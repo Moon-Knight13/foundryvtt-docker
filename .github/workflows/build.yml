@@ -129,21 +129,22 @@ jobs:
       - foundry-secrets
       - lint
       - metadata
-    uses: felddy/reusable-workflows/.github/workflows/docker-build-image.yml@v2
+    # TODO: unpin the version of the reusable workflow
+    uses: felddy/reusable-workflows/.github/workflows/docker-build-image.yml@improvement/build-secrets
     with:
       artifact_name: pre-installed-${{ needs.config.outputs.image_artifact_name_stem }}-${{ needs.config.outputs.test_platform }}
-      build_arg_1_name: FOUNDRY_PASSWORD
-      build_arg_2_name: FOUNDRY_USERNAME
-      build_arg_3_name: VERSION
+      build_arg_1_name: VERSION
+      build_secret_1_name: FOUNDRY_PASSWORD
+      build_secret_2_name: FOUNDRY_USERNAME
       cache_from_scopes: ${{ needs.config.outputs.test_platform }}-pre-installed
       cache_to_scope: ${{ needs.config.outputs.test_platform }}-pre-installed
       image_archive_name_stem: ${{ needs.config.outputs.test_platform }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       platforms: ${{ needs.config.outputs.test_platform }}
     secrets:
-      build_arg_1_value: ${{ secrets.FOUNDRY_PASSWORD }}
-      build_arg_2_value: ${{ secrets.FOUNDRY_USERNAME }}
-      build_arg_3_value: ${{ needs.metadata.outputs.source_version }}
+      build_arg_1_value: ${{ needs.metadata.outputs.source_version }}
+      build_secret_1_value: ${{ secrets.FOUNDRY_PASSWORD }}
+      build_secret_2_value: ${{ secrets.FOUNDRY_USERNAME }}
       image_archive_key: ${{ secrets.ARTIFACT_KEY }}
 
 # Since we need to pass the foundryvtt.com credentials to the tests, we can't
