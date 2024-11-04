@@ -41,6 +41,8 @@ RUN mkdir dist && touch dist/.placeholder
 RUN \
   --mount=type=secret,id=foundry_username,required=false \
   --mount=type=secret,id=foundry_password,required=false \
+  echo ">>> username: $(cat /run/secrets/foundry_username)" && \
+  echo ">>> password: $(cat /run/secrets/foundry_password)" && \
   npm install && \
   if [ -f /run/secrets/foundry_username ] && [ -f /run/secrets/foundry_password ]; then \
   ./authenticate.js "$(cat /run/secrets/foundry_username)" "$(cat /run/secrets/foundry_password)" cookiejar.json && \
