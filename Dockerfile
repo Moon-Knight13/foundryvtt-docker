@@ -37,27 +37,22 @@ COPY --from=compile-typescript-stage \
   ./
 # .placeholder file to mitigate https://github.com/moby/moby/issues/37965
 RUN mkdir dist && touch dist/.placeholder
-RUN --mount=type=secret,id=foundry_credentials,required=false \
-  npm install classic-level && \
-  if [ -f /run/secrets/foundry_credentials ]; then \
-  # Extract credentials from JSON
-  apt-get update && apt-get install -y jq && \
-  FOUNDRY_USERNAME=$(jq -r '.foundry_username // empty' /run/secrets/foundry_credentials) && \
-  FOUNDRY_PASSWORD=$(jq -r '.foundry_password // empty' /run/secrets/foundry_credentials); \
-  fi && \
-  if [ -n "${FOUNDRY_USERNAME}" ] && [ -n "${FOUNDRY_PASSWORD}" ]; then \
-  # Authenticate using credentials and get the pre-signed URL
-  ./authenticate.js "${FOUNDRY_USERNAME}" "${FOUNDRY_PASSWORD}" cookiejar.json && \
+
+RUN \
+  --mount=type=secret,id=foundry_username,required=false \
+  --mount=type=secret,id=foundry_password,required=false \
+  npm install && \
+  if [ -f /run/secrets/foundry_username ] && [ -f /run/secrets/foundry_password ]; then \
+  ./authenticate.js "$(cat /run/secrets/foundry_username)" "$(cat /run/secrets/foundry_password)" cookiejar.json && \
   presigned_url=$(./get_release_url.js --retry 5 cookiejar.json "${FOUNDRY_VERSION}") && \
   DOWNLOAD_URL="${presigned_url}"; \
   elif [ -n "${FOUNDRY_RELEASE_URL}" ]; then \
-  # Use pre-signed URL
   DOWNLOAD_URL="${FOUNDRY_RELEASE_URL}"; \
   else \
   echo "No valid credentials or pre-signed URL provided. Skipping pre-installation."; \
   fi && \
   if [ -n "${DOWNLOAD_URL}" ]; then \
-  apt-get install -y unzip wget && \
+  apt-get update && apt-get install -y unzip wget && \
   wget -O ${ARCHIVE} "${DOWNLOAD_URL}" && \
   unzip -d dist ${ARCHIVE} 'resources/*'; \
   fi
