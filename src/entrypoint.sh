@@ -1,13 +1,7 @@
-#!/bin/sh
-# shellcheck disable=SC3010,SC3046,SC3051
-# SC3010 - busybox supports [[ ]]
-# SC3046 - busybox supports source command
-# SC3051 - busybox supports source command
+#!/bin/bash
 
 set -o nounset
 set -o errexit
-# shellcheck disable=SC3040
-# pipefail is supported by busybox
 set -o pipefail
 
 CONFIG_DIR="/data/Config"
@@ -89,9 +83,9 @@ fi
 
 # Check to see if an install is required
 install_required=false
-# Track whether an S3 URL request is made.
+# Track whether a presigned URL request is made.
 # We use this information to protect from a download loop.
-requested_s3_url=false
+requested_presigned_url=false
 if [ -f "resources/app/package.json" ]; then
   # FoundryVTT no longer supports the "version" field in package.json
   # We need to build up a pseudo-version using the generation and build values
@@ -113,7 +107,7 @@ if [ $install_required = true ]; then
   # Determine how we are going to get the release URL
   if [ "${FOUNDRY_RELEASE_URL:-}" ]; then
     log "Using FOUNDRY_RELEASE_URL to download release."
-    s3_url="${FOUNDRY_RELEASE_URL}"
+    presigned_url="${FOUNDRY_RELEASE_URL}"
   fi
   if [[ "${FOUNDRY_USERNAME:-}" && "${FOUNDRY_PASSWORD:-}" ]]; then
     log "Using FOUNDRY_USERNAME and FOUNDRY_PASSWORD to authenticate."
@@ -124,16 +118,16 @@ if [ $install_required = true ]; then
     ./authenticate.js ${CONTAINER_VERBOSE+--log-level=debug} \
       --user-agent="${node_user_agent}" \
       "${FOUNDRY_USERNAME}" "${FOUNDRY_PASSWORD}" "${cookiejar_file}"
-    if [[ ! "${s3_url:-}" ]]; then
-      # If the s3_url wasn't set by FOUNDRY_RELEASE_URL generate one now.
+    if [[ ! "${presigned_url:-}" ]]; then
+      # If the presigned_url wasn't set by FOUNDRY_RELEASE_URL generate one now.
       log "Using authenticated credentials to download release."
       # CONTAINER_VERBOSE default value should not be quoted.
       # shellcheck disable=SC2086
-      s3_url=$(./get_release_url.js ${CONTAINER_VERBOSE+--log-level=debug} \
+      presigned_url=$(./get_release_url.js ${CONTAINER_VERBOSE+--log-level=debug} \
         ${CONTAINER_URL_FETCH_RETRY+--retry=${CONTAINER_URL_FETCH_RETRY}} \
         --user-agent="${node_user_agent}" \
         "${cookiejar_file}" "${FOUNDRY_VERSION}")
-      requested_s3_url=true
+      requested_presigned_url=true
     fi
   fi
 
@@ -153,14 +147,14 @@ if [ $install_required = true ]; then
   release_filename="${CONTAINER_CACHE%%+(/)}${CONTAINER_CACHE:+/}foundryvtt-${FOUNDRY_VERSION}.zip"
   set -o nounset
 
-  if [[ "${s3_url:-}" ]]; then
+  if [[ "${presigned_url:-}" ]]; then
     log "Downloading Foundry Virtual Tabletop release."
     # Download release if newer than cached version.
     # Filter out warnings about bad date formats if the file is missing.
     curl ${CONTAINER_VERBOSE+--verbose} --fail --location \
       --user-agent "${curl_user_agent}" \
       --time-cond "${release_filename}" \
-      --output "${downloading_filename}" "${s3_url}" 2>&1 \
+      --output "${downloading_filename}" "${presigned_url}" 2>&1 \
       | tr "\r" "\n" \
       | sed --unbuffered '/^Warning: .* date/d'
 
@@ -203,6 +197,13 @@ if [ $install_required = true ]; then
     log_error "Or set CONTAINER_CACHE to a directory containing foundryvtt-${FOUNDRY_VERSION}.zip"
     exit 1
   fi
+
+  # TODO: This is a workaround for a "known issue" with FoundryVTT 13.332
+  # Install classic-level module per release notes.
+  pushd resources/app > /dev/null
+  log "Installing classic-level module."
+  npm install classic-level --silent --no-audit --no-fund --no-progress
+  popd > /dev/null
 
   if [[ "${CONTAINER_CACHE:-}" ]]; then
     log "Preserving release archive file in cache."
@@ -263,8 +264,11 @@ if [ $install_required = true ]; then
     log "Using CONTAINER_PATCHES: ${CONTAINER_PATCHES}"
     if [ -d "${CONTAINER_PATCHES}" ]; then
       log "Container patches directory detected.  Starting patch application..."
-      for f in "${CONTAINER_PATCHES}"/*; do
-        [ -f "$f" ] || continue # we can't set nullglob in busybox
+      shopt -s nullglob # if the directory is empty we want an empty array
+      patch_files=("${CONTAINER_PATCHES}"/*)
+      shopt -u nullglob
+      for f in "${patch_files[@]}"; do
+        [ -f "$f" ] || continue # skip non-files
         log "Sourcing patch from file: $f"
         # shellcheck disable=SC1090
         source "$f"
@@ -343,7 +347,7 @@ export CONTAINER_PRESERVE_CONFIG FOUNDRY_ADMIN_KEY FOUNDRY_AWS_CONFIG \
   FOUNDRY_UPNP_LEASE_DURATION FOUNDRY_WORLD
 # set the TERM signal handler
 trap handle_sigterm TERM
-su-exec "${FOUNDRY_UID}:${FOUNDRY_GID}" ./launcher.sh "$@" &
+gosu "${FOUNDRY_UID}:${FOUNDRY_GID}" ./launcher.sh "$@" &
 child_pid=$!
 log_debug "Waiting for child pid: ${child_pid} to exit."
 wait "$child_pid"
@@ -357,9 +361,9 @@ if [ $exit_code -ne 0 ]; then
   log_error "Child process failed with error code: $exit_code"
 fi
 
-# If the container requested a new S3 URL but disabled the cache
+# If the container requested a new presigned URL but disabled the cache
 # we are going to sleep forever to prevent a download loop.
-if [[ "${requested_s3_url}" == "true" && "${CONTAINER_CACHE:-}" == "" ]]; then
+if [[ "${requested_presigned_url}" == "true" && "${CONTAINER_CACHE:-}" == "" ]]; then
   log_warn "Server exited after downloading a release while the CONTAINER_CACHE was disabled."
   log_warn "This configuration could lead to a restart loop putting excessive load on the release server."
   log_warn "Please re-enable the CONTAINER_CACHE to allow the container to safely exit."
