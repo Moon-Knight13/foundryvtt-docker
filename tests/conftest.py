@@ -58,6 +58,7 @@ def main_container(image_tag):
         },
         name=MAIN_SERVICE_NAME,
         ports={"30000/tcp": None},
+        user=f"{os.getuid()}:{os.getgid()}",
         volumes={str(Path.cwd() / Path("data")): {"bind": "/data", "driver": "local"}},
     )
     yield container
