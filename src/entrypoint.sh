@@ -198,7 +198,7 @@ if [ $install_required = true ]; then
     exit 1
   fi
 
-  # TODO: This is a workaround for a "known issue" with FoundryVTT 13.332
+  # TODO: This is a workaround for a "known issue" with FoundryVTT 13.333
   # Install classic-level module per release notes.
   pushd resources/app > /dev/null
   log "Installing classic-level module."
