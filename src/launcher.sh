@@ -39,19 +39,13 @@ else
   fi
 fi
 
-if [ "$1" = "--shell" ]; then
-  log_warn "Starting a shell as requested by argument --shell"
-  /bin/sh
-  exit $?
-fi
-
 if [[ "${FOUNDRY_IP_DISCOVERY:-}" == "false" ]]; then
   log "FOUNDRY_IP_DISCOVERY is set to false: Disabling IP discovery."
   # Add argument to disable IP discovery
   set -- "$@" --noipdiscovery
 fi
 
-# Space seperated list of regex rules which environment variables must meet to
+# Space separated list of regex rules which environment variables must meet to
 # be carried over to the new environment, which Node/Foundry will be running in.
 ENV_VAR_PASSLIST_REGEX='^HOME$ ^NODE_.+$'
 # Build list of environment variables to carry over into a clean environment

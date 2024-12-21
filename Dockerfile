@@ -1,7 +1,7 @@
+ARG CONTAINER_VERSION=13.333.0
 ARG FOUNDRY_RELEASE_URL
-ARG FOUNDRY_VERSION=13.332
+ARG FOUNDRY_VERSION=13.333
 ARG NODE_IMAGE_VERSION=20-bookworm-slim
-ARG VERSION
 
 FROM node:${NODE_IMAGE_VERSION} AS compile-typescript-stage
 
@@ -41,8 +41,6 @@ RUN mkdir dist && touch dist/.placeholder
 RUN \
   --mount=type=secret,id=foundry_username,required=false \
   --mount=type=secret,id=foundry_password,required=false \
-  echo ">>> username: $(cat /run/secrets/foundry_username)" && \
-  echo ">>> password: $(cat /run/secrets/foundry_password)" && \
   npm install && \
   if [ -f /run/secrets/foundry_username ] && [ -f /run/secrets/foundry_password ]; then \
   ./authenticate.js "$(cat /run/secrets/foundry_username)" "$(cat /run/secrets/foundry_password)" cookiejar.json && \
@@ -61,19 +59,18 @@ RUN \
 
 FROM node:${NODE_IMAGE_VERSION} AS final-stage
 
-ARG FOUNDRY_UID=421
+ARG CONTAINER_VERSION
 ARG FOUNDRY_VERSION
 ARG TARGETPLATFORM
-ARG VERSION
 
 LABEL com.foundryvtt.version=${FOUNDRY_VERSION}
 LABEL org.opencontainers.image.authors="markf+github@geekpad.com"
 LABEL org.opencontainers.image.vendor="Geekpad"
 
-ENV FOUNDRY_HOME="/home/foundry"
 ENV FOUNDRY_VERSION=${FOUNDRY_VERSION}
+ENV HOME=/home/node
 
-WORKDIR ${FOUNDRY_HOME}
+WORKDIR $HOME
 
 COPY --from=optional-release-stage /root/dist/ .
 COPY --from=compile-typescript-stage /root/dist/ .
@@ -85,18 +82,17 @@ COPY \
   src/launcher.sh \
   src/logging.sh \
   ./
-RUN addgroup --system --gid ${FOUNDRY_UID} foundry \
-  && adduser --system --uid ${FOUNDRY_UID} --ingroup foundry foundry \
+RUN mkdir -p resources /data \
+  && chmod a+rwx resources /data \
   && apt-get update && apt-get install -y \
   curl \
   file \
-  gosu \
   jq \
   sed \
   tzdata \
   unzip \
   && rm -rf /var/lib/apt/lists/* \
-  && npm install && echo ${VERSION} > image_version.txt
+  && npm install && echo ${CONTAINER_VERSION} > image_version.txt
 
 VOLUME ["/data"]
 # HTTP Server
@@ -107,6 +103,7 @@ EXPOSE 30000/TCP
 # EXPOSE 33478/UDP
 # EXPOSE 49152-65535/UDP
 
+USER node
 ENTRYPOINT ["./entrypoint.sh"]
 CMD ["resources/app/main.mjs", "--port=30000", "--headless", "--noupdate",\
   "--dataPath=/data"]
