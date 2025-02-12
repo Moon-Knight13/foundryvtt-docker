@@ -36,4 +36,4 @@ source = "https://github.com/felddy/foundryvtt-docker"
 test = ["coverage", "coveralls", "docker", "pre-commit", "pytest", "pytest-cov"]
 
 [tool.setuptools.dynamic]
-version = { attr = "_version.__version__" }
+version = { file = "src/version.txt" }
