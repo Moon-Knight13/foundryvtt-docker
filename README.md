@@ -58,7 +58,7 @@ Alternatively, you may acquire a temporary download URL from your user profile
 page on the Foundry website.
 
 1. Navigate to the [`Purchased Software Licenses` page](https://foundryvtt.com/me/licenses).
-1. Change the `Operating System` menu item to `Linux/NodeJS`.
+1. Change the `Operating System` menu item to `Node.js`.
 1. Click the `🔗 Timed URL` button to obtain the temporary URL.
 1. Use the following command to start up a Foundry Virtual Tabletop server:
 

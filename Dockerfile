@@ -54,7 +54,8 @@ RUN \
   if [ -n "${DOWNLOAD_URL}" ]; then \
   apt-get update && apt-get install -y unzip wget && \
   wget -O ${ARCHIVE} "${DOWNLOAD_URL}" && \
-  unzip -d dist ${ARCHIVE} 'resources/*'; \
+  mkdir -p "dist/resources/app" && \
+  unzip -d "dist/resources/app" ${ARCHIVE}; \
   fi
 
 FROM node:${NODE_IMAGE_VERSION} AS final-stage
