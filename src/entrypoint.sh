@@ -4,7 +4,8 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
-CONFIG_DIR="/data/Config"
+DATA_DIR="/data"
+CONFIG_DIR="${DATA_DIR}/config"
 DEPRECATED_ENVS="CONTAINER_PRESERVE_OWNER FOUNDRY_UID FOUNDRY_GID TIMEZONE"
 LICENSE_FILE="${CONFIG_DIR}/license.json"
 # setup logging
@@ -139,7 +140,7 @@ if [ $install_required = true ]; then
 
   # If CONTAINER_CACHE is null, set it to a default.
   # If it set to an empty string, disable the caching.
-  CONTAINER_CACHE="${CONTAINER_CACHE-/data/container_cache}"
+  CONTAINER_CACHE="${CONTAINER_CACHE-${DATA_DIR}/container_cache}"
 
   if [[ "${CONTAINER_CACHE:-}" ]]; then
     log "Using CONTAINER_CACHE: ${CONTAINER_CACHE}"
