@@ -5,7 +5,7 @@ set -o errexit
 set -o pipefail
 
 DATA_DIR="/data"
-CONFIG_DIR="${DATA_DIR}/config"
+CONFIG_DIR="${DATA_DIR}/Config"
 DEPRECATED_ENVS="CONTAINER_PRESERVE_OWNER FOUNDRY_UID FOUNDRY_GID TIMEZONE"
 LICENSE_FILE="${CONFIG_DIR}/license.json"
 # setup logging
