@@ -1,5 +1,5 @@
 ---
-name: "Test Docker image"
+name: Test Docker image
 
 # This reusable workflow tests a Docker image using pytest.  The image is loaded
 # from the artifacts of a previous workflow.  If image decryption keys are
@@ -11,51 +11,51 @@ on: # yamllint disable-line rule:truthy
     inputs:
       # Required inputs
       image_artifact_name:
-        description: "The artifact name used to load the image archive"
+        description: The artifact name used to load the image archive
         required: true
         type: string
       data_artifact_name:
-        description: "The artifact name used to store the data archive"
+        description: The artifact name used to store the data archive
         required: true
         type: string
       # Optional inputs
       data_artifact_path:
-        description: "The artifact path used to create the data archive"
+        description: The artifact path used to create the data archive
         default: data
         required: false
         type: string
       data_artifact_retention_days:
         default: 1
-        description: "Number of days to retain the test data artifact"
+        description: Number of days to retain the test data artifact
         required: false
         type: number
       image_archive_name:
         default: image.tar
-        description: "The name of the image archive to load (name will be cleaned)"
+        description: The name of the image archive to load (name will be cleaned)
         required: false
         type: string
       pip_cache_dir:
-        description: "The pip cache directory"
+        description: The pip cache directory
         default: ~/.cache/pip
         required: false
         type: string
       python_version:
-        description: "The Python version to use"
-        default: '3.10'
+        description: The Python version to use
+        default: "3.10"
         required: false
         type: string
     secrets:
       data_archive_key:
-        description: "Enables encryption of the data archive if specified"
+        description: Enables encryption of the data archive if specified
         required: true
       image_archive_key:
-        description: "Enables decryption of the image archive if specified"
+        description: Enables decryption of the image archive if specified
         required: false
       foundry_password:
-        description: "The password for the foundryvtt.com account"
+        description: The password for the foundryvtt.com account
         required: false
       foundry_username:
-        description: "The username for the foundryvtt.com account"
+        description: The username for the foundryvtt.com account
         required: false
 
 env:
@@ -69,11 +69,11 @@ permissions:
 jobs:
   test:
     # Executes tests on the single-platform image created in the "build" job.
-    name: "Test image"
+    name: Test image
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2  # tag=v2.13.3
+        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # tag=v2.13.3
         with:
           egress-policy: audit
           # allowed-endpoints: >
@@ -108,14 +108,14 @@ jobs:
             echo "do_decryption=false" >> $GITHUB_OUTPUT
           fi
 
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # tag=v6.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # tag=v6.0.0
       - id: setup-python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548  # tag=v6.1.0
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # tag=v6.1.0
         with:
           python-version: ${{ inputs.python_version }}
 
       - name: Cache testing environments
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # tag=v4.3.0
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # tag=v4.3.0
         env:
           BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
             py${{ steps.setup-python.outputs.python-version }}-"
@@ -133,7 +133,7 @@ jobs:
           pip install --upgrade --requirement requirements-test.txt
 
       - name: Download Docker image artifact
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53  # tag=v6.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # tag=v6.0.0
         with:
           name: ${{ inputs.image_artifact_name }}
           path: ${{ env.ARTIFACT_WORK_DIR }}
@@ -183,7 +183,7 @@ jobs:
 
       - name: Upload unencrypted data artifacts
         if: ( success() || failure() ) && steps.check_data_archive_key.outputs.do_encryption == 'false'
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # tag=v5.0.0
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # tag=v5.0.0
         with:
           name: ${{ inputs.data_artifact_name }}
           path: data.tar.gz
@@ -191,7 +191,7 @@ jobs:
 
       - name: Upload encrypted data artifacts
         if: ( success() || failure() ) && steps.check_data_archive_key.outputs.do_encryption == 'true'
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # tag=v5.0.0
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # tag=v5.0.0
         with:
           name: ${{ inputs.data_artifact_name }}
           path: data.tar.7z

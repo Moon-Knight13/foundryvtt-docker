@@ -1,5 +1,4 @@
 ---
-
 name: Build
 
 on: # yamllint disable-line rule:truthy
@@ -9,17 +8,19 @@ on: # yamllint disable-line rule:truthy
   pull_request:
   push:
     branches:
-      - '**'
+      - "**"
   release:
-    types: [edited, published]
+    types:
+      - edited
+      - published
   schedule:
-    - cron: '0 10 * * *'  # everyday at 10am
+    - cron: 0 10 * * * # everyday at 10am
   workflow_dispatch:
     inputs:
       dispatch-tag:
-        description: "Tag to apply to pushed images"
+        description: Tag to apply to pushed images
         required: true
-        default: "dispatch"
+        default: dispatch
 
 permissions:
   actions: read
@@ -35,26 +36,27 @@ defaults:
 
 jobs:
   diagnostics:
-    name: "Diagnostics"
+    name: Diagnostics
     uses: felddy/reusable-workflows/.github/workflows/diagnostics.yml@v3
 
   config:
-    name: "Config"
+    name: Config
     uses: ./.github/workflows/_config.yml
 
   metadata:
-    name: "Metadata"
-    needs: [config]
+    name: Metadata
+    needs:
+      - config
     uses: felddy/reusable-workflows/.github/workflows/container-metadata.yml@v3
     with:
       image_name: ${{ needs.config.outputs.image_name }}
 
   foundry-secrets:
-    name: "Foundry secrets"
+    name: Foundry secrets
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2  # tag=v2.13.3
+        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # tag=v2.13.3
         with:
           egress-policy: block
 
@@ -72,11 +74,11 @@ jobs:
           exit $return_code
 
   docker-secrets:
-    name: "Docker secrets"
+    name: Docker secrets
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2  # tag=v2.13.3
+        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # tag=v2.13.3
         with:
           egress-policy: block
 
@@ -94,11 +96,11 @@ jobs:
           exit $return_code
 
   artifact-key:
-    name: "Artifact key"
+    name: Artifact key
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2  # tag=v2.13.3
+        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # tag=v2.13.3
         with:
           egress-policy: block
 
@@ -110,12 +112,13 @@ jobs:
           fi
 
   lint:
-    name: "Lint"
-    needs: [config]
+    name: Lint
+    needs:
+      - config
     uses: felddy/reusable-workflows/.github/workflows/common-lint.yml@v3
 
   build-normal-test-image:
-    name: "Build normal test image"
+    name: Build normal test image
     needs:
       - config
       - lint
@@ -130,7 +133,7 @@ jobs:
       platforms: ${{ needs.config.outputs.test_platform }}
 
   build-pre-installed-test-image:
-    name: "Build pre-installed test image"
+    name: Build pre-installed test image
     needs:
       - artifact-key
       - config
@@ -152,13 +155,13 @@ jobs:
       build_secret_2_value: ${{ secrets.FOUNDRY_USERNAME }}
       image_archive_key: ${{ secrets.ARTIFACT_KEY }}
 
-# Since we need to pass the foundryvtt.com credentials to the tests, we can't
-# use the standard reusable test workflow.  Instead, we'll use a modified
-# version of the workflow that accepts the credential secrets and is stored in
-# this repository.
+  # Since we need to pass the foundryvtt.com credentials to the tests, we can't
+  # use the standard reusable test workflow.  Instead, we'll use a modified
+  # version of the workflow that accepts the credential secrets and is stored in
+  # this repository.
 
   test-normal-image:
-    name: "Test normal image"
+    name: Test normal image
     needs:
       - artifact-key
       - build-normal-test-image
@@ -176,7 +179,7 @@ jobs:
       foundry_username: ${{ secrets.FOUNDRY_USERNAME }}
 
   test-pre-installed-image:
-    name: "Test pre-installed image"
+    name: Test pre-installed image
     needs:
       - artifact-key
       - build-pre-installed-test-image
@@ -192,7 +195,7 @@ jobs:
       image_archive_key: ${{ secrets.ARTIFACT_KEY }}
 
   build-each-platform:
-    name: "Build platform"
+    name: Build platform
     needs:
       - config
       - lint
@@ -215,7 +218,7 @@ jobs:
       platforms: ${{ matrix.platform }}
 
   generate-sboms:
-    name: "Bill of Materials"
+    name: Bill of Materials
     needs:
       - build-each-platform
       - config
@@ -230,7 +233,7 @@ jobs:
       sbom_artifact_name: ${{ needs.config.outputs.sbom_artifact_name_stem }}-${{ matrix.platform }}
 
   build-multi-arch-image:
-    name: "Publish image"
+    name: Publish image
     needs:
       - build-each-platform
       - config
@@ -248,7 +251,7 @@ jobs:
       docker_username: ${{ secrets.DOCKER_USERNAME }}
 
   publish-readme:
-    name: "Publish docs"
+    name: Publish docs
     needs:
       - build-multi-arch-image
       - config
