@@ -38,8 +38,10 @@ rules:
     allow-non-breakable-inline-mappings: true
     # When pinning GitHub Actions with full SHAs and comments we run into the
     # inability to wrap yaml in any sane way.
+    # Likewise, issue template placeholder text can be quite wide.
     ignore: |
       /.github/workflows/*.yml
+      /.github/ISSUE_TEMPLATE/*.yml
     # Allows a 10% overage from the default limit of 80
     max: 88
 
