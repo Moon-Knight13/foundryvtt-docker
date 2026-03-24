@@ -12,9 +12,9 @@ COPY \
   package-lock.json \
   tsconfig.json \
   ./
-RUN npm install && npm install --global typescript
+RUN npm install && npx tsc --version
 COPY /src/*.ts src/
-RUN tsc
+RUN npx tsc
 RUN grep -l "#!" dist/*.js | xargs chmod a+x
 
 FROM public.ecr.aws/docker/library/node:${NODE_IMAGE_VERSION} AS optional-release-stage
