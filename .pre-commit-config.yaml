@@ -170,7 +170,7 @@ repos:
           # - https://github.com/pygments/pygments/issues/3058
           #
           # TODO: Remove this when it becomes possible.  See
-          # cisagov/skeleton-docker#285 for more details.
+          # cisagov/skeleton-generic#257 for more details.
           - --ignore-vuln
           - CVE-2026-4539
           # Add any pip requirements files to scan
