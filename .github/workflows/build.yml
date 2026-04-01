@@ -90,8 +90,8 @@ jobs:
       scan-severity: CRITICAL,HIGH
     secrets:
       private-package-token: ${{ secrets.PRIVATE_PACKAGE_TOKEN }}
-      build-secret-1-value: ${{ secrets.FOUNDRY_PASSWORD }}
-      build-secret-2-value: ${{ secrets.FOUNDRY_USERNAME }}
+      build-secret-1: ${{ secrets.FOUNDRY_PASSWORD }}
+      build-secret-2: ${{ secrets.FOUNDRY_USERNAME }}
 
   test:
     name: Test Container
@@ -109,8 +109,8 @@ jobs:
       test-secret-1-name: FOUNDRY_USERNAME
       test-secret-2-name: FOUNDRY_PASSWORD
     secrets:
-      test-secret-1-value: ${{ secrets.FOUNDRY_USERNAME }}
-      test-secret-2-value: ${{ secrets.FOUNDRY_PASSWORD }}
+      test-secret-1: ${{ secrets.FOUNDRY_USERNAME }}
+      test-secret-2: ${{ secrets.FOUNDRY_PASSWORD }}
 
   test-preinstalled:
     name: Test Container Pre-Installed
