@@ -2,4 +2,3 @@
 --requirement requirements.txt
 pre-commit
 pytest
-semver>=3
