@@ -16,6 +16,9 @@ on: # yamllint disable-line rule:truthy
       image_name:
         description: The container image name
         value: felddy/foundryvtt
+      image_name_preinstall:
+        description: The pre-install container image name
+        value: felddy/foundryvtt-preinstall-2
       platforms:
         description: The platforms to build (JSON array string)
         value: ${{ inputs.platforms }}
