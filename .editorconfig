@@ -1,0 +1,16 @@
+# EditorConfig is awesome: https://editorconfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+insert_final_newline = true
+
+# Shell scripts
+[*.{sh,bash}]
+binary_next_line = true
+indent_size = 2
+indent_style = space
+keep_padding       = true
+space_redirects    = true
+switch_case_indent = true
