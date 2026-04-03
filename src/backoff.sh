@@ -48,8 +48,6 @@ backoff_reset() {
 #     Exit with original <exit_code>.
 backoff_on_failure() {
   local exit_code="${1}"
-  local state_file="${CONTAINER_CACHE:-}/backoff_state.json"
-  local tmp_file="${state_file}.tmp"
 
   log_debug "backoff_on_failure: called with exit_code=${exit_code}"
   log_debug "backoff_on_failure: CONTAINER_CACHE='${CONTAINER_CACHE:-}'"
@@ -62,8 +60,22 @@ backoff_on_failure() {
   fi
 
   # ── No cache directory ─────────────────────────────────────────────────────
+  # Apply the same default as the install block: null → default path, empty → disabled.
+  # Then attempt to create the directory. If it can't be created (e.g. permissions
+  # failure before /data is writable), treat it as disabled and sleep indefinitely.
+  if [[ -z "${CONTAINER_CACHE+x}" ]]; then
+    CONTAINER_CACHE="/data/container_cache"
+  fi
+
+  if [[ -n "${CONTAINER_CACHE:-}" ]]; then
+    if ! mkdir -p "${CONTAINER_CACHE}" 2> /dev/null; then
+      log_warn "Cannot create CONTAINER_CACHE directory '${CONTAINER_CACHE}'.  Treating cache as disabled."
+      CONTAINER_CACHE=""
+    fi
+  fi
+
   if [[ -z "${CONTAINER_CACHE:-}" ]]; then
-    log_warn "No CONTAINER_CACHE configured.  Cannot persist backoff state."
+    log_warn "No CONTAINER_CACHE available.  Cannot persist backoff state."
     log_warn "Sleeping indefinitely to prevent a restart loop.  Send SIGTERM to shut down."
 
     # Sleep in background so SIGTERM can interrupt it.
@@ -79,6 +91,9 @@ backoff_on_failure() {
   fi
 
   # ── Cache directory configured ─────────────────────────────────────────────
+
+  local state_file="${CONTAINER_CACHE}/backoff_state.json"
+  local tmp_file="${state_file}.tmp"
 
   # Read current consecutive_failures from state file.
   local consecutive_failures=0
