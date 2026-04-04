@@ -2,6 +2,9 @@
 # Files already tracked by Git are not affected.
 # See: https://git-scm.com/docs/gitignore
 
+## DirEnv ##
+.envrc
+
 ## FoundryVTT ##
 cookiejar.json
 license.json
@@ -18,6 +21,3 @@ __pycache__
 .python-version
 *.egg-info
 venv
-
-## DirEnv ##
-.envrc
