@@ -63,8 +63,8 @@ updates:
         patterns:
           - "*"
 
-  - directory: /
-    package-ecosystem: pip
+  - package-ecosystem: pip
+    directory: /
     schedule:
       interval: daily
     labels:
@@ -73,6 +73,20 @@ updates:
       - "python :snake:"
     groups:
       pip-all:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: daily
+    labels:
+      - "bot :robot:"
+      - "dependencies :game_die:"
+      - "python :snake:"
+    groups:
+      uv-all:
         applies-to: version-updates
         patterns:
           - "*"
