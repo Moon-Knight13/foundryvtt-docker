@@ -14,7 +14,7 @@ permissions:
 jobs:
   diagnostics:
     name: Run Diagnostics
-    uses: felddy/reusable-workflows/.github/workflows/diagnostics.yml@d586f3254330e18d4433661e60aee74c0ca0e26c # tag=v4.1.0
+    uses: felddy/reusable-workflows/.github/workflows/diagnostics.yml@f6d1e515e0afe45c4be2e7ce855672958c51ac95 # tag=v4.1.1
   labeler:
     needs:
       - diagnostics
@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # tag=v2.17.0
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # tag=v2.18.0
         with:
           egress-policy: block
           allowed-endpoints: >
