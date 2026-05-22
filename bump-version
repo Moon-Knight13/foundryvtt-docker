@@ -116,6 +116,9 @@ else
         if [ -z "${2:-}" ]; then
           invalid_option "'set' requires a version argument (e.g. 14.365.0)"
         fi
+        if ! python -c 'import semver, sys; semver.VersionInfo.parse(sys.argv[1])' "$2" > /dev/null 2>&1; then
+          invalid_option "'set' requires a valid semver version (e.g. 14.365.0)"
+        fi
         new_version="$2"
         bump_part="set"
         shift 2
@@ -186,17 +189,30 @@ old_short="${old_version%.*}"
 new_short="${new_version%.*}"
 old_short_regex="${old_short//\./\\.}"
 
-tmp_file=/tmp/version.$$
+tmp_files=()
+cleanup_tmp_files() {
+  if [ ${#tmp_files[@]} -gt 0 ]; then
+    rm -f "${tmp_files[@]}"
+  fi
+}
+trap cleanup_tmp_files EXIT
+
 for version_file in "${VERSION_FILES[@]}"; do
   if [ ! -f "$version_file" ]; then
     echo "Missing expected file: $version_file"
     exit 1
   fi
+
+  tmp_file_pass1=$(mktemp /tmp/version.pass1.XXXXXX)
+  tmp_file_pass2=$(mktemp /tmp/version.pass2.XXXXXX)
+  tmp_files+=("$tmp_file_pass1" "$tmp_file_pass2")
+
   # Pass 1: replace full semver form (e.g. 14.360.0 → 14.361.0); must precede pass 2
-  sed "s/$old_version_regex/$new_version/g" "$version_file" > "$tmp_file"
+  sed "s/$old_version_regex/$new_version/g" "$version_file" > "$tmp_file_pass1"
   # Pass 2: replace short form (e.g. 14.360 → 14.361)
-  sed "s/$old_short_regex/$new_short/g" "$tmp_file" > "$version_file"
-  rm "$tmp_file"
+  sed "s/$old_short_regex/$new_short/g" "$tmp_file_pass1" > "$tmp_file_pass2"
+  mv "$tmp_file_pass2" "$version_file"
+  rm -f "$tmp_file_pass1"
 done
 
 git add "${VERSION_FILES[@]}"
