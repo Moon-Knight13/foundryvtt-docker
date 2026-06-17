@@ -55,24 +55,27 @@ Run the automated setup script:
 When prompted:
 1. Answer yes to backup restoration
 2. Enter remote host as `user@hostname`
-3. Enter remote backup path (default: `~/.local/share/FoundryVTT/Backups`)
+3. Enter remote backup path (default: `~/.local/share/FoundryVTT`)
 4. Enter SSH key path (default: `~/.ssh/id_rsa`)
-5. The script automatically pulls backups to `./data/Backups/`
+5. The script automatically syncs data to `~/.local/share/FoundryVTT/`
 
 ## Method 2: Manual Pull
 
 If backups weren't pulled during setup, manually pull them:
 
 ```bash
-# Create Backups directory
-mkdir -p data/Backups
+# Create local FoundryVTT data directory
+mkdir -p ~/.local/share/FoundryVTT
 
-# Pull from remote host via SCP
-scp -i ~/.ssh/id_rsa -r user@remote-host:~/.local/share/FoundryVTT/Backups/* data/Backups/
+# Sync from remote host via rsync over SSH
+rsync -avz --progress -e "ssh -i ~/.ssh/id_rsa" user@remote-host:~/.local/share/FoundryVTT/ ~/.local/share/FoundryVTT/
+
+# In .env, set:
+# FOUNDRY_BACKUPS_PATH=~/.local/share/FoundryVTT/Backups
 
 # Or, if using deploy-setup variables:
 source .env
-scp -i "$BACKUP_SSH_KEY" -r "$BACKUP_REMOTE_HOST:$BACKUP_REMOTE_PATH/*" data/Backups/
+rsync -avz --progress -e "ssh -i $BACKUP_SSH_KEY" "$BACKUP_REMOTE_HOST:$BACKUP_REMOTE_PATH/" "$BACKUP_LOCAL_PATH/"
 ```
 
 ## Restoring Backups Inside Container
@@ -106,15 +109,15 @@ docker compose up -d
 ## File Locations
 
 - **Container backup location**: `/data/Backups/`
-- **Host backup location**: `./data/Backups/`
-- **Remote backup source**: `~/.local/share/FoundryVTT/Backups/` (on source laptop)
+- **Host backup location**: `~/.local/share/FoundryVTT/Backups/`
+- **Remote data source**: `~/.local/share/FoundryVTT/` (on source laptop)
 
 All backup files are automatically available to the container, and any restored data persists on the host.
 
 ## Backup Structure
 
 ```
-data/Backups/
+~/.local/share/FoundryVTT/Backups/
 ├── worlds
 │   └── world-name
 │       ├── world-name.bak          # Actual backup data
@@ -158,14 +161,14 @@ ssh -i ~/.ssh/id_rsa -v user@remote-host
 ssh -i ~/.ssh/id_rsa user@remote-host "ls -lah ~/.local/share/FoundryVTT/Backups/"
 ```
 
-### SCP Pull Fails
+### rsync Pull Fails
 ```bash
 # Verify path formatting
-scp -i ~/.ssh/id_rsa -r user@remote-host:~/.local/share/FoundryVTT/Backups/ data/Backups/
+rsync -avz --progress -e "ssh -i ~/.ssh/id_rsa" user@remote-host:~/.local/share/FoundryVTT/ ~/.local/share/FoundryVTT/
 ```
 
 ### Restore Fails in FoundryVTT UI
-1. Check file permissions: `ls -la data/Backups/`
+1. Check file permissions: `ls -la ~/.local/share/FoundryVTT/Backups/`
 2. Verify `.bak` and `.json` files both exist
 3. Check container logs: `docker compose logs foundry | tail -50`
 4. Ensure snapshot `.json` files reference valid `.bak` files

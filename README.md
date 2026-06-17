@@ -31,16 +31,19 @@ distribution.
 
 ## Running ##
 
-### Running with Docker and credentials ###
+### Running with Docker and a temporary URL (recommended) ###
 
-You can use the following command to start up a Foundry Virtual Tabletop server.
-Your [foundryvtt.com](https://foundryvtt.com) credentials are required so the
-container can install and license your server.
+You can acquire a temporary download URL from your user profile
+on the Foundry website. This is the recommended startup method.
+
+1. Navigate to the [`Purchased Software Licenses` page](https://foundryvtt.com/me/licenses).
+1. Change the `Operating System` menu item to `Node.js`.
+1. Click the `🔗 Timed URL` button to obtain the temporary URL.
+1. Use the following command to start up a Foundry Virtual Tabletop server:
 
 ```console
 docker run \
-  --env FOUNDRY_USERNAME='<your_username>' \
-  --env FOUNDRY_PASSWORD='<your_password>' \
+  --env FOUNDRY_RELEASE_URL='<temporary_url>' \
   --publish 30000:30000/tcp \
   --volume <your_data_dir>:/data \
   ghcr.io/felddy/foundryvtt:14
@@ -52,19 +55,15 @@ docker run \
 > shell history list.  See:
 > [`HISTCONTROL`](https://www.gnu.org/software/bash/manual/html_node/Bash-Variables.html#index-HISTCONTROL)
 
-### Running with Docker and a temporary URL ###
+### Running with Docker and credentials (fallback) ###
 
-Alternatively, you may acquire a temporary download URL from your user profile
-page on the Foundry website.
-
-1. Navigate to the [`Purchased Software Licenses` page](https://foundryvtt.com/me/licenses).
-1. Change the `Operating System` menu item to `Node.js`.
-1. Click the `🔗 Timed URL` button to obtain the temporary URL.
-1. Use the following command to start up a Foundry Virtual Tabletop server:
+Alternatively, you can use your [foundryvtt.com](https://foundryvtt.com)
+account credentials so the container can install and license your server.
 
 ```console
 docker run \
-  --env FOUNDRY_RELEASE_URL='<temporary_url>' \
+  --env FOUNDRY_USERNAME='<your_username>' \
+  --env FOUNDRY_PASSWORD='<your_password>' \
   --publish 30000:30000/tcp \
   --volume <your_data_dir>:/data \
   ghcr.io/felddy/foundryvtt:14
@@ -91,8 +90,8 @@ configuration files, set `CONTAINER_PRESERVE_CONFIG` to `true`.
 > If no hostname is set, Docker assigns a random container ID on each start,
 > causing license verification to fail after every restart.
 
-1. Create a `compose.yml` file similar to the one below.  Provide
-   your credentials as values to the environment variables:
+1. Create a `compose.yml` file similar to the one below. Provide
+  a timed URL as the preferred download method:
 
     ```yaml
     ---
@@ -105,8 +104,10 @@ configuration files, set `CONTAINER_PRESERVE_CONFIG` to `true`.
             source: <your_data_dir>
             target: /data
         environment:
-          - FOUNDRY_USERNAME=<your_username>
-          - FOUNDRY_PASSWORD=<your_password>
+          - FOUNDRY_RELEASE_URL=<temporary_url>
+          # Optional fallback:
+          # - FOUNDRY_USERNAME=<your_username>
+          # - FOUNDRY_PASSWORD=<your_password>
           - FOUNDRY_ADMIN_KEY=atropos
           - FOUNDRY_TELEMETRY=true
         ports:

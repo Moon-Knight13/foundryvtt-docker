@@ -4,14 +4,14 @@ services:
     image: ghcr.io/felddy/foundryvtt:release
     hostname: ${FOUNDRY_HOSTNAME:-my_foundry_host}
     
-    # GPU Support - uncomment these lines to enable GPU
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    #GPU Support - uncomment these lines to enable GPU
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     
     volumes:
       - type: bind
@@ -30,22 +30,22 @@ services:
       
       # Version & URLs
       - FOUNDRY_VERSION=${FOUNDRY_VERSION:-14.363}
-      - FOUNDRY_RELEASE_URL=${FOUNDRY_RELEASE_URL}
+      - FOUNDRY_RELEASE_URL=${FOUNDRY_RELEASE_URL:-}
       
       # Hostname Configuration
-      - FOUNDRY_HOSTNAME=${FOUNDRY_HOSTNAME}
-      - FOUNDRY_LOCAL_HOSTNAME=${FOUNDRY_LOCAL_HOSTNAME}
+      - FOUNDRY_HOSTNAME=${FOUNDRY_HOSTNAME:-}
+      - FOUNDRY_LOCAL_HOSTNAME=${FOUNDRY_LOCAL_HOSTNAME:-}
       
       # SSL/HTTPS (optional)
-      - FOUNDRY_SSL_CERT=${FOUNDRY_SSL_CERT}
-      - FOUNDRY_SSL_KEY=${FOUNDRY_SSL_KEY}
-      - FOUNDRY_PROTOCOL=${FOUNDRY_PROTOCOL}
+      - FOUNDRY_SSL_CERT=${FOUNDRY_SSL_CERT:-}
+      - FOUNDRY_SSL_KEY=${FOUNDRY_SSL_KEY:-}
+      - FOUNDRY_PROTOCOL=${FOUNDRY_PROTOCOL:-}
       
       # Container Optimization
       - CONTAINER_CACHE=${CONTAINER_CACHE:-/data/container_cache}
-      - CONTAINER_CACHE_SIZE=${CONTAINER_CACHE_SIZE}
+      - CONTAINER_CACHE_SIZE=${CONTAINER_CACHE_SIZE:-}
       - CONTAINER_VERBOSE=${CONTAINER_VERBOSE:-false}
-      - CONTAINER_UMASK=${CONTAINER_UMASK}
+      - CONTAINER_UMASK=${CONTAINER_UMASK:-}
     
     ports:
       - target: 30000

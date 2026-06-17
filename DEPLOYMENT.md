@@ -11,23 +11,27 @@ This guide walks you through deploying FoundryVTT via Docker with support for:
 ### 1. Initial Setup
 
 ```bash
-./deploy-setup.sh
+cp .env.example .env
+mkdir -p ~/.local/share/FoundryVTT
 ```
 
 This will:
 - Create `.env` from `.env.example` template
 - Create `./data` directory for persistent storage
-- Verify Docker and Docker Compose installation
+- Create `~/.local/share/FoundryVTT` directory for optional data mirroring
 
-### 2. Configure Credentials
+### 2. Configure Download Access
 
-Edit `.env` and add your FoundryVTT credentials:
+Edit `.env` and add your FoundryVTT timed URL:
 
 ```bash
 nano .env
 ```
 
 Required variables:
+- `FOUNDRY_RELEASE_URL`: Timed URL from Foundry license page (Node.js option)
+
+Optional fallback:
 - `FOUNDRY_USERNAME`: Your Foundry VTT username
 - `FOUNDRY_PASSWORD`: Your Foundry VTT password
 
@@ -49,7 +53,13 @@ docker compose --profile ngrok up -d
 
 **With backup restoration from secondary laptop:**
 ```bash
-./deploy-setup.sh  # Follow prompts to configure backup source
+# Pull full FoundryVTT data manually from your secondary laptop
+rsync -avz --progress -e "ssh -i ~/.ssh/id_rsa" user@remote-host:~/.local/share/FoundryVTT/ ~/.local/share/FoundryVTT/
+
+# Ensure compose uses the mirrored Backups directory
+# In .env, set:
+# FOUNDRY_BACKUPS_PATH=~/.local/share/FoundryVTT/Backups
+
 docker compose up -d
 # Then restore via FoundryVTT UI: Setup → Manage Backups
 ```
@@ -70,8 +80,8 @@ All FoundryVTT data is stored in `./data` on your host:
 When you make changes in FoundryVTT UI, they're immediately written to `./data`.
 
 #### Backup Restoration (Multi-Host)
-Pull backups from your secondary laptop during setup:
-- ✅ One-time SCP pull (no continuous sync overhead)
+Pull full FoundryVTT data from your secondary laptop during setup:
+- ✅ Idempotent rsync sync (new/changed files only)
 - ✅ Changes made in container persist on host
 - ✅ Restored data available via FoundryVTT UI
 
@@ -109,17 +119,19 @@ docker compose logs ngrok | grep URL
 
 ### 💾 Backup Restoration from Secondary Laptop
 
-Restore FoundryVTT backups from another laptop via SCP. Simple, bandwidth-efficient, and secure.
+Mirror full FoundryVTT user data from another laptop via rsync over SSH. Simple, bandwidth-efficient, and secure.
 
 #### Quick Start
 
 ```bash
-# Run interactive setup
-./deploy-setup.sh
+# Create local FoundryVTT data directory
+mkdir -p ~/.local/share/FoundryVTT
 
-# When prompted, answer yes to backup restoration
-# Provide remote host, backup path, and SSH key
-# Backups are automatically pulled to ./data/Backups/
+# Mirror data from remote host
+rsync -avz --progress -e "ssh -i ~/.ssh/id_rsa" user@remote-host:~/.local/share/FoundryVTT/ ~/.local/share/FoundryVTT/
+
+# In .env, set:
+# FOUNDRY_BACKUPS_PATH=~/.local/share/FoundryVTT/Backups
 
 # Start container
 docker compose up -d
@@ -150,11 +162,14 @@ See **[BACKUP_RESTORE.md](./BACKUP_RESTORE.md)** for:
 If backups weren't pulled during setup:
 
 ```bash
-# Create Backups directory
-mkdir -p data/Backups
+# Create local FoundryVTT data directory
+mkdir -p ~/.local/share/FoundryVTT
 
-# Pull from remote host via SCP
-scp -i ~/.ssh/id_rsa -r user@remote-host:~/.local/share/FoundryVTT/Backups/* data/Backups/
+# Sync full FoundryVTT data via rsync
+rsync -avz --progress -e "ssh -i ~/.ssh/id_rsa" user@remote-host:~/.local/share/FoundryVTT/ ~/.local/share/FoundryVTT/
+
+# In .env, set:
+# FOUNDRY_BACKUPS_PATH=~/.local/share/FoundryVTT/Backups
 ```
 
 #### Backup Restoration Steps
@@ -211,15 +226,17 @@ docker compose exec foundry nvidia-smi
 ## Environment Variables Reference
 
 ```bash
-# Credentials
-FOUNDRY_USERNAME=your_username
-FOUNDRY_PASSWORD=your_password
-FOUNDRY_RELEASE_URL=  # Optional: pre-signed URL
+# Preferred download method
+FOUNDRY_RELEASE_URL=https://your-timed-url-here
+
+# Optional fallback credentials
+FOUNDRY_USERNAME=
+FOUNDRY_PASSWORD=
 
 # Container
 FOUNDRY_ADMIN_KEY=atropos
 FOUNDRY_VERSION=14.363
-FOUNDRY_TELEMETRY=true
+FOUNDRY_TELEMETRY=false
 FOUNDRY_PORT=30000
 
 # ngrok
@@ -264,7 +281,7 @@ docker compose exec file-sync /root/entrypoint.sh
 
 ### FoundryVTT won't start
 - Check logs: `docker compose logs foundry`
-- Verify credentials in `.env`
+- Verify `FOUNDRY_RELEASE_URL` in `.env` (or valid fallback credentials)
 - Ensure port 30000 is not in use
 
 ### ngrok not connecting
