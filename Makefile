@@ -1,5 +1,5 @@
 CONTAINER_VERSION := $(shell tr -d '[:space:]' < src/version.txt)
-FOUNDRY_VERSION := $(shell echo "$(CONTAINER_VERSION)" | rev | cut -d. -f2- | rev)
+FOUNDRY_VERSION := $(shell echo "$(CONTAINER_VERSION)" | cut -d- -f1 | cut -d+ -f1 | cut -d. -f1-2)
 
 # Container image repository.
 IMAGE := ghcr.io/felddy/foundryvtt
@@ -12,15 +12,13 @@ guard-version:
 
 ## README.md: render the documentation from its template using the version.
 README.md: README.md.j2 src/version.txt guard-version
-	uv run render-docs README.md.j2 README.md $(CONTAINER_VERSION)
-
+	uv run --group dev render-docs README.md.j2 README.md $(CONTAINER_VERSION)
 ## build: build the container image tagged with the CONTAINER_VERSION.
 build: guard-version
 	docker buildx build --build-arg CONTAINER_VERSION=$(CONTAINER_VERSION) --build-arg FOUNDRY_VERSION=$(FOUNDRY_VERSION) --load --tag $(IMAGE):$(CONTAINER_VERSION) .
 
-## test: run the test suite.
 test:
-	uv run pytest tests/
+	uv run --group dev pytest tests/
 
 ## version: print the derived CONTAINER_VERSION and FOUNDRY_VERSION.
 version: guard-version

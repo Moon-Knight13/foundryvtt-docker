@@ -358,6 +358,8 @@ Build the image locally using this git repository as the [build context](https:/
 
 ```console
 docker build \
+  --build-arg CONTAINER_VERSION={{ container_version }} \
+  --build-arg FOUNDRY_VERSION={{ foundry_version }} \
   --tag ghcr.io/felddy/foundryvtt:{{ container_version }} \
   https://github.com/felddy/foundryvtt-docker.git#develop
 ```
@@ -379,10 +381,12 @@ Docker:
 1. Build the image using `buildx`:
 
     ```console
-    docker buildx build \
-      --platform linux/amd64 \
-      --output type=docker \
-      --tag ghcr.io/felddy/foundryvtt:{{ container_version }} .
+docker buildx build \
+  --platform linux/amd64 \
+  --build-arg CONTAINER_VERSION={{ container_version }} \
+  --build-arg FOUNDRY_VERSION={{ foundry_version }} \
+  --output type=docker \
+  --tag ghcr.io/felddy/foundryvtt:{{ container_version }} .
     ```
 
 ## Pre-installed distribution builds ##
@@ -401,6 +405,8 @@ build-time instead of start-time.
 
 ```console
 docker build \
+  --build-arg CONTAINER_VERSION={{ container_version }} \
+  --build-arg FOUNDRY_VERSION={{ foundry_version }} \
   --secret id=foundry_username,src=<(echo "<your_username>") \
   --secret id=foundry_password,src=<(echo "<your_password>") \
   --tag ghcr.io/felddy/foundryvtt:{{ container_version }} \
@@ -413,11 +419,13 @@ docker build \
 > and password and pass them as build secrets using the following syntax:
 >
 > ```console
-> docker build \
->   --secret id=foundry_username,src=<(jq -r '.foundry_username' path/to/credentials.json) \
->   --secret id=foundry_password,src=<(jq -r '.foundry_password' path/to/credentials.json) \
->   --tag ghcr.io/felddy/foundryvtt:{{ container_version }} \
->   https://github.com/felddy/foundryvtt-docker.git#develop
+docker build \
+  --build-arg CONTAINER_VERSION={{ container_version }} \
+  --build-arg FOUNDRY_VERSION={{ foundry_version }} \
+  --secret id=foundry_username,src=<(jq -r '.foundry_username' path/to/credentials.json) \
+  --secret id=foundry_password,src=<(jq -r '.foundry_password' path/to/credentials.json) \
+  --tag ghcr.io/felddy/foundryvtt:{{ container_version }} \
+  https://github.com/felddy/foundryvtt-docker.git#develop
 > ```
 
 More information about Docker build secrets can be found in the [Docker
@@ -427,6 +435,8 @@ documentation](https://docs.docker.com/build/building/secrets/).
 
 ```console
 docker build \
+  --build-arg CONTAINER_VERSION={{ container_version }} \
+  --build-arg FOUNDRY_VERSION={{ foundry_version }} \
   --build-arg FOUNDRY_RELEASE_URL='<temporary_url>' \
   --tag ghcr.io/felddy/foundryvtt:{{ container_version }} \
   https://github.com/felddy/foundryvtt-docker.git#develop

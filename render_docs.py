@@ -31,12 +31,22 @@ def main() -> None:
         trim_blocks=True,
         undefined=StrictUndefined,
     )
+    version_core = container_version.split("+", 1)[0].split("-", 1)[0]
+    parts = version_core.split(".")
+    if len(parts) < 3:
+        print(
+            f"ERROR: container_version must be semver (x.y.z); got {container_version!r}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    major, minor, _patch = parts[:3]
     rendered = env.get_template(template_path.name).render(
         container_version=container_version,
-        foundry_version=container_version.rsplit(".", 1)[0],
-        major_version=container_version.split(".")[0],
+        foundry_version=f"{major}.{minor}",
+        major_version=major,
     )
-    Path(output).write_text(rendered)
+    Path(output).write_text(rendered, encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

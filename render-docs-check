@@ -15,16 +15,20 @@ COMMITTED="README.md"
 
 # Create a temporary file for the rendered output and ensure it is always
 # cleaned up, regardless of how the script exits (success, diff, or failure).
-tmpfile=$(mktemp)
+tmpfile=$(mktemp -t render-docs-check.XXXXXX)
 trap 'rm -f "$tmpfile"' EXIT INT TERM
 
 # Derive CONTAINER_VERSION from the single source of truth (whitespace trimmed).
 CONTAINER_VERSION=$(tr -d '[:space:]' < "$VERSION_FILE")
+if [ -z "$CONTAINER_VERSION" ]; then
+  echo "ERROR: ${VERSION_FILE} is missing or empty." >&2
+  exit 1
+fi
 
 # Render the template to the temp file.  On any render failure (missing or
 # unparseable template, non-zero render-docs exit) report and abort without
 # touching the committed README.md.
-if ! uv run render-docs "$TEMPLATE" "$tmpfile" "$CONTAINER_VERSION"; then
+if ! uv run --group dev render-docs "$TEMPLATE" "$tmpfile" "$CONTAINER_VERSION"; then
   echo "ERROR: render-docs failed to render ${TEMPLATE}; ${COMMITTED} left unmodified." >&2
   exit 1
 fi

@@ -19,7 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Topic :: Games/Entertainment :: Role-Playing",
 ]
-dependencies = []
+dependencies = ["jinja2>=3.1"]
 description = "FoundryVTT Docker Python library"
 dynamic = ["version"]
 keywords = ["foundryvtt", "virtual tabletop"]
