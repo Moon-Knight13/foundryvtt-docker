@@ -381,12 +381,12 @@ Docker:
 1. Build the image using `buildx`:
 
     ```console
-docker buildx build \
-  --platform linux/amd64 \
-  --build-arg CONTAINER_VERSION={{ container_version }} \
-  --build-arg FOUNDRY_VERSION={{ foundry_version }} \
-  --output type=docker \
-  --tag ghcr.io/felddy/foundryvtt:{{ container_version }} .
+    docker buildx build \
+      --platform linux/amd64 \
+      --build-arg CONTAINER_VERSION={{ container_version }} \
+      --build-arg FOUNDRY_VERSION={{ foundry_version }} \
+      --output type=docker \
+      --tag ghcr.io/felddy/foundryvtt:{{ container_version }} .
     ```
 
 ## Pre-installed distribution builds ##

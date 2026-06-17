@@ -358,6 +358,8 @@ Build the image locally using this git repository as the [build context](https:/
 
 ```console
 docker build \
+  --build-arg CONTAINER_VERSION=14.363.0 \
+  --build-arg FOUNDRY_VERSION=14.363 \
   --tag ghcr.io/felddy/foundryvtt:14.363.0 \
   https://github.com/felddy/foundryvtt-docker.git#develop
 ```
@@ -381,6 +383,8 @@ Docker:
     ```console
     docker buildx build \
       --platform linux/amd64 \
+      --build-arg CONTAINER_VERSION=14.363.0 \
+      --build-arg FOUNDRY_VERSION=14.363 \
       --output type=docker \
       --tag ghcr.io/felddy/foundryvtt:14.363.0 .
     ```
@@ -401,6 +405,8 @@ build-time instead of start-time.
 
 ```console
 docker build \
+  --build-arg CONTAINER_VERSION=14.363.0 \
+  --build-arg FOUNDRY_VERSION=14.363 \
   --secret id=foundry_username,src=<(echo "<your_username>") \
   --secret id=foundry_password,src=<(echo "<your_password>") \
   --tag ghcr.io/felddy/foundryvtt:14.363.0 \
@@ -414,6 +420,8 @@ docker build \
 >
 > ```console
 > docker build \
+>   --build-arg CONTAINER_VERSION=14.363.0 \
+>   --build-arg FOUNDRY_VERSION=14.363 \
 >   --secret id=foundry_username,src=<(jq -r '.foundry_username' path/to/credentials.json) \
 >   --secret id=foundry_password,src=<(jq -r '.foundry_password' path/to/credentials.json) \
 >   --tag ghcr.io/felddy/foundryvtt:14.363.0 \
@@ -427,6 +435,8 @@ documentation](https://docs.docker.com/build/building/secrets/).
 
 ```console
 docker build \
+  --build-arg CONTAINER_VERSION=14.363.0 \
+  --build-arg FOUNDRY_VERSION=14.363 \
   --build-arg FOUNDRY_RELEASE_URL='<temporary_url>' \
   --tag ghcr.io/felddy/foundryvtt:14.363.0 \
   https://github.com/felddy/foundryvtt-docker.git#develop
