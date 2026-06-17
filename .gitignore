@@ -5,6 +5,21 @@
 ## DirEnv ##
 .envrc
 
+## Environment & Secrets (NEVER commit!) ##
+.env
+.env.*
+!.env.example
+.env.local
+.env.*.local
+
+## Credentials & API Keys ##
+cookiejar.json
+license.json
+*.key
+*.pem
+*.cert
+secret.txt
+
 ## FoundryVTT ##
 cookiejar.json
 license.json

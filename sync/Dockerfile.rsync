@@ -1,0 +1,11 @@
+# rsync-based file sync service for FoundryVTT data
+FROM alpine:latest
+
+RUN apk add --no-cache rsync openssh-client
+
+WORKDIR /root
+
+COPY sync/sync-entrypoint.sh /root/entrypoint.sh
+RUN chmod +x /root/entrypoint.sh
+
+ENTRYPOINT ["/root/entrypoint.sh"]

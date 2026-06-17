@@ -1,0 +1,27 @@
+# Syncthing ignore patterns
+# These files won't be synced, saving bandwidth
+
+# FoundryVTT temporary files
+*.tmp
+*.temp
+*.lock
+.DS_Store
+Thumbs.db
+
+# Cache directories (can be large, recreated on demand)
+**/node_modules/
+**/.cache/
+**/cache/
+**/__pycache__/
+
+# Browser data
+**/.vscode/
+*.log
+
+# Temporary session files (safe to ignore)
+foundryvtt-*.session
+
+# Database locks
+*.db-journal
+*.db-wal
+*.db-shm

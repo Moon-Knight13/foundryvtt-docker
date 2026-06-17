@@ -1,0 +1,57 @@
+# Docker Compose override template for advanced configurations
+# Copy to docker-compose.override.yml to customize behavior
+# This file is NOT tracked by git to allow local customizations
+
+services:
+  foundry:
+    # Uncomment for GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    
+    # Resource limits (recommended for production)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2'
+    #       memory: 4G
+    #     reservations:
+    #       cpus: '1'
+    #       memory: 2G
+    
+    # Additional environment variables for tuning
+    # environment:
+    #   - FOUNDRY_COMPRESS_WEBSOCKET=true
+    #   - FOUNDRY_MINIFY_STATIC_FILES=true
+    #   - FOUNDRY_HOT_RELOAD=false
+    
+    # Additional volumes (e.g., SSL certificates)
+    # volumes:
+    #   - ./certs:/data/certs:ro
+    #   - ./modules:/data/modules:ro
+
+  # Example: Watchtower for automatic container updates
+  # watchtower:
+  #   image: containrrr/watchtower
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   command: foundry --interval 86400  # Check daily
+  #   restart: unless-stopped
+
+  # Example: Backup service
+  # backup:
+  #   image: alpine:latest
+  #   volumes:
+  #     - ./data:/data:ro
+  #     - ./backups:/backups
+  #   entrypoint: |
+  #     sh -c "
+  #     apk add tar
+  #     tar -czf /backups/foundry-backup-\$(date +%Y%m%d-%H%M%S).tar.gz /data
+  #     find /backups -name '*.tar.gz' -mtime +7 -delete
+  #     "
+  #   restart: unless-stopped
