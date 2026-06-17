@@ -407,6 +407,7 @@ name = "foundryvtt-docker"
 source = { editable = "." }
 dependencies = [
     { name = "jinja2" },
+    { name = "semver" },
 ]
 
 [package.dev-dependencies]
@@ -436,7 +437,10 @@ test = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "jinja2", specifier = ">=3.1" }]
+requires-dist = [
+    { name = "jinja2", specifier = ">=3.1" },
+    { name = "semver", specifier = ">=3" },
+]
 
 [package.metadata.requires-dev]
 dev = [
