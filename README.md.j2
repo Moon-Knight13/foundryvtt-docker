@@ -419,13 +419,13 @@ docker build \
 > and password and pass them as build secrets using the following syntax:
 >
 > ```console
-docker build \
-  --build-arg CONTAINER_VERSION={{ container_version }} \
-  --build-arg FOUNDRY_VERSION={{ foundry_version }} \
-  --secret id=foundry_username,src=<(jq -r '.foundry_username' path/to/credentials.json) \
-  --secret id=foundry_password,src=<(jq -r '.foundry_password' path/to/credentials.json) \
-  --tag ghcr.io/felddy/foundryvtt:{{ container_version }} \
-  https://github.com/felddy/foundryvtt-docker.git#develop
+> docker build \
+>   --build-arg CONTAINER_VERSION={{ container_version }} \
+>   --build-arg FOUNDRY_VERSION={{ foundry_version }} \
+>   --secret id=foundry_username,src=<(jq -r '.foundry_username' path/to/credentials.json) \
+>   --secret id=foundry_password,src=<(jq -r '.foundry_password' path/to/credentials.json) \
+>   --tag ghcr.io/felddy/foundryvtt:{{ container_version }} \
+>   https://github.com/felddy/foundryvtt-docker.git#develop
 > ```
 
 More information about Docker build secrets can be found in the [Docker
