@@ -48,6 +48,14 @@ test = [
 ]
 dev = ["ipython", "jinja2>=3.1", "mypy", "semver", { include-group = "test" }]
 
+[tool.pytest.ini_options]
+addopts = "--capture=no --color=yes --runslow --verbose -rA"
+log_cli = true
+log_cli_level = "INFO"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+
 [tool.setuptools]
 py-modules = ["render_docs"]
 

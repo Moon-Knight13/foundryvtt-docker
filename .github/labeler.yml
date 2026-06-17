@@ -78,7 +78,7 @@
           - .mdl_config.yaml
           - .yamllint
           - compose.yml
-          - pytest.ini
+          - conftest.py
           - tests/**
 
 "typescript :blue_book:":
