@@ -17,6 +17,9 @@ services:
       - type: bind
         source: ${FOUNDRY_DATA_PATH:-./data}
         target: /data
+      - type: bind
+        source: ${FOUNDRY_BACKUPS_PATH:-./data/Backups}
+        target: /data/Backups
     
     environment:
       # Credentials (from .env file)
@@ -64,28 +67,3 @@ services:
       - "4040:4040"
     depends_on:
       - foundry
-  
-  # Optional: bidirectional file sync service (Syncthing)
-  # Syncthing only syncs changed blocks - no full rewrites of unchanged files
-  syncthing:
-    image: syncthing/syncthing:latest
-    profiles: ["sync"]
-    volumes:
-      - ${FOUNDRY_DATA_PATH:-./data}:/var/syncthing/Sync
-      - syncthing-config:/var/syncthing/config
-      - ./sync/.stignore:/var/syncthing/Sync/.stignore:ro
-    environment:
-      - STGUIAPIKEY=${SYNCTHING_API_KEY}
-      - STNORESTART=1
-      - STGUIADDRESS=0.0.0.0:8384
-    ports:
-      - "8384:8384"    # Web UI
-      - "22000:22000/tcp"   # Sync protocol (TCP)
-      - "22000:22000/udp"   # Sync protocol (UDP)
-      - "21027:21027/udp"   # Discovery
-    restart: unless-stopped
-    depends_on:
-      - foundry
-
-volumes:
-  syncthing-config:

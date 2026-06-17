@@ -74,17 +74,32 @@ if [ ! -f .env ]; then
     
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "📁 Optional: File Sync"
+    echo "💾 Optional: Restore from Remote Backups"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "Sync FoundryVTT data from another laptop via rsync"
+    echo "Restore FoundryVTT backups from another laptop via SCP"
+    echo "Requires SSH key-based authentication setup"
     echo ""
     
-    read -p "Do you want to enable file sync? (y/n) [default: n]: " -r enable_sync
-    enable_sync=${enable_sync:-n}
+    read -p "Do you want to restore backups from a remote host? (y/n) [default: n]: " -r enable_backup_restore
+    enable_backup_restore=${enable_backup_restore:-n}
     
-    if [[ $enable_sync =~ ^[Yy]$ ]]; then
-        prompt_env "SYNC_SOURCE_DIR" "Remote source (<user>@<host>:/path)" false
-        prompt_env "SYNC_INTERVAL" "Sync interval in seconds" false "300"
+    if [[ $enable_backup_restore =~ ^[Yy]$ ]]; then
+        prompt_env "BACKUP_REMOTE_HOST" "Remote host (<user>@<host>)" false
+        prompt_env "BACKUP_REMOTE_PATH" "Remote backup path (default: ~/.local/share/FoundryVTT/Backups)" false "$HOME/.local/share/FoundryVTT/Backups"
+        prompt_env "BACKUP_SSH_KEY" "SSH key path (default: ~/.ssh/id_rsa)" false "$HOME/.ssh/id_rsa"
+        echo ""
+        echo "📥 Pulling backups from remote host..."
+        backup_host=$(grep "^BACKUP_REMOTE_HOST=" .env | cut -d= -f2)
+        backup_path=$(grep "^BACKUP_REMOTE_PATH=" .env | cut -d= -f2)
+        backup_key=$(grep "^BACKUP_SSH_KEY=" .env | cut -d= -f2)
+        
+        mkdir -p data/Backups
+        
+        if scp -i "$backup_key" -r "$backup_host:$backup_path/" data/Backups/ 2>/dev/null; then
+            echo "✅ Backups downloaded successfully"
+        else
+            echo "⚠️  Could not download backups. Verify SSH key and host are configured."
+        fi
     fi
     
     echo ""
@@ -153,9 +168,11 @@ if grep -q "NGROK_AUTH_TOKEN=" .env && ! grep -q "^NGROK_AUTH_TOKEN=$" .env; the
     echo ""
 fi
 
-if grep -q "SYNC_SOURCE_DIR=" .env && ! grep -q "^SYNC_SOURCE_DIR=$" .env; then
-    echo "2. Enable automatic file sync:"
-    echo "   docker compose --profile sync up -d"
+if grep -q "BACKUP_REMOTE_HOST=" .env && ! grep -q "^BACKUP_REMOTE_HOST=$" .env; then
+    echo "2. Restore backups inside container:"
+    echo "   docker compose up -d"
+    echo "   docker compose exec foundry /bin/bash"
+    echo "   # In the container, use FoundryVTT UI to restore from ~/data/Backups"
     echo ""
 fi
 

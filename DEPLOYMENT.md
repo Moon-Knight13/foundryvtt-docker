@@ -3,7 +3,7 @@
 This guide walks you through deploying FoundryVTT via Docker with support for:
 - ✅ Secure credential management (no secrets in repo)
 - ✅ Remote access via ngrok
-- ✅ User file synchronization from secondary laptops
+- ✅ Backup restoration from secondary laptops
 - ✅ GPU acceleration support
 
 ## Quick Start
@@ -47,14 +47,16 @@ docker compose up -d
 docker compose --profile ngrok up -d
 ```
 
-**With file sync from secondary laptop:**
+**With backup restoration from secondary laptop:**
 ```bash
-SYNC_SOURCE_DIR=<remote-user>@<remote-host>:/path/to/data docker compose --profile sync up -d
+./deploy-setup.sh  # Follow prompts to configure backup source
+docker compose up -d
+# Then restore via FoundryVTT UI: Setup → Manage Backups
 ```
 
 ## Features & Configuration
 
-### 📊 Data Persistence & Synchronization
+### 📊 Data Persistence
 
 **Important**: Understanding how your data persists across deployments.
 
@@ -67,15 +69,16 @@ All FoundryVTT data is stored in `./data` on your host:
 
 When you make changes in FoundryVTT UI, they're immediately written to `./data`.
 
-#### File Sync (Multi-Host)
-The current sync service uses one-way rsync (laptop → host):
-- ⚠️ Changes made on the host DO NOT sync back to your laptop
-- ⚠️ The `--delete` flag means host-only changes will be removed on next sync!
+#### Backup Restoration (Multi-Host)
+Pull backups from your secondary laptop during setup:
+- ✅ One-time SCP pull (no continuous sync overhead)
+- ✅ Changes made in container persist on host
+- ✅ Restored data available via FoundryVTT UI
 
-**Recommendation**: See [DATA_PERSISTENCE.md](./DATA_PERSISTENCE.md) for:
-- 3 recommended sync strategies
-- How to test persistence
-- Bidirectional sync setup with Syncthing
+**Quick start**: See [DATA_PERSISTENCE.md](./DATA_PERSISTENCE.md) for:
+- Data persistence explanation
+- Backup restoration procedures
+- Testing data persistence
 
 ### 🌐 Remote Access via ngrok
 
@@ -104,67 +107,63 @@ docker compose logs ngrok | grep URL
 # Or visit http://localhost:4040 for the ngrok dashboard
 ```
 
-### 📁 File Synchronization (Syncthing - Bidirectional)
+### 💾 Backup Restoration from Secondary Laptop
 
-Syncthing provides **bidirectional**, **bandwidth-efficient** synchronization. Only changed blocks transfer - unchanged files use zero bandwidth.
+Restore FoundryVTT backups from another laptop via SCP. Simple, bandwidth-efficient, and secure.
 
 #### Quick Start
 
 ```bash
-# Generate API key
-SYNCTHING_API_KEY=$(openssl rand -hex 16)
+# Run interactive setup
+./deploy-setup.sh
 
-# Start Syncthing
-docker compose --profile sync up -d
+# When prompted, answer yes to backup restoration
+# Provide remote host, backup path, and SSH key
+# Backups are automatically pulled to ./data/Backups/
 
-# Open Web UI
-# http://localhost:8384
+# Start container
+docker compose up -d
+
+# Restore in FoundryVTT UI
+# Setup → Manage Backups → Restore
 ```
 
 #### Key Features
 
-- ✅ **Bidirectional**: Changes sync both ways
-- ✅ **Bandwidth-efficient**: Only changed blocks transfer
-- ✅ **Instant**: Real-time syncing (not periodic)
-- ✅ **Conflict-safe**: Both versions saved if conflict
-- ✅ **Web UI**: Easy management at http://localhost:8384
+- ✅ **Simple**: SSH key-based SCP pull
+- ✅ **Bandwidth-efficient**: One-time transfer during setup
+- ✅ **Secure**: Uses SSH authentication only
+- ✅ **Flexible**: Restore multiple backups or full snapshots
+- ✅ **No overhead**: No continuous sync running
 
 #### Full Setup Guide
 
-See **[SYNCTHING_SETUP.md](./SYNCTHING_SETUP.md)** for:
-- Complete step-by-step setup
-- Adding secondary laptop
-- Bandwidth optimization tests
-- Conflict resolution
+See **[BACKUP_RESTORE.md](./BACKUP_RESTORE.md)** for:
+- SSH key configuration
+- Manual backup pulling
+- Step-by-step restoration
+- Backup structure explanation
 - Troubleshooting
 
-#### Quick Reference
+#### Manual Backup Pull
+
+If backups weren't pulled during setup:
 
 ```bash
-# Stop sync service
-docker compose --profile sync down
+# Create Backups directory
+mkdir -p data/Backups
 
-# View Syncthing logs
-docker compose logs -f syncthing
-
-# Restart sync
-docker compose restart syncthing
-
-# Get Syncthing status
-curl -s http://localhost:8384/api/system/status | jq
+# Pull from remote host via SCP
+scp -i ~/.ssh/id_rsa -r user@remote-host:~/.local/share/FoundryVTT/Backups/* data/Backups/
 ```
 
-#### SSH Key Setup (for rsync service)
+#### Backup Restoration Steps
 
-For passwordless sync, set up SSH keys:
-
-```bash
-# On secondary laptop
-ssh-keygen -t ed25519 -f ~/.ssh/foundry_sync
-
-# Copy public key to hosting PC
-ssh-copy-id -i ~/.ssh/foundry_sync.pub <remote-user>@<remote-host>
-```
+1. Backups are available at `/data/Backups` in the container
+2. Use FoundryVTT **Setup** → **Manage Backups** to restore
+3. Select backup type (World, System, Module, or Snapshot)
+4. Click **Restore Latest** or select a specific backup to restore
+5. Wait for restoration to complete (may take several minutes)
 
 ### 🎮 GPU Support
 

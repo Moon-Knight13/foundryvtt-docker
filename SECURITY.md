@@ -7,7 +7,7 @@ This document explains how your sensitive data is protected.
 Your local `.env` file contains:
 - FoundryVTT username/password
 - ngrok auth tokens
-- Syncthing API keys
+- SSH key paths for backup restoration
 - Any other credentials
 
 ### Protection Layers
@@ -83,7 +83,7 @@ nano .env  # add your credentials
 # Revoke the exposed credential
 # - ngrok: https://dashboard.ngrok.com/security
 # - FoundryVTT: Update password at foundry website
-# - Syncthing: Generate new API key
+# - SSH keys: Revoke/regenerate if needed
 
 # Update your .env with new values
 nano .env
@@ -139,11 +139,11 @@ Expected response:
 - Every 90 days: Generate new API keys
 - Immediately if exposed: Revoke old, generate new
 
-### Use SSH Keys for Syncthing
+### Use SSH Keys for Backup Restoration
 ```bash
-# Instead of passwords, use SSH keys
-ssh-keygen -t ed25519 -f ~/.ssh/syncthing
-# Safer than storing passwords in .env
+# For secure backup restoration, use SSH keys
+ssh-keygen -t ed25519 -f ~/.ssh/foundry_backup
+# More secure than storing passwords
 ```
 
 ## 📖 Related Files
