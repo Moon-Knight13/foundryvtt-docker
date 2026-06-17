@@ -74,6 +74,8 @@ ARG TARGETPLATFORM
 LABEL com.foundryvtt.version=${FOUNDRY_VERSION}
 LABEL org.opencontainers.image.authors="markf+github@geekpad.com"
 LABEL org.opencontainers.image.vendor="Geekpad"
+LABEL org.opencontainers.image.url="https://github.com/Moon-Knight13/foundryvtt-docker"
+LABEL org.opencontainers.image.documentation="https://github.com/Moon-Knight13/foundryvtt-docker/blob/main/DEPLOYMENT.md"
 
 ENV FOUNDRY_VERSION=${FOUNDRY_VERSION}
 ENV HOME=/home/node
