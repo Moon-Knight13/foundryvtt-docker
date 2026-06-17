@@ -1,78 +1,66 @@
-# File Synchronization
+# Backup Restoration
 
-This directory contains sync service configurations for FoundryVTT data.
+This directory is reserved for future sync/backup service configurations.
 
-## Current Implementation: Syncthing (Recommended)
+## Current Backup Approach: SCP-based Restore
 
-Syncthing provides **bidirectional**, **bandwidth-efficient** file synchronization.
+We use a simple, bandwidth-efficient backup restore approach:
 
-### Key Benefits
-
-- ✅ **Bidirectional**: Changes sync both ways (host ↔ laptop)
-- ✅ **Block-level sync**: Only changed blocks transfer
-- ✅ **Bandwidth efficient**: Unchanged files = 0 bytes transferred
-- ✅ **Real-time**: Instant sync on file changes
-- ✅ **Conflict resolution**: Both versions saved if conflict
-- ✅ **Web UI**: Easy management at http://localhost:8384
+- ✅ **Simple**: SSH key-based SCP pull
+- ✅ **Bandwidth efficient**: Only copy once during setup
+- ✅ **Secure**: No continuous network sync overhead
+- ✅ **Flexible**: Restore multiple backups or snapshots
 
 ### Quick Start
 
 ```bash
-# Generate API key
-SYNCTHING_API_KEY=$(openssl rand -hex 16)
+# Run interactive setup
+./deploy-setup.sh
 
-# Start Syncthing service
-docker compose --profile sync up -d
+# Follow prompts to configure backup source
+# Backups are automatically pulled to ./data/Backups/
 
-# Access Web UI
-# http://localhost:8384
+# Start container
+docker compose up -d
+
+# Restore in FoundryVTT UI
+# Setup → Manage Backups → Restore
 ```
 
-### Full Setup
+### Full Setup Guide
 
-See [../SYNCTHING_SETUP.md](../SYNCTHING_SETUP.md) for complete guide:
-- Step-by-step setup
-- Adding secondary laptop
-- Bandwidth optimization tests
+See [../BACKUP_RESTORE.md](../BACKUP_RESTORE.md) for complete documentation:
+- SSH key configuration
+- Backup structure explanation
+- Restoration procedures
 - Troubleshooting
-- Conflict resolution
 
-## Legacy: rsync (Deprecated)
-
-The old `Dockerfile.rsync` and sync scripts are deprecated. Use Syncthing instead for better performance and bidirectional sync.
-
-If you need one-way sync for specific use cases:
-```bash
-./sync-user-files.sh <remote-user>@<remote-host>:/path/to/data
-```
-
-## Architecture
+### Architecture
 
 ```
-Host PC                    Secondary Laptop
-├─ FoundryVTT             ├─ Syncthing
-├─ ./data                 ├─ ~/foundry-data
-└─ Syncthing              └─ Syncing...
-   ↔────────────────────────↔
+Remote Laptop                Host PC (Docker)
+├─ ~/.local/share/          ├─ FoundryVTT Container
+│  FoundryVTT/Backups/       ├─ ./data/Backups/
+└─ (via SSH)                 └─ (via SCP pull)
+   ←─── One-time pull
 ```
 
-**Key**: Only changed blocks transfer. Unchanged files never retransmit!
+**Key**: SCP pull only transfers backup files once. Use FoundryVTT UI to restore.
 
 ## Configuration
 
-See `.env.example` for Syncthing settings:
+See `.env.example` for backup settings:
 ```bash
-SYNC_METHOD=syncthing
-SYNCTHING_API_KEY=<generated-key>
+BACKUP_REMOTE_HOST=user@hostname
+BACKUP_REMOTE_PATH=~/.local/share/FoundryVTT/Backups
+BACKUP_SSH_KEY=~/.ssh/id_rsa
+FOUNDRY_BACKUPS_PATH=./data/Backups
 ```
 
 ## Files in This Directory
 
-- `README.md` - This file
-- `.stignore` - Files excluded from sync (temp, cache, logs)
-- `Dockerfile.rsync` - Legacy rsync service (deprecated)
-- `sync-entrypoint.sh` - Legacy rsync script (deprecated)
+- `README.md` - This file (sync/backup overview)
 
 ## Support
 
-For issues or setup help, see [../SYNCTHING_SETUP.md](../SYNCTHING_SETUP.md)
+For setup help and troubleshooting, see [../BACKUP_RESTORE.md](../BACKUP_RESTORE.md)
