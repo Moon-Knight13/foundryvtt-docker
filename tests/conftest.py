@@ -95,19 +95,6 @@ def redacted_printer():
     return RedactedPrinter(REDACTION_REGEXES)
 
 
-def pytest_addoption(parser):
-    """Add new commandline options to pytest."""
-    parser.addoption(
-        "--runslow", action="store_true", default=False, help="run slow tests"
-    )
-    parser.addoption(
-        "--image-tag",
-        action="store",
-        default="local/test-image:latest",
-        help="image tag to test",
-    )
-
-
 @pytest.fixture(scope="session")
 def image_tag(request):
     """Get the image tag to test."""
