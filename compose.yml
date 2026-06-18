@@ -15,11 +15,8 @@ services:
     
     volumes:
       - type: bind
-        source: ${FOUNDRY_DATA_PATH:-./data}
+        source: ${FOUNDRY_DATA_PATH:-${HOME}/.local/share/FoundryVTT}
         target: /data
-      - type: bind
-        source: ${FOUNDRY_BACKUPS_PATH:-./data/Backups}
-        target: /data/Backups
     
     environment:
       # Credentials (from .env file)
