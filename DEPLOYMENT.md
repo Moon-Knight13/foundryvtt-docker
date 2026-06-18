@@ -103,7 +103,9 @@ ngrok creates a public URL for secure remote access without port forwarding.
 # In .env, set:
 NGROK_ENABLED=true
 NGROK_AUTH_TOKEN=your_ngrok_auth_token_here
-NGROK_REGION=us  # us, eu, ap, au, sa, jp, in
+FOUNDRY_PROTOCOL=https
+FOUNDRY_PROXY_PORT=443
+# FOUNDRY_HOSTNAME=<your-ngrok-domain>
 ```
 
 #### Start with ngrok
@@ -113,7 +115,7 @@ docker compose --profile ngrok up -d
 
 #### Get your public URL
 ```bash
-docker compose logs ngrok | grep URL
+docker compose logs ngrok --tail=100
 # Or visit http://localhost:4040 for the ngrok dashboard
 ```
 
@@ -241,7 +243,9 @@ FOUNDRY_PORT=30000
 
 # ngrok
 NGROK_AUTH_TOKEN=your_token
-NGROK_REGION=us
+FOUNDRY_PROTOCOL=https
+FOUNDRY_PROXY_PORT=443
+# FOUNDRY_HOSTNAME=<your-ngrok-domain>
 
 # File Sync
 SYNC_SOURCE_DIR=user@host:/path
@@ -287,7 +291,7 @@ docker compose exec file-sync /root/entrypoint.sh
 ### ngrok not connecting
 - Verify NGROK_AUTH_TOKEN in `.env`
 - Check ngrok dashboard for errors: http://localhost:4040
-- Try different NGROK_REGION
+- Check ngrok logs: `docker compose logs ngrok --tail=100`
 
 ### File sync not working
 - Check SSH key permissions: `chmod 600 ~/.ssh/foundry_sync`

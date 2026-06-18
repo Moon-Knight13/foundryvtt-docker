@@ -32,6 +32,7 @@ services:
       # Hostname Configuration
       - FOUNDRY_HOSTNAME=${FOUNDRY_HOSTNAME:-}
       - FOUNDRY_LOCAL_HOSTNAME=${FOUNDRY_LOCAL_HOSTNAME:-}
+      - FOUNDRY_PROXY_PORT=${FOUNDRY_PROXY_PORT:-}
       
       # SSL/HTTPS (optional)
       - FOUNDRY_SSL_CERT=${FOUNDRY_SSL_CERT:-}
@@ -59,7 +60,6 @@ services:
     command:
       - "http"
       - "foundry:30000"
-      - "--region=${NGROK_REGION:-us}"
     ports:
       - "4040:4040"
     depends_on:
