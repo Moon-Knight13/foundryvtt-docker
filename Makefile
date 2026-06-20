@@ -4,7 +4,14 @@ FOUNDRY_VERSION := $(shell echo "$(CONTAINER_VERSION)" | cut -d- -f1 | cut -d+ -
 # Container image repository.
 IMAGE := ghcr.io/felddy/foundryvtt
 
-.PHONY: guard-version build test version github-output help release
+# GitHub repository and the directory of branch/tag rulesets managed as code.
+# Ruleset IDs are resolved at run time by name, so they are not hardcoded.
+# See .github/rulesets/README.md for what the JSON contains (and a decoder
+# for the GitHub App IDs it references).
+REPO := felddy/foundryvtt-docker
+RULESET_DIR := .github/rulesets
+
+.PHONY: guard-version guard-gh guard-jq build test version github-output help release apply-ruleset export-ruleset
 
 ## guard-version: fail loudly if the version source is missing or empty.
 guard-version:
@@ -31,10 +38,51 @@ github-output: guard-version
 	@echo "container_version=$(CONTAINER_VERSION)"
 	@echo "foundry_version=$(FOUNDRY_VERSION)"
 
+## guard-gh: fail loudly if the GitHub CLI is unavailable.
+guard-gh:
+	@command -v gh >/dev/null 2>&1 || { echo "ERROR: gh (GitHub CLI) is required" >&2; exit 1; }
+
+## guard-jq: fail loudly if jq is unavailable.
+guard-jq:
+	@command -v jq >/dev/null 2>&1 || { echo "ERROR: jq is required" >&2; exit 1; }
+
+## apply-ruleset: create or update every ruleset in RULESET_DIR (IDs resolved by name).
+apply-ruleset: guard-gh guard-jq
+	@test -n "$$(ls $(RULESET_DIR)/*.json 2>/dev/null)" || { echo "ERROR: no ruleset files in $(RULESET_DIR)" >&2; exit 1; }
+	@set -e; \
+	for f in $(RULESET_DIR)/*.json; do \
+	  name=$$(jq -r '.name' "$$f"); \
+	  id=$$(gh api "repos/$(REPO)/rulesets" --jq "[.[] | select(.name == \"$$name\") | .id][0] // empty"); \
+	  if [ -n "$$id" ]; then \
+	    echo "Updating ruleset '$$name' (id $$id) in $(REPO)"; \
+	    gh api --method PUT "repos/$(REPO)/rulesets/$$id" --input "$$f" >/dev/null; \
+	  else \
+	    echo "Creating ruleset '$$name' in $(REPO)"; \
+	    gh api --method POST "repos/$(REPO)/rulesets" --input "$$f" >/dev/null; \
+	  fi; \
+	done; \
+	echo "Done."
+
+## export-ruleset: overwrite each file in RULESET_DIR from its live ruleset.
+export-ruleset: guard-gh guard-jq
+	@test -n "$$(ls $(RULESET_DIR)/*.json 2>/dev/null)" || { echo "ERROR: no ruleset files in $(RULESET_DIR)" >&2; exit 1; }
+	@set -e; \
+	for f in $(RULESET_DIR)/*.json; do \
+	  name=$$(jq -r '.name' "$$f"); \
+	  id=$$(gh api "repos/$(REPO)/rulesets" --jq "[.[] | select(.name == \"$$name\") | .id][0] // empty"); \
+	  if [ -z "$$id" ]; then echo "ERROR: no ruleset named '$$name' in $(REPO)" >&2; exit 1; fi; \
+	  raw=$$(gh api "repos/$(REPO)/rulesets/$$id"); \
+	  printf '%s\n' "$$raw" | jq '{name, target, enforcement, conditions, bypass_actors, rules}' > "$$f.tmp"; \
+	  mv "$$f.tmp" "$$f"; \
+	  echo "Wrote $$f from ruleset '$$name' (id $$id)"; \
+	done
+
 ## help: list the developer-invocable targets.
 help:
 	@echo "Available targets:"
+	@echo "  apply-ruleset  Create/update the branch and tag protection rulesets (resolved by name)."
 	@echo "  build          Build the container image tagged with the CONTAINER_VERSION."
+	@echo "  export-ruleset Overwrite the ruleset JSON files from the live rulesets."
 	@echo "  github-output  Print key=value lines for CI."
 	@echo "  help           Show this help message."
 	@echo "  README.md      Render README.md from README.md.j2 using the version."
