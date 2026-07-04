@@ -104,8 +104,9 @@ updates:
     # and minor/patch bumps automatically, but defer major-version jumps (e.g. to
     # the next LTS, or to a short-lived "Current" release) to manual review.
     ignore:
-      - dependency-name: "node"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: node
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: devcontainers
     directory: /

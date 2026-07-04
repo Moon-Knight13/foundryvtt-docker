@@ -118,4 +118,17 @@ regexes = [
   '''example[_-]?token''',
   '''dummy[_-]?secret''',
   '''your[-_]?api[-_]?key''',
+  # Upstream felddy/foundryvtt-docker maintainer's public contact address,
+  # present throughout inherited history (package.json, pyproject.toml,
+  # Dockerfile, issue templates, CODE_OF_CONDUCT.md) — not leaked PII.
+  '''[a-zA-Z0-9._%+\-]+@geekpad\.com''',
+]
+# Exception to the no-global-paths note above: these directories existed only
+# in 2020-era upstream skeleton commits (postfix templates with placeholder
+# certs and example "secrets") and were deleted from the tree years ago. They
+# are unreachable except via the full-history scan, so disabling all rules for
+# them cannot mask a live secret.
+paths = [
+  '''^secrets/''',
+  '''^src/secrets/''',
 ]
