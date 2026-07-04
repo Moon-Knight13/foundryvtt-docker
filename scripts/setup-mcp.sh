@@ -76,10 +76,28 @@ if [ ! -f "$TMP_DIR/server/standalone-mcp-server/index.js" ]; then
   exit 1
 fi
 
+# v0.8.x standalone zips omit backend.bundle.cjs (upstream packaging bug):
+# index.js is only a stdio wrapper that spawns backend.bundle.cjs and proxies
+# tool calls to it over 127.0.0.1:31414. Without the backend the wrapper
+# retries for ~70s and Claude Code times out at 30s. Preserve a previously
+# installed backend across reinstalls, and refuse to finish without one.
+if [ -f mcp-server/backend.bundle.cjs ]; then
+  cp mcp-server/backend.bundle.cjs "$TMP_DIR/backend.bundle.cjs.keep"
+fi
 rm -rf mcp-server
 mkdir -p mcp-server
 cp -a "$TMP_DIR"/server/standalone-mcp-server/. mcp-server/
-echo "✅ MCP server installed to mcp-server/ ($(du -h mcp-server/index.js | cut -f1) index.js)"
+if [ ! -f mcp-server/backend.bundle.cjs ] && [ -f "$TMP_DIR/backend.bundle.cjs.keep" ]; then
+  cp "$TMP_DIR/backend.bundle.cjs.keep" mcp-server/backend.bundle.cjs
+  echo "ℹ️  Restored backend.bundle.cjs from the previous install (missing from the release zip)."
+fi
+if [ ! -f mcp-server/backend.bundle.cjs ]; then
+  echo "❌ backend.bundle.cjs is missing: the standalone zip ships only the stdio wrapper."
+  echo "   Extract foundry-mcp-server/packages/mcp-server/dist/backend.bundle.cjs from the"
+  echo "   FoundryMCPServer-Setup-v${MCP_VERSION}.exe release asset (7zz x Setup.exe) into mcp-server/."
+  exit 1
+fi
+echo "✅ MCP server installed to mcp-server/ ($(du -h mcp-server/index.js | cut -f1) index.js, $(du -h mcp-server/backend.bundle.cjs | cut -f1) backend)"
 
 if [ "$WITH_MODULE" = true ]; then
   DATA_PATH="$(get_env_value FOUNDRY_DATA_PATH)"

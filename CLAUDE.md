@@ -150,6 +150,12 @@ Requirements and gotchas:
   settings after adding compendia.
 - A stale `foundry-mcp-backend.lock` is auto-detected (PID + staleness
   checks); ports 31414–31416 must be free on the host.
+- **Upstream packaging bug (v0.8.x)**: the standalone server zip ships only
+  the stdio wrapper (`index.js`); the real backend (`backend.bundle.cjs`)
+  exists only inside the .exe/.dmg installer assets. Without it the wrapper
+  spends ~70s retrying 127.0.0.1:31414 and Claude Code's 30s MCP handshake
+  times out. `setup-mcp.sh` preserves an installed backend across re-runs
+  and fails loudly if it is absent (extraction instructions in its error).
 - **Version drift**: the manifest URL installs the *latest* module release.
   When the module moves past 0.8.x, bump `MCP_VERSION` in
   `scripts/setup-mcp.sh` and re-run it so server and module stay in step.
