@@ -1,3 +1,6 @@
 # Placeholder Syncthing API key example in a deleted doc (SYNCTHING_SETUP.md,
 # removed when Syncthing was replaced by SCP backup in 12a4664). Fake value.
+# Same fake value appears in two commits touching the file; both fingerprints
+# are listed so a full-history scan is clean.
 d32a97998c6da4c5551865e03566bfbeb2cda94e:SYNCTHING_SETUP.md:generic-api-key:291
+08a84e42f48e6f3b669fcc0ed04dec9ce66490f0:SYNCTHING_SETUP.md:generic-api-key:291
