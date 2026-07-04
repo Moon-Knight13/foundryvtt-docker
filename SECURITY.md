@@ -166,3 +166,22 @@ ssh-keygen -t ed25519 -f ~/.ssh/foundry_backup
 ---
 
 **Your credentials are your responsibility.** Follow these guidelines to keep them safe!
+
+## 🔥 Secret Leak Response (from template foundation)
+
+If a credential ever lands in a commit:
+
+1. Revoke and rotate the exposed credential immediately.
+2. Remove the secret from code and git history.
+3. Re-scan repository history with gitleaks.
+4. Re-run CI secret and semgrep checks.
+5. Document the incident and remediation in project notes.
+
+## 🛡️ Baseline Security Controls (from template foundation)
+
+- Pre-commit hooks with gitleaks and semgrep (see `.pre-commit-config.yaml`).
+- CI secret-scan and semgrep workflows (`.github/workflows/`).
+- Deny-by-default egress firewall in the devcontainer.
+- Branch-protection bootstrap script (`scripts/bootstrap-github-settings.sh`).
+
+See [docs/TEMPLATE_GUIDE.md](./docs/TEMPLATE_GUIDE.md) for the full security model.
