@@ -122,6 +122,13 @@ regexes = [
   # present throughout inherited history (package.json, pyproject.toml,
   # Dockerfile, issue templates, CODE_OF_CONDUCT.md) — not leaked PII.
   '''[a-zA-Z0-9._%+\-]+@geekpad\.com''',
+  # Pre-2021 upstream history: the repo began life as cisagov/foundryvtt-docker;
+  # CISA org/maintainer contact addresses appear in old Dockerfiles, setup.py
+  # and issue templates (mark.feldhousen@trio.dhs.gov, github@cisa.dhs.gov,
+  # vm-dev@gwe.cisa.dhs.gov, ...) — public government contacts, not leaked PII.
+  '''[a-zA-Z0-9._%+\-]+@([a-zA-Z0-9\-]+\.)*dhs\.gov''',
+  # Placeholder host in upstream docs/examples
+  '''user@host\.local''',
 ]
 # Exception to the no-global-paths note above: these directories existed only
 # in 2020-era upstream skeleton commits (postfix templates with placeholder

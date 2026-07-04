@@ -11,4 +11,6 @@ mcp-server
 scripts
 docs
 .claude
-.devcontainer
+# NOTE: .devcontainer must NOT be ignored — the container-scan workflow builds
+# .devcontainer/Dockerfile with the repo root as context and COPYs
+# .devcontainer/init-firewall.sh from it.
