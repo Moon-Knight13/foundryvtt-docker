@@ -21,11 +21,9 @@ CHANGED_FILES="${3:-1}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Safety gate FIRST — high-risk and inherently-complex work must never be
-# auto-driven by an agent, and this must hold regardless of the FORCE_LOCAL /
-# FORCE_CLAUDE overrides. route-model.sh evaluates those overrides *before* it
-# ever reaches its high_risk / complex_task branches, so its verdict cannot be
-# trusted to surface those reasons. We therefore re-derive the Human gate here,
-# independently, matching the CLAUDE.md hard-escalation triggers.
+# auto-driven by an agent. route-model.sh now ranks these triggers above
+# FORCE_LOCAL too, but the Human-vs-Claude distinction is board-only semantics,
+# so we derive it here, matching the CLAUDE.md hard-escalation triggers.
 if [[ "$RISK_LEVEL" == "high" ]] \
   || [[ "$TASK_TYPE" =~ ^(architecture|security|deep-debug|cross-cutting)$ ]]; then
   echo "Human"   # work an agent should not auto-drive

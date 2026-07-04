@@ -43,7 +43,8 @@ IFS=$'\n\t'
 #                              needed only by bot-approval automation)
 
 RULESET_NAME="${RULESET_NAME:-Main_Branch_Protections}"
-BRANCH="${BRANCH:-main}"
+# BRANCH defaults to the repo's default branch, resolved after gh auth below —
+# hardcoding 'main' made the guard self-defeating on repos defaulting elsewhere.
 REQUIRED_APPROVALS="${REQUIRED_APPROVALS:-1}"
 REQUIRE_CODEOWNERS="${REQUIRE_CODEOWNERS:-true}"
 DISMISS_STALE="${DISMISS_STALE:-true}"
@@ -74,6 +75,7 @@ OWNER_REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 OWNER="${OWNER_REPO%%/*}"
 REPO="${OWNER_REPO##*/}"
 DEFAULT_BRANCH="$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)"
+BRANCH="${BRANCH:-$DEFAULT_BRANCH}"
 
 if [[ "$REQUIRE_DEFAULT_BRANCH" == "true" && "$BRANCH" != "$DEFAULT_BRANCH" ]]; then
   echo "Refusing to target a non-default branch."
@@ -156,12 +158,28 @@ RULESET_PAYLOAD="$(jq -n \
     ]
   }')"
 
-EXISTING_ID="$(gh api "repos/$OWNER/$REPO/rulesets" --jq ".[] | select(.name==\"$RULESET_NAME\") | .id" 2>/dev/null | head -n1 || true)"
+# Rulesets are plan-gated: private repos on personal free plans get HTTP 403
+# ("Upgrade to GitHub Pro..."). Detect that up front — the error body must not
+# be mistaken for a ruleset id — and fall back to applying only the repo-level
+# settings that ARE available on every plan.
+RULESETS_PLAN_GATED=false
+EXISTING_ID=""
+if RULESETS_JSON="$(gh api "repos/$OWNER/$REPO/rulesets" 2>&1)"; then
+  EXISTING_ID="$(jq -r ".[] | select(.name==\"$RULESET_NAME\") | .id" <<<"$RULESETS_JSON" 2>/dev/null | head -n1)"
+elif grep -q "Upgrade to GitHub Pro" <<<"$RULESETS_JSON"; then
+  RULESETS_PLAN_GATED=true
+else
+  echo "ERROR: failed to list rulesets:" >&2
+  echo "$RULESETS_JSON" >&2
+  exit 1
+fi
 
 echo "Repository:      $OWNER_REPO"
 echo "Default branch:  $DEFAULT_BRANCH"
 echo "Target ref:      $(jq -r 'join(", ")' <<<"$REF_INCLUDE_JSON")"
-if [[ -n "$EXISTING_ID" ]]; then
+if [[ "$RULESETS_PLAN_GATED" == "true" ]]; then
+  echo "Ruleset:         UNAVAILABLE — private repo on a personal plan (needs GitHub Pro or a public repo); applying repo-level settings only"
+elif [[ -n "$EXISTING_ID" ]]; then
   echo "Ruleset:         $RULESET_NAME (update id=$EXISTING_ID)"
 else
   echo "Ruleset:         $RULESET_NAME (create)"
@@ -192,7 +210,12 @@ gh api "repos/$OWNER/$REPO" > "$REPO_SETTINGS_SNAPSHOT"
 gh api "repos/$OWNER/$REPO/actions/permissions/workflow" > "$WORKFLOW_PERMS_SNAPSHOT" 2>/dev/null \
   || echo '{}' > "$WORKFLOW_PERMS_SNAPSHOT"
 
-if [[ -n "$EXISTING_ID" ]]; then
+if [[ "$RULESETS_PLAN_GATED" == "true" ]]; then
+  echo '{}' > "$RULESET_SNAPSHOT"
+  echo "Ruleset SKIPPED: not available on this plan (private personal repo)."
+  echo "To get branch protection: make the repo public or upgrade to GitHub Pro,"
+  echo "then re-run this script."
+elif [[ -n "$EXISTING_ID" ]]; then
   gh api "repos/$OWNER/$REPO/rulesets/$EXISTING_ID" > "$RULESET_SNAPSHOT" 2>/dev/null || echo '{}' > "$RULESET_SNAPSHOT"
   gh api --method PUT \
     -H "Accept: application/vnd.github+json" \
@@ -244,7 +267,12 @@ else
   echo "Actions PR-approval left untouched (human-in-the-loop). Set ALLOW_ACTIONS_PR_APPROVAL=true to opt in."
 fi
 
-mkdir -p .ai && touch .ai/bootstrap-completed
+mkdir -p .ai
+if [[ "$RULESETS_PLAN_GATED" == "true" ]]; then
+  echo "rulesets: skipped (plan-gated: private repo on a personal plan)" > .ai/bootstrap-completed
+else
+  echo "rulesets: applied" > .ai/bootstrap-completed
+fi
 echo "Bootstrap applied successfully."
 echo "Snapshots saved:"
 echo "  Ruleset (prior): $RULESET_SNAPSHOT"
