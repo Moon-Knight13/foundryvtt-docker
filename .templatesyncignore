@@ -29,3 +29,9 @@ SECURITY.md
 # Diverges only until the metavariable-regex nesting fix for the two PII rules
 # lands upstream in the template — then remove this line to resume syncing.
 .semgrep.yml
+# Private-repo gates on SARIF upload / GHAS-dependent jobs — remove these
+# lines if the gates are upstreamed to the template or the repo goes public.
+.github/workflows/semgrep.yml
+.github/workflows/container-scan.yml
+.github/workflows/codeql-analysis.yml
+.github/workflows/dependency-review.yml
