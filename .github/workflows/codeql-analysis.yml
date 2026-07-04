@@ -33,6 +33,9 @@ jobs:
     uses: felddy/reusable-workflows/.github/workflows/diagnostics.yml@76486c28caa391f5f9db4941fc555a20a6e084c8 # tag=v4.2.0
   analyze:
     name: Analyze
+    # CodeQL result upload requires code scanning, which needs GitHub Advanced
+    # Security on private repos; skip there. Runs again if the repo goes public.
+    if: ${{ !github.event.repository.private }}
     needs:
       - diagnostics
     runs-on: ubuntu-latest

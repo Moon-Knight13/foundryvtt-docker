@@ -433,6 +433,18 @@ docker build \
   https://github.com/felddy/foundryvtt-docker.git#develop
 ```
 
+## Development foundation ##
+
+This repository is built on the
+[claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo)
+foundation: a devcontainer with a deny-by-default firewall, gitleaks/semgrep
+security gates, BMAD + Kanban workflow, and a weekly `template-sync` workflow
+that pulls template updates in as reviewable pull requests.  See
+[`docs/TEMPLATE_GUIDE.md`](docs/TEMPLATE_GUIDE.md) for the full guide and
+[`CLAUDE.md`](CLAUDE.md) for the Claude workflow contract plus
+FoundryVTT-specific guidance (including the Foundry MCP integration for
+AI-assisted game mastering — see `scripts/setup-mcp.sh`).
+
 ## Contributing ##
 
 We welcome contributions!  Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for

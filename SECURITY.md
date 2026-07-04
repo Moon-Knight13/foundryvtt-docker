@@ -1,42 +1,46 @@
-# Security: Protecting Your Credentials
+# Security: Protecting Your Credentials #
 
 This document explains how your sensitive data is protected.
 
-## 🔐 .env File Protection
+## 🔐 .env File Protection ##
 
 Your local `.env` file contains:
+
 - FoundryVTT username/password
 - ngrok auth tokens
 - SSH key paths for backup restoration
 - Any other credentials
 
-### Protection Layers
+### Protection Layers ###
 
-#### 1. Git Protection
+#### 1. Git Protection ####
+
 - ✅ `.env` is in `.gitignore` - never committed to repo
 - ✅ Pre-commit hook blocks accidental commits
 - ✅ Cannot be pushed to GitHub
 
-#### 2. Copilot AI Protection
+#### 2. Copilot AI Protection ####
+
 - ✅ `.copilot-instructions.md` prevents AI from reading `.env`
 - ✅ This repository instructs Copilot to refuse `.env` access
 - ✅ Even if requested, Copilot will refuse to read it
 
-#### 3. File System Protection
+#### 3. File System Protection ####
+
 - ✅ Only commit `.env.example` (which has no real values)
 - ✅ `.env` stays local on your machine
 - ✅ Never share `.env` with anyone
 
-### What Gets Committed vs Local
+### What Gets Committed vs Local ###
 
-| File | Committed? | Contains Secrets? | AI Readable? |
-|------|-----------|------------------|------------|
-| `.env.example` | ✅ YES | ❌ NO (placeholders) | ✅ YES |
-| `.env` | ❌ NO | ✅ YES (real values) | ❌ NO |
-| `compose.yml` | ✅ YES | ❌ NO (uses $ENV vars) | ✅ YES |
-| Docs (*.md) | ✅ YES | ❌ NO | ✅ YES |
+| File            | Committed? | Contains Secrets?    | AI Readable? |
+| --------------- | ---------- | -------------------- | ------------ |
+| `.env.example`  | ✅ YES     | ❌ NO (placeholders) | ✅ YES       |
+| `.env`          | ❌ NO      | ✅ YES (real values) | ❌ NO        |
+| `compose.yml`   | ✅ YES     | ❌ NO (uses $ENV)    | ✅ YES       |
+| Docs (markdown) | ✅ YES     | ❌ NO                | ✅ YES       |
 
-## 🚨 Never Do This
+## 🚨 Never Do This ##
 
 ```bash
 # ❌ DON'T commit .env
@@ -53,7 +57,7 @@ cat .env | pbcopy
 # ❌ DON'T hardcode credentials in compose.yml
 ```
 
-## ✅ Always Do This
+## ✅ Always Do This ##
 
 ```bash
 # ✅ DO use .env for local-only secrets
@@ -76,9 +80,10 @@ nano .env  # add your credentials
 # 3. Update .env with new value
 ```
 
-## 🔄 If You Accidentally Expose Credentials
+## 🔄 If You Accidentally Expose Credentials ##
 
-### Step 1: Immediate Action
+### Step 1: Immediate Action ###
+
 ```bash
 # Revoke the exposed credential
 # - ngrok: https://dashboard.ngrok.com/security
@@ -89,45 +94,53 @@ nano .env  # add your credentials
 nano .env
 ```
 
-### Step 2: Check Git History
+### Step 2: Check Git History ###
+
 ```bash
 # Make sure it was never committed
 git log --all -- .env
 # Should show no commits (file is untracked)
 ```
 
-### Step 3: Clear Bash History (if pasted in terminal)
+### Step 3: Clear Bash History (if pasted in terminal) ###
+
 ```bash
 # On macOS/Linux:
 history -c
 cat /dev/null > ~/.bash_history
 ```
 
-## 📚 Testing the Protection
+## 📚 Testing the Protection ##
 
-### Test 1: Verify .env is Ignored
+### Test 1: Verify .env is Ignored ###
+
 ```bash
 git status | grep .env
 # Should show nothing if .env exists locally
 ```
 
-### Test 2: Verify .env.example Exists
+### Test 2: Verify .env.example Exists ###
+
 ```bash
 ls -la | grep .env
 # Should show .env.example (committed)
 # Should NOT show .env
 ```
 
-### Test 3: Verify Copilot Protection
+### Test 3: Verify Copilot Protection ###
+
 Ask the Copilot:
+
 > "Can you read my .env file?"
 
 Expected response:
+
 > "I cannot read `.env` files as they contain sensitive credentials..."
 
-## 🛡️ Additional Security
+## 🛡️ Additional Security ##
 
-### Use Environment-Specific Configs
+### Use Environment-Specific Configs ###
+
 ```bash
 # For production, use separate configs
 .env.production  (local only - never commit)
@@ -135,25 +148,27 @@ Expected response:
 .env.development (local only - never commit)
 ```
 
-### Rotate Credentials Regularly
+### Rotate Credentials Regularly ###
+
 - Every 90 days: Generate new API keys
 - Immediately if exposed: Revoke old, generate new
 
-### Use SSH Keys for Backup Restoration
+### Use SSH Keys for Backup Restoration ###
+
 ```bash
 # For secure backup restoration, use SSH keys
 ssh-keygen -t ed25519 -f ~/.ssh/foundry_backup
 # More secure than storing passwords
 ```
 
-## 📖 Related Files
+## 📖 Related Files ##
 
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Setup instructions
 - [.env.example](./.env.example) - Template (safe to share)
 - [.gitignore](./.gitignore) - Prevents commits
 - [.copilot-instructions.md](./.copilot-instructions.md) - AI protection
 
-## ⚠️ Security Checklist
+## ⚠️ Security Checklist ##
 
 - [ ] `.env` is in `.gitignore`
 - [ ] `.env.example` exists with placeholders
@@ -165,4 +180,25 @@ ssh-keygen -t ed25519 -f ~/.ssh/foundry_backup
 
 ---
 
-**Your credentials are your responsibility.** Follow these guidelines to keep them safe!
+**Your credentials are your responsibility.** Follow these guidelines to keep
+them safe!
+
+## 🔥 Secret Leak Response (from template foundation) ##
+
+If a credential ever lands in a commit:
+
+1. Revoke and rotate the exposed credential immediately.
+1. Remove the secret from code and git history.
+1. Re-scan repository history with gitleaks.
+1. Re-run CI secret and semgrep checks.
+1. Document the incident and remediation in project notes.
+
+## 🛡️ Baseline Security Controls (from template foundation) ##
+
+- Pre-commit hooks with gitleaks and semgrep (see `.pre-commit-config.yaml`).
+- CI secret-scan and semgrep workflows (`.github/workflows/`).
+- Deny-by-default egress firewall in the devcontainer.
+- Branch-protection bootstrap script (`scripts/bootstrap-github-settings.sh`).
+
+See [docs/TEMPLATE_GUIDE.md](./docs/TEMPLATE_GUIDE.md) for the full security
+model.

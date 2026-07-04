@@ -90,3 +90,28 @@ updates:
         applies-to: version-updates
         patterns:
           - "*"
+
+  # Template foundation additions (claude_template_repo)
+  - package-ecosystem: docker
+    directory: /.devcontainer
+    schedule:
+      interval: weekly
+    labels:
+      - "bot :robot:"
+      - "dependencies :game_die:"
+      - "docker :whale:"
+    # Pin the devcontainer base to its current LTS major (Node 24). Take digest
+    # and minor/patch bumps automatically, but defer major-version jumps (e.g. to
+    # the next LTS, or to a short-lived "Current" release) to manual review.
+    ignore:
+      - dependency-name: node
+        update-types:
+          - version-update:semver-major
+
+  - package-ecosystem: devcontainers
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - "bot :robot:"
+      - "dependencies :game_die:"

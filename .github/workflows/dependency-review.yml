@@ -9,6 +9,10 @@ permissions:
 
 jobs:
   dependency-review:
+    # Dependency graph + dependency review need GitHub Advanced Security on
+    # private repos; skip there so the check can't hard-fail. Runs again
+    # automatically if the repo is ever made public.
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner

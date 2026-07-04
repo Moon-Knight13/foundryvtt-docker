@@ -1,4 +1,24 @@
 ---
+# Template-owned files (claude_template_repo) are kept byte-identical to the
+# upstream template so template-sync PRs stay clean — lint/format changes to
+# them would surface as spurious reverts in every future sync. They are linted
+# in the template repo itself. Project-owned files under scripts/ (ci/,
+# setup-mcp.sh, test-instance.sh) remain fully linted.
+exclude: >
+  (?x)^(
+    \.claude/|
+    \.devcontainer/|
+    \.github/workflows/(ci|secret-scan|semgrep|container-scan|repository-audit|template-sync)\.yml$|
+    \.github/ISSUE_TEMPLATE/(bug_report|epic|feature_request|security_vulnerability|user-story)\.yml$|
+    \.github/pull_request_template\.md$|
+    docs/(TEMPLATE_GUIDE|BMAD_WORKFLOW|KANBAN_WORKFLOW|AI_ROUTING_POLICY|README\.template)\.md$|
+    scripts/(?!ci/|setup-mcp\.sh|test-instance\.sh).*|
+    \.semgrep\.yml$|
+    \.gitleaks\.toml$|
+    \.templatesyncignore$|
+    CLAUDE\.md$
+  )
+
 ci:
   # Do not commit changes from running pre-commit for pull requests.
   autofix_prs: false
@@ -252,3 +272,37 @@ repos:
     hooks:
       - id: packer_fmt
       - id: packer_validate
+
+  # Security scanning hooks (from claude_template_repo foundation)
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      # gitleaks-system runs the sha256-pinned binary baked into the devcontainer
+      # image (see GITLEAKS_VERSION in .devcontainer/Dockerfile — keep it in sync
+      # with this rev). The default `gitleaks` hook is language: golang, which
+      # builds from source and would need firewall egress to the Go toolchain
+      # and module proxy. Entry already passes --redact --staged --verbose.
+      # pass_filenames: false is set on the upstream golang hook but missing
+      # from the system variant — without it pre-commit appends filenames as
+      # positional args and gitleaks aborts ("accepts at most 1 arg(s)").
+      # Outside the devcontainer (no gitleaks binary on PATH) skip with:
+      #   SKIP=gitleaks-system git commit ...
+      # CI still scans full history via .github/workflows/secret-scan.yml.
+      - id: gitleaks-system
+        args:
+          - --config=.gitleaks.toml
+        pass_filenames: false
+  - repo: https://github.com/returntocorp/semgrep
+    rev: v1.83.0
+    hooks:
+      - id: semgrep
+        args:
+          - --config
+          - .semgrep.yml
+          - --error
+          - --metrics=off
+        # semgrep 1.83.0's opentelemetry dependency imports pkg_resources, which
+        # setuptools removed in v81. Pin a compatible setuptools so the hook's venv
+        # works on Python 3.12+ hosts (CI uses the semgrep Docker image, unaffected).
+        additional_dependencies:
+          - setuptools<81

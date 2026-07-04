@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "foundry-mcp": {
+      "args": ["mcp-server/index.js"],
+      "command": "node",
+      "env": {
+        "FOUNDRY_HOST": "localhost",
+        "FOUNDRY_NAMESPACE": "/foundry-mcp",
+        "FOUNDRY_PORT": "31415",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}
