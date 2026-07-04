@@ -28,14 +28,8 @@ cd "$REPO_ROOT"
 PROJECT="foundry-test"
 TEST_PORT="${FOUNDRY_TEST_PORT:-30001}"
 
-# Get environment variable value from .env (same idiom as deploy-setup.sh —
-# reads a single variable, never dumps the file)
-get_env_value() {
-  local var_name=$1
-  if [ -f .env ]; then
-    grep -E "^${var_name}=" .env | head -n1 | cut -d= -f2-
-  fi
-}
+# shellcheck source=scripts/lib/env-file.sh
+source "$REPO_ROOT/scripts/lib/env-file.sh"
 
 DATA_PATH="$(get_env_value FOUNDRY_DATA_PATH)"
 DATA_PATH="${DATA_PATH:-$HOME/.local/share/FoundryVTT}"

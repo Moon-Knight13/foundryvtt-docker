@@ -61,10 +61,12 @@ escalate() { # reason model
 
 # ── Rung 1: route decision (risk / task-type / size / force flags) ──────────
 route="$(bash "$HERE/route-model.sh" "$TASK_TYPE" "$RISK_LEVEL" "$CHANGED_FILES")"
+# Format is provider:model:reason, but model may contain ':' (Ollama tags like
+# qwen2.5-coder:7b); reason never does — so take the first and last fields.
 provider="${route%%:*}"
+route_reason="${route##*:}"
 rest="${route#*:}"
-model="${rest%%:*}"
-route_reason="${rest#*:}"
+model="${rest%:*}"
 if [[ "$provider" != "local" ]]; then
   escalate "route:$route_reason"
 fi

@@ -29,14 +29,8 @@ MODULE_ZIP="foundry-vtt-mcp.zip"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-# Get environment variable value from .env (same idiom as deploy-setup.sh —
-# reads a single variable, never dumps the file)
-get_env_value() {
-  local var_name=$1
-  if [ -f .env ]; then
-    grep -E "^${var_name}=" .env | head -n1 | cut -d= -f2-
-  fi
-}
+# shellcheck source=scripts/lib/env-file.sh
+source "$REPO_ROOT/scripts/lib/env-file.sh"
 
 WITH_MODULE=false
 for arg in "$@"; do

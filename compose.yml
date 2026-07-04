@@ -49,7 +49,10 @@ services:
       # Container Optimization
       - CONTAINER_CACHE=${CONTAINER_CACHE:-/data/container_cache}
       - CONTAINER_CACHE_SIZE=${CONTAINER_CACHE_SIZE:-}
-      - CONTAINER_VERBOSE=${CONTAINER_VERBOSE:-false}
+      # CONTAINER_VERBOSE is intentionally NOT listed here: the image enables
+      # debug logging (including an environment dump) whenever the variable is
+      # set — even to "false" or empty. To debug, add it in a
+      # compose.override.yml: environment: ["CONTAINER_VERBOSE=true"]
       - CONTAINER_UMASK=${CONTAINER_UMASK:-}
     
     ports:
@@ -66,12 +69,13 @@ services:
     image: ngrok/ngrok:latest
     profiles: ["ngrok"]
     environment:
-      NGROK_AUTHTOKEN: ${NGROK_AUTH_TOKEN}
+      NGROK_AUTHTOKEN: ${NGROK_AUTH_TOKEN:-}
     command:
       - "http"
       - "foundry:30000"
     ports:
-      - "4040:4040"
+      # ngrok agent admin API — operator-only, keep off the LAN
+      - "127.0.0.1:4040:4040"
     depends_on:
       - foundry
 
@@ -81,7 +85,8 @@ services:
     image: netdata/netdata:stable
     profiles: ["monitoring"]
     ports:
-      - "19999:19999"
+      # operator-only dashboard (docker socket mounted) — keep off the LAN
+      - "127.0.0.1:19999:19999"
     cap_add:
       - SYS_PTRACE
     security_opt:
@@ -96,6 +101,7 @@ services:
     image: amir20/dozzle:latest
     profiles: ["monitoring"]
     ports:
-      - "8080:8080"
+      # serves all container logs unauthenticated — keep off the LAN
+      - "127.0.0.1:8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro

@@ -43,7 +43,8 @@ IFS=$'\n\t'
 #                              needed only by bot-approval automation)
 
 RULESET_NAME="${RULESET_NAME:-Main_Branch_Protections}"
-BRANCH="${BRANCH:-main}"
+# BRANCH defaults to the repo's default branch, resolved after gh auth below —
+# hardcoding 'main' made the guard self-defeating on repos defaulting elsewhere.
 REQUIRED_APPROVALS="${REQUIRED_APPROVALS:-1}"
 REQUIRE_CODEOWNERS="${REQUIRE_CODEOWNERS:-true}"
 DISMISS_STALE="${DISMISS_STALE:-true}"
@@ -74,6 +75,7 @@ OWNER_REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 OWNER="${OWNER_REPO%%/*}"
 REPO="${OWNER_REPO##*/}"
 DEFAULT_BRANCH="$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)"
+BRANCH="${BRANCH:-$DEFAULT_BRANCH}"
 
 if [[ "$REQUIRE_DEFAULT_BRANCH" == "true" && "$BRANCH" != "$DEFAULT_BRANCH" ]]; then
   echo "Refusing to target a non-default branch."
