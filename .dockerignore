@@ -7,3 +7,8 @@ assets
 data
 patches
 tests
+mcp-server
+scripts
+docs
+.claude
+.devcontainer
