@@ -5,13 +5,15 @@ services:
     hostname: ${FOUNDRY_HOSTNAME:-my_foundry_host}
     
     #GPU Support - uncomment these lines to enable GPU
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # NOTE: the FoundryVTT server is headless Node.js and does not use the GPU;
+    # rendering happens in each player's browser. Leave this commented out.
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
     
     volumes:
       - type: bind
@@ -22,8 +24,13 @@ services:
       # Credentials (from .env file)
       - FOUNDRY_PASSWORD=${FOUNDRY_PASSWORD}
       - FOUNDRY_USERNAME=${FOUNDRY_USERNAME}
-      - FOUNDRY_ADMIN_KEY=${FOUNDRY_ADMIN_KEY:-atropos}
-      - FOUNDRY_TELEMETRY=${FOUNDRY_TELEMETRY:-true}
+      - FOUNDRY_ADMIN_KEY=${FOUNDRY_ADMIN_KEY:?FOUNDRY_ADMIN_KEY must be set in .env}
+      - FOUNDRY_TELEMETRY=${FOUNDRY_TELEMETRY:-false}
+
+      # Performance: compress static assets and websocket traffic
+      # (maps to compressStatic/compressSocket in options.json, regenerated on each start)
+      - FOUNDRY_MINIFY_STATIC_FILES=${FOUNDRY_MINIFY_STATIC_FILES:-true}
+      - FOUNDRY_COMPRESS_WEBSOCKET=${FOUNDRY_COMPRESS_WEBSOCKET:-true}
       
       # Version & URLs
       - FOUNDRY_VERSION=${FOUNDRY_VERSION:-14.363}
@@ -52,6 +59,9 @@ services:
         mode: host
   
   # Optional: ngrok service for remote access
+  # WARNING: free-tier ngrok throttles bandwidth and adds latency - expect lag
+  # with remote players. Prefer port forwarding or a Cloudflare Tunnel
+  # (see docs/cookbooks/cloudflare/) for game sessions.
   ngrok:
     image: ngrok/ngrok:latest
     profiles: ["ngrok"]
@@ -64,3 +74,28 @@ services:
       - "4040:4040"
     depends_on:
       - foundry
+
+  # Optional: monitoring stack - start with: docker compose --profile monitoring up -d
+  # Netdata: per-container CPU/memory/network/disk graphs at http://localhost:19999
+  netdata:
+    image: netdata/netdata:stable
+    profiles: ["monitoring"]
+    ports:
+      - "19999:19999"
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # Dozzle: live container logs in the browser at http://localhost:8080
+  dozzle:
+    image: amir20/dozzle:latest
+    profiles: ["monitoring"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro

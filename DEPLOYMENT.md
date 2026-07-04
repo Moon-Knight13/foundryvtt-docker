@@ -64,6 +64,18 @@ docker compose up -d
 # Then restore via FoundryVTT UI: Setup → Manage Backups
 ```
 
+### 4. Stop Services
+
+Stop Ngrok
+```
+docker compose down ngrok 
+```
+
+Stop foundryvtt
+```
+docker compose down
+```
+
 ## Features & Configuration
 
 ### 📊 Data Persistence
@@ -281,6 +293,65 @@ curl http://localhost:4040/api/tunnels
 docker compose exec file-sync /root/entrypoint.sh
 ```
 
+## Monitoring & Performance
+
+### Live monitoring (optional, off by default)
+
+```bash
+# Start Netdata + Dozzle alongside FoundryVTT
+docker compose --profile monitoring up -d
+
+# Stop them again
+docker compose --profile monitoring down
+```
+
+- **Netdata** (http://localhost:19999): per-container CPU, memory, network, and
+  disk graphs. Check the `foundry` container here during a laggy session to
+  rule the server in or out.
+- **Dozzle** (http://localhost:8080): live container logs in the browser.
+
+### Diagnosing lag during a session
+
+1. **Framerate vs network** (official FoundryVTT test): have the affected
+   player disable the Game Canvas in settings. If chat/sheets/rolls become
+   responsive, it's their client GPU/framerate; if delays persist, it's
+   network.
+2. **One player or everyone?** The player list shows a per-player latency
+   indicator — one red ping means their connection, all red means your side.
+3. **Your side**: open Netdata. If the foundry container is idle (it usually
+   is), the bottleneck is your upload bandwidth. FoundryVTT recommends at
+   least 12 Mbps upload for self-hosting.
+
+### Performance settings
+
+Static-file and websocket compression are enabled by default via
+`FOUNDRY_MINIFY_STATIC_FILES` and `FOUNDRY_COMPRESS_WEBSOCKET` in
+`compose.yml`. Note that the container regenerates `Config/options.json`
+from environment variables on every start — change settings in `.env` /
+`compose.yml`, not by editing `options.json` directly.
+
+**Avoid free-tier ngrok for game sessions** — it throttles bandwidth and adds
+latency. Prefer direct port forwarding of 30000, or a Cloudflare Tunnel (see
+`docs/cookbooks/cloudflare/`).
+
+### Data location (important)
+
+The live server data is at `FOUNDRY_DATA_PATH` from `.env`
+(`~/.local/share/FoundryVTT`), **not** the `./data/` directory in this repo —
+that is a stale copy. Back up and modify the live path only:
+
+```bash
+# Quick worlds backup before risky changes
+tar -czf ~/foundry-worlds-backup-$(date +%F).tar.gz \
+  -C ~/.local/share/FoundryVTT/Data worlds
+
+# Worlds reference images/audio in assets/ — back that up too when it changes.
+# NOTE: FoundryVTT's built-in backups (Setup -> Manage Backups) do NOT include
+# multimedia assets; a worlds-only restore will have broken image/audio links.
+tar -czf ~/foundry-assets-backup-$(date +%F).tar.gz \
+  -C ~/.local/share/FoundryVTT/Data assets
+```
+
 ## Troubleshooting
 
 ### FoundryVTT won't start
@@ -327,3 +398,4 @@ For production, consider:
 - Container Image: https://ghcr.io/felddy/foundryvtt
 - Original Repository: https://github.com/felddy/foundryvtt-docker
 - ngrok Docs: https://ngrok.com/docs
+
