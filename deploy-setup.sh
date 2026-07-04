@@ -5,7 +5,7 @@
 set -e
 
 # Get environment variable value from .env (shared helper)
-# shellcheck source=scripts/lib/env-file.sh
+# shellcheck source=scripts/lib/env-file.sh disable=SC1091
 source "$(cd "$(dirname "$0")" && pwd)/scripts/lib/env-file.sh"
 
 # Set or append environment variable in .env

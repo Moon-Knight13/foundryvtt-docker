@@ -28,7 +28,7 @@ cd "$REPO_ROOT"
 PROJECT="foundry-test"
 TEST_PORT="${FOUNDRY_TEST_PORT:-30001}"
 
-# shellcheck source=scripts/lib/env-file.sh
+# shellcheck source=scripts/lib/env-file.sh disable=SC1091
 source "$REPO_ROOT/scripts/lib/env-file.sh"
 
 DATA_PATH="$(get_env_value FOUNDRY_DATA_PATH)"
