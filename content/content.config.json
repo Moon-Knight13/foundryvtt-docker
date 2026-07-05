@@ -1,0 +1,10 @@
+{
+  "id": "troubled-waters-content",
+  "title": "Troubled Waters Content",
+  "description": "Campaign content authored as code in the project repository.",
+  "version": "1.0.0",
+  "system": "dnd5e",
+  "packLabelPrefix": "Troubled Waters",
+  "compatibility": { "minimum": "12", "verified": "13" },
+  "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+}
