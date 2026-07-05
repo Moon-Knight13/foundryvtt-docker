@@ -1,0 +1,16 @@
+{
+  "name": "Harbor Rumors",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>What the dockhands are whispering about this week. Roll when the party asks around the harbor district.</p>",
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "results": [
+    { "type": "text", "description": "A ship came in last night flying no flag, and the harbormaster signed it in without a word.", "range": [1, 1], "weight": 1 },
+    { "type": "text", "description": "The bell under the old pier tolled twice at midnight. Nobody has dived to look.", "range": [2, 2], "weight": 1 },
+    { "type": "text", "description": "Customs seized a crate that screamed when they moved it. It is still in the customs house.", "range": [3, 3], "weight": 1 },
+    { "type": "text", "description": "Three crews refused the same charter this week. Good coin, too. Nobody says why.", "range": [4, 4], "weight": 1 },
+    { "type": "text", "description": "A fence called Grimtooth is paying double for anything pulled out of the bay.", "range": [5, 5], "weight": 1 },
+    { "type": "text", "description": "The lighthouse keeper has not been seen in a tenday, but the light still burns every night.", "range": [6, 6], "weight": 1 }
+  ]
+}

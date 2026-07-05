@@ -9,7 +9,14 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-MODULE_DIR="$REPO_ROOT/content/dist/troubled-waters-content"
+CONFIG="$REPO_ROOT/content/content.config.json"
+# Module id from content.config.json — no jq/node dependency on the host.
+MODULE_ID="$(sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$CONFIG" | head -n 1)"
+if [[ -z "$MODULE_ID" ]]; then
+  echo "Error: could not read module id from $CONFIG" >&2
+  exit 1
+fi
+MODULE_DIR="$REPO_ROOT/content/dist/$MODULE_ID"
 
 DATA_PATH="${FOUNDRY_DATA_PATH:-$HOME/.local/share/FoundryVTT}"
 DRY_RUN=()
@@ -40,14 +47,14 @@ if [[ ! -d "$MODULES_DIR" ]]; then
 fi
 
 if command -v rsync >/dev/null 2>&1; then
-  rsync -a --delete "${DRY_RUN[@]}" "$MODULE_DIR/" "$MODULES_DIR/troubled-waters-content/"
+  rsync -a --delete "${DRY_RUN[@]}" "$MODULE_DIR/" "$MODULES_DIR/$MODULE_ID/"
 else
   if [[ ${#DRY_RUN[@]} -gt 0 ]]; then
-    echo "Dry run (no rsync available): would replace $MODULES_DIR/troubled-waters-content with:"
+    echo "Dry run (no rsync available): would replace $MODULES_DIR/$MODULE_ID with:"
     find "$MODULE_DIR" -type f
     exit 0
   fi
-  rm -rf "$MODULES_DIR/troubled-waters-content"
-  cp -a "$MODULE_DIR" "$MODULES_DIR/troubled-waters-content"
+  rm -rf "$MODULES_DIR/$MODULE_ID"
+  cp -a "$MODULE_DIR" "$MODULES_DIR/$MODULE_ID"
 fi
-echo "Synced troubled-waters-content -> $MODULES_DIR"
+echo "Synced $MODULE_ID -> $MODULES_DIR"
