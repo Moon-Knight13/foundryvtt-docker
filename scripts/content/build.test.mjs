@@ -29,6 +29,7 @@ test('prepareDoc gives journal pages stable embedded ids', () => {
   const out = prepareDoc(doc, 'journals', 'journals/q.json');
   assert.equal(out._key, `!journal!${out._id}`);
   assert.match(out.pages[0]._id, /^[a-z0-9]{16}$/);
+  assert.equal(out.pages[0]._key, `!journal.pages!${out._id}.${out.pages[0]._id}`);
   const again = prepareDoc(doc, 'journals', 'journals/q.json');
   assert.equal(out.pages[0]._id, again.pages[0]._id);
 });
