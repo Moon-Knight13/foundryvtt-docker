@@ -54,7 +54,7 @@ else
     find "$MODULE_DIR" -type f
     exit 0
   fi
-  rm -rf "$MODULES_DIR/$MODULE_ID"
+  rm -rf "${MODULES_DIR:?}/${MODULE_ID:?}"
   cp -a "$MODULE_DIR" "$MODULES_DIR/$MODULE_ID"
 fi
 echo "Synced $MODULE_ID -> $MODULES_DIR"
