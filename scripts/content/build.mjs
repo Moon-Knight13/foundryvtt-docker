@@ -11,6 +11,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compilePack } from '@foundryvtt/foundryvtt-cli';
 
+// Scaffolded by the foundry-gm Claude Code plugin; bump on breaking tooling
+// changes so the skill can detect stale consumer copies.
+export const TOOLING_VERSION = 1;
+
 export const COLLECTIONS = {
   actors:   { key: 'actors',  type: 'Actor' },
   items:    { key: 'items',   type: 'Item' },

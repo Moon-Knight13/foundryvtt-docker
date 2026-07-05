@@ -19,8 +19,9 @@ module; set it (here: `dnd5e`) to bind packs to a system.
 content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Data/modules/  --import-->  world
 ```
 
-1. **Author** (Claude, in the devcontainer): the `foundry-content` skill
-   (`.claude/skills/foundry-content/`) copies a template —
+1. **Author** (Claude, in the devcontainer): the `foundry-content` skill —
+   shipped by the **foundry-gm** plugin (`/plugin install
+   foundry-gm@foundry-gm-marketplace`) — copies a template —
    system-agnostic: `templates/common/{journal,scene,roll-table,faction,encounter}.json`;
    dnd5e: `templates/dnd5e/{npc,item}.json` — into
    `content/src/{actors,items,journals,scenes,tables}/<kebab-name>.json` and
@@ -80,10 +81,11 @@ token movement, conditions, scene activation, reading world state, and
 editing documents already imported into a world. Full routing table in
 [`CLAUDE.md`](../CLAUDE.md), "Content routing".
 
-A PreToolUse hook (`scripts/hooks/foundry-mcp-guard.sh`, wired in
-`.claude/settings.json`) enforces this: `dnd5e-create-npc` and
-`create-quest-journal` are denied with a pointer to the skill. For a genuine
-live-session one-off:
+A PreToolUse hook enforces this: `dnd5e-create-npc` and `create-quest-journal`
+are denied with a pointer to the skill. The **foundry-gm plugin** ships this
+hook; a local copy (`scripts/hooks/foundry-mcp-guard.sh`, wired in
+`.claude/settings.json`) is kept until the plugin hook is confirmed in a
+session (both deny identically). For a genuine live-session one-off:
 
 ```bash
 touch .ai/foundry-live-session    # per-checkout flag; delete when the session ends
