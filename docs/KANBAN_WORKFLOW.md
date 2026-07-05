@@ -28,6 +28,16 @@ with how work is actually routed:
 - `Local` — simple work the local model handles (`scripts/ask-local.sh`).
 - `Claude` — agentic work for a Claude session.
 
+## Which repo does an issue belong on?
+
+Board #10 tracks work on **this** repo (`Moon-Knight13/foundryvtt-docker`),
+which is a standalone repo (not a fork) with Issues enabled so day-0 can own
+the board. A bug in the **foundry-gm plugin** (its skills, guard hook, reviewer
+agent, or build tooling) is filed on the **plugin's** repo instead; an
+upstream-bound fix goes through the `upstreamfork` fork as a PR to felddy. Full
+topology and the routing table: see **CLAUDE.md → "Repository topology & issue
+routing"**.
+
 ## One-time setup (day 0)
 
 `scripts/setup-day0.sh` runs this automatically once `gh` is authenticated with the
