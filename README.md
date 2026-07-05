@@ -16,6 +16,9 @@ Three things compose it:
    (this repo's upstream) supplies the battle-tested container image. We run
    the published `ghcr.io/felddy/foundryvtt:release` image via
    [`compose.yml`](compose.yml) — this fork does not build its own image.
+   Contributions to the image itself are staged through our clean fork,
+   [Moon-Knight13/foundryvtt-docker-upstream](https://github.com/Moon-Knight13/foundryvtt-docker-upstream),
+   and PR'd from there to felddy.
 2. **[claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo)**
    supplies the AI-development foundation: a devcontainer with a
    deny-by-default firewall, model routing (Claude ↔ local Ollama),
@@ -71,6 +74,45 @@ Test module changes against a disposable clone first —
 | [`docs/TEMPLATE_GUIDE.md`](docs/TEMPLATE_GUIDE.md) | The template foundation: devcontainer, firewall, routing, CI gates, template-sync |
 | [`docs/KANBAN_WORKFLOW.md`](docs/KANBAN_WORKFLOW.md) | Board-driven agent workflow (`/next-issue`, `/run-epic`) |
 | [`docs/cookbooks/`](docs/cookbooks/) | Recipes — e.g. Cloudflare Tunnel for permanent remote access |
+
+## Working on this repo (devcontainer)
+
+Development happens inside the devcontainer supplied by the
+[claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo)
+foundation — a deny-by-default egress firewall, the Claude Code workflow, and
+all CI gate tooling come preinstalled.
+
+Prerequisites:
+
+- Docker plus VS Code with the Dev Containers extension
+- A Claude Code (CLI) account for the AI workflow
+- Optional: [Ollama](https://ollama.com) on host port 11434 for local model
+  routing
+
+Steps:
+
+1. Clone the repo, open it in VS Code, and accept **"Reopen in Container"**.
+   Tooling installs on container start, including the day-0 auto-setup
+   (`scripts/setup-day0.sh`).
+2. Inside the container, finish the auth-gated bootstraps:
+
+   ```bash
+   gh auth login --hostname github.com --git-protocol https --web -s project && gh auth setup-git
+   claude   # authenticate Claude Code on first launch
+   bash scripts/setup-day0.sh   # re-run so the GitHub ruleset + board bootstraps apply
+   ```
+
+3. Verify with `bash scripts/check-day0.sh` — or `/day0-check` from inside
+   Claude Code. Expect all green (Ollama is a non-blocking WARN if absent).
+
+Notes:
+
+- The firewall blocks unknown egress hosts by default; use the
+  `/firewall-allow` skill to allowlist a new host. Full detail on the
+  foundation lives in [`docs/TEMPLATE_GUIDE.md`](docs/TEMPLATE_GUIDE.md).
+- The devcontainer has **no docker socket** by design — run the Foundry stack
+  (`docker compose up -d`) from a host terminal, not from inside the
+  container.
 
 ## Branch model
 
