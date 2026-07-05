@@ -25,9 +25,10 @@ fields, build, hand off one host command.
    `FOUNDRY_TEST_DATA_PATH` set)
    `scripts/content/sync-content.sh` — production data dir
    Tell the user to run this; you cannot.
-4. **Import (user, in Foundry UI):** enable "Troubled Waters Content" module in
-   the world, open Compendium Packs, import documents. Pack-content changes
-   need a world reload; module.json changes need a Foundry restart.
+4. **Import (user, in Foundry UI):** enable "Troubled Waters Content" module
+   in the world (Game Settings → Manage Modules — packs are invisible until
+   enabled), open Compendium Packs, import documents. Pack-content changes
+   need a world reload; module.json changes need a world relaunch.
 
 ## Rules
 
@@ -53,3 +54,11 @@ switching scenes, checking current game state. Use the foundry-mcp tools.
 Editing documents already imported into a world — compendium re-import
 overwrites the compendium copy only; world copies must be updated in the UI or
 via foundry-mcp.
+
+Note: a PreToolUse hook (`scripts/hooks/foundry-mcp-guard.sh`) denies the
+foundry-mcp content-creation tools (`dnd5e-create-npc`, `create-quest-journal`)
+and points back here. If the user explicitly wants a live-session one-off,
+they can override with `touch .ai/foundry-live-session` or
+`FOUNDRY_MCP_WRITES=allow` — do not work around the guard yourself.
+Routing table: `CLAUDE.md` "Content routing"; pipeline doc:
+`docs/CONTENT_AUTHORING.md`.

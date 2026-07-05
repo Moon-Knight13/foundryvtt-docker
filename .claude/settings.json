@@ -1,4 +1,17 @@
 {
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__foundry-mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/hooks/foundry-mcp-guard.sh"
+          }
+        ]
+      }
+    ]
+  },
   "mcpServers": {
     "local-ollama": {
       "command": "npx",
