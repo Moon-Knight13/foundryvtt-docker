@@ -162,6 +162,37 @@ Requirements and gotchas:
 - In the devcontainer, port 31415 is forwarded (see devcontainer.json) so the
   GM browser on the host reaches the backend inside the container.
 
+### Connection troubleshooting
+
+When every MCP tool returns `Foundry VTT module not connected`, the backend
+side (ports 31414/31415/31416, the `backend.bundle.cjs` process) is almost
+always healthy and the Claude Code ↔ MCP-server link reconnects fine via
+`/mcp`. The hop that breaks is **GM browser (foundry-mcp-bridge) → backend
+:31415**. Run the read-only diagnostic to pin it:
+
+```bash
+./scripts/mcp-health.sh   # checks the 3 ports + backend process; inspects
+                          # :31415 for a connected module; prints the fix
+```
+
+Two root causes, in order of likelihood:
+
+1. **Enabled ≠ connected.** The module handshake must happen *after* the
+   backend is up, and "enabled in Manage Modules" does not mean "connected".
+   Check the module's connection-status indicator (not just the enable
+   toggle), confirm the backend host/port is `:31415`, then **hard-refresh the
+   GM tab** (Ctrl/Cmd+Shift+R) so it reconnects to the running backend. If it
+   still fails, open browser DevTools → Console and read the module's
+   WebSocket error. A GM tab must stay open — the module is client-side.
+2. **Port-forward mismatch (background job vs interactive devcontainer).**
+   `.devcontainer/devcontainer.json` forwards `:31415` for the *interactive*
+   devcontainer only. A background-job / remote Claude session can run in a
+   *different* container, so the host browser's `localhost:31415` forwards to
+   a container that is not the one running this backend. Run the MCP backend
+   in the same interactive devcontainer the browser forwards from (or forward
+   `:31415` from the container that actually hosts the backend). `mcp-health.sh`
+   warns when it detects it is running inside a container.
+
 ## Content routing: skill vs MCP (token efficiency)
 
 Two ways to get content into Foundry — the choice is the routing protocol
