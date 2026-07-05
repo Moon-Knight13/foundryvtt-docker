@@ -1,0 +1,19 @@
+{
+  "name": "Harbor District Primer",
+  "pages": [
+    {
+      "name": "The Docks at a Glance",
+      "type": "text",
+      "title": { "show": true, "level": 1 },
+      "text": { "content": "<p>The harbor district is the beating heart of Troubled Waters: three piers, a customs house, and more rumors per square foot than anywhere else in town.</p><p>All harbor business runs through @UUID[Compendium.troubled-waters-content.actors.Actor.bdf4e7b7dcdf7ae4]{Harbormaster Vela}. Nothing docks, loads, or leaves without her ledger knowing.</p>", "format": 1 },
+      "sort": 0
+    },
+    {
+      "name": "Hooks",
+      "type": "text",
+      "title": { "show": true, "level": 1 },
+      "text": { "content": "<ul><li>A crate on Pier Two is registered to a ship that sank last spring.</li><li>Vela pays quietly for word of any vessel flying no flag after dark.</li></ul>", "format": 1 },
+      "sort": 100
+    }
+  ]
+}

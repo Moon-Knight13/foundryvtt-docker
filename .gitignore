@@ -71,3 +71,7 @@ _bmad-output/
 ## OS / editor ##
 .DS_Store
 .vscode/settings.json
+
+# Foundry content module build output
+content/dist/
+scripts/content/node_modules/

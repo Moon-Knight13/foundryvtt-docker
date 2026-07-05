@@ -6,9 +6,10 @@
 [![CodeQL](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml/badge.svg?branch=develop)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml)
 
 A self-hosted [Foundry Virtual Tabletop](https://foundryvtt.com) deployment
-where **Claude Code acts as an AI game master** — creating NPCs, quests,
-journals, and scenes directly in the live world over an MCP bridge — and where
-the repository itself is operated by AI agents under a governed workflow.
+where **Claude Code acts as an AI game master** — authoring NPCs, quests,
+journals, and scenes as code compiled into a compendium module, and running
+live sessions over an MCP bridge — and where the repository itself is
+operated by AI agents under a governed workflow.
 
 Three things compose it:
 
@@ -50,7 +51,24 @@ docker compose --profile monitoring up -d   # Netdata :19999, Dozzle :8080 (loop
 docker compose --profile ngrok up -d        # temporary remote access (see DEPLOYMENT.md)
 ```
 
-### AI game master (MCP)
+### AI game master
+
+Two complementary paths, routed by token cost
+(see [`docs/CONTENT_AUTHORING.md`](docs/CONTENT_AUTHORING.md)):
+
+**Content authoring (default — content-as-code).** Claude writes NPCs, items,
+quest journals, and scenes as JSON in `content/src/` and compiles them into
+the "Troubled Waters Content" compendium module; you sync it to the Foundry
+data dir and import in the UI:
+
+```bash
+node scripts/content/build.mjs            # Claude runs this after authoring
+./scripts/content/sync-content.sh --test  # you, on the host: test instance first
+./scripts/content/sync-content.sh         # then production
+```
+
+**Live play (MCP).** Dice requests, tokens, conditions, scene activation, and
+world-state reads go over the [foundry-vtt-mcp](https://github.com/adambdooley/foundry-vtt-mcp) bridge:
 
 ```bash
 ./scripts/setup-mcp.sh        # installs the MCP server into mcp-server/
@@ -69,7 +87,8 @@ Test module changes against a disposable clone first —
 |---|---|
 | [`DEPLOYMENT.md`](DEPLOYMENT.md) | Full deployment guide: env setup, profiles, monitoring, performance, troubleshooting |
 | [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) | Backup and restore: SCP/rsync pull from a remote host, Foundry-native backups, the assets caveat |
-| [`CLAUDE.md`](CLAUDE.md) | Claude workflow contract + FoundryVTT specifics: MCP integration, safe A/B testing, security hard rules |
+| [`CLAUDE.md`](CLAUDE.md) | Claude workflow contract + FoundryVTT specifics: MCP integration, content routing, safe A/B testing, security hard rules |
+| [`docs/CONTENT_AUTHORING.md`](docs/CONTENT_AUTHORING.md) | Content-as-code pipeline: author JSON → build compendium module → sync → import; skill-vs-MCP routing |
 | [`SECURITY.md`](SECURITY.md) | Credential handling and the files agents must never read |
 | [`docs/TEMPLATE_GUIDE.md`](docs/TEMPLATE_GUIDE.md) | The template foundation: devcontainer, firewall, routing, CI gates, template-sync |
 | [`docs/KANBAN_WORKFLOW.md`](docs/KANBAN_WORKFLOW.md) | Board-driven agent workflow (`/next-issue`, `/run-epic`) |

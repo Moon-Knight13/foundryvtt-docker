@@ -162,15 +162,36 @@ Requirements and gotchas:
 - In the devcontainer, port 31415 is forwarded (see devcontainer.json) so the
   GM browser on the host reaches the backend inside the container.
 
+## Content routing: skill vs MCP (token efficiency)
+
+Two ways to get content into Foundry — the choice is the routing protocol
+applied to game content. Full pipeline doc: `docs/CONTENT_AUTHORING.md`.
+
+| Task | Route | Why |
+|---|---|---|
+| New NPCs, items, quest journals, scenes (any bulk/offline authoring) | **foundry-content skill** | No MCP schemas or fat JSON results in context; content is versioned in git; survives world rebuilds |
+| Dice requests, token moves, conditions, scene activation, world state reads | **foundry-mcp** | Needs the live world; skill cannot touch a running session |
+| Editing documents already imported into a world | **foundry-mcp** (or Foundry UI) | Compendium re-import only updates the compendium copy |
+| Compendium research (`search-compendium`, `list-creatures-by-criteria`) | either | Read-only; fine from MCP during prep |
+
+Enforcement: a PreToolUse hook (`scripts/hooks/foundry-mcp-guard.sh`, wired in
+`.claude/settings.json`) denies `dnd5e-create-npc` and `create-quest-journal`
+with a pointer to the skill. Live-session override: `touch
+.ai/foundry-live-session` (delete afterwards) or `FOUNDRY_MCP_WRITES=allow`.
+Sessions that never touch a live game should disable the foundry-mcp server
+entirely (`claude --mcp-config` selection or `/mcp` toggle) — its tool
+schemas are pure overhead there.
+
 ### Game-creation workflow
 
-From a rough idea to playable content, the typical tool flow:
+From a rough idea to playable content:
 
-1. `get-world-info` / `list-scenes` — orient in the world.
-2. `search-compendium` / `list-creatures-by-criteria` — find source material.
-3. `dnd5e-create-npc` (or compendium-sourced actors) — cast of characters.
-4. Quest journal tools — write the quest/plot entries, link actors.
-5. Scene/token tools — stage encounters; dice-request tools during play.
+1. `get-world-info` / `list-scenes` (MCP) — orient in the world.
+2. `search-compendium` / `list-creatures-by-criteria` (MCP) — source material.
+3. **foundry-content skill** — author NPCs, items, journals, scenes as JSON in
+   `content/src/`; build; user syncs and imports (see skill for steps).
+4. Scene/token tools (MCP) — stage encounters in the live world from the
+   imported compendium content; dice-request tools during play.
 
 ## Safe A/B testing (protecting the live worlds)
 
