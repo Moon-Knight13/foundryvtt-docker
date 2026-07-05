@@ -85,9 +85,9 @@ in the live world.
   (default `~/.local/share/FoundryVTT`) — **not** the repo's gitignored
   `data/` placeholder directory. Worlds live under `<data>/Data/worlds/`,
   modules under `<data>/Data/modules/`.
-- `src/` — TypeScript/shell utilities baked into the container image.
-- `deploy-setup.sh` — interactive environment setup; `BACKUP_RESTORE.md` and
-  `DATA_PERSISTENCE.md` document the SCP/rsync backup flow.
+- `deploy-setup.sh` — interactive environment setup; `BACKUP_RESTORE.md`
+  documents the SCP/rsync backup flow. (The upstream image-source tree
+  `src/` was removed — this fork runs the published felddy image.)
 - `scripts/` — template foundation scripts (board, routing, day-0) plus
   project scripts: `scripts/ci/*` (CI gates), `scripts/setup-mcp.sh`,
   `scripts/test-instance.sh`.

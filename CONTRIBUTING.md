@@ -1,172 +1,51 @@
-# Welcome #
+# Contributing
 
-We're so glad you're thinking about contributing to this open source
-project!  If you're unsure or afraid of anything, just ask or submit
-the issue or pull request anyway.  The worst that can happen is that
-you'll be politely asked to change something.  We appreciate any sort
-of contribution, and don't want a wall of rules to get in the way of
-that.
+Thanks for your interest! This is a personal FoundryVTT deployment that
+doubles as a reference for retrofitting the
+[claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo)
+onto an existing self-hosted service. Issues and PRs are welcome — if you're
+unsure about anything, open an issue and ask.
 
-Before contributing, we encourage you to read our CONTRIBUTING policy
-(you are here), our [LICENSE](LICENSE), and our [README](README.md),
-all of which should be in this repository.
+## Ground rules
 
-## Issues ##
+- All PRs target `develop` (the default branch). `main` is production and is
+  promotion-only.
+- Both branches are protected: PRs need a passing check run
+  (validate-template, semgrep, gitleaks) and a review.
+- **Never commit credentials.** `.env`, `license.json`, and `cookiejar.json`
+  are off-limits — see [SECURITY.md](SECURITY.md). Secret scanning and push
+  protection are enabled; gitleaks runs in CI and pre-commit.
 
-If you want to report a bug or request a new feature, the most direct
-method is to [create an
-issue](https://github.com/felddy/foundryvtt-docker/issues) in this
-repository.  We recommend that you first search through existing
-issues (both open and closed) to check if your particular issue has
-already been reported.  If it has then you might want to add a comment
-to the existing issue.  If it hasn't then feel free to create a new
-one.
+## Development environment
 
-## Pull requests ##
+The repo ships a devcontainer (VS Code → "Reopen in Container") with all
+tooling preinstalled, including the Claude Code workflow described in
+[CLAUDE.md](CLAUDE.md) and [docs/TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md).
 
-If you choose to [submit a pull
-request](https://github.com/felddy/foundryvtt-docker/pulls), you will
-notice that our continuous integration (CI) system runs a fairly
-extensive set of linters and syntax checkers.  Your pull request may
-fail these checks, and that's OK.  If you want you can stop there and
-wait for us to make the necessary corrections to ensure your code
-passes the CI checks.
+Working outside the devcontainer: install
+[pre-commit](https://pre-commit.com) and run `pre-commit install` so the
+lint/security hooks run on commit.
 
-If you want to make the changes yourself, or if you want to become a
-regular contributor, then you will want to set up
-[pre-commit](https://pre-commit.com/) on your local machine.  Once you
-do that, the CI checks will run locally before you even write your
-commit message.  This speeds up your development cycle considerably.
-
-### Setting up pre-commit ###
-
-There are a few ways to do this, but we prefer to use
-[`pyenv`](https://github.com/pyenv/pyenv) and
-[`pyenv-virtualenv`](https://github.com/pyenv/pyenv-virtualenv) to
-create and manage a Python virtual environment specific to this
-project.
-
-We recommend using the `setup-env` script located in this repository,
-as it automates the entire environment configuration process. The
-dependencies required to run this script are
-[GNU `getopt`](https://github.com/util-linux/util-linux/blob/master/misc-utils/getopt.1.adoc),
-[`pyenv`](https://github.com/pyenv/pyenv), and [`pyenv-virtualenv`](https://github.com/pyenv/pyenv-virtualenv).
-If these tools are already configured on your system, you can simply run the
-following command:
-
-```console
-./setup-env
-```
-
-Otherwise, follow the steps below to manually configure your
-environment.
-
-#### Installing and using GNU `getopt`, `pyenv`, and `pyenv-virtualenv` ####
-
-On macOS, we recommend installing [brew](https://brew.sh/).  Then
-installation is as simple as `brew install gnu-getopt pyenv pyenv-virtualenv` and
-adding this to your profile:
+## Testing your changes
 
 ```bash
-# GNU getopt must be explicitly added to the path since it is
-# keg-only (https://docs.brew.sh/FAQ#what-does-keg-only-mean)
-export PATH="$(brew --prefix)/opt/gnu-getopt/bin:$PATH"
-
-# Setup pyenv
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init --path)"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
+bash scripts/validate-template.sh     # template integrity (CI runs this too)
+bash scripts/tests/test-delegation.sh # model-routing test suite
+bash scripts/tests/test-day0.sh       # day-0 bootstrap checks
 ```
 
-For Linux, Windows Subsystem for Linux (WSL), or macOS (if you
-don't want to use `brew`) you can use
-[pyenv/pyenv-installer](https://github.com/pyenv/pyenv-installer) to
-install the necessary tools. Before running this ensure that you have
-installed the prerequisites for your platform according to the
-[`pyenv` wiki
-page](https://github.com/pyenv/pyenv/wiki/common-build-problems).
-GNU `getopt` is included in most Linux distributions as part of the
-[`util-linux`](https://github.com/util-linux/util-linux) package.
+Changes to the Foundry stack itself should be exercised against a disposable
+clone, never the live data: `./scripts/test-instance.sh up` (see CLAUDE.md,
+"Safe A/B testing").
 
-On WSL you should treat your platform as whatever Linux distribution
-you've chosen to install.
+## Licence
 
-Once you have installed `pyenv` you will need to add the following
-lines to your `.bash_profile` (or `.profile`):
+By submitting a pull request you agree to release your contribution under
+this repository's [MIT license](LICENSE).
 
-```bash
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init --path)"
-```
+## Upstream
 
-and then add the following lines to your `.bashrc`:
-
-```bash
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-```
-
-If you want more information about setting up `pyenv` once installed, please run
-
-```console
-pyenv init
-```
-
-and
-
-```console
-pyenv virtualenv-init
-```
-
-for the current configuration instructions.
-
-If you are using a shell other than `bash` you should follow the
-instructions that the `pyenv-installer` script outputs.
-
-You will need to reload your shell for these changes to take effect so
-you can begin to use `pyenv`.
-
-For a list of Python versions that are already installed and ready to
-use with `pyenv`, use the command `pyenv versions`.  To see a list of
-the Python versions available to be installed and used with `pyenv`
-use the command `pyenv install --list`.  You can read more about
-the [many things that `pyenv` can do](https://github.com/pyenv/pyenv/blob/master/COMMANDS.md).
-See the [usage information](https://github.com/pyenv/pyenv-virtualenv#usage)
-for the additional capabilities that pyenv-virtualenv adds to the `pyenv`
-command.
-
-#### Creating the Python virtual environment ####
-
-Once `pyenv` and `pyenv-virtualenv` are installed on your system, you
-can create and configure the Python virtual environment with these
-commands:
-
-```console
-cd foundryvtt-docker
-pyenv virtualenv <python_version_to_use> foundryvtt-docker
-pyenv local foundryvtt-docker
-pip install --requirement requirements-dev.txt
-```
-
-#### Installing the pre-commit hook ####
-
-Now setting up pre-commit is as simple as:
-
-```console
-pre-commit install
-```
-
-At this point the pre-commit checks will run against any files that
-you attempt to commit.  If you want to run the checks against the
-entire repo, just execute `pre-commit run --all-files`.
-
-## License ##
-
-This project is released as open source under the [MIT license](LICENSE).
-
-All contributions to this project will be released under the same MIT license.
-By submitting a pull request, you are agreeing to comply with this waiver of
-copyright interest.
+Bugs in the container image itself (entrypoint, launcher, image build)
+belong upstream at
+[felddy/foundryvtt-docker](https://github.com/felddy/foundryvtt-docker) —
+this fork consumes the published image and does not build its own.

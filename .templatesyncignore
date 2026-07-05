@@ -6,7 +6,7 @@
 # Note: per actions-template-sync, this file itself is not synced — each
 # derived repo owns its copy and may extend it with project-divergent paths.
 
-# Replaced per project (seed lives in docs/README.template.md)
+# Replaced per project
 README.md
 
 # Customized on day 0 with real owners
@@ -29,9 +29,8 @@ SECURITY.md
 # Diverges only until the metavariable-regex nesting fix for the two PII rules
 # lands upstream in the template — then remove this line to resume syncing.
 .semgrep.yml
-# Private-repo gates on SARIF upload / GHAS-dependent jobs — remove these
-# lines if the gates are upstreamed to the template or the repo goes public.
-.github/workflows/semgrep.yml
-.github/workflows/container-scan.yml
+# Private-repo gate ignores for semgrep/container-scan/dependency-review were
+# removed 2026-07-05 (repo is public; sync may revert the now-inert gates).
+# codeql-analysis.yml stays ignored: this fork deliberately scans `actions`
+# only — the upstream image-source TS/Python was removed with the toolchain.
 .github/workflows/codeql-analysis.yml
-.github/workflows/dependency-review.yml
