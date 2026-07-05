@@ -1,344 +1,58 @@
 # FoundryVTT Docker Deployment Guide
 
-This guide walks you through deploying FoundryVTT via Docker with support for:
-- ✅ Secure credential management (no secrets in repo)
-- ✅ Remote access via ngrok
-- ✅ Backup restoration from secondary laptops
-- ✅ GPU acceleration support
+Deploying this repo's FoundryVTT stack:
+
+- ✅ Secure credential management (no secrets in the repo)
+- ✅ Live data on the host at `FOUNDRY_DATA_PATH`
+- ✅ Optional remote access via ngrok or Cloudflare Tunnel
+- ✅ Optional monitoring stack (Netdata + Dozzle)
 
 ## Quick Start
 
-### 1. Initial Setup
+### 1. Initial setup
 
 ```bash
 cp .env.example .env
-mkdir -p ~/.local/share/FoundryVTT
-```
-
-This will:
-- Create `.env` from `.env.example` template
-- Create `./data` directory for persistent storage
-- Create `~/.local/share/FoundryVTT` directory for optional data mirroring
-
-### 2. Configure Download Access
-
-Edit `.env` and add your FoundryVTT timed URL:
-
-```bash
-nano .env
+./deploy-setup.sh        # guided setup — or edit .env by hand
 ```
 
 Required variables:
-- `FOUNDRY_RELEASE_URL`: Timed URL from Foundry license page (Node.js option)
 
-Optional fallback:
-- `FOUNDRY_USERNAME`: Your Foundry VTT username
-- `FOUNDRY_PASSWORD`: Your Foundry VTT password
+- `FOUNDRY_RELEASE_URL` — timed URL from your Foundry license page (Node.js
+  option), **or** `FOUNDRY_USERNAME` + `FOUNDRY_PASSWORD` as fallback
+- `FOUNDRY_ADMIN_KEY` — admin panel password (compose refuses to start
+  without it)
 
 Optional:
-- `NGROK_AUTH_TOKEN`: For remote access via ngrok
-- `FOUNDRY_PORT`: Port mapping (default: 30000)
 
-### 3. Start the Container
+- `NGROK_AUTH_TOKEN` — for remote access via ngrok
+- `FOUNDRY_PORT` — published port (default 30000)
+- `FOUNDRY_DATA_PATH` — host data directory
+  (default `~/.local/share/FoundryVTT`)
 
-**Basic deployment (local access only):**
-```bash
-docker compose up -d
-```
-
-**With ngrok (remote access):**
-```bash
-docker compose --profile ngrok up -d
-```
-
-**With backup restoration from secondary laptop:**
-```bash
-# Pull full FoundryVTT data manually from your secondary laptop
-rsync -avz --progress -e "ssh -i ~/.ssh/id_rsa" user@remote-host:~/.local/share/FoundryVTT/ ~/.local/share/FoundryVTT/
-
-# Ensure compose uses the mirrored Backups directory
-# In .env, set:
-# FOUNDRY_BACKUPS_PATH=~/.local/share/FoundryVTT/Backups
-
-docker compose up -d
-# Then restore via FoundryVTT UI: Setup → Manage Backups
-```
-
-### 4. Stop Services
-
-Stop Ngrok
-```
-docker compose down ngrok 
-```
-
-Stop foundryvtt
-```
-docker compose down
-```
-
-## Features & Configuration
-
-### 📊 Data Persistence
-
-**Important**: Understanding how your data persists across deployments.
-
-#### Volume Binding (Single Host)
-All FoundryVTT data is stored in `./data` on your host:
-- **Container path**: `/data` (inside container)
-- **Host path**: `./data` (bound via docker volume)
-- **Persistence**: Data survives container restarts ✅
-- **Location**: compose.yml lines 16-19
-
-When you make changes in FoundryVTT UI, they're immediately written to `./data`.
-
-#### Backup Restoration (Multi-Host)
-Pull full FoundryVTT data from your secondary laptop during setup:
-- ✅ Idempotent rsync sync (new/changed files only)
-- ✅ Changes made in container persist on host
-- ✅ Restored data available via FoundryVTT UI
-
-**Quick start**: See [DATA_PERSISTENCE.md](./DATA_PERSISTENCE.md) for:
-- Data persistence explanation
-- Backup restoration procedures
-- Testing data persistence
-
-### 🌐 Remote Access via ngrok
-
-ngrok creates a public URL for secure remote access without port forwarding.
-
-#### Prerequisites
-1. Create free ngrok account: https://ngrok.com
-2. Get your auth token from dashboard
-
-#### Setup
-```bash
-# In .env, set:
-NGROK_ENABLED=true
-NGROK_AUTH_TOKEN=your_ngrok_auth_token_here
-FOUNDRY_PROTOCOL=https
-FOUNDRY_PROXY_PORT=443
-# FOUNDRY_HOSTNAME=<your-ngrok-domain>
-```
-
-#### Start with ngrok
-```bash
-docker compose --profile ngrok up -d
-```
-
-#### Get your public URL
-```bash
-docker compose logs ngrok --tail=100
-# Or visit http://localhost:4040 for the ngrok dashboard
-```
-
-### 💾 Backup Restoration from Secondary Laptop
-
-Mirror full FoundryVTT user data from another laptop via rsync over SSH. Simple, bandwidth-efficient, and secure.
-
-#### Quick Start
+### 2. Start
 
 ```bash
-# Create local FoundryVTT data directory
-mkdir -p ~/.local/share/FoundryVTT
-
-# Mirror data from remote host
-rsync -avz --progress -e "ssh -i ~/.ssh/id_rsa" user@remote-host:~/.local/share/FoundryVTT/ ~/.local/share/FoundryVTT/
-
-# In .env, set:
-# FOUNDRY_BACKUPS_PATH=~/.local/share/FoundryVTT/Backups
-
-# Start container
-docker compose up -d
-
-# Restore in FoundryVTT UI
-# Setup → Manage Backups → Restore
+docker compose up -d                        # basic, local access only
+docker compose --profile ngrok up -d       # + ngrok remote access
+docker compose --profile monitoring up -d  # + Netdata/Dozzle dashboards
 ```
 
-#### Key Features
+Foundry answers on <http://localhost:30000>.
 
-- ✅ **Simple**: SSH key-based SCP pull
-- ✅ **Bandwidth-efficient**: One-time transfer during setup
-- ✅ **Secure**: Uses SSH authentication only
-- ✅ **Flexible**: Restore multiple backups or full snapshots
-- ✅ **No overhead**: No continuous sync running
-
-#### Full Setup Guide
-
-See **[BACKUP_RESTORE.md](./BACKUP_RESTORE.md)** for:
-- SSH key configuration
-- Manual backup pulling
-- Step-by-step restoration
-- Backup structure explanation
-- Troubleshooting
-
-#### Manual Backup Pull
-
-If backups weren't pulled during setup:
+### 3. Stop
 
 ```bash
-# Create local FoundryVTT data directory
-mkdir -p ~/.local/share/FoundryVTT
-
-# Sync full FoundryVTT data via rsync
-rsync -avz --progress -e "ssh -i ~/.ssh/id_rsa" user@remote-host:~/.local/share/FoundryVTT/ ~/.local/share/FoundryVTT/
-
-# In .env, set:
-# FOUNDRY_BACKUPS_PATH=~/.local/share/FoundryVTT/Backups
+docker compose stop ngrok   # stop just the ngrok tunnel
+docker compose down         # stop everything
 ```
 
-#### Backup Restoration Steps
-
-1. Backups are available at `/data/Backups` in the container
-2. Use FoundryVTT **Setup** → **Manage Backups** to restore
-3. Select backup type (World, System, Module, or Snapshot)
-4. Click **Restore Latest** or select a specific backup to restore
-5. Wait for restoration to complete (may take several minutes)
-
-### 🎮 GPU Support
-
-Enable NVIDIA GPU acceleration for better performance.
-
-#### Prerequisites
-- NVIDIA GPU installed
-- NVIDIA Docker runtime: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/
-
-#### Installation (Ubuntu/Debian)
-```bash
-distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
-curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
-  sudo tee /etc/apt/sources.list.d/nvidia-docker.list
-
-sudo apt-get update && sudo apt-get install -y nvidia-docker2
-sudo systemctl restart docker
-```
-
-#### Enable GPU in compose.yml
-
-Uncomment the GPU section in `compose.yml`:
-
-```yaml
-deploy:
-  resources:
-    reservations:
-      devices:
-        - driver: nvidia
-          count: 1
-          capabilities: [gpu]
-```
-
-Or use environment variable:
-```bash
-GPU_ENABLED=true
-```
-
-#### Verify GPU
-```bash
-docker compose exec foundry nvidia-smi
-```
-
-## Environment Variables Reference
-
-```bash
-# Preferred download method
-FOUNDRY_RELEASE_URL=https://your-timed-url-here
-
-# Optional fallback credentials
-FOUNDRY_USERNAME=
-FOUNDRY_PASSWORD=
-
-# Container
-FOUNDRY_ADMIN_KEY=atropos
-FOUNDRY_VERSION=14.363
-FOUNDRY_TELEMETRY=false
-FOUNDRY_PORT=30000
-
-# ngrok
-NGROK_AUTH_TOKEN=your_token
-FOUNDRY_PROTOCOL=https
-FOUNDRY_PROXY_PORT=443
-# FOUNDRY_HOSTNAME=<your-ngrok-domain>
-
-# File Sync
-SYNC_SOURCE_DIR=user@host:/path
-SYNC_INTERVAL=300
-
-# GPU
-GPU_ENABLED=false
-
-# Performance
-CONTAINER_CACHE=/data/container_cache
-CONTAINER_VERBOSE=false
-```
-
-## Common Commands
-
-```bash
-# View logs
-docker compose logs -f foundry
-
-# Stop container
-docker compose down
-
-# Restart
-docker compose restart
-
-# Check status
-docker compose ps
-
-# View ngrok stats
-curl http://localhost:4040/api/tunnels
-
-# Manual sync trigger
-docker compose exec file-sync /root/entrypoint.sh
-```
-
-## Monitoring & Performance
-
-### Live monitoring (optional, off by default)
-
-```bash
-# Start Netdata + Dozzle alongside FoundryVTT
-docker compose --profile monitoring up -d
-
-# Stop them again
-docker compose --profile monitoring down
-```
-
-- **Netdata** (http://localhost:19999): per-container CPU, memory, network, and
-  disk graphs. Check the `foundry` container here during a laggy session to
-  rule the server in or out.
-- **Dozzle** (http://localhost:8080): live container logs in the browser.
-
-### Diagnosing lag during a session
-
-1. **Framerate vs network** (official FoundryVTT test): have the affected
-   player disable the Game Canvas in settings. If chat/sheets/rolls become
-   responsive, it's their client GPU/framerate; if delays persist, it's
-   network.
-2. **One player or everyone?** The player list shows a per-player latency
-   indicator — one red ping means their connection, all red means your side.
-3. **Your side**: open Netdata. If the foundry container is idle (it usually
-   is), the bottleneck is your upload bandwidth. FoundryVTT recommends at
-   least 12 Mbps upload for self-hosting.
-
-### Performance settings
-
-Static-file and websocket compression are enabled by default via
-`FOUNDRY_MINIFY_STATIC_FILES` and `FOUNDRY_COMPRESS_WEBSOCKET` in
-`compose.yml`. Note that the container regenerates `Config/options.json`
-from environment variables on every start — change settings in `.env` /
-`compose.yml`, not by editing `options.json` directly.
-
-**Avoid free-tier ngrok for game sessions** — it throttles bandwidth and adds
-latency. Prefer direct port forwarding of 30000, or a Cloudflare Tunnel (see
-`docs/cookbooks/cloudflare/`).
-
-### Data location (important)
+## Data location (important)
 
 The live server data is at `FOUNDRY_DATA_PATH` from `.env`
-(`~/.local/share/FoundryVTT`), **not** the `./data/` directory in this repo —
-that is a stale copy. Back up and modify the live path only:
+(default `~/.local/share/FoundryVTT`), bind-mounted to `/data` in the
+container. Everything you change in the FoundryVTT UI is written there
+immediately and survives container restarts and upgrades.
 
 ```bash
 # Quick worlds backup before risky changes
@@ -352,50 +66,117 @@ tar -czf ~/foundry-assets-backup-$(date +%F).tar.gz \
   -C ~/.local/share/FoundryVTT/Data assets
 ```
 
+Migrating data from another machine, and restoring Foundry-native backups,
+is covered in **[BACKUP_RESTORE.md](./BACKUP_RESTORE.md)** (SSH key setup,
+rsync pull, step-by-step restore, troubleshooting).
+
+## Remote access via ngrok
+
+ngrok creates a public URL without port forwarding.
+
+> **Avoid free-tier ngrok for actual game sessions** — it throttles bandwidth
+> and adds latency. Prefer direct port forwarding of 30000, or a permanent
+> [Cloudflare Tunnel](docs/cookbooks/cloudflare/) which is free and faster.
+
+```bash
+# In .env:
+NGROK_AUTH_TOKEN=your_ngrok_auth_token_here
+FOUNDRY_PROTOCOL=https
+FOUNDRY_PROXY_PORT=443
+
+docker compose --profile ngrok up -d
+
+# Get your public URL (the agent dashboard is loopback-only):
+docker compose logs ngrok --tail=100
+# or visit http://localhost:4040
+```
+
+## Monitoring & performance
+
+### Live monitoring (optional, off by default)
+
+```bash
+docker compose --profile monitoring up -d    # start
+docker compose --profile monitoring down     # stop
+```
+
+- **Netdata** (<http://localhost:19999>): per-container CPU, memory, network,
+  and disk graphs. Check the `foundry` container here during a laggy session
+  to rule the server in or out.
+- **Dozzle** (<http://localhost:8080>): live container logs in the browser.
+
+Both bind to loopback — reachable from the host only, by design (they are
+unauthenticated and mount the docker socket).
+
+### Diagnosing lag during a session
+
+1. **Framerate vs network** (official FoundryVTT test): have the affected
+   player disable the Game Canvas in settings. If chat/sheets/rolls become
+   responsive, it's their client GPU/framerate; if delays persist, it's
+   network.
+2. **One player or everyone?** The player list shows a per-player latency
+   indicator — one red ping means their connection, all red means your side.
+3. **Your side**: open Netdata. If the foundry container is idle (it usually
+   is), the bottleneck is your upload bandwidth. FoundryVTT recommends at
+   least 12 Mbps upload for self-hosting.
+
+Note: the FoundryVTT **server** is headless Node.js and does not use a GPU —
+rendering happens in each player's browser. There is nothing to accelerate
+server-side.
+
+### Performance settings
+
+Static-file and websocket compression are enabled by default via
+`FOUNDRY_MINIFY_STATIC_FILES` and `FOUNDRY_COMPRESS_WEBSOCKET` in
+`compose.yml`. The container regenerates `Config/options.json` from
+environment variables on every start — change settings in `.env` /
+`compose.yml`, not by editing `options.json` directly.
+
+## Common commands
+
+```bash
+docker compose logs -f foundry        # follow server logs
+docker compose ps                     # status / health
+docker compose restart foundry        # restart the server
+curl http://localhost:4040/api/tunnels  # ngrok tunnel info (profile up)
+```
+
 ## Troubleshooting
 
 ### FoundryVTT won't start
+
 - Check logs: `docker compose logs foundry`
-- Verify `FOUNDRY_RELEASE_URL` in `.env` (or valid fallback credentials)
+- Verify `FOUNDRY_RELEASE_URL` in `.env` (timed URLs expire — regenerate on
+  the license page), or valid fallback credentials
 - Ensure port 30000 is not in use
 
 ### ngrok not connecting
-- Verify NGROK_AUTH_TOKEN in `.env`
-- Check ngrok dashboard for errors: http://localhost:4040
-- Check ngrok logs: `docker compose logs ngrok --tail=100`
 
-### File sync not working
-- Check SSH key permissions: `chmod 600 ~/.ssh/foundry_sync`
-- Test rsync manually: `rsync -avz <remote-user>@<remote-host>:/path ./data/`
-- Check logs: `docker compose logs file-sync`
+- Verify `NGROK_AUTH_TOKEN` in `.env`
+- Check the dashboard for errors: <http://localhost:4040>
+- Check logs: `docker compose logs ngrok --tail=100`
 
-### GPU not detected
-- Run: `docker run --rm --gpus all nvidia/cuda:11.0-runtime nvidia-smi`
-- Check NVIDIA runtime: `docker info | grep nvidia`
+## Security considerations
 
-## Security Considerations
+1. **Never commit `.env`** — it's in `.gitignore`, and agents are barred from
+   reading it (see [SECURITY.md](SECURITY.md))
+2. **ngrok token** — rotate if accidentally exposed
+3. **Firewall** — restrict access to port 30000 if not tunneling
+4. **SSL/TLS** — configure `FOUNDRY_SSL_CERT` / `FOUNDRY_SSL_KEY` when
+   exposing directly
 
-1. **Never commit `.env`** - It's already in `.gitignore`
-2. **SSH keys** - Use `~/.ssh` mount with read-only permissions
-3. **ngrok token** - Rotate if accidentally exposed
-4. **Firewall** - Restrict access to port 30000 if not using ngrok
-5. **SSL/TLS** - Configure `FOUNDRY_SSL_CERT` and `FOUNDRY_SSL_KEY` for production
+## Production hardening ideas
 
-## Production Deployment
+1. SSL/TLS with valid certificates (or terminate at a Cloudflare Tunnel)
+2. Watchtower for automatic image updates (see
+   `docker-compose.override.example.yml`)
+3. Scheduled backups of the live data path (worlds **and** assets)
+4. Resource limits in a compose override
 
-For production, consider:
+## Support & resources
 
-1. Use managed secrets (Docker Secrets, HashiCorp Vault)
-2. Enable SSL/TLS with valid certificates
-3. Use Watchtower for automatic updates
-4. Set up regular backups of `/data` directory
-5. Configure resource limits in compose.yml
-6. Use health checks (already configured)
-
-## Support & Resources
-
-- FoundryVTT Docs: https://foundryvtt.com/
-- Container Image: https://ghcr.io/felddy/foundryvtt
-- Original Repository: https://github.com/felddy/foundryvtt-docker
-- ngrok Docs: https://ngrok.com/docs
-
+- FoundryVTT docs: <https://foundryvtt.com/>
+- Container image: <https://ghcr.io/felddy/foundryvtt> —
+  all image environment variables:
+  [upstream README](https://github.com/felddy/foundryvtt-docker#readme)
+- ngrok docs: <https://ngrok.com/docs>

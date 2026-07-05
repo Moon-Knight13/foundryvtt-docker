@@ -11,6 +11,11 @@ Your local `.env` file contains:
 - SSH key paths for backup restoration
 - Any other credentials
 
+The same protection extends to two files inside the live data directory:
+`license.json` (FoundryVTT license key) and `cookiejar.json` (authentication
+cookies). Agents must never read or display any of the three — see
+`.copilot-instructions.md` and the CLAUDE.md security hard rules.
+
 ### Protection Layers ###
 
 #### 1. Git Protection ####

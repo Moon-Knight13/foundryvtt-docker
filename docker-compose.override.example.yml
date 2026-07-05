@@ -4,15 +4,9 @@
 
 services:
   foundry:
-    # Uncomment for GPU support
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
-    
+    # NOTE: no GPU section on purpose — the FoundryVTT server is headless
+    # Node.js and does not use a GPU; rendering happens in players' browsers.
+
     # Resource limits (recommended for production)
     # deploy:
     #   resources:
@@ -42,11 +36,11 @@ services:
   #   command: foundry --interval 86400  # Check daily
   #   restart: unless-stopped
 
-  # Example: Backup service
+  # Example: Backup service (source = the live data path from .env)
   # backup:
   #   image: alpine:latest
   #   volumes:
-  #     - ./data:/data:ro
+  #     - ${FOUNDRY_DATA_PATH:-~/.local/share/FoundryVTT}:/data:ro
   #     - ./backups:/backups
   #   entrypoint: |
   #     sh -c "
