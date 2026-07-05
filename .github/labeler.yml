@@ -59,8 +59,6 @@
           # If this project has any shell scripts that do not end in the ".sh"
           # extension, add them below.
           - "**/*.sh"
-          - bump-version
-          - setup-env
 
 "terraform :cloud:":
   - changed-files:
@@ -71,15 +69,10 @@
   - changed-files:
       - any-glob-to-any-file:
           # Add any test-related files or paths.
-          - .ansible-lint
-          - .bandit.yml
-          - .flake8
-          - .isort.cfg
           - .mdl_config.yaml
           - .yamllint
           - compose.yml
-          - pytest.ini
-          - tests/**
+          - scripts/tests/**
 
 "typescript :blue_book:":
   - changed-files:
@@ -91,8 +84,3 @@
       # Any Lineage pull requests should use this branch.
       - lineage/skeleton
 
-"version bump :bookmark:":
-  - changed-files:
-      - any-glob-to-any-file:
-          # Ensure this matches your version tracking file(s).
-          - src/version.txt

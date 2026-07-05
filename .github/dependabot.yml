@@ -7,20 +7,9 @@
 version: 2
 
 updates:
-  - package-ecosystem: docker
-    directory: /
-    schedule:
-      interval: daily
-    labels:
-      - "bot :robot:"
-      - "dependencies :game_die:"
-      - "docker :whale:"
-    groups:
-      docker-all:
-        applies-to: version-updates
-        patterns:
-          - "*"
-
+  # NOTE: docker (root Dockerfile), npm, pip, and uv ecosystems were removed
+  # with the upstream image-build toolchain — this fork deploys the published
+  # felddy image and has no root Node/Python project to bump.
   - package-ecosystem: docker-compose
     directory: /
     schedule:
@@ -45,48 +34,6 @@ updates:
       - "github-actions :octocat:"
     groups:
       github-actions-all:
-        applies-to: version-updates
-        patterns:
-          - "*"
-
-  - package-ecosystem: npm
-    directory: /
-    schedule:
-      interval: daily
-    labels:
-      - "bot :robot:"
-      - "dependencies :game_die:"
-      - "javascript :coffee:"
-    groups:
-      npm-all:
-        applies-to: version-updates
-        patterns:
-          - "*"
-
-  - package-ecosystem: pip
-    directory: /
-    schedule:
-      interval: daily
-    labels:
-      - "bot :robot:"
-      - "dependencies :game_die:"
-      - "python :snake:"
-    groups:
-      pip-all:
-        applies-to: version-updates
-        patterns:
-          - "*"
-
-  - package-ecosystem: uv
-    directory: /
-    schedule:
-      interval: daily
-    labels:
-      - "bot :robot:"
-      - "dependencies :game_die:"
-      - "python :snake:"
-    groups:
-      uv-all:
         applies-to: version-updates
         patterns:
           - "*"
