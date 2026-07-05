@@ -49,3 +49,10 @@ Bugs in the container image itself (entrypoint, launcher, image build)
 belong upstream at
 [felddy/foundryvtt-docker](https://github.com/felddy/foundryvtt-docker) —
 this fork consumes the published image and does not build its own.
+
+Stage upstream contributions through our clean fork,
+[Moon-Knight13/foundryvtt-docker-upstream](https://github.com/Moon-Knight13/foundryvtt-docker-upstream):
+branch there (off its `develop`), do the image work in that tree, and open
+the PR from it against felddy/foundryvtt-docker. Keeping upstream work out of
+this repo avoids mixing image-source changes with our deployment/AI-workflow
+history.
