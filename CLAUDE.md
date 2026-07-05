@@ -233,3 +233,35 @@ Procedure:
 Caveat: avoid *actively playing* both instances at once — one Foundry license
 permits one active server; use one at a time during testing. The cloned data
 dir carries the license and admin key, so the test instance needs no re-entry.
+
+## Repository topology & issue routing
+
+Three GitHub repos, three roles — do not confuse them:
+
+| Repo | Git remote | Role |
+|---|---|---|
+| `Moon-Knight13/foundryvtt-docker` | `origin` | **This repo.** A standalone repo (**not** a fork — `isFork:false`), so day-0 (`scripts/bootstrap-project.sh`) owns its **Issues** and **Project board #10**. Our bugs and stories live here. |
+| `Moon-Knight13/foundryvtt-docker-upstream` | `upstreamfork` | The **fork of felddy** (`isFork:true`, parent `felddy/foundryvtt-docker`). Used *only* to contribute back upstream: branch here, open a PR to felddy. No board, no product issues. |
+| `felddy/foundryvtt-docker` | `upstream` | The real upstream we track and pull from. |
+
+Why `origin` is deliberately **not** a fork: a fork disables Issues by default
+and can't carry its own template governance cleanly. Keeping our working repo
+standalone (detached) lets `setup-day0.sh` / `bootstrap-project.sh` run the full
+board + Issues workflow. Issues were enabled on `origin` on 2026-07-05; before
+that, cards had to be created as draft-only items on board #10.
+
+Contributions to felddy's image or behavior go through the **`upstreamfork`**
+fork (branch there, PR to `felddy/foundryvtt-docker`) — never mix an
+upstream-bound change into our own board work.
+
+### Where a bug/story is filed
+
+| The problem is in… | File it on… |
+|---|---|
+| This repo's runtime, compose stack, MCP wiring, content pipeline, scripts, docs | An **Issue on `Moon-Knight13/foundryvtt-docker`** → add to **board #10** (`scripts/board.sh add <n>`). |
+| The **foundry-gm plugin** itself — `foundry-content` / `foundry-mcp-setup` skills, the guard hook, the reviewer agent, or the build tooling the plugin ships | An **Issue on `Moon-Knight13/foundry-gm-claude-plugin`** (its own board/repo), not here. |
+| Upstream felddy image/behavior we want fixed upstream | Branch on **`upstreamfork`**, PR to **`felddy/foundryvtt-docker`**. |
+
+Rule of thumb: this repo *consumes* the plugin. A bug reproducible with the
+plugin uninstalled belongs here; a bug in a skill/hook/agent the plugin ships
+belongs on the plugin repo so the fix reaches every consumer.
