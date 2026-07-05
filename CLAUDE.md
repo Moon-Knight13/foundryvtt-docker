@@ -162,25 +162,70 @@ Requirements and gotchas:
 - In the devcontainer, port 31415 is forwarded (see devcontainer.json) so the
   GM browser on the host reaches the backend inside the container.
 
+### Connection troubleshooting
+
+When every MCP tool returns `Foundry VTT module not connected`, the backend
+side (ports 31414/31415/31416, the `backend.bundle.cjs` process) is almost
+always healthy and the Claude Code ↔ MCP-server link reconnects fine via
+`/mcp`. The hop that breaks is **GM browser (foundry-mcp-bridge) → backend
+:31415**. Run the read-only diagnostic to pin it:
+
+```bash
+./scripts/mcp-health.sh   # checks the 3 ports + backend process; inspects
+                          # :31415 for a connected module; prints the fix
+```
+
+Two root causes, in order of likelihood:
+
+1. **Enabled ≠ connected.** The module handshake must happen *after* the
+   backend is up, and "enabled in Manage Modules" does not mean "connected".
+   Check the module's connection-status indicator (not just the enable
+   toggle), confirm the backend host/port is `:31415`, then **hard-refresh the
+   GM tab** (Ctrl/Cmd+Shift+R) so it reconnects to the running backend. If it
+   still fails, open browser DevTools → Console and read the module's
+   WebSocket error. A GM tab must stay open — the module is client-side.
+2. **Port-forward mismatch (background job vs interactive devcontainer).**
+   `.devcontainer/devcontainer.json` forwards `:31415` for the *interactive*
+   devcontainer only. A background-job / remote Claude session can run in a
+   *different* container, so the host browser's `localhost:31415` forwards to
+   a container that is not the one running this backend. Run the MCP backend
+   in the same interactive devcontainer the browser forwards from (or forward
+   `:31415` from the container that actually hosts the backend). `mcp-health.sh`
+   warns when it detects it is running inside a container.
+
 ## Content routing: skill vs MCP (token efficiency)
 
 Two ways to get content into Foundry — the choice is the routing protocol
 applied to game content. Full pipeline doc: `docs/CONTENT_AUTHORING.md`.
 
+The `foundry-content` skill (and the `foundry-mcp-setup` skill) ship in the
+**foundry-gm** Claude Code plugin, installed from its marketplace:
+
+```
+/plugin marketplace add Moon-Knight13/foundry-gm-claude-plugin
+/plugin install foundry-gm@foundry-gm-marketplace
+```
+
+The plugin scaffolds its build tooling into `scripts/content/` (already
+present here); a `TOOLING_VERSION` marker in `build.mjs` lets the skill flag
+a stale copy.
+
 | Task | Route | Why |
 |---|---|---|
-| New NPCs, items, quest journals, scenes (any bulk/offline authoring) | **foundry-content skill** | No MCP schemas or fat JSON results in context; content is versioned in git; survives world rebuilds |
+| New NPCs, items, quest journals, scenes, roll tables, factions, encounters (any bulk/offline authoring) | **foundry-content skill** (foundry-gm plugin) | No MCP schemas or fat JSON results in context; content is versioned in git; survives world rebuilds |
 | Dice requests, token moves, conditions, scene activation, world state reads | **foundry-mcp** | Needs the live world; skill cannot touch a running session |
 | Editing documents already imported into a world | **foundry-mcp** (or Foundry UI) | Compendium re-import only updates the compendium copy |
 | Compendium research (`search-compendium`, `list-creatures-by-criteria`) | either | Read-only; fine from MCP during prep |
 
-Enforcement: a PreToolUse hook (`scripts/hooks/foundry-mcp-guard.sh`, wired in
-`.claude/settings.json`) denies `dnd5e-create-npc` and `create-quest-journal`
-with a pointer to the skill. Live-session override: `touch
-.ai/foundry-live-session` (delete afterwards) or `FOUNDRY_MCP_WRITES=allow`.
-Sessions that never touch a live game should disable the foundry-mcp server
-entirely (`claude --mcp-config` selection or `/mcp` toggle) — its tool
-schemas are pure overhead there.
+Enforcement: a PreToolUse hook denies `dnd5e-create-npc` and
+`create-quest-journal` with a pointer to the skill. The **foundry-gm plugin
+ships this hook**; a local copy (`scripts/hooks/foundry-mcp-guard.sh`, wired in
+`.claude/settings.json`) is kept as belt-and-suspenders until the plugin hook
+is confirmed in a session — both deny identically, so running both is safe.
+Live-session override: `touch .ai/foundry-live-session` (delete afterwards) or
+`FOUNDRY_MCP_WRITES=allow`. Sessions that never touch a live game should
+disable the foundry-mcp server entirely (`claude --mcp-config` selection or
+`/mcp` toggle) — its tool schemas are pure overhead there.
 
 ### Game-creation workflow
 
@@ -219,3 +264,35 @@ Procedure:
 Caveat: avoid *actively playing* both instances at once — one Foundry license
 permits one active server; use one at a time during testing. The cloned data
 dir carries the license and admin key, so the test instance needs no re-entry.
+
+## Repository topology & issue routing
+
+Three GitHub repos, three roles — do not confuse them:
+
+| Repo | Git remote | Role |
+|---|---|---|
+| `Moon-Knight13/foundryvtt-docker` | `origin` | **This repo.** A standalone repo (**not** a fork — `isFork:false`), so day-0 (`scripts/bootstrap-project.sh`) owns its **Issues** and **Project board #10**. Our bugs and stories live here. |
+| `Moon-Knight13/foundryvtt-docker-upstream` | `upstreamfork` | The **fork of felddy** (`isFork:true`, parent `felddy/foundryvtt-docker`). Used *only* to contribute back upstream: branch here, open a PR to felddy. No board, no product issues. |
+| `felddy/foundryvtt-docker` | `upstream` | The real upstream we track and pull from. |
+
+Why `origin` is deliberately **not** a fork: a fork disables Issues by default
+and can't carry its own template governance cleanly. Keeping our working repo
+standalone (detached) lets `setup-day0.sh` / `bootstrap-project.sh` run the full
+board + Issues workflow. Issues were enabled on `origin` on 2026-07-05; before
+that, cards had to be created as draft-only items on board #10.
+
+Contributions to felddy's image or behavior go through the **`upstreamfork`**
+fork (branch there, PR to `felddy/foundryvtt-docker`) — never mix an
+upstream-bound change into our own board work.
+
+### Where a bug/story is filed
+
+| The problem is in… | File it on… |
+|---|---|
+| This repo's runtime, compose stack, MCP wiring, content pipeline, scripts, docs | An **Issue on `Moon-Knight13/foundryvtt-docker`** → add to **board #10** (`scripts/board.sh add <n>`). |
+| The **foundry-gm plugin** itself — `foundry-content` / `foundry-mcp-setup` skills, the guard hook, the reviewer agent, or the build tooling the plugin ships | An **Issue on `Moon-Knight13/foundry-gm-claude-plugin`** (its own board/repo), not here. |
+| Upstream felddy image/behavior we want fixed upstream | Branch on **`upstreamfork`**, PR to **`felddy/foundryvtt-docker`**. |
+
+Rule of thumb: this repo *consumes* the plugin. A bug reproducible with the
+plugin uninstalled belongs here; a bug in a skill/hook/agent the plugin ships
+belongs on the plugin repo so the fix reaches every consumer.
