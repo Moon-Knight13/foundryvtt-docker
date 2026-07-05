@@ -122,7 +122,8 @@ export async function main({
   await rm(path.join(distRoot, '.stage'), { recursive: true, force: true });
 
   await mkdir(moduleDir, { recursive: true });
-  await writeFile(path.join(moduleDir, 'module.json'), JSON.stringify(moduleManifest(), null, 2));
+  const manifest = moduleManifest(Object.keys(staged));
+  await writeFile(path.join(moduleDir, 'module.json'), JSON.stringify(manifest, null, 2));
   return { counts };
 }
 
@@ -137,8 +138,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     });
 }
 
-export function moduleManifest() {
-  const packs = Object.entries(COLLECTIONS).map(([src, c]) => ({
+// Foundry fails to register packs whose directory is missing, so the manifest
+// must list only the packs the build actually compiled.
+export function moduleManifest(builtTypes = Object.keys(COLLECTIONS)) {
+  const packs = builtTypes.map(src => [src, COLLECTIONS[src]]).map(([src, c]) => ({
     name: src,
     label: `Troubled Waters ${c.type}s`,
     path: `packs/${src}`,

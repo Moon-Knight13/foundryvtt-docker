@@ -42,6 +42,11 @@ test('moduleManifest shape', () => {
   assert.deepEqual(m.relationships.systems[0].id, 'dnd5e');
 });
 
+test('moduleManifest declares only built packs', () => {
+  const m = moduleManifest(['actors', 'journals']);
+  assert.deepEqual(m.packs.map(p => p.name), ['actors', 'journals']);
+});
+
 test('COLLECTIONS maps journal collection correctly', () => {
   assert.equal(COLLECTIONS.journals.key, 'journal');
   assert.equal(COLLECTIONS.journals.type, 'JournalEntry');
