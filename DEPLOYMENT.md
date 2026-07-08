@@ -4,7 +4,7 @@ Deploying this repo's FoundryVTT stack:
 
 - ✅ Secure credential management (no secrets in the repo)
 - ✅ Live data on the host at `FOUNDRY_DATA_PATH`
-- ✅ Optional remote access via ngrok or Cloudflare Tunnel
+- ✅ Optional remote access via Cloudflare Tunnel (no inbound ports)
 - ✅ Optional monitoring stack (Netdata + Dozzle)
 
 ## Quick Start
@@ -25,7 +25,7 @@ Required variables:
 
 Optional:
 
-- `NGROK_AUTH_TOKEN` — for remote access via ngrok
+- `CF_TUNNEL_TOKEN` — for remote access via Cloudflare Tunnel
 - `FOUNDRY_PORT` — published port (default 30000)
 - `FOUNDRY_DATA_PATH` — host data directory
   (default `~/.local/share/FoundryVTT`)
@@ -33,9 +33,9 @@ Optional:
 ### 2. Start
 
 ```bash
-docker compose up -d                        # basic, local access only
-docker compose --profile ngrok up -d       # + ngrok remote access
-docker compose --profile monitoring up -d  # + Netdata/Dozzle dashboards
+docker compose up -d                                              # basic, local access only
+docker compose -f compose.yml -f compose.cloudflare.yml up -d     # + Cloudflare Tunnel remote access
+docker compose --profile monitoring up -d                         # + Netdata/Dozzle dashboards
 ```
 
 Foundry answers on <http://localhost:30000>.
@@ -43,8 +43,8 @@ Foundry answers on <http://localhost:30000>.
 ### 3. Stop
 
 ```bash
-docker compose stop ngrok   # stop just the ngrok tunnel
-docker compose down         # stop everything
+docker compose -f compose.yml -f compose.cloudflare.yml stop cloudflared   # stop just the tunnel
+docker compose down                                                        # stop everything
 ```
 
 ## Data location (important)
@@ -70,26 +70,50 @@ Migrating data from another machine, and restoring Foundry-native backups,
 is covered in **[BACKUP_RESTORE.md](./BACKUP_RESTORE.md)** (SSH key setup,
 rsync pull, step-by-step restore, troubleshooting).
 
-## Remote access via ngrok
+## Remote access via Cloudflare Tunnel
 
-ngrok creates a public URL without port forwarding.
+A Cloudflare Tunnel gives players a stable HTTPS URL with **no port forwarding
+and no inbound ports** — `cloudflared` dials outbound to Cloudflare's edge,
+which terminates TLS. It's free and faster than the free ngrok tier this repo
+used previously. Requires a Cloudflare account and a domain on Cloudflare.
 
-> **Avoid free-tier ngrok for actual game sessions** — it throttles bandwidth
-> and adds latency. Prefer direct port forwarding of 30000, or a permanent
-> [Cloudflare Tunnel](docs/cookbooks/cloudflare/) which is free and faster.
+The tunnel lives in the `compose.cloudflare.yml` overlay, applied with `-f` so
+the base stack (and plain `http://localhost:30000`) is unaffected when you're
+not tunneling.
+
+### One-time setup
+
+1. **Create the tunnel.** Cloudflare Zero Trust dashboard → **Networks →
+   Tunnels → Create a tunnel** (type *Cloudflared*). Copy the **tunnel token**.
+2. **Route a hostname to it.** In the tunnel's *Public Hostnames*, add e.g.
+   `vtt.example.com` → service `http://foundry:30000`. Cloudflare creates the
+   DNS record for you.
+3. **Set the env vars** in `.env`:
+
+   ```bash
+   CF_TUNNEL_TOKEN=<token from step 1>
+   FOUNDRY_HOSTNAME=vtt.example.com     # the public hostname from step 2
+   ```
+
+   Leave `FOUNDRY_SSL_CERT`/`FOUNDRY_SSL_KEY` empty — Cloudflare owns TLS. The
+   overlay sets `FOUNDRY_PROXY_PORT=443` and `FOUNDRY_PROXY_SSL=true` so Foundry
+   advertises `https`/`wss` URLs while serving plain http internally.
+
+### Run
 
 ```bash
-# In .env:
-NGROK_AUTH_TOKEN=your_ngrok_auth_token_here
-FOUNDRY_PROTOCOL=https
-FOUNDRY_PROXY_PORT=443
-
-docker compose --profile ngrok up -d
-
-# Get your public URL (the agent dashboard is loopback-only):
-docker compose logs ngrok --tail=100
-# or visit http://localhost:4040
+docker compose -f compose.yml -f compose.cloudflare.yml up -d
+docker compose -f compose.yml -f compose.cloudflare.yml logs -f cloudflared
 ```
+
+Foundry is then reachable at `https://<FOUNDRY_HOSTNAME>`.
+
+> **Hardening:** put **Cloudflare Access** in front of the hostname (Zero Trust
+> → Access → Applications) to require SSO/email before Foundry even loads —
+> dashboard-side, no compose change. On the free plan, uploads *through* the
+> tunnel are capped at 100 MB per request; upload large assets locally via
+> `http://localhost:30000` instead. Pin the `cloudflared` image to a digest
+> (see the note in `compose.cloudflare.yml`).
 
 ## Monitoring & performance
 
@@ -138,7 +162,6 @@ environment variables on every start — change settings in `.env` /
 docker compose logs -f foundry        # follow server logs
 docker compose ps                     # status / health
 docker compose restart foundry        # restart the server
-curl http://localhost:4040/api/tunnels  # ngrok tunnel info (profile up)
 ```
 
 ## Troubleshooting
@@ -150,18 +173,23 @@ curl http://localhost:4040/api/tunnels  # ngrok tunnel info (profile up)
   the license page), or valid fallback credentials
 - Ensure port 30000 is not in use
 
-### ngrok not connecting
+### Cloudflare Tunnel not connecting
 
-- Verify `NGROK_AUTH_TOKEN` in `.env`
-- Check the dashboard for errors: <http://localhost:4040>
-- Check logs: `docker compose logs ngrok --tail=100`
+- Verify `CF_TUNNEL_TOKEN` in `.env` matches the tunnel in the dashboard
+- Check the tunnel shows **Healthy** in Zero Trust → Networks → Tunnels
+- Confirm the public hostname routes to `http://foundry:30000`
+- Check logs:
+  `docker compose -f compose.yml -f compose.cloudflare.yml logs cloudflared --tail=100`
 
 ## Security considerations
 
 1. **Never commit `.env`** — it's in `.gitignore`, and agents are barred from
    reading it (see [SECURITY.md](SECURITY.md))
-2. **ngrok token** — rotate if accidentally exposed
-3. **Firewall** — restrict access to port 30000 if not tunneling
+2. **Cloudflare Tunnel token** (`CF_TUNNEL_TOKEN`) — a live credential; if
+   exposed, delete and recreate the tunnel in the dashboard (it can't be
+   rotated in place)
+3. **Firewall** — restrict access to port 30000 if not tunneling. The tunnel
+   itself opens no inbound ports; players never reach 30000 directly
 4. **SSL/TLS** — configure `FOUNDRY_SSL_CERT` / `FOUNDRY_SSL_KEY` when
    exposing directly
 
@@ -179,4 +207,5 @@ curl http://localhost:4040/api/tunnels  # ngrok tunnel info (profile up)
 - Container image: <https://ghcr.io/felddy/foundryvtt> —
   all image environment variables:
   [upstream README](https://github.com/felddy/foundryvtt-docker#readme)
-- ngrok docs: <https://ngrok.com/docs>
+- Cloudflare Tunnel docs:
+  <https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/>

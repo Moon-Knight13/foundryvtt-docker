@@ -7,7 +7,7 @@ This document explains how your sensitive data is protected.
 Your local `.env` file contains:
 
 - FoundryVTT username/password
-- ngrok auth tokens
+- Cloudflare Tunnel token (`CF_TUNNEL_TOKEN`)
 - SSH key paths for backup restoration
 - Any other credentials
 
@@ -91,7 +91,8 @@ nano .env  # add your credentials
 
 ```bash
 # Revoke the exposed credential
-# - ngrok: https://dashboard.ngrok.com/security
+# - Cloudflare Tunnel: delete + recreate the tunnel in the Zero Trust
+#   dashboard (Networks -> Tunnels); the token cannot be rotated in place
 # - FoundryVTT: Update password at foundry website
 # - SSH keys: Revoke/regenerate if needed
 

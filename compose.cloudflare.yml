@@ -1,0 +1,35 @@
+---
+# Cloudflare Tunnel overlay — remote access with no inbound ports.
+#
+# Apply on top of the base stack:
+#   docker compose -f compose.yml -f compose.cloudflare.yml up -d
+#
+# Requires in .env:
+#   CF_TUNNEL_TOKEN   — token from the tunnel you create in the Cloudflare
+#                       Zero Trust dashboard (Networks -> Tunnels)
+#   FOUNDRY_HOSTNAME  — the public hostname routed to the tunnel
+#                       (e.g. vtt.example.com); Foundry uses it for URL/websocket
+#                       generation
+#
+# Cloudflare terminates TLS at its edge, so leave FOUNDRY_SSL_CERT/KEY empty:
+# Foundry serves plain http on the private docker network and only advertises
+# https/wss via the proxy settings below.
+services:
+  foundry:
+    environment:
+      - FOUNDRY_PROXY_PORT=443
+      - FOUNDRY_PROXY_SSL=true
+
+  cloudflared:
+    # SECURITY: :latest is convenient but unpinned. Pin to a digest for
+    # supply-chain hardening — on a host with network access run:
+    #   docker pull cloudflare/cloudflared:latest
+    #   docker inspect --format '{{index .RepoDigests 0}}' cloudflare/cloudflared:latest
+    # then replace the tag below with cloudflare/cloudflared@sha256:<digest>.
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN:?set CF_TUNNEL_TOKEN in .env}
+    restart: unless-stopped
+    depends_on:
+      - foundry
