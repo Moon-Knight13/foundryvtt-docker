@@ -252,19 +252,21 @@ if [ ! -f .env ]; then
     
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "🌐 Optional: Remote Access (ngrok)"
+    echo "🌐 Optional: Remote Access (Cloudflare Tunnel)"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "For remote access, you'll need an ngrok account:"
-    echo "1. Sign up: https://ngrok.com"
-    echo "2. Get your auth token from dashboard"
+    echo "For remote access with no inbound ports, you'll need a Cloudflare"
+    echo "account and a domain on Cloudflare:"
+    echo "1. Zero Trust dashboard -> Networks -> Tunnels -> Create a tunnel"
+    echo "2. Copy the tunnel token; route your hostname (e.g. vtt.example.com)"
+    echo "   to the tunnel with service http://foundry:30000"
     echo ""
-    
-    read -p "Do you want to enable ngrok? (y/n) [default: n]: " -r enable_ngrok
-    enable_ngrok=${enable_ngrok:-n}
-    
-    if [[ $enable_ngrok =~ ^[Yy]$ ]]; then
-        prompt_env "NGROK_AUTH_TOKEN" "ngrok Auth Token" true
-        prompt_env "NGROK_REGION" "ngrok Region (us/eu/ap/au/sa/jp/in)" false "us"
+
+    read -p "Do you want to enable a Cloudflare Tunnel? (y/n) [default: n]: " -r enable_cf
+    enable_cf=${enable_cf:-n}
+
+    if [[ $enable_cf =~ ^[Yy]$ ]]; then
+        prompt_env "CF_TUNNEL_TOKEN" "Cloudflare Tunnel Token" true
+        prompt_env "FOUNDRY_HOSTNAME" "Public tunnel hostname (e.g. vtt.example.com)" false
     fi
     
     echo ""
@@ -359,10 +361,10 @@ echo ""
 echo "   Then access at: http://localhost:30000"
 echo ""
 
-if grep -q "NGROK_AUTH_TOKEN=" .env && ! grep -q "^NGROK_AUTH_TOKEN=$" .env; then
-    echo "2. View ngrok public URL:"
-    echo "   docker compose --profile ngrok up -d"
-    echo "   docker compose logs ngrok | grep URL"
+if grep -q "CF_TUNNEL_TOKEN=" .env && ! grep -q "^CF_TUNNEL_TOKEN=$" .env; then
+    echo "2. Start with the Cloudflare Tunnel:"
+    echo "   docker compose -f compose.yml -f compose.cloudflare.yml up -d"
+    echo "   Then access at your configured hostname over HTTPS."
     echo ""
 fi
 
