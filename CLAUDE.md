@@ -114,7 +114,7 @@ docker compose up -d          # start
 docker compose restart foundry
 docker compose ps             # health
 docker compose logs -f foundry
-docker compose --profile ngrok up -d   # with ngrok remote access
+docker compose -f compose.yml -f compose.cloudflare.yml up -d   # + Cloudflare Tunnel remote access
 ```
 
 Foundry UI: http://localhost:30000 (admin key + credentials from `.env`).

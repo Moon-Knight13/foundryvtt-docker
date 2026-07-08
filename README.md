@@ -48,7 +48,7 @@ Optional profiles:
 
 ```bash
 docker compose --profile monitoring up -d   # Netdata :19999, Dozzle :8080 (loopback-only)
-docker compose --profile ngrok up -d        # temporary remote access (see DEPLOYMENT.md)
+docker compose -f compose.yml -f compose.cloudflare.yml up -d   # remote access via Cloudflare Tunnel (see DEPLOYMENT.md)
 ```
 
 ### AI game master

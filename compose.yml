@@ -61,23 +61,10 @@ services:
         protocol: tcp
         mode: host
   
-  # Optional: ngrok service for remote access
-  # WARNING: free-tier ngrok throttles bandwidth and adds latency - expect lag
-  # with remote players. Prefer port forwarding or a Cloudflare Tunnel
-  # (see docs/cookbooks/cloudflare/) for game sessions.
-  ngrok:
-    image: ngrok/ngrok:latest
-    profiles: ["ngrok"]
-    environment:
-      NGROK_AUTHTOKEN: ${NGROK_AUTH_TOKEN:-}
-    command:
-      - "http"
-      - "foundry:30000"
-    ports:
-      # ngrok agent admin API — operator-only, keep off the LAN
-      - "127.0.0.1:4040:4040"
-    depends_on:
-      - foundry
+  # Remote access: Cloudflare Tunnel — no inbound ports, TLS at the edge.
+  # The cloudflared service lives in the compose.cloudflare.yml overlay:
+  #   docker compose -f compose.yml -f compose.cloudflare.yml up -d
+  # See DEPLOYMENT.md ("Remote access via Cloudflare Tunnel").
 
   # Optional: monitoring stack - start with: docker compose --profile monitoring up -d
   # Netdata: per-container CPU/memory/network/disk graphs at http://localhost:19999
