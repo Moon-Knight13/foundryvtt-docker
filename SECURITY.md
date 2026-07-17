@@ -1,6 +1,42 @@
-# Security: Protecting Your Credentials #
+# Security Policy #
 
-This document explains how your sensitive data is protected.
+This document explains how to report a vulnerability, and how your sensitive
+data is protected.
+
+## 🛡️ Reporting a Vulnerability ##
+
+**Do not open a public issue for a security vulnerability.** Public issues are
+visible to everyone, including before a fix exists.
+
+Report privately through GitHub Security Advisories:
+
+- <https://github.com/Moon-Knight13/foundryvtt-docker/security/advisories/new>
+
+Please include: affected version or commit, reproduction steps, and the impact
+you believe it has. You can expect an initial response within 7 days. Fixes are
+developed privately and released alongside a published advisory crediting the
+reporter unless anonymity is requested.
+
+### Scope ###
+
+In scope — report here: this repo's `compose.yml`, `.devcontainer/`,
+`scripts/`, MCP wiring, content pipeline, and docs.
+
+Out of scope — report to the project that owns the code:
+
+- The `foundry-gm` plugin (skills, guard hook, build tooling) —
+  [report to foundry-gm-claude-plugin][plugin-advisory]
+- The upstream FoundryVTT image —
+  [report to felddy/foundryvtt-docker][upstream-security]
+- FoundryVTT itself — [report to foundryvtt.com](https://foundryvtt.com/)
+
+[plugin-advisory]: https://github.com/Moon-Knight13/foundry-gm-claude-plugin/security/advisories/new
+[upstream-security]: https://github.com/felddy/foundryvtt-docker/security
+
+The devcontainer is a local development sandbox behind a deny-by-default
+firewall, not a shipped artifact. Known non-CRITICAL CVEs in developer tooling
+baked into that image are tracked in the Security tab and gated per
+`.github/workflows/container-scan.yml`.
 
 ## 🔐 .env File Protection ##
 
