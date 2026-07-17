@@ -54,6 +54,7 @@ venv
 .claude/cache/
 .claude/history/
 .claude/statsig/
+.claude/worktrees/
 .ai/
 
 ## BMAD generated output (installed at container start; never commit) ##
