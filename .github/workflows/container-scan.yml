@@ -58,7 +58,7 @@ jobs:
       # Also skip on private repos: code scanning needs Advanced Security there.
       - name: Upload Trivy SARIF to GitHub Security tab
         if: ${{ always() && hashFiles('trivy.sarif') != '' && !github.event.repository.private && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
-        uses: github/codeql-action/upload-sarif@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9
         with:
           sarif_file: trivy.sarif
 
