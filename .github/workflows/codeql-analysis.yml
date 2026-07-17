@@ -53,11 +53,18 @@ jobs:
         #
         # Supported options are actions, c-cpp, csharp, go,
         # java-kotlin, javascript-typescript, python, ruby, and swift.
-        # Only workflow files remain in-scope: the upstream image-source
-        # toolchain (TypeScript/Python) was removed with the root Dockerfile,
-        # and the vendored mcp-server/ bundle is gitignored.
+        # In scope: workflows (actions), the content build tooling
+        # (scripts/content/*.mjs), and scripts/tests/*.py. The upstream
+        # image-source toolchain was removed with the root Dockerfile and the
+        # vendored mcp-server/ bundle is gitignored, so neither is scanned.
+        # Keep this list in step with the tracked sources: dropping a language
+        # that develop has already analyzed leaves a stale code-scanning
+        # configuration, which makes the "CodeQL" gate report
+        # "configurations not found" on every PR.
         language:
           - actions
+          - javascript-typescript
+          - python
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript',
         # 'python', 'ruby' ] Learn more about CodeQL language support at
         # https://git.io/codeql-language-support
