@@ -54,7 +54,9 @@ authoring route. This design covers world **state**, which git cannot merge.
 | Forgot-checkout while off-LAN | **Option A: refuse, with a "here's what to do" message** | Safest — never creates a second world copy, so no merge bug can exist. Author offline instead |
 | What travels | **Whole `Data/`** (worlds + modules + systems + assets) | Handoff is self-consistent; world can't open against wrong module set |
 | Excluded from handoff | `Backups/`, `container_cache/`, `Logs/` | Per-machine, regenerable; syncing `Backups/` would stomp local snapshot history |
-| `Config/` (license, admin key) | Synced **once at setup**, not per-handoff | Credential, changes ~never |
+| `Config/` (license, admin key, server `options.json`) | Synced **once at setup**, not per-handoff | Credential + machine-specific server config (port/hostname); `options.json` is regenerated from `.env` `FOUNDRY_*` on each container start, so each machine keeps its own |
+| Transfer semantics | **Mirror, not union** (`rsync --delete`) | Target `Data/` becomes an exact copy of the holder's, so an add-on/system removed on one side actually disappears on the other — no stale module a world can reference and break on. Safe because both sides are snapshotted first |
+| Foundry version | **Must match on both machines** — handoff refuses on mismatch | The only true corruption vector: Foundry migrates a world *forward* on load; an older binary cannot reopen a migrated world. Guard closes it |
 | Sync as a compose step? | **No** | Lifecycle verbs (`up` on crash/reboot/config-edit) would auto-clobber; direction is a human decision; loss must be deliberate and loud |
 
 ### Why Option A over the break-glass alternatives
@@ -124,15 +126,16 @@ direction flipped.
 
 ```
 laptop: ./world.sh checkout
-  1. reachable?      ── no ─► REFUSE "main PC unreachable, on LAN?"
-  2. source running? ── yes ─► REFUSE "stop Foundry on main first"
-  3. SNAPSHOT BOTH   ── fail ─► ABORT (lease untouched)
+  1. reachable?          ── no ─► REFUSE "main PC unreachable, on LAN?"
+  2. source running?     ── yes ─► REFUSE "stop Foundry on main first"
+  3. FOUNDRY_VERSION ==? ── mismatch ─► REFUSE "version drift: main X, laptop Y"
+  4. SNAPSHOT BOTH       ── fail ─► ABORT (lease untouched)
         main:   Data → Data.snap-<date>
         laptop: Data → Data.snap-<date>
-  4. rsync Data/ main ──► laptop  (deltas; excl Backups, container_cache, Logs)
+  5. rsync --delete Data/ main ──► laptop  (mirror; excl Backups, container_cache, Logs)
         crash here? lease still = MAIN → no loss → rerun
-  5. VERIFY checksum source == target ── mismatch ─► ABORT, keep lease = MAIN
-  6. FLIP LEASE  main = frozen, laptop = holder   ← last, point of no return
+  6. VERIFY checksum source == target ── mismatch ─► ABORT, keep lease = MAIN
+  7. FLIP LEASE  main = frozen, laptop = holder   ← last, point of no return
   ✓ laptop holds world; main refuses to start until checkin/reclaim
 ```
 
@@ -185,6 +188,9 @@ that lifecycle (`up`) can never trigger data movement.
   state.
 - **Peer Foundry running:** refuse; a running server means the world is open and
   unsafe to copy.
+- **`FOUNDRY_VERSION` mismatch:** refuse before any snapshot/copy; handing a
+  forward-migrated world to an older binary corrupts it. Resolve by aligning the
+  version pin on both machines first.
 - **Snapshot fails (e.g. disk full):** abort before any overwrite; lease
   untouched.
 - **Checksum mismatch after rsync:** abort, keep lease with the source; the
