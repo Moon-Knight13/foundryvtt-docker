@@ -575,6 +575,8 @@ else bad "snapshot" "count=$count snap=$snap"; fi
 
 Note: sourcing `scripts/world.sh` runs nothing (guarded), so the helper functions are callable. Snapshots created back-to-back may share a timestamp second; `snapshot_dir` must tolerate an existing target (reuse/refresh it) so four rapid calls still produce ≤3 distinct dirs.
 
+**Why a custom snapshot and not Foundry's built-in backup** (verified 2026-07-18; see the design doc's "Native Foundry backup vs. our snapshot"): Foundry v13+ Manage Backups is **UI-trigger only** — no core REST/admin-key endpoint and no `foundryvtt-cli` verb (`configure/launch/package` only), so it cannot run inside `world.sh`. It also covers only World/Module/System (not the whole `Data/` we mirror) and writes `.bak`+manifest into `Data/Backups/`, which the handoff already excludes. `snapshot_dir`'s stopped-world file copy is exactly Foundry's own supported "manually copy Data files" method, so it is LevelDB-safe without any native dependency. Native backup stays an optional operator click, out of this script.
+
 - [ ] **Step 2: Run tests, verify fail**
 
 Run: `bash scripts/tests/test-world.sh`
@@ -993,6 +995,13 @@ stop Foundry and restore a snapshot:
 
 A failed or interrupted handoff never flips the lease — the previous holder
 stays authoritative, so you just rerun the command.
+
+Optional extra safety net: with Foundry stopped at the Setup screen you can also
+use Foundry's built-in **Manage Backups → Create a Snapshot** for a per-package
+rollback point. It is separate from `world.sh` (UI-only, and it saves into
+`Data/Backups/`, which is deliberately never synced), so use it as an occasional
+manual belt-and-suspenders — the automatic `Data.snap-*` above is what the
+handoff relies on.
 ```
 
 - [ ] **Step 3: Append the pointer to `CLAUDE.md`**

@@ -149,6 +149,30 @@ laptop: ./world.sh checkout
 3. **Snapshot both before any overwrite.** `Data.snap-<date>` on both machines is
    the rollback if a sync goes wrong.
 
+## Native Foundry backup vs. our snapshot (verified 2026-07-18)
+
+Foundry v13+ ships a built-in **Manage Backups** system (per-package Backup +
+whole-instance Snapshot). We checked whether it should replace the custom
+`Data.snap-<date>` copy. **It cannot** — the custom snapshot stays. Facts, from
+Foundry's own docs (`/article/backups/`, `/article/user-data-backup/`,
+`/article/automatic-backups/`, `/article/configuration/`):
+
+| Question (was open) | Verified answer | Consequence |
+|---|---|---|
+| Snapshot format / dedup | A `.bak` archive **plus** a JSON manifest per backup — not a hardlink tree, not a plain zip | Different mechanism from our `rsync --link-dest` hardlink snaps; no reuse |
+| Where stored | `Data/Backups/` inside User Data | The handoff **already excludes `Backups/`** — native output never travels, never collides with the peer |
+| What it covers | **Only** the World / Module / System folders; assets elsewhere under `Data/` are not included | Not a substitute for the transport, which mirrors the **whole** `Data/` |
+| Headless trigger? (4a: admin-key API vs 4b: operator clicks) | **No core API and no CLI verb.** `@foundryvtt/foundryvtt-cli` v3 exposes only `configure/launch/package pack\|unpack`; Foundry core has no REST/admin-key backup endpoint. Trigger is the **UI only** | **4b confirmed.** It cannot be scripted into `world.sh`; a headless one-command handoff must use direct file copy |
+| Server-stopped requirement | Restore/copy require Foundry stopped (world not loaded): *"never use a data sync service while Foundry VTT is running — you will permanently lose your work"* | Our snapshot runs **only after** the `source running? → REFUSE` gate, i.e. exactly Foundry's supported "manually copy Data files" method — already LevelDB-safe. Native adds no safety the gate lacks |
+| Cross-machine restore | Foundry's supported move = copy `Config/Data/Logs` to the new host, repoint the User Data path. Native `.bak` restore targets the *same* User Data | The `rsync --delete` mirror **is** that supported move; native `.bak` is not a portable transport |
+
+**Decision:** keep the custom hardlinked snapshot in the scripted transaction.
+Native backup remains an **optional, operator-driven** extra — a GM may click
+Manage Backups → Create Snapshot for an added per-package rollback before a risky
+handoff, but it is never part of `world.sh` (UI-only, package-scoped, and lands
+in the excluded `Backups/`). The earlier "hybrid: use native for snapshots"
+idea is retired by these facts.
+
 ## Refusal UX (the entire user-facing surface of Option A)
 
 ```
