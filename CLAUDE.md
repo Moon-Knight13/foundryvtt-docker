@@ -296,3 +296,14 @@ upstream-bound change into our own board work.
 Rule of thumb: this repo *consumes* the plugin. A bug reproducible with the
 plugin uninstalled belongs here; a bug in a skill/hook/agent the plugin ships
 belongs on the plugin repo so the fix reaches every consumer.
+
+## Portable world sync (main PC ↔ laptop)
+
+`scripts/world.sh` moves the live world between machines over the LAN under a
+hard lease (one holder at a time; the non-holder's `world.sh up` refuses).
+Handoff snapshots both sides, mirrors `Data/` with `rsync --delete`, verifies,
+and flips the lease last. Commands: `up`, `checkout`/`checkin` (laptop),
+`reclaim` (main PC), `status --peer`. Full guide: `docs/WORLD_SYNC.md`. This is
+world **state** movement; bulk **authoring** still goes through the
+foundry-content skill (see "Content routing"). One editor at a time — LevelDB
+worlds do not merge.
