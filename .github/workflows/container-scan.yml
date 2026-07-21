@@ -29,7 +29,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Build devcontainer image
         shell: bash
@@ -58,7 +58,7 @@ jobs:
       # Also skip on private repos: code scanning needs Advanced Security there.
       - name: Upload Trivy SARIF to GitHub Security tab
         if: ${{ always() && hashFiles('trivy.sarif') != '' && !github.event.repository.private && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
-        uses: github/codeql-action/upload-sarif@7188fc363630916deb702c7fdcf4e481b751f97a
+        uses: github/codeql-action/upload-sarif@e0647621c2984b5ed2f768cb892365bf2a616ad1
         with:
           sarif_file: trivy.sarif
 
