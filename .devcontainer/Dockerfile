@@ -9,7 +9,7 @@
 # Pinned by digest (not tag alone) so the build stage is reproducible and the
 # Scorecard pinned-dependencies check passes; Dependabot bumps the digest the
 # same way it does for the node stage below.
-FROM golang:1.26.5@sha256:ae5a2316d12f3e78fd99177dad452e6ad4f240af2d71d57b480c3477f250fec6 AS gitleaks-build
+FROM golang:1.26.5@sha256:3aff6657219a4d9c14e27fb1d8976c49c29fddb70ba835014f477e1c70636647 AS gitleaks-build
 ARG GITLEAKS_VERSION=8.30.1
 RUN CGO_ENABLED=0 go install "github.com/zricethezav/gitleaks/v8@v${GITLEAKS_VERSION}"
 
