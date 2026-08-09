@@ -5,15 +5,11 @@
 # against the Go checksum database (sum.golang.org), which replaces the
 # release-tarball sha256 pin. Revisit pinning a release binary again once
 # upstream ships one built on a fixed Go.
-#
-# Pinned by digest (not tag alone) so the build stage is reproducible and the
-# Scorecard pinned-dependencies check passes; Dependabot bumps the digest the
-# same way it does for the node stage below.
-FROM golang:1.26.5@sha256:2005724102f45917a63e9d092fc0e4ea56ea575048ce147caad5f5f61502c365 AS gitleaks-build
+FROM golang:1.26.5 AS gitleaks-build
 ARG GITLEAKS_VERSION=8.30.1
 RUN CGO_ENABLED=0 go install "github.com/zricethezav/gitleaks/v8@v${GITLEAKS_VERSION}"
 
-FROM node:24@sha256:934240a162082fd8b8a2f90cd5114446443f1eba1c5378f6687167ca405e6584
+FROM node:24@sha256:392e1e23f34da768d8d1f4e502b64f200d3be3465934d4b7930f57d7e2fc1989
 
 ARG TZ
 ENV TZ="$TZ"
