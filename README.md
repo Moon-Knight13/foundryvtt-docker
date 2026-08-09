@@ -115,9 +115,10 @@ D&D Beyond), so a Foundry world can be wiped and rebuilt in minutes.
 The repo ships the *plumbing and a starter skeleton*, never anyone's notes. To
 wire up yours:
 
-1. Set `DND_VAULT_PATH` in `.env` (defaults to `~/Documents/DnD`). It is
-   bind-mounted read-write into Foundry at `/data/Data/DnD` and into the
-   devcontainer at `/home/node/DnD`.
+1. Set `DND_VAULT_PATH` in `.env` (defaults to `~/Documents/DnD`). Compose
+   bind-mounts it read-write into Foundry at `/data/Data/DnD`. The devcontainer
+   mounts `~/Documents/DnD` at `/home/node/DnD` — always that fixed path, as
+   VS Code reads neither `.env` nor nested variable defaults in mounts.
 2. Start from the skeleton — copy it to your vault path and open it in Obsidian:
 
    ```bash
