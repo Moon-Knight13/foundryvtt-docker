@@ -13,8 +13,7 @@ on: # yamllint disable-line rule:truthy
   pull_request:
     # The branches here must be a subset of the ones in the push key
     branches:
-      - develop
-      - develop-prerelease
+      - main
   push:
     # Dependabot-triggered push events have read-only access, but uploading code
     # scanning requires write access.
@@ -58,7 +57,7 @@ jobs:
         # image-source toolchain was removed with the root Dockerfile and the
         # vendored mcp-server/ bundle is gitignored, so neither is scanned.
         # Keep this list in step with the tracked sources: dropping a language
-        # that develop has already analyzed leaves a stale code-scanning
+        # that main has already analyzed leaves a stale code-scanning
         # configuration, which makes the "CodeQL" gate report
         # "configurations not found" on every PR.
         language:

@@ -21,7 +21,6 @@ name: content-tests
   push:
     branches:
       - main
-      - develop
     paths:
       - scripts/content/**
       - content/**
