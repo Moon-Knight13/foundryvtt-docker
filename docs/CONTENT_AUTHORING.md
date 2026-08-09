@@ -53,6 +53,36 @@ content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Dat
    Pack-content changes need a world reload; `module.json` changes need a
    world relaunch.
 
+## Multiple modules (one repo, N games)
+
+`build.mjs` and `sync-content.sh` default to `content/content.config.json` +
+`content/src/`. To build a **second** module (e.g. per campaign/oneshot), add a
+config with its own `id` and a `srcDir`, then pass `--config`:
+
+```json
+// content/noir-gala-heist.config.json
+{ "id": "noir-gala-heist", "title": "Noir Gala Heist", "system": "dnd5e",
+  "srcDir": "src-noir" }
+```
+
+```bash
+node scripts/content/build.mjs    --config content/noir-gala-heist.config.json
+./scripts/content/sync-content.sh --config content/noir-gala-heist.config.json   # host
+```
+
+`srcDir` is a directory under `content/` (default `src`); each module builds into
+its own `content/dist/<id>/`. Source-root precedence: explicit `srcRoot` arg >
+config `srcDir` > `content/src`.
+
+## Scenes as code
+
+Scenes use `templates/common/scene.json` in `content/src/scenes/`. Set
+`background.src` to an image **Foundry can see** — under the mounted vault, e.g.
+`/data/Data/DnD/<game>/Assets/Maps/<file>` (the vault is bind-mounted into the
+Foundry container). This is the git-durable route for scene stubs. For maps that
+need **walls + lights**, prefer exporting `.dd2vtt` from DungeonMapBuilder and
+importing via the Universal Battlemap Importer — see `FOUNDRY_REBUILD.md`.
+
 ## Rules that bite
 
 - **IDs derive from the source path** (sha256 of e.g.

@@ -1,0 +1,25 @@
+{
+  "name": "Bellkeeper Sela",
+  "type": "npc",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "abilities": {
+      "str": { "value": 1 }, "dex": { "value": 14 }, "con": { "value": 11 },
+      "int": { "value": 10 }, "wis": { "value": 10 }, "cha": { "value": 11 }
+    },
+    "attributes": {
+      "hp": { "value": 22, "max": 22 },
+      "ac": { "flat": 12, "calc": "flat" },
+      "movement": { "walk": 0, "fly": 50, "hover": true, "units": "ft" }
+    },
+    "details": {
+      "cr": 1,
+      "type": { "value": "undead" },
+      "alignment": "Chaotic Neutral",
+      "biography": { "value": "<p>Grief-bound spirit who tolls the bell to call her drowned son Tomkin home. Not a monster — stuck. Fights (as an SRD Specter) only if attacked or the mercy check fails.</p>" }
+    },
+    "traits": { "size": "med", "languages": { "value": [] } }
+  },
+  "items": [],
+  "prototypeToken": { "name": "Bellkeeper Sela", "disposition": 0, "actorLink": false }
+}

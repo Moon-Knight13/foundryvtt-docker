@@ -115,12 +115,20 @@ export async function loadConfig(configPath = DEFAULT_CONFIG_PATH) {
   };
 }
 
+// srcRoot precedence: explicit arg > config "srcDir" (a dir under content/) >
+// the default content/src. Lets one repo build N modules from N source dirs.
+export function resolveSrcRoot(config, srcRoot) {
+  if (srcRoot) return srcRoot;
+  return path.join(REPO_ROOT, 'content', config?.srcDir ?? 'src');
+}
+
 export async function main({
-  srcRoot = path.join(REPO_ROOT, 'content', 'src'),
+  srcRoot,
   distRoot = path.join(REPO_ROOT, 'content', 'dist'),
   configPath = DEFAULT_CONFIG_PATH,
 } = {}) {
   const config = await loadConfig(configPath);
+  const resolvedSrcRoot = resolveSrcRoot(config, srcRoot);
   const moduleDir = path.join(distRoot, config.id);
   await rm(moduleDir, { recursive: true, force: true });
 
@@ -131,7 +139,7 @@ export async function main({
   const prepared = []; // [type, file, doc]
 
   for (const type of Object.keys(COLLECTIONS)) {
-    const typeDir = path.join(srcRoot, type);
+    const typeDir = path.join(resolvedSrcRoot, type);
     counts[type] = 0;
     if (!existsSync(typeDir)) continue;
     const files = (await readdir(typeDir)).filter(f => f.endsWith('.json'));
@@ -192,7 +200,22 @@ export async function main({
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  main()
+  const argv = process.argv.slice(2);
+  let configPath = DEFAULT_CONFIG_PATH;
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--config') {
+      const p = argv[++i];
+      if (!p) {
+        console.error('--config requires a path');
+        process.exit(1);
+      }
+      configPath = path.resolve(p);
+    } else {
+      console.error(`Unknown argument: ${argv[i]}`);
+      process.exit(1);
+    }
+  }
+  main({ configPath })
     .then(({ counts, config }) => {
       console.log(`Built ${config.id}:`, counts);
     })

@@ -1,0 +1,16 @@
+{
+  "name": "Mourncastle Rumours",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>What the villagers whisper in the square (Scene 1).</p>",
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "results": [
+    { "type": "text", "description": "The bell rings itself at midnight. My gran's grave was open by morning.", "range": [1, 1], "weight": 1 },
+    { "type": "text", "description": "Old Sela kept that bell forty years. Died the same night her boy drowned.", "range": [2, 2], "weight": 1 },
+    { "type": "text", "description": "The boy — Tomkin — went into the moat when the curfew bell came late.", "range": [3, 3], "weight": 1 },
+    { "type": "text", "description": "There's a stone beast up in the tower now. Weren't there before.", "range": [4, 4], "weight": 1 },
+    { "type": "text", "description": "Priest won't go up. Says the grief in there is thick as tar.", "range": [5, 5], "weight": 1 },
+    { "type": "text", "description": "Leave it be. Some bells are meant to mourn.", "range": [6, 6], "weight": 1 }
+  ]
+}
