@@ -8,10 +8,9 @@ unsure about anything, open an issue and ask.
 
 ## Ground rules
 
-- All PRs target `develop` (the default branch). `main` is production and is
-  promotion-only.
-- Both branches are protected: PRs need a passing check run
-  (validate-template, semgrep, gitleaks) and a review.
+- All PRs target `main`, the single default branch.
+- `main` is protected: PRs need a passing check run (validate-template,
+  semgrep, gitleaks) and a review.
 - **Never commit credentials.** `.env`, `license.json`, and `cookiejar.json`
   are off-limits — see [SECURITY.md](SECURITY.md). Secret scanning and push
   protection are enabled; gitleaks runs in CI and pre-commit.
@@ -35,8 +34,8 @@ bash scripts/tests/test-day0.sh       # day-0 bootstrap checks
 ```
 
 Changes to the Foundry stack itself should be exercised against a disposable
-clone, never the live data: `./scripts/test-instance.sh up` (see CLAUDE.md,
-"Safe A/B testing").
+clone, never the live data: `./scripts/test-instance.sh up` (see
+docs/PROJECT.md, "Safe A/B testing").
 
 ## Licence
 

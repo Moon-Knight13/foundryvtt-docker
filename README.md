@@ -1,9 +1,9 @@
 # FoundryVTT server + Claude Code AI game master
 
-[![ci](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/ci.yml)
-[![semgrep](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml/badge.svg?branch=develop)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml)
-[![secret-scan](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml/badge.svg?branch=develop)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml)
-[![CodeQL](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml/badge.svg?branch=develop)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml)
+[![ci](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/ci.yml)
+[![semgrep](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml)
+[![secret-scan](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml)
+[![CodeQL](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml)
 
 A self-hosted [Foundry Virtual Tabletop](https://foundryvtt.com) deployment
 where **Claude Code acts as an AI game master** — authoring NPCs, quests,
@@ -27,8 +27,8 @@ Three things compose it:
    planning, and weekly template-sync PRs.
 3. **[foundry-vtt-mcp](https://github.com/adambdooley/foundry-vtt-mcp)**
    bridges the two: a Foundry module + MCP server that lets Claude Code read
-   and write the running world (see [`CLAUDE.md`](CLAUDE.md) for setup,
-   ports, and the game-creation workflow).
+   and write the running world (see [`docs/PROJECT.md`](docs/PROJECT.md) for
+   setup, ports, and the game-creation workflow).
 
 ## Quickstart
 
@@ -80,7 +80,7 @@ claude                        # Claude Code picks up .mcp.json from the repo roo
 
 Test module changes against a disposable clone first —
 `./scripts/test-instance.sh up` starts a full copy of your live data on
-:30001 (see [`CLAUDE.md`](CLAUDE.md), "Safe A/B testing").
+:30001 (see [`docs/PROJECT.md`](docs/PROJECT.md), "Safe A/B testing").
 
 ## Documentation map
 
@@ -88,7 +88,8 @@ Test module changes against a disposable clone first —
 | --- | --- |
 | [`DEPLOYMENT.md`](DEPLOYMENT.md) | Full deployment guide: env setup, profiles, monitoring, performance, troubleshooting |
 | [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) | Backup and restore: SCP/rsync pull from a remote host, Foundry-native backups, the assets caveat |
-| [`CLAUDE.md`](CLAUDE.md) | Claude workflow contract + FoundryVTT specifics: MCP integration, content routing, safe A/B testing, security hard rules |
+| [`docs/PROJECT.md`](docs/PROJECT.md) | FoundryVTT specifics for agents: MCP integration, content routing, safe A/B testing, container operations, security hard rules |
+| [`CLAUDE.md`](CLAUDE.md) | Template-wide Claude workflow contract (kept byte-identical to the template so sync stays clean) |
 | [`docs/CONTENT_AUTHORING.md`](docs/CONTENT_AUTHORING.md) | Content-as-code pipeline: author JSON → build compendium module → sync → import; skill-vs-MCP routing |
 | [`SECURITY.md`](SECURITY.md) | Credential handling and the files agents must never read |
 | [`docs/TEMPLATE_GUIDE.md`](docs/TEMPLATE_GUIDE.md) | The template foundation: devcontainer, firewall, routing, CI gates, template-sync |
@@ -135,9 +136,16 @@ Notes:
 
 ## Branch model
 
-`develop` is the default and integration branch — all PRs land there.
-`main` is production; promotion is a fast-forward push after verification.
-Both branches carry protection rulesets (PR + review + required checks).
+`main` is the single default branch — all PRs land there, and it carries a
+protection ruleset (PR + review + required checks).
+
+This repo used to run felddy's two-branch release model (`develop` for
+integration, `main` for production, promoted by fast-forward). That model earns
+its keep when a branch *is* the released artifact; here nothing is deployed from
+a branch — the stack runs `docker compose up` against the published felddy
+image. In practice the promotion was performed once, then `main` sat 24 commits
+behind for five weeks and collected a template-sync PR aimed at the stale
+branch. The old history is preserved at tag `archive/main-2026-08-09`.
 
 ## Contributing
 

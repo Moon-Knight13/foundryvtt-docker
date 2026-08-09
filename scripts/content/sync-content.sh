@@ -2,7 +2,8 @@
 # Sync the built content module into a Foundry data directory.
 # Run this on the HOST, not inside the devcontainer.
 #
-# Usage: scripts/content/sync-content.sh [--test] [--dry-run] [--data <path>]
+# Usage: scripts/content/sync-content.sh [--config <path>] [--test] [--dry-run] [--data <path>]
+#   --config   module config to sync (default content/content.config.json)
 #   --test     sync to $FOUNDRY_TEST_DATA_PATH instead of $FOUNDRY_DATA_PATH
 #   --data     explicit data directory (overrides env vars)
 #   --dry-run  show what rsync would do
@@ -10,19 +11,14 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CONFIG="$REPO_ROOT/content/content.config.json"
-# Module id from content.config.json — no jq/node dependency on the host.
-MODULE_ID="$(sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$CONFIG" | head -n 1)"
-if [[ -z "$MODULE_ID" ]]; then
-  echo "Error: could not read module id from $CONFIG" >&2
-  exit 1
-fi
-MODULE_DIR="$REPO_ROOT/content/dist/$MODULE_ID"
 
 DATA_PATH="${FOUNDRY_DATA_PATH:-$HOME/.local/share/FoundryVTT}"
 DRY_RUN=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --config)
+      CONFIG="${2:?--config requires a path}"; shift 2 ;;
     --test)
       DATA_PATH="${FOUNDRY_TEST_DATA_PATH:?--test requires FOUNDRY_TEST_DATA_PATH to be set}"
       shift ;;
@@ -34,6 +30,18 @@ while [[ $# -gt 0 ]]; do
       echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
 done
+
+if [[ ! -f "$CONFIG" ]]; then
+  echo "Error: config not found: $CONFIG" >&2
+  exit 1
+fi
+# Module id from the config — no jq/node dependency on the host.
+MODULE_ID="$(sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$CONFIG" | head -n 1)"
+if [[ -z "$MODULE_ID" ]]; then
+  echo "Error: could not read module id from $CONFIG" >&2
+  exit 1
+fi
+MODULE_DIR="$REPO_ROOT/content/dist/$MODULE_ID"
 
 if [[ ! -f "$MODULE_DIR/module.json" ]]; then
   echo "Error: $MODULE_DIR is missing or not built. Run: node scripts/content/build.mjs" >&2
