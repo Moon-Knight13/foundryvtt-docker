@@ -196,10 +196,36 @@ docker compose restart foundry        # restart the server
 ## Production hardening ideas
 
 1. SSL/TLS with valid certificates (or terminate at a Cloudflare Tunnel)
-2. Watchtower for automatic image updates (see
-   `docker-compose.override.example.yml`)
+2. Watchtower for automatic image updates
 3. Scheduled backups of the live data path (worlds **and** assets)
 4. Resource limits in a compose override
+
+### Compose overrides
+
+Compose v2 auto-loads `compose.override.yml` alongside `compose.yml` — no `-f`
+flag needed. The file is gitignored, so local tweaks stay out of the repo.
+
+```yaml
+---
+services:
+  foundry:
+    # Cap resources on a shared host.
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+
+  # Automatic image updates. Watch the release notes — Foundry world data is
+  # migrated on version bumps and downgrades are not supported, so take a
+  # backup first (see BACKUP_RESTORE.md).
+  watchtower:
+    image: containrrr/watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --cleanup --interval 86400 foundry
+```
 
 ## Support & resources
 

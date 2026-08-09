@@ -68,7 +68,8 @@ node scripts/content/build.mjs            # Claude runs this after authoring
 ```
 
 **Live play (MCP).** Dice requests, tokens, conditions, scene activation, and
-world-state reads go over the [foundry-vtt-mcp](https://github.com/adambdooley/foundry-vtt-mcp) bridge:
+world-state reads go over the
+[foundry-vtt-mcp](https://github.com/adambdooley/foundry-vtt-mcp) bridge:
 
 ```bash
 ./scripts/setup-mcp.sh        # installs the MCP server into mcp-server/
@@ -84,7 +85,7 @@ Test module changes against a disposable clone first —
 ## Documentation map
 
 | Doc | What it covers |
-|---|---|
+| --- | --- |
 | [`DEPLOYMENT.md`](DEPLOYMENT.md) | Full deployment guide: env setup, profiles, monitoring, performance, troubleshooting |
 | [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) | Backup and restore: SCP/rsync pull from a remote host, Foundry-native backups, the assets caveat |
 | [`CLAUDE.md`](CLAUDE.md) | Claude workflow contract + FoundryVTT specifics: MCP integration, content routing, safe A/B testing, security hard rules |
@@ -92,7 +93,6 @@ Test module changes against a disposable clone first —
 | [`SECURITY.md`](SECURITY.md) | Credential handling and the files agents must never read |
 | [`docs/TEMPLATE_GUIDE.md`](docs/TEMPLATE_GUIDE.md) | The template foundation: devcontainer, firewall, routing, CI gates, template-sync |
 | [`docs/KANBAN_WORKFLOW.md`](docs/KANBAN_WORKFLOW.md) | Board-driven agent workflow (`/next-issue`, `/run-epic`) |
-| [`docs/cookbooks/`](docs/cookbooks/) | Recipes — e.g. Cloudflare Tunnel for permanent remote access |
 
 ## Working on this repo (devcontainer)
 

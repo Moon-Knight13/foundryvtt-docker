@@ -1,16 +1,11 @@
 .git
 .github
-.mypy_cache
-.pytest_cache
-.python-version
 assets
-data
-patches
-tests
 mcp-server
 scripts
 docs
 .claude
+content
 # NOTE: .devcontainer must NOT be ignored — the container-scan workflow builds
 # .devcontainer/Dockerfile with the repo root as context and COPYs
 # .devcontainer/init-firewall.sh from it.
