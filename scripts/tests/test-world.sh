@@ -153,12 +153,12 @@ else bad "init" "rc=$rc; lease=$(cat "$D/.foundry-lease" 2>&1)"; fi
 # ── Case 2.1: local Foundry-running probe honors MOCK_LOCAL_UP ────────────────
 D="$TMP/probe"; make_data "$D" "MAIN-PC" "14.363"
 rc=$(run_world "MAIN-PC" "$D" MOCK_LOCAL_UP=true -- status)
-grep -qi "running" "$TMP/out" && ok "status: reports Foundry running when up" \
-  || bad "local up probe" "$(cat "$TMP/out")"
+if grep -qi "running" "$TMP/out"; then ok "status: reports Foundry running when up"
+else bad "local up probe" "$(cat "$TMP/out")"; fi
 
 rc=$(run_world "MAIN-PC" "$D" MOCK_LOCAL_UP=false -- status)
-grep -qi "stopped" "$TMP/out" && ok "status: reports stopped when down" \
-  || bad "local down probe" "$(cat "$TMP/out")"
+if grep -qi "stopped" "$TMP/out"; then ok "status: reports stopped when down"
+else bad "local down probe" "$(cat "$TMP/out")"; fi
 
 # ── Case 2.2: peer config falls back to BACKUP_REMOTE_* ──────────────────────
 D="$TMP/peercfg"; make_data "$D" "LAPTOP" "14.363"
@@ -219,25 +219,25 @@ make_pair() { # localdir peerdir version peerholder
 L="$TMP/l1"; P="$TMP/p1"; make_pair "$L" "$P" "14.363" "MAIN-PC"
 rc=$(run_world "LAPTOP" "$L" WORLD_PEER_SSH=u@main WORLD_PEER_DATA_PATH="$P" \
       MOCK_PEER_REACHABLE=false -- checkout)
-[[ "$rc" != "0" ]] && grep -qi "unreachable\|on the LAN" "$TMP/out" \
-  && ok "checkout: refuses when peer unreachable" \
-  || bad "checkout unreachable" "rc=$rc; $(cat "$TMP/out")"
+if [[ "$rc" != "0" ]] && grep -qi "unreachable\|on the LAN" "$TMP/out"; then
+  ok "checkout: refuses when peer unreachable"
+else bad "checkout unreachable" "rc=$rc; $(cat "$TMP/out")"; fi
 
 # ── Case 5.2: checkout refuses when source (peer) Foundry is running ─────────
 L="$TMP/l2"; P="$TMP/p2"; make_pair "$L" "$P" "14.363" "MAIN-PC"
 rc=$(run_world "LAPTOP" "$L" WORLD_PEER_SSH=u@main WORLD_PEER_DATA_PATH="$P" \
       MOCK_PEER_REACHABLE=true MOCK_REMOTE_UP=true -- checkout)
-[[ "$rc" != "0" ]] && grep -qi "stop foundry" "$TMP/out" \
-  && ok "checkout: refuses when source Foundry running" \
-  || bad "checkout source-running" "rc=$rc; $(cat "$TMP/out")"
+if [[ "$rc" != "0" ]] && grep -qi "stop foundry" "$TMP/out"; then
+  ok "checkout: refuses when source Foundry running"
+else bad "checkout source-running" "rc=$rc; $(cat "$TMP/out")"; fi
 
 # ── Case 5.3: checkout refuses on version drift (receiver older) ─────────────
 L="$TMP/l3"; P="$TMP/p3"; make_pair "$L" "$P" "14.400" "MAIN-PC"   # world stamped 14.400
 rc=$(run_world "LAPTOP" "$L" WORLD_PEER_SSH=u@main WORLD_PEER_DATA_PATH="$P" \
       FOUNDRY_VERSION=14.363 MOCK_PEER_REACHABLE=true MOCK_REMOTE_UP=false -- checkout)
-[[ "$rc" != "0" ]] && grep -qi "version" "$TMP/out" \
-  && ok "checkout: refuses when receiver Foundry older than world" \
-  || bad "checkout version drift" "rc=$rc; $(cat "$TMP/out")"
+if [[ "$rc" != "0" ]] && grep -qi "version" "$TMP/out"; then
+  ok "checkout: refuses when receiver Foundry older than world"
+else bad "checkout version drift" "rc=$rc; $(cat "$TMP/out")"; fi
 
 # ── Case 5.4: full checkout round trip — world moves, excluded dirs preserved, lease flips ─
 L="$TMP/l4"; P="$TMP/p4"; make_pair "$L" "$P" "14.363" "MAIN-PC"
