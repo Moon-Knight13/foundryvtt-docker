@@ -33,6 +33,13 @@ SECURITY.md
 # and the README rewritten to record why the folder is empty.
 scripts/ci/README.md
 .dockerignore
+# Carries a per-rule allowlist for the upstream felddy maintainer's public
+# contact address, which appears all through inherited history (package.json,
+# pyproject.toml, Dockerfile, issue templates, CODE_OF_CONDUCT.md) and is not
+# leaked PII. The template has no such entry, so syncing this file strips the
+# allowlist and the full-history gitleaks scan in secret-scan.yml starts
+# flagging it. Verified against sync PR #59, which proposed exactly that.
+.gitleaks.toml
 # Diverges only until the metavariable-regex nesting fix for the two PII rules
 # lands upstream in the template — then remove this line to resume syncing.
 .semgrep.yml
