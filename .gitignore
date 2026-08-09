@@ -39,9 +39,9 @@ coverage
 
 ## Python ##
 # The upstream Python suite and src/ tree went with the image-build toolchain
-# (a07b482), and the last .py file (scripts/tests/mock-ollama.py) went with the
-# routing subsystem. No Python source remains; __pycache__ stays ignored only so
-# an ad-hoc script run cannot drop bytecode into a commit.
+# (a07b482). The only Python left is the battlemap renderer,
+# scripts/maps/render_map.py, which has no test suite or packaging of its own —
+# so __pycache__ is all that needs ignoring.
 __pycache__
 
 ## Claude / agent runtime state (template assets in .claude/ stay tracked) ##
