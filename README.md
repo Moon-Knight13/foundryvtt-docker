@@ -1,42 +1,50 @@
-# FoundryVTT server + Claude Code AI game master
+# Self-hosted FoundryVTT in Docker — Cloudflare-tunneled, Obsidian-backed prep
 
 [![ci](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/ci.yml)
 [![semgrep](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml)
 [![secret-scan](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml)
 [![CodeQL](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml)
 
-A self-hosted [Foundry Virtual Tabletop](https://foundryvtt.com) deployment
-where **Claude Code acts as an AI game master** — authoring NPCs, quests,
-journals, and scenes as code compiled into a compendium module, and running
-live sessions over an MCP bridge — and where the repository itself is
-operated by AI agents under a governed workflow.
+A self-hosted **[Foundry Virtual Tabletop](https://foundryvtt.com)** server that
+runs in **Docker** and is reachable remotely through a **Cloudflare Tunnel** —
+no port forwarding, no inbound ports. Game prep lives in an **Obsidian vault**
+(the DM's durable source of truth) and is projected into Foundry for online or
+hybrid play, while the same notes run an **in-person** table with no export.
+**Claude Code** assists prep — authoring content as code and driving the live
+world over an MCP bridge — and the repo also ships a devcontainer for
+*developing this repository*, which is a dev tool, not part of running the game.
 
-Three things compose it:
+## How it fits together
 
-1. **[felddy/foundryvtt-docker](https://github.com/felddy/foundryvtt-docker)**
-   (this repo's upstream) supplies the battle-tested container image. We run
-   the published `ghcr.io/felddy/foundryvtt:release` image via
-   [`compose.yml`](compose.yml) — this fork does not build its own image.
-   Contributions to the image itself are staged through our clean fork,
-   [Moon-Knight13/foundryvtt-docker-upstream](https://github.com/Moon-Knight13/foundryvtt-docker-upstream),
-   and PR'd from there to felddy.
-2. **[claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo)**
-   supplies the AI-development foundation: a devcontainer with a
-   deny-by-default firewall, model routing (Claude ↔ local Ollama),
-   gitleaks/semgrep/CodeQL gates, a GitHub-Projects Kanban flow, BMAD
-   planning, and weekly template-sync PRs.
-3. **[foundry-vtt-mcp](https://github.com/adambdooley/foundry-vtt-mcp)**
-   bridges the two: a Foundry module + MCP server that lets Claude Code read
-   and write the running world (see [`docs/PROJECT.md`](docs/PROJECT.md) for
-   setup, ports, and the game-creation workflow).
+- **FoundryVTT container** — the published
+  [felddy/foundryvtt-docker](https://github.com/felddy/foundryvtt-docker) image
+  (`ghcr.io/felddy/foundryvtt:release`) run via [`compose.yml`](compose.yml);
+  this fork doesn't build its own image. Live data (worlds, modules) is
+  bind-mounted from `FOUNDRY_DATA_PATH`. Contributions to the image itself are
+  staged through a clean
+  [upstream fork](https://github.com/Moon-Knight13/foundryvtt-docker-upstream)
+  and PR'd to felddy.
+- **Remote access** — an optional **Cloudflare Tunnel** overlay
+  ([`compose.cloudflare.yml`](compose.cloudflare.yml), see
+  [DEPLOYMENT.md](DEPLOYMENT.md#remote-access-via-cloudflare-tunnel)):
+  `cloudflared` dials out to Cloudflare's edge, giving players a stable HTTPS
+  URL with zero inbound ports. Locally it's just `http://localhost:30000`.
+- **DM prep backbone** — an **Obsidian vault** you own is the system-agnostic
+  source of truth; FoundryVTT is a transient projection you can wipe and rebuild
+  from the vault, the git content module, and D&D Beyond. See
+  [Prep in Obsidian, play in Foundry](#prep-in-obsidian-play-in-foundry).
+- **AI game master (optional)** —
+  [Claude Code](https://claude.com/claude-code) authors NPCs / items / quests /
+  scenes as code compiled into a compendium module, and drives the running world
+  (dice, tokens, scenes) over the
+  [foundry-vtt-mcp](https://github.com/adambdooley/foundry-vtt-mcp) bridge (see
+  [`docs/PROJECT.md`](docs/PROJECT.md)).
 
-Underneath all three, an **Obsidian vault is the durable source of truth** —
-system-agnostic prep (NPCs, locations, quests, handouts, maps) that you own and
-sync across devices. **FoundryVTT is a transient projection**: wipe and rebuild
-the world anytime from the vault, the git content module, and D&D Beyond. The
-vault is *yours* — this repo ships the plumbing and a starter skeleton, not
-anyone's notes. See
-[Prep in Obsidian, play in Foundry](#prep-in-obsidian-play-in-foundry).
+The repository itself is developed AI-first: the devcontainer, deny-by-default
+firewall, model routing, CI gates, and Kanban flow come from
+[claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo)
+and exist to work **on this repo**, not to run your table — see
+[Working on this repo](#working-on-this-repo-devcontainer).
 
 ## Quickstart
 
@@ -183,7 +191,9 @@ is in the
 
 ## Working on this repo (devcontainer)
 
-Development happens inside the devcontainer supplied by the
+This section is for **hacking on this repository**, not for running your game —
+the game stack is just `docker compose up` from the Quickstart. Development
+happens inside the devcontainer supplied by the
 [claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo)
 foundation — a deny-by-default egress firewall, the Claude Code workflow, and
 all CI gate tooling come preinstalled.
