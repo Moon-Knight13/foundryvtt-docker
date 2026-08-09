@@ -50,10 +50,52 @@ scripts/ci/README.md
 # sources (actions, javascript-typescript, python) rather than the template's,
 # and the felddy diagnostics job has no upstream equivalent.
 .github/workflows/codeql-analysis.yml
-# Carries this fork's Obsidian-vault bind mount (source→/home/node/DnD) plus the
-# `ln -sfn /home/node/DnD /workspace/DnD` symlink in postStartCommand — the vault
-# is the durable source of truth (see README + docs/PROJECT.md). The template has
-# neither, so syncing this file reverts both (it did in PR #63, which is why they
-# were missing until restored here). TRADE-OFF: this file no longer receives
-# upstream template updates — diff it manually against the template on occasion.
+# Carries this fork's Obsidian-vault bind mount (source→/home/node/DnD); the
+# vault is the durable source of truth (see README + docs/PROJECT.md). A bind
+# mount can only be declared in devcontainer.json, so this one divergence cannot
+# be moved anywhere else — the template cannot carry it either, since a bind to a
+# host path that does not exist breaks container start for every other
+# derivative. The postStartCommand symlink that used to live here moved into
+# scripts/project-setup.sh, so the chain now matches the template's apart from
+# the trailing hook call.
+#
+# TRADE-OFF: this file no longer receives upstream template updates. It is the
+# one ignore entry that costs real security coverage, so diff it against the
+# template whenever the template's devcontainer changes:
+#   diff <(gh api repos/Moon-Knight13/claude_template_repo/contents/.devcontainer/devcontainer.json \
+#            --jq .content | base64 -d) .devcontainer/devcontainer.json
+# Expect exactly two hunks: the mounts entry, and nothing else.
 .devcontainer/devcontainer.json
+
+# ── Deleted subsystems: keep sync from resurrecting them ──────────────────────
+# actions-template-sync only ADDS and UPDATES files; it never deletes. So a file
+# the template still ships but this repo deleted comes back on the very next
+# sync. #66 switched routing and BMAD off in template.conf and deleted their
+# files; sync PR #70 then re-added all eleven. Listing them here is the only way
+# to make those deletions stick.
+#
+# These are NOT divergences to review — they are files this repo has no use for
+# while SUBSYSTEM_ROUTING and SUBSYSTEM_BMAD are false. If either subsystem is
+# ever switched back on, delete the matching block below and let sync restore
+# them.
+#
+# routing (SUBSYSTEM_ROUTING=false)
+.claude/agents/local-worker.md
+.claude/commands/route-task.md
+docs/AI_ROUTING_POLICY.md
+scripts/ask-local.sh
+scripts/delegate-local.sh
+scripts/local-health.sh
+scripts/tests/mock-ollama.py
+scripts/tests/test-delegation.sh
+# BMAD (SUBSYSTEM_BMAD=false)
+.claude/commands/bmad.md
+.claude/commands/bmad-to-board.md
+docs/BMAD_WORKFLOW.md
+
+# Owned downstream by design: the template ships this as a no-op and expects
+# derivatives to replace the body (see docs/TEMPLATE_GUIDE.md, "Project-specific
+# container setup"). Ours installs Pillow for scripts/maps/render_map.py and
+# creates the /workspace/DnD vault symlink. Listed only now that the file exists
+# locally — ignoring a path sync has not yet delivered means it never arrives.
+scripts/project-setup.sh
