@@ -123,8 +123,11 @@ for domain in \
     done < <(echo "$ips")
 done
 
-# Resolve optional telemetry domains (do not fail startup if unavailable)
+# Resolve optional domains (do not fail startup if unavailable)
+# obsidianttrpgtutorials.com is a Cloudflare-fronted reference site (rotating
+# IPs); kept optional so a resolution hiccup never blocks container startup.
 for domain in \
+    "obsidianttrpgtutorials.com" \
     "sentry.io" \
     "statsig.anthropic.com" \
     "statsig.com"; do
