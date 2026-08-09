@@ -19,7 +19,17 @@ services:
       - type: bind
         source: ${FOUNDRY_DATA_PATH:-${HOME}/.local/share/FoundryVTT}
         target: /data
-    
+      # Obsidian DnD notes vault, surfaced inside Foundry's Data root so the
+      # vault's files (images/PDFs/handouts) appear in Foundry's file picker.
+      # Read-write per operator choice: Foundry can save into the vault — note
+      # this can clobber Obsidian on the next sync, so avoid editing the same
+      # file in Foundry and on another device at once. Obsidian stays the
+      # source of truth; sync remains host-side. Host source must be writable
+      # by the container's runtime UID or writes fail with permission errors.
+      - type: bind
+        source: ${DND_VAULT_PATH:-${HOME}/Documents/DnD}
+        target: /data/Data/DnD
+
     environment:
       # Credentials (from .env file)
       - FOUNDRY_PASSWORD=${FOUNDRY_PASSWORD}

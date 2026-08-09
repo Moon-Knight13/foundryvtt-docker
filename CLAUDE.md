@@ -96,6 +96,13 @@ carries no note content and stays out of git.
   elsewhere.
 - The mount takes effect only after a container rebuild; a missing host
   `~/Documents/DnD` makes Docker create an empty dir (single-user repo, so fine).
+- The vault is **also bind-mounted into the Foundry container** (`compose.yml`)
+  at `/data/Data/DnD` (host source `${DND_VAULT_PATH:-~/Documents/DnD}`),
+  **read-write**, so its files (images/PDFs/handouts) show up in Foundry's file
+  picker. Read-write means Foundry can save into the vault — the same
+  one-writer / sync-clobber caveat applies, and the host dir must be writable
+  by the container's runtime UID or writes fail. Restart the Foundry stack
+  (`docker compose up -d`) to apply.
 
 ## Repo layout & where things live
 
