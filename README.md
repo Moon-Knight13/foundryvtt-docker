@@ -1,34 +1,50 @@
-# FoundryVTT server + Claude Code AI game master
+# Self-hosted FoundryVTT in Docker — Cloudflare-tunneled, Obsidian-backed prep
 
 [![ci](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/ci.yml)
 [![semgrep](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml)
 [![secret-scan](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml)
 [![CodeQL](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml)
 
-A self-hosted [Foundry Virtual Tabletop](https://foundryvtt.com) deployment
-where **Claude Code acts as an AI game master** — authoring NPCs, quests,
-journals, and scenes as code compiled into a compendium module, and running
-live sessions over an MCP bridge — and where the repository itself is
-operated by AI agents under a governed workflow.
+A self-hosted **[Foundry Virtual Tabletop](https://foundryvtt.com)** server that
+runs in **Docker** and is reachable remotely through a **Cloudflare Tunnel** —
+no port forwarding, no inbound ports. Game prep lives in an **Obsidian vault**
+(the DM's durable source of truth) and is projected into Foundry for online or
+hybrid play, while the same notes run an **in-person** table with no export.
+**Claude Code** assists prep — authoring content as code and driving the live
+world over an MCP bridge — and the repo also ships a devcontainer for
+*developing this repository*, which is a dev tool, not part of running the game.
 
-Three things compose it:
+## How it fits together
 
-1. **[felddy/foundryvtt-docker](https://github.com/felddy/foundryvtt-docker)**
-   (this repo's upstream) supplies the battle-tested container image. We run
-   the published `ghcr.io/felddy/foundryvtt:release` image via
-   [`compose.yml`](compose.yml) — this fork does not build its own image.
-   Contributions to the image itself are staged through our clean fork,
-   [Moon-Knight13/foundryvtt-docker-upstream](https://github.com/Moon-Knight13/foundryvtt-docker-upstream),
-   and PR'd from there to felddy.
-2. **[claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo)**
-   supplies the AI-development foundation: a devcontainer with a
-   deny-by-default firewall, model routing (Claude ↔ local Ollama),
-   gitleaks/semgrep/CodeQL gates, a GitHub-Projects Kanban flow, BMAD
-   planning, and weekly template-sync PRs.
-3. **[foundry-vtt-mcp](https://github.com/adambdooley/foundry-vtt-mcp)**
-   bridges the two: a Foundry module + MCP server that lets Claude Code read
-   and write the running world (see [`docs/PROJECT.md`](docs/PROJECT.md) for
-   setup, ports, and the game-creation workflow).
+- **FoundryVTT container** — the published
+  [felddy/foundryvtt-docker](https://github.com/felddy/foundryvtt-docker) image
+  (`ghcr.io/felddy/foundryvtt:release`) run via [`compose.yml`](compose.yml);
+  this fork doesn't build its own image. Live data (worlds, modules) is
+  bind-mounted from `FOUNDRY_DATA_PATH`. Contributions to the image itself are
+  staged through a clean
+  [upstream fork](https://github.com/Moon-Knight13/foundryvtt-docker-upstream)
+  and PR'd to felddy.
+- **Remote access** — an optional **Cloudflare Tunnel** overlay
+  ([`compose.cloudflare.yml`](compose.cloudflare.yml), see
+  [DEPLOYMENT.md](DEPLOYMENT.md#remote-access-via-cloudflare-tunnel)):
+  `cloudflared` dials out to Cloudflare's edge, giving players a stable HTTPS
+  URL with zero inbound ports. Locally it's just `http://localhost:30000`.
+- **DM prep backbone** — an **Obsidian vault** you own is the system-agnostic
+  source of truth; FoundryVTT is a transient projection you can wipe and rebuild
+  from the vault, the git content module, and D&D Beyond. See
+  [Prep in Obsidian, play in Foundry](#prep-in-obsidian-play-in-foundry).
+- **AI game master (optional)** —
+  [Claude Code](https://claude.com/claude-code) authors NPCs / items / quests /
+  scenes as code compiled into a compendium module, and drives the running world
+  (dice, tokens, scenes) over the
+  [foundry-vtt-mcp](https://github.com/adambdooley/foundry-vtt-mcp) bridge (see
+  [`docs/PROJECT.md`](docs/PROJECT.md)).
+
+The repository itself is developed AI-first: the devcontainer, deny-by-default
+firewall, model routing, CI gates, and Kanban flow come from
+[claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo)
+and exist to work **on this repo**, not to run your table — see
+[Working on this repo](#working-on-this-repo-devcontainer).
 
 ## Quickstart
 
@@ -82,6 +98,81 @@ Test module changes against a disposable clone first —
 `./scripts/test-instance.sh up` starts a full copy of your live data on
 :30001 (see [`docs/PROJECT.md`](docs/PROJECT.md), "Safe A/B testing").
 
+## Prep in Obsidian, play in Foundry
+
+Prep lives in an **Obsidian vault you own** — system-agnostic notes that sync
+across your devices. Foundry is just one place that prep gets *played*:
+everything durable lives in the vault (plus the git content module and
+D&D Beyond), so a Foundry world can be wiped and rebuilt in minutes.
+
+- **Durable (source of truth):** the vault (prose, handouts, map `.dd2vtt`), the
+  git content module, D&D Beyond characters.
+- **Transient (fine to lose):** token positions, fog, the combat tracker, the
+  active scene.
+
+### Bring your own vault
+
+The repo ships the *plumbing and a starter skeleton*, never anyone's notes. To
+wire up yours:
+
+1. Set `DND_VAULT_PATH` in `.env` (defaults to `~/Documents/DnD`). It is
+   bind-mounted read-write into Foundry at `/data/Data/DnD` and into the
+   devcontainer at `/home/node/DnD`.
+2. Start from the skeleton — copy it to your vault path and open it in Obsidian:
+
+   ```bash
+   cp -r examples/vault-skeleton "$DND_VAULT_PATH"   # or an empty folder to start bare
+   ```
+
+   It carries the folder taxonomy, blank Templater templates, and generic guide
+   notes — no campaign content. See
+   [`examples/vault-skeleton/README.md`](examples/vault-skeleton/README.md) for
+   the Obsidian plugins to enable.
+
+### Two play surfaces
+
+Same notes, two tables:
+
+- **In person** — run straight from the vault (laptop/tablet as your GM screen):
+  Fantasy Statblocks cards, printed or displayed handouts and maps, dice + the
+  Initiative Tracker. No export.
+- **Online / hybrid** — project the vault into Foundry through purpose-built
+  pipes:
+
+  | Content | Pipe | Direction |
+  | --- | --- | --- |
+  | Notes / journals / handouts | **SoSly Obsidian Bridge** | bidirectional |
+  | NPCs / items / roll tables / scenes | **content-as-code → compendium module** | one-way (git = truth) |
+  | Images / art / map files | **`/data/Data/DnD` mount** | shared files (no copy) |
+  | Maps as walled/lit scenes | **`.dd2vtt` → Universal Battlemap Importer** | source `.dd2vtt` lives in the vault |
+  | Player characters | **D&D Beyond → ddb-importer** | DDB = truth |
+
+### Maps
+
+`scripts/maps/render_map.py` turns one JSON spec into a clean **Player** PNG, a
+keyed **DM** PNG, and a Foundry **`.dd2vtt`** (walls + lights + doors baked in).
+Full spec: [`scripts/maps/README.md`](scripts/maps/README.md).
+
+### Taxonomy
+
+The starter vault (`examples/vault-skeleton/`) lays out:
+
+```text
+00 Index/      Home, How this vault works, Notes to the table, Running a new game
+01 Systems/    per-system rules notes (cairn, dnd5e, …)
+02 Campaigns/  multi-session games
+03 Oneshots/   single-session games
+04 Bestiary/   reusable statblocks
+05 Templates/  Templater templates (NPC, Location, Quest, Map Brief, …)
+06 Assets/     handouts, maps, tokens
+99 Inbox/      unsorted capture
+```
+
+To rebuild a wiped world from these durable sources, see
+[`docs/FOUNDRY_REBUILD.md`](docs/FOUNDRY_REBUILD.md); the full design rationale
+is in the
+[architecture spec](docs/superpowers/specs/2026-07-18-obsidian-foundry-architecture-design.md).
+
 ## Documentation map
 
 | Doc | What it covers |
@@ -91,13 +182,18 @@ Test module changes against a disposable clone first —
 | [`docs/PROJECT.md`](docs/PROJECT.md) | FoundryVTT specifics for agents: MCP integration, content routing, safe A/B testing, container operations, security hard rules |
 | [`CLAUDE.md`](CLAUDE.md) | Template-wide Claude workflow contract (kept byte-identical to the template so sync stays clean) |
 | [`docs/CONTENT_AUTHORING.md`](docs/CONTENT_AUTHORING.md) | Content-as-code pipeline: author JSON → build compendium module → sync → import; skill-vs-MCP routing |
+| [`docs/FOUNDRY_REBUILD.md`](docs/FOUNDRY_REBUILD.md) | Rebuild a wiped Foundry world from the durable sources (vault, git content module, D&D Beyond) |
+| [`scripts/maps/README.md`](scripts/maps/README.md) | Spec-driven battlemap generator: Player PNG + keyed DM PNG + Foundry `.dd2vtt` |
+| [`examples/vault-skeleton/`](examples/vault-skeleton/) | Copy-to-start Obsidian vault: taxonomy, blank Templater templates, generic guide notes |
 | [`SECURITY.md`](SECURITY.md) | Credential handling and the files agents must never read |
 | [`docs/TEMPLATE_GUIDE.md`](docs/TEMPLATE_GUIDE.md) | The template foundation: devcontainer, firewall, routing, CI gates, template-sync |
 | [`docs/KANBAN_WORKFLOW.md`](docs/KANBAN_WORKFLOW.md) | Board-driven agent workflow (`/next-issue`, `/run-epic`) |
 
 ## Working on this repo (devcontainer)
 
-Development happens inside the devcontainer supplied by the
+This section is for **hacking on this repository**, not for running your game —
+the game stack is just `docker compose up` from the Quickstart. Development
+happens inside the devcontainer supplied by the
 [claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo)
 foundation — a deny-by-default egress firewall, the Claude Code workflow, and
 all CI gate tooling come preinstalled.

@@ -50,3 +50,10 @@ scripts/ci/README.md
 # sources (actions, javascript-typescript, python) rather than the template's,
 # and the felddy diagnostics job has no upstream equivalent.
 .github/workflows/codeql-analysis.yml
+# Carries this fork's Obsidian-vault bind mount (source→/home/node/DnD) plus the
+# `ln -sfn /home/node/DnD /workspace/DnD` symlink in postStartCommand — the vault
+# is the durable source of truth (see README + docs/PROJECT.md). The template has
+# neither, so syncing this file reverts both (it did in PR #63, which is why they
+# were missing until restored here). TRADE-OFF: this file no longer receives
+# upstream template updates — diff it manually against the template on occasion.
+.devcontainer/devcontainer.json
