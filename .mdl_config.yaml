@@ -4,8 +4,11 @@ default: true
 
 # MD003/heading-style/header-style - Heading style
 MD003:
-  # Enforce the ATX-closed style of header
-  style: atx_closed
+  # Enforce plain ATX headers (`# Heading`). The inherited cisagov skeleton
+  # asked for atx_closed (`# Heading #`), which no document in this repository
+  # has ever used -- every markdown file failed the rule, so any doc edit was
+  # unlandable until the rule matched reality.
+  style: atx
 
 # MD004/ul-style - Unordered list style
 MD004:
@@ -28,8 +31,10 @@ MD024:
 
 # MD029/ol-prefix - Ordered list item prefix
 MD029:
-  # Enforce the `1.` style for ordered lists
-  style: one
+  # Enforce incrementing prefixes (`1.` `2.` `3.`), the style every document in
+  # this repository already uses. The inherited skeleton asked for the all-`1.`
+  # style, which nothing here follows.
+  style: ordered
 
 # MD033/no-inline-html - Inline HTML
 MD033:

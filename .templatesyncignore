@@ -26,6 +26,13 @@ SECURITY.md
 .gitignore
 .pre-commit-config.yaml
 .github/dependabot.yml
+# MD003/MD029 were retuned to the heading and ordered-list styles this repo's
+# documents actually use; the inherited skeleton values matched no file here.
+.mdl_config.yaml
+# This fork has no root-level language marker, so the ci/ hooks were removed
+# and the README rewritten to record why the folder is empty.
+scripts/ci/README.md
+.dockerignore
 # Diverges only until the metavariable-regex nesting fix for the two PII rules
 # lands upstream in the template — then remove this line to resume syncing.
 .semgrep.yml
