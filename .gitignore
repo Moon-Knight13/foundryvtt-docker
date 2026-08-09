@@ -38,11 +38,10 @@ build
 coverage
 
 ## Python ##
-# The upstream Python suite and src/ tree went away with the image-build
-# toolchain (a07b482). Only scripts/tests/mock-ollama.py remains, and running it
-# still drops bytecode, so __pycache__ stays ignored; the rest of the block
-# (.hypothesis, .mypy_cache, .pytest_cache, .python-version, egg-info, venvs)
-# guarded tooling this repo no longer has.
+# The upstream Python suite and src/ tree went with the image-build toolchain
+# (a07b482), and the last .py file (scripts/tests/mock-ollama.py) went with the
+# routing subsystem. No Python source remains; __pycache__ stays ignored only so
+# an ad-hoc script run cannot drop bytecode into a commit.
 __pycache__
 
 ## Claude / agent runtime state (template assets in .claude/ stay tracked) ##

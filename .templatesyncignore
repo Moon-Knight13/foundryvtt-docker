@@ -22,6 +22,10 @@ LICENSE
 # These intentionally diverge from the template (felddy-fork lineage or merged
 # union configs); sync must not propose reverting them.
 SECURITY.md
+# Records which optional template subsystems this repo uses. Owned downstream —
+# syncing it would reset the choices to the template's all-on defaults and
+# re-require routing and BMAD, which this repo has deleted.
+template.conf
 .editorconfig
 .gitignore
 .pre-commit-config.yaml
