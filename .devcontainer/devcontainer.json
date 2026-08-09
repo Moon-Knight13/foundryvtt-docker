@@ -49,7 +49,8 @@
   "mounts": [
     "source=claude-code-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
     "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume",
-    "source=claude-code-ghconfig-${devcontainerId},target=/home/node/.config/gh,type=volume"
+    "source=claude-code-ghconfig-${devcontainerId},target=/home/node/.config/gh,type=volume",
+    "source=${localEnv:HOME}/Documents/DnD,target=/home/node/DnD,type=bind,consistency=cached"
   ],
   "containerEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
