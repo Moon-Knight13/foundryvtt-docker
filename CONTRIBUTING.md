@@ -35,8 +35,8 @@ bash scripts/tests/test-day0.sh       # day-0 bootstrap checks
 ```
 
 Changes to the Foundry stack itself should be exercised against a disposable
-clone, never the live data: `./scripts/test-instance.sh up` (see CLAUDE.md,
-"Safe A/B testing").
+clone, never the live data: `./scripts/test-instance.sh up` (see
+docs/PROJECT.md, "Safe A/B testing").
 
 ## Licence
 
