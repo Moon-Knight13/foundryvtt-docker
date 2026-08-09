@@ -69,6 +69,12 @@ repos:
       - id: markdownlint
         args:
           - --config=.mdl_config.yaml
+        # The copied Obsidian vault content under examples/vault-skeleton/ is
+        # authored to Obsidian conventions (YAML `title:` + an H1 → MD025, tight
+        # lists, wikilinks), not repo doc-lint rules; forcing markdownlint on it
+        # would only degrade it as a vault. The skeleton's own README.md is a
+        # real repo doc and stays linted.
+        exclude: ^examples/vault-skeleton/(?!README\.md$).*
   - repo: https://github.com/rbubley/mirrors-prettier
     rev: v3.8.1
     hooks:

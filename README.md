@@ -30,6 +30,14 @@ Three things compose it:
    and write the running world (see [`docs/PROJECT.md`](docs/PROJECT.md) for
    setup, ports, and the game-creation workflow).
 
+Underneath all three, an **Obsidian vault is the durable source of truth** —
+system-agnostic prep (NPCs, locations, quests, handouts, maps) that you own and
+sync across devices. **FoundryVTT is a transient projection**: wipe and rebuild
+the world anytime from the vault, the git content module, and D&D Beyond. The
+vault is *yours* — this repo ships the plumbing and a starter skeleton, not
+anyone's notes. See
+[Prep in Obsidian, play in Foundry](#prep-in-obsidian-play-in-foundry).
+
 ## Quickstart
 
 ```bash
@@ -82,6 +90,81 @@ Test module changes against a disposable clone first —
 `./scripts/test-instance.sh up` starts a full copy of your live data on
 :30001 (see [`docs/PROJECT.md`](docs/PROJECT.md), "Safe A/B testing").
 
+## Prep in Obsidian, play in Foundry
+
+Prep lives in an **Obsidian vault you own** — system-agnostic notes that sync
+across your devices. Foundry is just one place that prep gets *played*:
+everything durable lives in the vault (plus the git content module and
+D&D Beyond), so a Foundry world can be wiped and rebuilt in minutes.
+
+- **Durable (source of truth):** the vault (prose, handouts, map `.dd2vtt`), the
+  git content module, D&D Beyond characters.
+- **Transient (fine to lose):** token positions, fog, the combat tracker, the
+  active scene.
+
+### Bring your own vault
+
+The repo ships the *plumbing and a starter skeleton*, never anyone's notes. To
+wire up yours:
+
+1. Set `DND_VAULT_PATH` in `.env` (defaults to `~/Documents/DnD`). It is
+   bind-mounted read-write into Foundry at `/data/Data/DnD` and into the
+   devcontainer at `/home/node/DnD`.
+2. Start from the skeleton — copy it to your vault path and open it in Obsidian:
+
+   ```bash
+   cp -r examples/vault-skeleton "$DND_VAULT_PATH"   # or an empty folder to start bare
+   ```
+
+   It carries the folder taxonomy, blank Templater templates, and generic guide
+   notes — no campaign content. See
+   [`examples/vault-skeleton/README.md`](examples/vault-skeleton/README.md) for
+   the Obsidian plugins to enable.
+
+### Two play surfaces
+
+Same notes, two tables:
+
+- **In person** — run straight from the vault (laptop/tablet as your GM screen):
+  Fantasy Statblocks cards, printed or displayed handouts and maps, dice + the
+  Initiative Tracker. No export.
+- **Online / hybrid** — project the vault into Foundry through purpose-built
+  pipes:
+
+  | Content | Pipe | Direction |
+  | --- | --- | --- |
+  | Notes / journals / handouts | **SoSly Obsidian Bridge** | bidirectional |
+  | NPCs / items / roll tables / scenes | **content-as-code → compendium module** | one-way (git = truth) |
+  | Images / art / map files | **`/data/Data/DnD` mount** | shared files (no copy) |
+  | Maps as walled/lit scenes | **`.dd2vtt` → Universal Battlemap Importer** | source `.dd2vtt` lives in the vault |
+  | Player characters | **D&D Beyond → ddb-importer** | DDB = truth |
+
+### Maps
+
+`scripts/maps/render_map.py` turns one JSON spec into a clean **Player** PNG, a
+keyed **DM** PNG, and a Foundry **`.dd2vtt`** (walls + lights + doors baked in).
+Full spec: [`scripts/maps/README.md`](scripts/maps/README.md).
+
+### Taxonomy
+
+The starter vault (`examples/vault-skeleton/`) lays out:
+
+```text
+00 Index/      Home, How this vault works, Notes to the table, Running a new game
+01 Systems/    per-system rules notes (cairn, dnd5e, …)
+02 Campaigns/  multi-session games
+03 Oneshots/   single-session games
+04 Bestiary/   reusable statblocks
+05 Templates/  Templater templates (NPC, Location, Quest, Map Brief, …)
+06 Assets/     handouts, maps, tokens
+99 Inbox/      unsorted capture
+```
+
+To rebuild a wiped world from these durable sources, see
+[`docs/FOUNDRY_REBUILD.md`](docs/FOUNDRY_REBUILD.md); the full design rationale
+is in the
+[architecture spec](docs/superpowers/specs/2026-07-18-obsidian-foundry-architecture-design.md).
+
 ## Documentation map
 
 | Doc | What it covers |
@@ -91,6 +174,9 @@ Test module changes against a disposable clone first —
 | [`docs/PROJECT.md`](docs/PROJECT.md) | FoundryVTT specifics for agents: MCP integration, content routing, safe A/B testing, container operations, security hard rules |
 | [`CLAUDE.md`](CLAUDE.md) | Template-wide Claude workflow contract (kept byte-identical to the template so sync stays clean) |
 | [`docs/CONTENT_AUTHORING.md`](docs/CONTENT_AUTHORING.md) | Content-as-code pipeline: author JSON → build compendium module → sync → import; skill-vs-MCP routing |
+| [`docs/FOUNDRY_REBUILD.md`](docs/FOUNDRY_REBUILD.md) | Rebuild a wiped Foundry world from the durable sources (vault, git content module, D&D Beyond) |
+| [`scripts/maps/README.md`](scripts/maps/README.md) | Spec-driven battlemap generator: Player PNG + keyed DM PNG + Foundry `.dd2vtt` |
+| [`examples/vault-skeleton/`](examples/vault-skeleton/) | Copy-to-start Obsidian vault: taxonomy, blank Templater templates, generic guide notes |
 | [`SECURITY.md`](SECURITY.md) | Credential handling and the files agents must never read |
 | [`docs/TEMPLATE_GUIDE.md`](docs/TEMPLATE_GUIDE.md) | The template foundation: devcontainer, firewall, routing, CI gates, template-sync |
 | [`docs/KANBAN_WORKFLOW.md`](docs/KANBAN_WORKFLOW.md) | Board-driven agent workflow (`/next-issue`, `/run-epic`) |
