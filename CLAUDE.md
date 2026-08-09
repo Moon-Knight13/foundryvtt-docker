@@ -84,6 +84,9 @@ The GM's personal notes live in an **Obsidian vault** bind-mounted into the
 devcontainer at `/home/node/DnD` (host source `~/Documents/DnD`, wired in
 `.devcontainer/devcontainer.json`). Read/write notes there by absolute path;
 it is **outside `/workspace`**, so it is never part of this repo's git tree.
+A gitignored symlink `/workspace/DnD` → `/home/node/DnD` (created by
+`postStartCommand`) surfaces the vault in the VS Code sidebar; the symlink
+carries no note content and stays out of git.
 
 - **Obsidian is the source of truth.** Sync (Obsidian Sync / other devices) is
   **host-side** — the container only shares the files. Do not run sync in the

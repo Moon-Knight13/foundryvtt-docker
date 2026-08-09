@@ -76,3 +76,6 @@ _bmad-output/
 # Foundry content module build output
 content/dist/
 scripts/content/node_modules/
+
+# Sidebar symlink to the Obsidian notes vault (created at container start)
+/DnD
