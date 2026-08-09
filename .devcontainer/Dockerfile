@@ -25,6 +25,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y --no-install-reco
   git \
   python3 \
   python3-pip \
+  python3-pil \
   procps \
   sudo \
   fzf \

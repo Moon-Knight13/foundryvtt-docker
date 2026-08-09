@@ -1,0 +1,30 @@
+{
+  "name": "The Belfry",
+  "grid": {"w": 16, "h": 16},
+  "ppg": 72,
+  "floor": {"shape": "octagon", "bounds": [2, 2, 14, 14], "chamfer": 3},
+  "walls": [
+    [[6.5, 6.5], [9.5, 6.5], [9.5, 9.5], [6.5, 9.5], [6.5, 6.5]]
+  ],
+  "features": [
+    {"type": "bell",     "at": [8, 8],        "size": 3, "label": "GREAT BELL"},
+    {"type": "arch",     "at": [8, 2],        "dir": "n", "label": "arch"},
+    {"type": "arch",     "at": [14, 8],       "dir": "e"},
+    {"type": "arch",     "at": [8, 14],       "dir": "s"},
+    {"type": "arch",     "at": [2, 8],        "dir": "w"},
+    {"type": "trapdoor", "at": [11.5, 11.5],  "size": 2, "label": "trapdoor"},
+    {"type": "marker",   "at": [8, 9.3],      "size": 0.4, "label": "Sela"}
+  ],
+  "keys": [
+    {"n": 1, "at": [8, 8],       "label": "Great Bell", "note": "Swaying on its yoke; the square beneath is difficult terrain and grants partial cover. A hard strike rings the bell — see the toll table."},
+    {"n": 2, "at": [11.5, 11.5], "label": "Trapdoor",   "note": "Entry from the clock room below. Ladder down; hatch is unlocked but stiff (DC 12 Athletics to open quietly)."},
+    {"n": 3, "at": [8, 9.3],     "label": "Sela",       "note": "The ghost's resting spot. She manifests here at moonrise; hostile only if the bell is struck."}
+  ],
+  "lights": [
+    {"at": [8, 2.4],  "range": 6, "color": "cfe0ff"},
+    {"at": [13.6, 8], "range": 6, "color": "cfe0ff"},
+    {"at": [8, 13.6], "range": 6, "color": "cfe0ff"},
+    {"at": [2.4, 8],  "range": 6, "color": "cfe0ff"},
+    {"at": [8, 9.3],  "range": 3, "intensity": 0.4, "color": "aecadf"}
+  ]
+}
