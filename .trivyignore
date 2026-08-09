@@ -1,0 +1,25 @@
+# Trivy vulnerability ignores.
+#
+# Format: one CVE id per line (comments with '#'). Keep every entry
+# justified and paired with a removal condition — mirror the template's
+# pip-audit ignore convention (see commit "Ignore a vulnerability
+# originating from pygments").
+
+# node-tar Denial of Service via a crafted gzip bomb.
+#
+# We have to ignore this for now: tar is pulled in transitively by
+# @anthropic-ai/claude-code, installed globally (`npm install -g`) in
+# .devcontainer/Dockerfile, so there is no package.json / lockfile /
+# overrides we control, and the current `@latest` still resolves
+# tar 7.5.15 (< the fixed 7.5.19).
+#
+# Low real-world risk: it is a DoS (not RCE/priv-esc) in a build-time
+# tool, inside a local dev sandbox behind a deny-by-default firewall —
+# consistent with the gate's own policy of blocking only CRITICALs that
+# actually matter for this image.
+#
+# TODO: Remove this when @anthropic-ai/claude-code ships tar >= 7.5.19.
+# See:
+# - https://nvd.nist.gov/vuln/detail/CVE-2026-59873
+# - https://avd.aquasec.com/nvd/cve-2026-59873
+CVE-2026-59873
