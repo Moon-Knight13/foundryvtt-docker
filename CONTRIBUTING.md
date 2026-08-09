@@ -29,8 +29,8 @@ lint/security hooks run on commit.
 
 ```bash
 bash scripts/validate-template.sh     # template integrity (CI runs this too)
-bash scripts/tests/test-delegation.sh # model-routing test suite
 bash scripts/tests/test-day0.sh       # day-0 bootstrap checks
+cd scripts/content && npm ci && npm test   # content-pipeline build + roundtrip
 ```
 
 Changes to the Foundry stack itself should be exercised against a disposable

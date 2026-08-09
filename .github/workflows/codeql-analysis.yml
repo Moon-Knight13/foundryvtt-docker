@@ -52,18 +52,23 @@ jobs:
         #
         # Supported options are actions, c-cpp, csharp, go,
         # java-kotlin, javascript-typescript, python, ruby, and swift.
-        # In scope: workflows (actions), the content build tooling
-        # (scripts/content/*.mjs), and scripts/tests/*.py. The upstream
-        # image-source toolchain was removed with the root Dockerfile and the
-        # vendored mcp-server/ bundle is gitignored, so neither is scanned.
+        # In scope: workflows (actions) and the content build tooling
+        # (scripts/content/*.mjs). The upstream image-source toolchain was
+        # removed with the root Dockerfile and the vendored mcp-server/ bundle
+        # is gitignored, so neither is scanned. Python is gone too: the last
+        # .py file (scripts/tests/mock-ollama.py) left with the routing
+        # subsystem, and CodeQL fails hard (exit 32) on a language with no
+        # source, so the leg was dropped rather than kept red.
         # Keep this list in step with the tracked sources: dropping a language
         # that main has already analyzed leaves a stale code-scanning
         # configuration, which makes the "CodeQL" gate report
-        # "configurations not found" on every PR.
+        # "configurations not found" on every PR. When removing one, also
+        # delete its old analyses:
+        #   gh api "repos/<owner>/<repo>/code-scanning/analyses?ref=refs/heads/main" \
+        #     --jq '.[] | select(.category | endswith("language:<lang>")) | .id'
         language:
           - actions
           - javascript-typescript
-          - python
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript',
         # 'python', 'ruby' ] Learn more about CodeQL language support at
         # https://git.io/codeql-language-support
