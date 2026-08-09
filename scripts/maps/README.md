@@ -21,10 +21,11 @@ Writes into `<outdir>` (using the spec's `name`):
 
 ## Dependency
 
-Pillow (PIL). In this container:
+Pillow (PIL). **Preinstalled in the devcontainer** via the `python3-pil` apt
+package (`.devcontainer/Dockerfile`). Elsewhere:
 
 ```bash
-pip install --break-system-packages --user Pillow
+pip install Pillow            # or: apt-get install -y python3-pil
 ```
 
 ## Foundry import
