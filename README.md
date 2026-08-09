@@ -27,8 +27,8 @@ Three things compose it:
    planning, and weekly template-sync PRs.
 3. **[foundry-vtt-mcp](https://github.com/adambdooley/foundry-vtt-mcp)**
    bridges the two: a Foundry module + MCP server that lets Claude Code read
-   and write the running world (see [`CLAUDE.md`](CLAUDE.md) for setup,
-   ports, and the game-creation workflow).
+   and write the running world (see [`docs/PROJECT.md`](docs/PROJECT.md) for
+   setup, ports, and the game-creation workflow).
 
 ## Quickstart
 
@@ -80,7 +80,7 @@ claude                        # Claude Code picks up .mcp.json from the repo roo
 
 Test module changes against a disposable clone first —
 `./scripts/test-instance.sh up` starts a full copy of your live data on
-:30001 (see [`CLAUDE.md`](CLAUDE.md), "Safe A/B testing").
+:30001 (see [`docs/PROJECT.md`](docs/PROJECT.md), "Safe A/B testing").
 
 ## Documentation map
 
@@ -88,7 +88,8 @@ Test module changes against a disposable clone first —
 | --- | --- |
 | [`DEPLOYMENT.md`](DEPLOYMENT.md) | Full deployment guide: env setup, profiles, monitoring, performance, troubleshooting |
 | [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) | Backup and restore: SCP/rsync pull from a remote host, Foundry-native backups, the assets caveat |
-| [`CLAUDE.md`](CLAUDE.md) | Claude workflow contract + FoundryVTT specifics: MCP integration, content routing, safe A/B testing, security hard rules |
+| [`docs/PROJECT.md`](docs/PROJECT.md) | FoundryVTT specifics for agents: MCP integration, content routing, safe A/B testing, container operations, security hard rules |
+| [`CLAUDE.md`](CLAUDE.md) | Template-wide Claude workflow contract (kept byte-identical to the template so sync stays clean) |
 | [`docs/CONTENT_AUTHORING.md`](docs/CONTENT_AUTHORING.md) | Content-as-code pipeline: author JSON → build compendium module → sync → import; skill-vs-MCP routing |
 | [`SECURITY.md`](SECURITY.md) | Credential handling and the files agents must never read |
 | [`docs/TEMPLATE_GUIDE.md`](docs/TEMPLATE_GUIDE.md) | The template foundation: devcontainer, firewall, routing, CI gates, template-sync |
