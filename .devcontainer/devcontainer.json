@@ -49,8 +49,7 @@
   "mounts": [
     "source=claude-code-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
     "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume",
-    "source=claude-code-ghconfig-${devcontainerId},target=/home/node/.config/gh,type=volume",
-    "source=${localEnv:HOME}/Documents/DnD,target=/home/node/DnD,type=bind,consistency=cached"
+    "source=claude-code-ghconfig-${devcontainerId},target=/home/node/.config/gh,type=volume"
   ],
   "containerEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
@@ -65,12 +64,6 @@
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace",
-  "forwardPorts": [31415],
-  "portsAttributes": {
-    "31415": {
-      "label": "Foundry MCP bridge (GM browser → MCP backend)"
-    }
-  },
-  "postStartCommand": "ln -sfn /home/node/DnD /workspace/DnD && sudo /usr/local/bin/init-firewall.sh && bash scripts/install-caveman.sh && bash scripts/install-bmad.sh && bash scripts/bootstrap-bmad.sh && bash scripts/bootstrap-precommit.sh && bash scripts/install-claude-plugins.sh && bash scripts/setup-day0.sh",
+  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh && bash scripts/install-caveman.sh && bash scripts/install-bmad.sh && bash scripts/bootstrap-bmad.sh && bash scripts/bootstrap-precommit.sh && bash scripts/install-claude-plugins.sh && bash scripts/setup-day0.sh",
   "waitFor": "postStartCommand"
 }
