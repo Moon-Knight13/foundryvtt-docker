@@ -4,7 +4,8 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
-  docId, validateDoc, prepareDoc, moduleManifest, validateLinks, loadConfig, COLLECTIONS,
+  docId, validateDoc, prepareDoc, moduleManifest, validateLinks, loadConfig,
+  resolveSrcRoot, COLLECTIONS,
 } from './build.mjs';
 
 const CONFIG = {
@@ -104,6 +105,16 @@ test('loadConfig applies defaults and validates id/title', async () => {
   await writeFile(file, JSON.stringify({ id: 'ok-id' }));
   await assert.rejects(() => loadConfig(file), /"title" is required/);
   await assert.rejects(() => loadConfig(path.join(dir, 'missing.json')), /Cannot read module config/);
+});
+
+test('resolveSrcRoot: explicit arg > config srcDir > default content/src', () => {
+  // explicit srcRoot always wins
+  assert.equal(resolveSrcRoot({ srcDir: 'ignored' }, '/explicit/src'), '/explicit/src');
+  // config srcDir resolves under content/
+  assert.ok(resolveSrcRoot({ srcDir: 'src-noir' }).endsWith(path.join('content', 'src-noir')));
+  // default when neither given
+  assert.ok(resolveSrcRoot({}).endsWith(path.join('content', 'src')));
+  assert.ok(resolveSrcRoot().endsWith(path.join('content', 'src')));
 });
 
 test('validateLinks resolves ids and pack placement', () => {
