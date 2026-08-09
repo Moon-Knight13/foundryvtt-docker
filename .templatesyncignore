@@ -46,8 +46,7 @@ scripts/ci/README.md
 .gitleaks.toml
 # Private-repo gate ignores for semgrep/container-scan/dependency-review were
 # removed 2026-07-05 (repo is public; sync may revert the now-inert gates).
-# codeql-analysis.yml stays ignored: this fork scans `actions` and
-# `javascript-typescript` only. The upstream image-source Python went with the
-# build toolchain, and the routing subsystem took the last .py file with it, so
-# a `python` matrix leg fails hard (exit 32, "not any written in Python").
+# codeql-analysis.yml stays ignored: this fork's language matrix tracks its own
+# sources (actions, javascript-typescript, python) rather than the template's,
+# and the felddy diagnostics job has no upstream equivalent.
 .github/workflows/codeql-analysis.yml
