@@ -1,32 +1,48 @@
 #!/usr/bin/env bash
-# Project-specific container setup — the derivative's extension point.
+# Project-specific container setup for foundryvtt-docker.
 #
-# Every other entry in devcontainer.json's postStartCommand is template-owned,
-# which leaves a derivative with nowhere to run its own start-time setup:
-# editing devcontainer.json downstream works until the next template-sync
-# reverts it (`-X theirs`), and adding devcontainer.json to .templatesyncignore
-# would sever the channel that carries devcontainer security fixes downstream.
-# This script exists so that dilemma does not arise.
+# This is the template's derivative extension point (docs/TEMPLATE_GUIDE.md,
+# "Project-specific container setup"). The template ships it as a no-op; this
+# copy is ours and is listed in .templatesyncignore so sync stops proposing the
+# no-op back.
 #
-# The template ships it as a no-op. To use it in a derivative:
+# Runs last in devcontainer.json's postStartCommand `&&` chain, so a non-zero
+# exit marks the whole postStartCommand failed. Everything here therefore warns
+# and continues rather than aborting — neither task is worth a broken container.
 #
-#   1. Replace the body below with whatever your project needs at container
-#      start (extra runtime deps, symlinks, fetching a fixture, …).
-#   2. Add `scripts/project-setup.sh` to .templatesyncignore so sync stops
-#      proposing the template's no-op version. Do this only AFTER the file
-#      exists locally — listing a path sync has not delivered yet means it
-#      never arrives, and postStartCommand then dies with exit 127.
-#
-# Two constraints worth respecting:
-#
-#   - Exit 0 unless the failure genuinely warrants a broken container. This
-#     runs last in a `&&` chain, so a non-zero exit marks the whole
-#     postStartCommand failed.
-#   - Network egress is deny-by-default (see .devcontainer/init-firewall.sh).
-#     registry.npmjs.org, pypi.org and files.pythonhosted.org are reachable;
-#     anything else needs adding to the allowlist there first.
+# Egress is deny-by-default (.devcontainer/init-firewall.sh). pypi.org and
+# files.pythonhosted.org are on the allowlist, which is what makes the Pillow
+# install below possible at container start.
 
 set -euo pipefail
 
-echo "project-setup.sh: nothing to do (template default)."
-echo "  Derivatives override this — see the comments in this file."
+# 1. Pillow, for scripts/maps/render_map.py.
+#
+# This used to be `python3-pil` in .devcontainer/Dockerfile, but that file is
+# template-owned and not ignore-listed, so template-sync deleted the line (it
+# did exactly that in sync PR #70 — see issue #69). Installing here keeps the
+# Dockerfile byte-identical to the template, which is what lets devcontainer
+# security fixes keep flowing down.
+if python3 -c "import PIL" 2>/dev/null; then
+  echo "project-setup: Pillow already present."
+elif pip install --quiet --break-system-packages --user Pillow; then
+  echo "project-setup: Pillow installed."
+else
+  echo "project-setup: WARN Pillow install failed — scripts/maps/render_map.py"
+  echo "  will not run. Retry manually:"
+  echo "    pip install --break-system-packages --user Pillow"
+fi
+
+# 2. Obsidian vault symlink.
+#
+# devcontainer.json bind-mounts the host vault at /home/node/DnD; this exposes
+# it inside the workspace as /workspace/DnD (gitignored). Previously inlined at
+# the front of postStartCommand — moved here so the chain matches the template's
+# apart from the trailing hook call.
+if [[ -d /home/node/DnD ]]; then
+  ln -sfn /home/node/DnD /workspace/DnD
+  echo "project-setup: /workspace/DnD -> /home/node/DnD"
+else
+  echo "project-setup: no vault at /home/node/DnD; skipping symlink."
+  echo "  Set DND_VAULT_PATH on the host and rebuild if you want it mounted."
+fi
