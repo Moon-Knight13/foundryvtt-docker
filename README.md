@@ -1,9 +1,9 @@
 # FoundryVTT server + Claude Code AI game master
 
-[![ci](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/ci.yml)
-[![semgrep](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml/badge.svg?branch=develop)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml)
-[![secret-scan](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml/badge.svg?branch=develop)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml)
-[![CodeQL](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml/badge.svg?branch=develop)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml)
+[![ci](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/ci.yml)
+[![semgrep](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml)
+[![secret-scan](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml)
+[![CodeQL](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml)
 
 A self-hosted [Foundry Virtual Tabletop](https://foundryvtt.com) deployment
 where **Claude Code acts as an AI game master** — authoring NPCs, quests,
@@ -136,9 +136,16 @@ Notes:
 
 ## Branch model
 
-`develop` is the default and integration branch — all PRs land there.
-`main` is production; promotion is a fast-forward push after verification.
-Both branches carry protection rulesets (PR + review + required checks).
+`main` is the single default branch — all PRs land there, and it carries a
+protection ruleset (PR + review + required checks).
+
+This repo used to run felddy's two-branch release model (`develop` for
+integration, `main` for production, promoted by fast-forward). That model earns
+its keep when a branch *is* the released artifact; here nothing is deployed from
+a branch — the stack runs `docker compose up` against the published felddy
+image. In practice the promotion was performed once, then `main` sat 24 commits
+behind for five weeks and collected a template-sync PR aimed at the stale
+branch. The old history is preserved at tag `archive/main-2026-08-09`.
 
 ## Contributing
 
