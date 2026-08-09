@@ -1,0 +1,55 @@
+---
+name: content-tests
+
+# Tests for the content-as-code build pipeline (scripts/content).
+#
+# These cannot run through ci.yml's language routing: that job detects markers
+# at the repository ROOT (`[[ -f package.json ]]`), and this repo's only Node
+# package lives at scripts/content/. Detection therefore reported has_node=false
+# and the suite -- build.test.mjs and roundtrip.test.mjs, the only real tests in
+# the repository -- never executed in CI.
+#
+# Uses the runner's bundled Node rather than actions/setup-node to avoid adding
+# another third-party action; every action here stays SHA-pinned.
+
+"on":
+  pull_request:
+    paths:
+      - scripts/content/**
+      - content/**
+      - .github/workflows/content-tests.yml
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - scripts/content/**
+      - content/**
+      - .github/workflows/content-tests.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: content-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: scripts/content
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build the compendium module
+        run: npm run build
