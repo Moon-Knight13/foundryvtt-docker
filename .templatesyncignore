@@ -44,11 +44,10 @@ scripts/ci/README.md
 # allowlist and the full-history gitleaks scan in secret-scan.yml starts
 # flagging it. Verified against sync PR #59, which proposed exactly that.
 .gitleaks.toml
-# Diverges only until the metavariable-regex nesting fix for the two PII rules
-# lands upstream in the template — then remove this line to resume syncing.
-.semgrep.yml
 # Private-repo gate ignores for semgrep/container-scan/dependency-review were
 # removed 2026-07-05 (repo is public; sync may revert the now-inert gates).
-# codeql-analysis.yml stays ignored: this fork deliberately scans `actions`
-# only — the upstream image-source TS/Python was removed with the toolchain.
+# codeql-analysis.yml stays ignored: this fork scans `actions` and
+# `javascript-typescript` only. The upstream image-source Python went with the
+# build toolchain, and the routing subsystem took the last .py file with it, so
+# a `python` matrix leg fails hard (exit 32, "not any written in Python").
 .github/workflows/codeql-analysis.yml
