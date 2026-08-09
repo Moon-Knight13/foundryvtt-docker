@@ -1,0 +1,15 @@
+{
+  "name": "Sela's Last Note",
+  "pages": [
+    {
+      "name": "Sela's Last Note",
+      "type": "text",
+      "title": { "show": true, "level": 1 },
+      "text": {
+        "content": "<p><em>Scrawled, water-stained, the ink run through with old damp:</em></p><blockquote><p>\"Tomkin — if you come in from the dark, I will ring you home. I will ring every night until you do. Forgive me that I did not ring in time. The bell remembers your name even when I cannot. — Mother\"</p></blockquote><p><strong>GM:</strong> naming Tomkin or showing this note to Bellkeeper Sela grants advantage on the lay-to-rest check.</p>",
+        "format": 1
+      },
+      "sort": 0
+    }
+  ]
+}

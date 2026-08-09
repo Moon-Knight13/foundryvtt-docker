@@ -1,0 +1,10 @@
+{
+  "id": "mourncastle-oneshot",
+  "title": "The Last Bell of Mourncastle",
+  "system": "dnd5e",
+  "srcDir": "src-mourncastle",
+  "version": "1.0.0",
+  "packLabelPrefix": "Mourncastle",
+  "compatibility": { "minimum": "12", "verified": "13" },
+  "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+}

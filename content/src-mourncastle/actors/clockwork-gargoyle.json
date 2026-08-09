@@ -1,0 +1,25 @@
+{
+  "name": "Clockwork Gargoyle",
+  "type": "npc",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "abilities": {
+      "str": { "value": 15 }, "dex": { "value": 11 }, "con": { "value": 16 },
+      "int": { "value": 6 }, "wis": { "value": 11 }, "cha": { "value": 7 }
+    },
+    "attributes": {
+      "hp": { "value": 52, "max": 52 },
+      "ac": { "flat": 15, "calc": "flat" },
+      "movement": { "walk": 30, "fly": 60, "units": "ft" }
+    },
+    "details": {
+      "cr": 2,
+      "type": { "value": "elemental" },
+      "alignment": "Chaotic Neutral",
+      "biography": { "value": "<p>Stone guardian among the tower gears, animated by Sela's grief. False Appearance until the party nears the belfry ladder. Guards, does not pursue. (SRD Gargoyle.)</p>" }
+    },
+    "traits": { "size": "med", "languages": { "value": ["terran"] } }
+  },
+  "items": [],
+  "prototypeToken": { "name": "Clockwork Gargoyle", "disposition": -1, "actorLink": false }
+}
