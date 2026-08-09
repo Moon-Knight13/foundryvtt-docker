@@ -78,6 +78,25 @@ A fork of felddy/foundryvtt-docker running FoundryVTT (D&D 5e, world
 act as an AI game master: create NPCs, quests, journals, and scenes directly
 in the live world.
 
+## Notes vault (Obsidian)
+
+The GM's personal notes live in an **Obsidian vault** bind-mounted into the
+devcontainer at `/home/node/DnD` (host source `~/Documents/DnD`, wired in
+`.devcontainer/devcontainer.json`). Read/write notes there by absolute path;
+it is **outside `/workspace`**, so it is never part of this repo's git tree.
+A gitignored symlink `/workspace/DnD` → `/home/node/DnD` (created by
+`postStartCommand`) surfaces the vault in the VS Code sidebar; the symlink
+carries no note content and stays out of git.
+
+- **Obsidian is the source of truth.** Sync (Obsidian Sync / other devices) is
+  **host-side** — the container only shares the files. Do not run sync in the
+  container and do not add firewall egress for it.
+- **One writer at a time.** Editing the same note here while another device
+  edits it risks a last-write clobber on the next sync. Prefer notes not open
+  elsewhere.
+- The mount takes effect only after a container rebuild; a missing host
+  `~/Documents/DnD` makes Docker create an empty dir (single-user repo, so fine).
+
 ## Repo layout & where things live
 
 - `compose.yml` — the FoundryVTT stack. Live user data (worlds, modules,
