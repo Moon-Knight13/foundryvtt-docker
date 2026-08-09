@@ -287,7 +287,66 @@ PII-Shield cannot be installed via `claude plugin install` — it uses a `.mcpb`
      the base digest is refreshed via Dependabot.
    - repository-audit workflow (validates required files and CODEOWNERS customisation)
 - Project marker detection for language-specific checks.
-- If a stack marker exists and expected scripts are missing under `scripts/ci`, CI fails by design.
+- If a stack marker exists but the matching `scripts/ci` hook is absent, CI logs
+  a notice naming the missing script and continues. It used to fail hard, which
+  meant a freshly stamped repo went red the moment it added a `package.json` —
+  before it had written any CI at all. Add the hook to turn the gate on.
+
+## Optional Subsystems
+
+Not every project wants everything the template ships. `template.conf` at the
+repository root records which optional subsystems a derived repo uses:
+
+```sh
+SUBSYSTEM_ROUTING=true   # local-model delegation (needs an Ollama endpoint)
+SUBSYSTEM_BOARD=true     # GitHub Project board: /next-issue, /run-epic
+SUBSYSTEM_BMAD=true      # BMAD planning skill pack
+SUBSYSTEM_CAVEMAN=true   # caveman response-style plugin
+SUBSYSTEM_DAY0=true      # day-0 provisioning scripts
+```
+
+Everything defaults to `true`, including when the file is missing entirely, so
+repos that predate this mechanism behave exactly as before.
+
+Switching one off does two things:
+
+1. `scripts/validate-template.sh` stops requiring that subsystem's files and
+   reports them as skipped instead of missing.
+2. The devcontainer's `postStartCommand` skips its installer, so container
+   start does not reinstall what you removed.
+
+It does **not** delete anything — delete the files yourself once the switch is
+off. `template.conf` is listed in `.templatesyncignore`, so sync never
+overwrites your choices.
+
+### Why this exists
+
+The validator's required-file list used to be flat, and the validator is itself
+template-owned. A derivative that deleted a subsystem it never used went red in
+CI, and could not fix it locally because the next sync reverted the edit. The
+only escape was to ignore-list the validator, which then froze it against real
+upstream fixes. Worse, `.devcontainer/devcontainer.json` and `CLAUDE.md` wire
+those subsystems in, and ignore-listing *those* would sever the channel that
+carries devcontainer security fixes downstream — the main reason to keep the
+sync at all. Subsystem switches let a derivative decline a subsystem without
+giving up anything it still wants.
+
+### Deciding whether you actually use one
+
+- **Routing** — read `.ai/route-log.jsonl`. If every entry says
+  `local_unreachable_fallback` and `.ai/local-health.json` was never written,
+  no local delegation has ever happened.
+- **BMAD** — check whether `_bmad-output/` has ever contained anything. The
+  cost is not disk: its skill descriptions load into the system prompt of
+  every session in the repo.
+- **Board** — cheap to keep; it costs nothing per session unless invoked.
+
+### Existing derivatives
+
+`template.conf` reaches an existing derivative through a normal sync PR. Add
+`template.conf` to that repo's own `.templatesyncignore` in the same PR,
+otherwise a later sync will reset the choices to the template's all-on
+defaults.
 
 ## BMAD Workflow
 
@@ -486,14 +545,21 @@ Setup per derived repo (one-time):
 - Enable Settings > Actions > General > Workflow permissions >
   "Allow GitHub Actions to create and approve pull requests".
 - The default `GITHUB_TOKEN` is sufficient until a sync PR needs to change
-  files under `.github/workflows/` — pushing those requires the `workflow`
-  scope. For that, add a fine-grained PAT (contents: write, pull requests:
-  write, workflows: write, scoped to the repo) as the `TEMPLATE_SYNC_TOKEN`
-  secret; the workflow falls back to `GITHUB_TOKEN` when the secret is absent.
+  files under `.github/workflows/`. `GITHUB_TOKEN` can **never** push workflow
+  files — this is a GitHub platform restriction: there is no `workflows:` key
+  for the workflow `permissions:` block, and the repository "Read and write
+  permissions" setting does not lift it either. For that case, add a
+  fine-grained PAT (contents: write, pull requests: write, workflows: write,
+  scoped to the repo) as the `TEMPLATE_SYNC_TOKEN` secret; the workflow falls
+  back to `GITHUB_TOKEN` when the secret is absent. A preflight step in the
+  workflow detects this case and fails fast with these instructions before
+  attempting the sync. If you mint tokens through your own GitHub App instead,
+  the app needs Workflows: Read and write, then reinstall/approve the updated
+  app permissions on the repo.
 
-Repos created before the workflow existed can retrofit it with
-`bash scripts/adopt-template-sync.sh` (fetches the two files from the template
-via `gh` and prints the setup steps).
+Repos created before the workflow existed can retrofit it by copying
+`.github/workflows/template-sync.yml` and `.templatesyncignore` from this
+template, then following the token setup above.
 
 Possible future refinements (not implemented): converting the security
 workflows to reusable `workflow_call` workflows referenced by tag, and
@@ -509,6 +575,7 @@ that needs syncing at all.
 - CI missing script failure: add matching scripts under `scripts/ci` for detected stack.
 - Gitleaks false positive on a test file: add the file path to the rule's `paths` allowlist in `.gitleaks.toml`.
 - Semgrep PII false positive: add the file pattern to the rule's `paths.exclude` list in `.semgrep.yml`.
+- template-sync push rejected with `refusing to allow a GitHub App to create or update workflow '.github/workflows/…' without 'workflows' permission`: the sync includes workflow-file changes and the run used the default `GITHUB_TOKEN`, which can never push those (platform restriction — no `permissions:` entry or repo setting fixes it; beware that `workflows:` is not a valid `permissions:` key and adding it invalidates the workflow file). Add the `TEMPLATE_SYNC_TOKEN` fine-grained PAT secret (Contents, Pull requests, Workflows — read and write) and re-run; see [Template Updates](#template-updates-downstream-sync).
 
 ## FAQ
 

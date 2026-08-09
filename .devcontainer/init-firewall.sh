@@ -97,7 +97,6 @@ done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | sort -u)
 for domain in \
     "registry.npmjs.org" \
     "api.anthropic.com" \
-    "foundryvtt.com" \
     "codeload.github.com" \
     "raw.githubusercontent.com" \
     "objects.githubusercontent.com" \
