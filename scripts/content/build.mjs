@@ -46,11 +46,16 @@ export function validateDoc(doc, type, file) {
 }
 
 // Embedded collections per pack collection, mirroring the CLI's HIERARCHY map.
+// assignKeys recurses only ARRAY-valued embeds; the CLI's object-valued
+// sub-embeds (scenes' tokens.delta, regions.behaviors) are NOT handled here —
+// scene conversion (dd2vtt-to-scene.mjs) emits only walls/lights/notes arrays,
+// so their keys are assigned correctly.
 const EMBEDDED = {
   actors: ['items', 'effects'],
   items: ['effects'],
   journal: ['pages', 'categories'],
   tables: ['results'],
+  scenes: ['walls', 'lights', 'tokens', 'notes', 'sounds', 'tiles', 'drawings', 'templates', 'regions'],
 };
 
 function assignKeys(doc, collection, sublevelPrefix, idPrefix, seed) {

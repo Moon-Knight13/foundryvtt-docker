@@ -15,7 +15,7 @@ module; set it (here: `dnd5e`) to bind packs to a system.
 
 ## Pipeline
 
-```
+```text
 content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Data/modules/  --import-->  world
 ```
 
@@ -51,37 +51,102 @@ content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Dat
    module in the world (Game Settings → Manage Modules — packs are invisible
    until the module is on), open Compendium Packs, import documents.
    Pack-content changes need a world reload; `module.json` changes need a
-   world relaunch.
+   world relaunch. **If Foundry runs in a container, restart it after syncing**
+   (`docker compose restart`) — Foundry opens compendium (LevelDB) packs at
+   container start, so a world reload alone keeps serving the old pack from open
+   file handles; a stale/half-swapped pack shows old data or fails to import.
 
-## Multiple modules (one repo, N games)
+## Multiple modules — one per game (one repo, N games)
 
 `build.mjs` and `sync-content.sh` default to `content/content.config.json` +
-`content/src/`. To build a **second** module (e.g. per campaign/oneshot), add a
-config with its own `id` and a `srcDir`, then pass `--config`:
+`content/src/`. Every **game** (oneshot or campaign) gets its **own** module —
+its own config + `srcDir` — so its compendium is a separate module you enable
+only in that game's world.
 
-```json
-// content/noir-gala-heist.config.json
-{ "id": "noir-gala-heist", "title": "Noir Gala Heist", "system": "dnd5e",
-  "srcDir": "src-noir" }
-```
+### Scaffold a new game's module
+
+Don't hand-write the config. Run:
 
 ```bash
-node scripts/content/build.mjs    --config content/noir-gala-heist.config.json
-./scripts/content/sync-content.sh --config content/noir-gala-heist.config.json   # host
+scripts/content/new-game.sh <slug> [--type oneshot|campaign] [--system <sys>] [--title "<Title>"]
+# e.g. scripts/content/new-game.sh harborwatch --type campaign --system dnd5e
+```
+
+It writes `content/<slug>.config.json` and creates the empty
+`content/src-<slug>/{actors,items,journals,scenes,tables}/` tree (with
+`.gitkeep`s), then prints the build + sync commands. It refuses to overwrite an
+existing config. Omit `--system` for a system-agnostic module.
+
+### Naming convention (locked)
+
+| Thing | Rule |
+| --- | --- |
+| config file | `content/<slug>.config.json` |
+| `srcDir` | `src-<slug>` (dir under `content/`) |
+| module `id` | `<slug>-oneshot` or `<slug>-campaign` |
+| `packLabelPrefix` | the game's title |
+| `system` | per game; omit for system-agnostic |
+| exception | default `content/src/` + `troubled-waters-content` is the seed/demo — left as-is. |
+
+### Build + sync a specific module
+
+```bash
+node scripts/content/build.mjs    --config content/<slug>.config.json
+./scripts/content/sync-content.sh --config content/<slug>.config.json   # on the host
 ```
 
 `srcDir` is a directory under `content/` (default `src`); each module builds into
 its own `content/dist/<id>/`. Source-root precedence: explicit `srcRoot` arg >
-config `srcDir` > `content/src`.
+config `srcDir` > `content/src`. The full lifecycle (spark, author in the vault,
+package, play) lives in the vault guide
+`examples/vault-skeleton/00 Index/Running a new game.md`.
 
 ## Scenes as code
 
-Scenes use `templates/common/scene.json` in `content/src/scenes/`. Set
-`background.src` to an image **Foundry can see** — under the mounted vault, e.g.
-`/data/Data/DnD/<game>/Assets/Maps/<file>` (the vault is bind-mounted into the
-Foundry container). This is the git-durable route for scene stubs. For maps that
-need **walls + lights**, prefer exporting `.dd2vtt` from DungeonMapBuilder and
-importing via the Universal Battlemap Importer — see `FOUNDRY_REBUILD.md`.
+Two routes put a map into the compendium.
+
+**Full battlemap (walls + lights + doors) — recommended.** Generate the map,
+then convert its `.dd2vtt` into a Scene document:
+
+```bash
+python3 scripts/maps/render_map.py <spec>.json <outdir>
+node scripts/content/dd2vtt-to-scene.mjs "<outdir>/<name>.dd2vtt" \
+  --background "DnD/<game>/Assets/Maps/<name> - Player.png" \
+  --out content/src-<slug>/scenes/<name>.json
+# or both steps at once:
+scripts/maps/map-to-scene.sh <spec>.json <slug> --outdir <dir> --background <src>
+```
+
+The converter reads the **same `.dd2vtt` the Universal Battlemap Importer
+consumes**, so the scene gets the same walls (from `line_of_sight`), doors
+(`portals`), and lights — but git-durable and imported as part of the module,
+not a separate UI step. `build.mjs` keys the embedded walls/lights via the
+`scenes` entry in its `EMBEDDED` map.
+
+**Scene stub (no walls).** Author a scene JSON by hand in
+`content/src-<slug>/scenes/` with just a `background.src` — the git-durable route
+when you don't need dynamic walls/lights.
+
+**The compendium ships no image.** `--background` (and a `background.src`) is a
+Foundry **Data-relative** path to an image already under the Foundry data dir —
+the vault is bind-mounted at `/data/Data/DnD`, so a vault map at
+`DnD/<game>/Assets/Maps/<file>` resolves. **Online / hybrid:** the PNG must sit
+on the **host that serves Foundry** (remote players load it over the tunnel),
+not only in the devcontainer.
+
+**Baked light — use `--no-lights` for `render_map` maps.** `render_map.py` bakes
+its lighting into the Player PNG *and* emits dynamic lights, so importing both
+double-lights the scene. For generated maps, pass `--no-lights`: ship the
+baked-lit image with walls only (add dynamic lights by hand if you want them).
+Keep lights for dd2vtt from sources that don't bake light in.
+
+**Automate, then refine by hand.** The converted scene is a *base* — walls,
+lights, and doors auto-placed. Tune lighting/darkness, add ambient sounds or
+note pins in the VTT afterwards. Hand-refinements are **per-world and do not
+round-trip back**: re-import only when the map itself changes, not over a scene
+you've already hand-tuned (re-import replaces the compendium copy; a scene
+already dragged into a world is a separate copy). Map **keys → clickable note
+pins** is a planned follow-on.
 
 ## Rules that bite
 

@@ -134,9 +134,62 @@ A finished folder (`03 Oneshots/<Name>/` or `02 Campaigns/<Name>/`) in the house
 style: index/MOC, GM prep, scene/POI notes, NPC cards (Fantasy Statblocks),
 handouts, `Assets/`, Dataview auto-index.
 
-## Then (optional): Foundry content
-Compile the cards to Foundry compendium JSON — see
-[[How this vault works#Foundry pipeline]].
+## Package for Foundry (per game)
+Author in the vault first — it's the durable truth. When a game is table-ready
+**and** you're playing online, project it into Foundry. Foundry is a
+**rebuildable** view: wipe the world, re-run these pipes, lose nothing.
+
+Each game gets its **own** content module. One-time scaffold (in the devcontainer):
+
+```text
+scripts/content/new-game.sh <slug> --type oneshot|campaign [--system dnd5e]
+```
+
+Then run the pipes **in this order** (objects exist before notes/scenes link to them):
+
+1. **Objects** — Claude ports the NPC statblocks / items / tables into
+   `content/src-<slug>/`, then `build.mjs --config content/<slug>.config.json`,
+   then on the host `sync-content.sh --config …`; in Foundry, enable **that
+   game's** module and import its packs.
+2. **Notes** — SoSly Obsidian Bridge import turns your prose notes into journals.
+3. **Maps** — ship the map as a compendium **Scene** (`render_map.py` →
+   `dd2vtt-to-scene.mjs` → build) so it imports with the module, or point the
+   Universal Battlemap Importer at the `.dd2vtt` directly. Walls + lights + doors
+   either way; then refine lighting by hand in the VTT.
+4. **PCs** — ddb-importer pulls each player character from D&D Beyond.
+
+**One owner per document.** A creature's stats live *either* in the vault
+statblock *or* in `content/src-<slug>/` — port once at packaging, then stop
+hand-editing the other. A journal is carried by the Bridge (prose) *or* the
+compendium (structured), never both. See
+[[How this vault works#Foundry pipeline]] and `docs/FOUNDRY_REBUILD.md`.
+
+## Play surfaces
+- **In person** — vault only. No Foundry, no packaging. Fantasy Statblocks,
+  Initiative Tracker, printed / TV maps. Zero Foundry/MCP token cost.
+- **Online** — the Foundry projection; players join over the Cloudflare Tunnel.
+- **Hybrid** — Foundry owns **live** state (tokens, initiative, fog); the vault
+  stays prep-only. Don't edit the same journal in both at once.
+
+## Editing a game later
+Change the source, rebuild, re-import — in place:
+
+```text
+edit content/src-<slug>/…  ->  build --config …  ->  sync --config …  ->  re-import
+```
+
+- **Never rename a source file** — the compendium id derives from the path, so a
+  rename makes a **duplicate** on re-import instead of updating.
+- Re-import updates the **compendium copy only**. Anything already dragged into
+  the world is a separate copy — fix those in the Foundry UI (or via foundry-mcp).
+
+## Token-lean prep
+- Scope to one game: point Claude at `03 Oneshots/<Name>/` (or the campaign
+  folder) + `content/src-<slug>/`, not the whole vault.
+- **Cite by `[[link]]` or page range**, never "read my vault" — Claude reads only
+  what you cite. Navigate via MOCs / Dataview, not wholesale reads.
+- In-person games cost zero Foundry/MCP tokens. Content-as-code (build + import)
+  is far cheaper than live foundry-mcp content tools.
 
 ## The loop
 Claude drafts → you review in Obsidian → say what to change → Claude refines.
