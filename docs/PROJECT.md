@@ -18,6 +18,41 @@ A fork of felddy/foundryvtt-docker running FoundryVTT (D&D 5e, world
 act as an AI game master: create NPCs, quests, journals, and scenes directly
 in the live world.
 
+## Template subsystems this repo does not use
+
+`template.conf` records which optional template subsystems are active here.
+Two are off:
+
+- **`SUBSYSTEM_ROUTING=false`** — there is no local Ollama endpoint. Every
+  routing attempt this repo ever logged fell back to Claude
+  (`.ai/route-log.jsonl`: 12 `local_unreachable_fallback`, 1 `local_disabled`,
+  zero successes). `ask-local.sh`, `local-health.sh` and `delegate-local.sh`
+  are deleted. **Treat every task as Claude-routed** and do not attempt local
+  delegation.
+- **`SUBSYSTEM_BMAD=false`** — never produced anything, and its ~46 skill
+  descriptions cost context in every session.
+
+Three files are deliberately kept despite their subsystem being off:
+
+- `scripts/route-model.sh` and `scripts/suggest-route.sh` — the board's
+  **Route** field is derived from them; with routing off they classify Human vs
+  Claude only.
+- `scripts/install-bmad.sh` and `scripts/bootstrap-bmad.sh` — the
+  devcontainer's `postStartCommand` chains every installer with `&&`, so a
+  missing script exits 127 and silently prevents the rest of the chain
+  (pre-commit hooks, Claude plugins, day-0 setup) from running. Both scripts
+  detect `SUBSYSTEM_BMAD=false`, print a skip notice and exit 0, which is
+  exactly what that chain needs. Do not delete them while `devcontainer.json`
+  still references them — it is template-owned, so it cannot be fixed here.
+
+One rough edge to know about: `/next-issue` and `/run-epic` still mention
+`delegate-local.sh`, and the board issue templates still offer `Local` as a
+Route value. Those files are template-owned, so editing them here would just be
+reverted by the next sync. Ignore those instructions — `CLAUDE.md` states that
+the routing protocol applies only when `SUBSYSTEM_ROUTING=true`, and that is
+authoritative. The upstream fix is for the board subsystem to degrade
+gracefully when routing is off.
+
 ## Notes vault (Obsidian)
 
 The GM's personal notes live in an **Obsidian vault** bind-mounted into the

@@ -21,11 +21,19 @@ Writes into `<outdir>` (using the spec's `name`):
 
 ## Dependency
 
-Pillow (PIL). **Preinstalled in the devcontainer** via the `python3-pil` apt
-package (`.devcontainer/Dockerfile`). Elsewhere:
+Pillow (PIL). **Installed in the devcontainer at container start** by
+`scripts/project-setup.sh`, which runs as the last step of `postStartCommand`.
+
+It used to be the `python3-pil` apt package in `.devcontainer/Dockerfile`, but
+that file is template-owned and template-sync deleted the line (issue #69).
+Installing at start keeps the Dockerfile byte-identical to the template so
+devcontainer security fixes keep reaching this repo.
+
+If the map script reports `No module named 'PIL'`, the start-time install
+failed — the container-start log says so. Rerun it by hand:
 
 ```bash
-pip install Pillow            # or: apt-get install -y python3-pil
+pip install --break-system-packages --user Pillow
 ```
 
 ## Foundry import

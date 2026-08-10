@@ -38,11 +38,10 @@ build
 coverage
 
 ## Python ##
-# The upstream Python suite and src/ tree went away with the image-build
-# toolchain (a07b482). Only scripts/tests/mock-ollama.py remains, and running it
-# still drops bytecode, so __pycache__ stays ignored; the rest of the block
-# (.hypothesis, .mypy_cache, .pytest_cache, .python-version, egg-info, venvs)
-# guarded tooling this repo no longer has.
+# The upstream Python suite and src/ tree went with the image-build toolchain
+# (a07b482). The only Python left is the battlemap renderer,
+# scripts/maps/render_map.py, which has no test suite or packaging of its own —
+# so __pycache__ is all that needs ignoring.
 __pycache__
 
 ## Claude / agent runtime state (template assets in .claude/ stay tracked) ##

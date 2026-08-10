@@ -53,13 +53,27 @@ jobs:
         # Supported options are actions, c-cpp, csharp, go,
         # java-kotlin, javascript-typescript, python, ruby, and swift.
         # In scope: workflows (actions), the content build tooling
-        # (scripts/content/*.mjs), and scripts/tests/*.py. The upstream
-        # image-source toolchain was removed with the root Dockerfile and the
-        # vendored mcp-server/ bundle is gitignored, so neither is scanned.
-        # Keep this list in step with the tracked sources: dropping a language
-        # that main has already analyzed leaves a stale code-scanning
-        # configuration, which makes the "CodeQL" gate report
-        # "configurations not found" on every PR.
+        # (scripts/content/*.mjs), and the battlemap renderer
+        # (scripts/maps/render_map.py). The upstream image-source toolchain was
+        # removed with the root Dockerfile and the vendored mcp-server/ bundle
+        # is gitignored, so neither is scanned.
+        #
+        # Keep this list in step with the tracked sources, and check `git
+        # ls-files` on THIS branch's merge base rather than on the branch
+        # itself. #66 dropped the python leg after the routing subsystem took
+        # the last .py file, not noticing that #64 had landed
+        # scripts/maps/render_map.py on main in the meantime; the leg was red
+        # for the branch and correct for main. Both failure modes are silent
+        # in opposite directions: a language with no source fails hard (exit
+        # 32, "not any written in Python"), while a language with source and
+        # no leg simply goes unscanned.
+        #
+        # Dropping a language that main has already analyzed also leaves a
+        # stale code-scanning configuration, which makes the "CodeQL" gate
+        # report "configurations not found" on every PR. When removing one,
+        # delete its old analyses:
+        #   gh api "repos/<owner>/<repo>/code-scanning/analyses?ref=refs/heads/main" \
+        #     --jq '.[] | select(.category | endswith("language:<lang>")) | .id'
         language:
           - actions
           - javascript-typescript
