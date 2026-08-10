@@ -14,73 +14,7 @@
     "units": "ft"
   },
   "height": 1152,
-  "lights": [
-    {
-      "config": {
-        "alpha": 0.5,
-        "bright": 15,
-        "color": "#cfe0ff",
-        "dim": 30
-      },
-      "rotation": 0,
-      "vision": false,
-      "walls": true,
-      "x": 576,
-      "y": 172.79999999999998
-    },
-    {
-      "config": {
-        "alpha": 0.5,
-        "bright": 15,
-        "color": "#cfe0ff",
-        "dim": 30
-      },
-      "rotation": 0,
-      "vision": false,
-      "walls": true,
-      "x": 979.1999999999999,
-      "y": 576
-    },
-    {
-      "config": {
-        "alpha": 0.5,
-        "bright": 15,
-        "color": "#cfe0ff",
-        "dim": 30
-      },
-      "rotation": 0,
-      "vision": false,
-      "walls": true,
-      "x": 576,
-      "y": 979.1999999999999
-    },
-    {
-      "config": {
-        "alpha": 0.5,
-        "bright": 15,
-        "color": "#cfe0ff",
-        "dim": 30
-      },
-      "rotation": 0,
-      "vision": false,
-      "walls": true,
-      "x": 172.79999999999998,
-      "y": 576
-    },
-    {
-      "config": {
-        "alpha": 0.4,
-        "bright": 7.5,
-        "color": "#aecadf",
-        "dim": 15
-      },
-      "rotation": 0,
-      "vision": false,
-      "walls": true,
-      "x": 576,
-      "y": 669.6
-    }
-  ],
+  "lights": [],
   "name": "The Belfry",
   "padding": 0,
   "tokenVision": true,

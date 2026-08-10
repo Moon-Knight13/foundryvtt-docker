@@ -131,6 +131,12 @@ the vault is bind-mounted at `/data/Data/DnD`, so a vault map at
 on the **host that serves Foundry** (remote players load it over the tunnel),
 not only in the devcontainer.
 
+**Baked light — use `--no-lights` for `render_map` maps.** `render_map.py` bakes
+its lighting into the Player PNG *and* emits dynamic lights, so importing both
+double-lights the scene. For generated maps, pass `--no-lights`: ship the
+baked-lit image with walls only (add dynamic lights by hand if you want them).
+Keep lights for dd2vtt from sources that don't bake light in.
+
 **Automate, then refine by hand.** The converted scene is a *base* — walls,
 lights, and doors auto-placed. Tune lighting/darkness, add ambient sounds or
 note pins in the VTT afterwards. Hand-refinements are **per-world and do not

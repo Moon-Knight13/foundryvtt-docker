@@ -47,6 +47,10 @@ while [[ $# -gt 0 ]]; do
       EXTRA+=(--global-light)
       shift
       ;;
+    --no-lights)
+      EXTRA+=(--no-lights)
+      shift
+      ;;
     -*)
       echo "Unknown argument: $1" >&2
       exit 1

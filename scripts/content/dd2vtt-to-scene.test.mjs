@@ -73,6 +73,12 @@ test('--global-light enables global illumination', () => {
   assert.equal(s.environment.globalLight.enabled, true);
 });
 
+test('--no-lights drops dynamic lights (baked maps)', () => {
+  const s = sceneFromDd2vtt(DD, { name: 'M', background: 'a.png', noLights: true });
+  assert.equal(s.lights.length, 0);
+  assert.equal(s.walls.length, 2);       // walls unaffected
+});
+
 test('parseArgs requires an input file and --background', () => {
   assert.throws(() => parseArgs(['map.dd2vtt']), /--background is required/);
   assert.throws(() => parseArgs(['--background', 'a.png']), /Missing <file\.dd2vtt>/);

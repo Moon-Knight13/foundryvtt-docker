@@ -93,6 +93,7 @@ export function sceneFromDd2vtt(dd, opts = {}) {
     background,
     gridDistance = DEFAULT_GRID_DISTANCE,
     globalLight = false,
+    noLights = false,
   } = opts;
   const res = dd.resolution ?? {};
   const ppg = Number(res.pixels_per_grid ?? DEFAULT_PPG);
@@ -102,7 +103,9 @@ export function sceneFromDd2vtt(dd, opts = {}) {
     ...wallsFromLOS(dd.line_of_sight, ppg),
     ...doorsFromPortals(dd.portals, ppg),
   ];
-  const lights = (dd.lights ?? []).map(l => lightFromDd2vtt(l, ppg, gridDistance));
+  // render_map bakes light into the Player PNG, so its dynamic lights would
+  // double up; --no-lights ships the baked map with no dynamic lights.
+  const lights = noLights ? [] : (dd.lights ?? []).map(l => lightFromDd2vtt(l, ppg, gridDistance));
 
   const scene = {
     name,
@@ -138,6 +141,7 @@ export function parseArgs(argv) {
       case '--name': opts.name = argv[++i]; break;
       case '--grid-distance': opts.gridDistance = Number(argv[++i]); break;
       case '--global-light': opts.globalLight = true; break;
+      case '--no-lights': opts.noLights = true; break;
       default:
         if (arg.startsWith('-')) throw new Error(`Unknown argument: ${arg}`);
         if (input) throw new Error(`Unexpected extra argument: ${arg}`);
