@@ -64,6 +64,7 @@ test('sceneFromDd2vtt builds a Foundry scene with pixel dims + combined walls', 
   assert.equal(s.lights.length, 1);
   assert.equal(s.background.src, 'DnD/x/Assets/Maps/m.png');
   assert.equal(s.tokenVision, true);
+  assert.equal(s.padding, 0);            // no padding -> placeables align on the background
   assert.equal(s.environment.globalLight.enabled, false);
 });
 

@@ -108,7 +108,10 @@ export function sceneFromDd2vtt(dd, opts = {}) {
     name,
     width: size.x * ppg,
     height: size.y * ppg,
-    padding: 0.25,
+    // padding 0: dd2vtt/image coords are 0-based, so scene coords must be too.
+    // A non-zero padding offsets the background from the scene origin, but our
+    // walls/lights are at raw image pixels — any padding would misalign them.
+    padding: 0,
     grid: { type: 1, size: ppg, distance: gridDistance, units: 'ft' },
     tokenVision: true,
     // Global light off by default so walls + lights matter; darkness/dynamic
