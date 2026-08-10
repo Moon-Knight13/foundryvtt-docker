@@ -64,7 +64,12 @@ test('sceneFromDd2vtt builds a Foundry scene with pixel dims + combined walls', 
   assert.equal(s.lights.length, 1);
   assert.equal(s.background.src, 'DnD/x/Assets/Maps/m.png');
   assert.equal(s.tokenVision, true);
-  assert.equal(s.padding, 0);            // no padding -> placeables align on the background
+  assert.equal(s.padding, 0.25);         // valid padding (Foundry rejects 0 on import)
+  // Placeables offset by the padding so they land on the padded background:
+  // offset = ceil(0.25*200/100)*100 = 100. Raw LOS wall [0,0,200,0] -> +100.
+  assert.deepEqual(s.walls[0].c, [100, 100, 300, 100]);
+  assert.equal(s.lights[0].x, 200);      // raw 100 + offset 100
+  assert.equal(s.lights[0].y, 200);
   assert.equal(s.environment.globalLight.enabled, false);
 });
 

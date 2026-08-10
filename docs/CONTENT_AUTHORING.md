@@ -51,7 +51,10 @@ content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Dat
    module in the world (Game Settings → Manage Modules — packs are invisible
    until the module is on), open Compendium Packs, import documents.
    Pack-content changes need a world reload; `module.json` changes need a
-   world relaunch.
+   world relaunch. **If Foundry runs in a container, restart it after syncing**
+   (`docker compose restart`) — Foundry opens compendium (LevelDB) packs at
+   container start, so a world reload alone keeps serving the old pack from open
+   file handles; a stale/half-swapped pack shows old data or fails to import.
 
 ## Multiple modules — one per game (one repo, N games)
 

@@ -28,7 +28,9 @@ lives in the world, and that is meant to be transient.
 2. **Objects:** enable the content compendium module(s) → NPCs / items / roll
    tables (and any scene stubs) are available. (Build+sync from the repo first:
    `node scripts/content/build.mjs [--config …]` then, on the host,
-   `./scripts/content/sync-content.sh [--config …]`.)
+   `./scripts/content/sync-content.sh [--config …]`. If Foundry runs in a
+   container, `docker compose restart` after syncing — it opens compendium packs
+   at container start, so a reload alone won't pick up the swapped LevelDB.)
 3. **Notes:** run the SoSly Obsidian Bridge import → vault notes become Foundry
    journals. Leave it on for bidirectional sync (Foundry edits flow back to the
    vault).

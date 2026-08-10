@@ -99,22 +99,37 @@ export function sceneFromDd2vtt(dd, opts = {}) {
   const ppg = Number(res.pixels_per_grid ?? DEFAULT_PPG);
   const size = res.map_size ?? { x: 0, y: 0 };
 
+  const width = size.x * ppg;
+  const height = size.y * ppg;
+
+  // Foundry insets the background by `padding` (rounded up to whole grid
+  // squares) from the scene origin and places walls/lights in that PADDED
+  // space. Our dd2vtt coords are 0-based image pixels, so shift every placeable
+  // by the same offset to land on the background. padding must be a valid
+  // non-zero value — Foundry rejects a scene with padding 0 on import.
+  const PADDING = 0.25;
+  const offsetX = Math.ceil((PADDING * width) / ppg) * ppg;
+  const offsetY = Math.ceil((PADDING * height) / ppg) * ppg;
+  const shiftWall = w => ({
+    ...w,
+    c: [w.c[0] + offsetX, w.c[1] + offsetY, w.c[2] + offsetX, w.c[3] + offsetY],
+  });
+  const shiftLight = l => ({ ...l, x: l.x + offsetX, y: l.y + offsetY });
+
   const walls = [
     ...wallsFromLOS(dd.line_of_sight, ppg),
     ...doorsFromPortals(dd.portals, ppg),
-  ];
+  ].map(shiftWall);
   // render_map bakes light into the Player PNG, so its dynamic lights would
   // double up; --no-lights ships the baked map with no dynamic lights.
-  const lights = noLights ? [] : (dd.lights ?? []).map(l => lightFromDd2vtt(l, ppg, gridDistance));
+  const lights = (noLights ? [] : (dd.lights ?? []).map(l => lightFromDd2vtt(l, ppg, gridDistance)))
+    .map(shiftLight);
 
   const scene = {
     name,
-    width: size.x * ppg,
-    height: size.y * ppg,
-    // padding 0: dd2vtt/image coords are 0-based, so scene coords must be too.
-    // A non-zero padding offsets the background from the scene origin, but our
-    // walls/lights are at raw image pixels — any padding would misalign them.
-    padding: 0,
+    width,
+    height,
+    padding: PADDING,
     grid: { type: 1, size: ppg, distance: gridDistance, units: 'ft' },
     tokenVision: true,
     // Global light off by default so walls + lights matter; darkness/dynamic
