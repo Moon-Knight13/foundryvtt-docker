@@ -100,12 +100,44 @@ package, play) lives in the vault guide
 
 ## Scenes as code
 
-Scenes use `templates/common/scene.json` in `content/src/scenes/`. Set
-`background.src` to an image **Foundry can see** — under the mounted vault, e.g.
-`/data/Data/DnD/<game>/Assets/Maps/<file>` (the vault is bind-mounted into the
-Foundry container). This is the git-durable route for scene stubs. For maps that
-need **walls + lights**, prefer exporting `.dd2vtt` from DungeonMapBuilder and
-importing via the Universal Battlemap Importer — see `FOUNDRY_REBUILD.md`.
+Two routes put a map into the compendium.
+
+**Full battlemap (walls + lights + doors) — recommended.** Generate the map,
+then convert its `.dd2vtt` into a Scene document:
+
+```bash
+python3 scripts/maps/render_map.py <spec>.json <outdir>
+node scripts/content/dd2vtt-to-scene.mjs "<outdir>/<name>.dd2vtt" \
+  --background "DnD/<game>/Assets/Maps/<name> - Player.png" \
+  --out content/src-<slug>/scenes/<name>.json
+# or both steps at once:
+scripts/maps/map-to-scene.sh <spec>.json <slug> --outdir <dir> --background <src>
+```
+
+The converter reads the **same `.dd2vtt` the Universal Battlemap Importer
+consumes**, so the scene gets the same walls (from `line_of_sight`), doors
+(`portals`), and lights — but git-durable and imported as part of the module,
+not a separate UI step. `build.mjs` keys the embedded walls/lights via the
+`scenes` entry in its `EMBEDDED` map.
+
+**Scene stub (no walls).** Author a scene JSON by hand in
+`content/src-<slug>/scenes/` with just a `background.src` — the git-durable route
+when you don't need dynamic walls/lights.
+
+**The compendium ships no image.** `--background` (and a `background.src`) is a
+Foundry **Data-relative** path to an image already under the Foundry data dir —
+the vault is bind-mounted at `/data/Data/DnD`, so a vault map at
+`DnD/<game>/Assets/Maps/<file>` resolves. **Online / hybrid:** the PNG must sit
+on the **host that serves Foundry** (remote players load it over the tunnel),
+not only in the devcontainer.
+
+**Automate, then refine by hand.** The converted scene is a *base* — walls,
+lights, and doors auto-placed. Tune lighting/darkness, add ambient sounds or
+note pins in the VTT afterwards. Hand-refinements are **per-world and do not
+round-trip back**: re-import only when the map itself changes, not over a scene
+you've already hand-tuned (re-import replaces the compendium copy; a scene
+already dragged into a world is a separate copy). Map **keys → clickable note
+pins** is a planned follow-on.
 
 ## Rules that bite
 

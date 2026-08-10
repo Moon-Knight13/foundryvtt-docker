@@ -16,7 +16,7 @@ lives in the world, and that is meant to be transient.
 ## Foundry-side modules (install once)
 
 | Module | Role |
-|---|---|
+| --- | --- |
 | **SoSly Obsidian Bridge** | journals ↔ Obsidian vault, **bidirectional** |
 | **Universal Battlemap Importer** (`dd-import`, moo-man) | `.dd2vtt` → scenes with walls/lights/doors |
 | **ddb-importer** | D&D Beyond characters → Foundry actors |
@@ -34,6 +34,9 @@ lives in the world, and that is meant to be transient.
    vault).
 4. **Maps:** for each map, Universal Battlemap Importer → point at the vault
    `.dd2vtt` (`/data/Data/DnD/<game>/Assets/Maps/…`) → a scene with walls + lights.
+   *Or* ship the map as a compendium **Scene** (`scripts/content/dd2vtt-to-scene.mjs`
+   → build) so it imports with the module in step 2 — see `CONTENT_AUTHORING.md`
+   "Scenes as code".
 5. **Player characters:** ddb-importer → import each PC from D&D Beyond.
 
 Assets (images/handouts) resolve automatically via the `/data/Data/DnD` mount —

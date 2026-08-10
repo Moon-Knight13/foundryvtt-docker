@@ -152,8 +152,10 @@ Then run the pipes **in this order** (objects exist before notes/scenes link to 
    then on the host `sync-content.sh --config …`; in Foundry, enable **that
    game's** module and import its packs.
 2. **Notes** — SoSly Obsidian Bridge import turns your prose notes into journals.
-3. **Maps** — Universal Battlemap Importer on the `.dd2vtt` under `Assets/Maps/`
-   builds scenes with walls + lights.
+3. **Maps** — ship the map as a compendium **Scene** (`render_map.py` →
+   `dd2vtt-to-scene.mjs` → build) so it imports with the module, or point the
+   Universal Battlemap Importer at the `.dd2vtt` directly. Walls + lights + doors
+   either way; then refine lighting by hand in the VTT.
 4. **PCs** — ddb-importer pulls each player character from D&D Beyond.
 
 **One owner per document.** A creature's stats live *either* in the vault

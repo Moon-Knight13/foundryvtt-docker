@@ -74,6 +74,41 @@ test('roll tables round-trip with embedded results', async () => {
   assert.match(doc.results[0]._id, /^[a-z0-9]{16}$/);
 });
 
+test('scenes round-trip with embedded walls and lights', async () => {
+  const { work, srcRoot, distRoot, configPath } = await workspace('fvtt-scenes-');
+  await mkdir(path.join(srcRoot, 'scenes'), { recursive: true });
+  await writeFile(
+    path.join(srcRoot, 'scenes', 'belfry.json'),
+    JSON.stringify({
+      name: 'The Belfry',
+      width: 1600,
+      height: 1600,
+      grid: { type: 1, size: 100, distance: 5, units: 'ft' },
+      walls: [
+        { c: [0, 0, 1600, 0] },
+        { c: [1600, 0, 1600, 1600], door: 1, ds: 0 },
+      ],
+      lights: [{ x: 800, y: 800, config: { dim: 30, bright: 15, color: '#ffdca8', alpha: 0.5 } }],
+    })
+  );
+
+  const { counts } = await main({ srcRoot, distRoot, configPath });
+  assert.equal(counts.scenes, 1);
+
+  const outDir = path.join(work, 'unpacked');
+  await extractPack(path.join(distRoot, MODULE_ID, 'packs', 'scenes'), outDir, { log: false });
+  const files = await readdir(outDir);
+  assert.equal(files.length, 1);
+  const doc = JSON.parse(await readFile(path.join(outDir, files[0]), 'utf8'));
+  assert.equal(doc.name, 'The Belfry');
+  // The EMBEDDED change must give every wall/light a stable 16-hex id through
+  // the LevelDB roundtrip, else the CLI drops them.
+  assert.equal(doc.walls.length, 2);
+  assert.match(doc.walls[0]._id, /^[a-z0-9]{16}$/);
+  assert.equal(doc.lights.length, 1);
+  assert.match(doc.lights[0]._id, /^[a-z0-9]{16}$/);
+});
+
 test('build fails loudly on invalid source', async () => {
   const { srcRoot, distRoot, configPath } = await workspace('fvtt-content-bad-');
   await mkdir(path.join(srcRoot, 'actors'), { recursive: true });

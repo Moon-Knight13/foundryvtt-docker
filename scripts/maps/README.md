@@ -36,6 +36,24 @@ walls (from `line_of_sight`), doors (`portals`), and light sources (`lights`)
 at the correct grid scale (`pixels_per_grid`). The DM PNG is a GM reference
 handout, not imported as a play surface.
 
+### Or ship it in the compendium
+
+Convert the `.dd2vtt` into a Foundry Scene document so the map packages and
+imports with the rest of the module — same walls/lights/doors, but git-durable
+and no manual importer step:
+
+```bash
+node scripts/content/dd2vtt-to-scene.mjs "<outdir>/<name>.dd2vtt" \
+  --background "DnD/<game>/Assets/Maps/<name> - Player.png" \
+  --out content/src-<slug>/scenes/<name>.json
+# or render + convert in one go:
+scripts/maps/map-to-scene.sh <spec>.json <slug> --outdir <dir> --background <src>
+```
+
+The compendium ships no image, so the Player PNG must already live under the
+Foundry data dir (the vault mount). See `docs/CONTENT_AUTHORING.md` →
+"Scenes as code".
+
 ## Spec format
 
 All coordinates are in **grid units** (pixels = grid × `ppg`).
