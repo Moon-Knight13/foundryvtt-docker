@@ -14,7 +14,7 @@
  *   node scripts/content/dd2vtt-to-scene.mjs <file.dd2vtt> --background <src> \
  *     [--out <path>] [--name "<Scene>"] [--grid-distance 5] [--global-light]
  */
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -157,6 +157,7 @@ export async function convertFile(input, opts) {
   const name = opts.name ?? path.basename(input).replace(/\.dd2vtt$/i, '');
   const scene = sceneFromDd2vtt(dd, { ...opts, name });
   const out = opts.out ?? path.join(process.cwd(), `${name}.json`);
+  await mkdir(path.dirname(out), { recursive: true });
   await writeFile(out, JSON.stringify(scene, null, 2));
   return { out, scene };
 }
