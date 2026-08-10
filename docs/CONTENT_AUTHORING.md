@@ -15,7 +15,7 @@ module; set it (here: `dnd5e`) to bind packs to a system.
 
 ## Pipeline
 
-```
+```text
 content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Data/modules/  --import-->  world
 ```
 
@@ -53,26 +53,50 @@ content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Dat
    Pack-content changes need a world reload; `module.json` changes need a
    world relaunch.
 
-## Multiple modules (one repo, N games)
+## Multiple modules — one per game (one repo, N games)
 
 `build.mjs` and `sync-content.sh` default to `content/content.config.json` +
-`content/src/`. To build a **second** module (e.g. per campaign/oneshot), add a
-config with its own `id` and a `srcDir`, then pass `--config`:
+`content/src/`. Every **game** (oneshot or campaign) gets its **own** module —
+its own config + `srcDir` — so its compendium is a separate module you enable
+only in that game's world.
 
-```json
-// content/noir-gala-heist.config.json
-{ "id": "noir-gala-heist", "title": "Noir Gala Heist", "system": "dnd5e",
-  "srcDir": "src-noir" }
-```
+### Scaffold a new game's module
+
+Don't hand-write the config. Run:
 
 ```bash
-node scripts/content/build.mjs    --config content/noir-gala-heist.config.json
-./scripts/content/sync-content.sh --config content/noir-gala-heist.config.json   # host
+scripts/content/new-game.sh <slug> [--type oneshot|campaign] [--system <sys>] [--title "<Title>"]
+# e.g. scripts/content/new-game.sh harborwatch --type campaign --system dnd5e
+```
+
+It writes `content/<slug>.config.json` and creates the empty
+`content/src-<slug>/{actors,items,journals,scenes,tables}/` tree (with
+`.gitkeep`s), then prints the build + sync commands. It refuses to overwrite an
+existing config. Omit `--system` for a system-agnostic module.
+
+### Naming convention (locked)
+
+| Thing | Rule |
+| --- | --- |
+| config file | `content/<slug>.config.json` |
+| `srcDir` | `src-<slug>` (dir under `content/`) |
+| module `id` | `<slug>-oneshot` or `<slug>-campaign` |
+| `packLabelPrefix` | the game's title |
+| `system` | per game; omit for system-agnostic |
+| exception | default `content/src/` + `troubled-waters-content` is the seed/demo — left as-is. |
+
+### Build + sync a specific module
+
+```bash
+node scripts/content/build.mjs    --config content/<slug>.config.json
+./scripts/content/sync-content.sh --config content/<slug>.config.json   # on the host
 ```
 
 `srcDir` is a directory under `content/` (default `src`); each module builds into
 its own `content/dist/<id>/`. Source-root precedence: explicit `srcRoot` arg >
-config `srcDir` > `content/src`.
+config `srcDir` > `content/src`. The full lifecycle (spark, author in the vault,
+package, play) lives in the vault guide
+`examples/vault-skeleton/00 Index/Running a new game.md`.
 
 ## Scenes as code
 
