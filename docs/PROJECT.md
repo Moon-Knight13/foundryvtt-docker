@@ -196,14 +196,24 @@ Requirements and gotchas:
 
 - **A GM browser session must be open** — the module is client-side; every
   MCP tool fails without a logged-in GM tab.
-- **Port 31415 must be forwarded out of the devcontainer.** The module runs in
-  the browser *on the host* and dials `localhost:31415`; the backend listens
-  inside the devcontainer, where Claude Code started it. `devcontainer.json`
+- **Port 31415 must be forwarded out of the devcontainer.** Upstream confirms
+  the module is client-side and *it* initiates the WebSocket outbound to the
+  MCP server. That browser runs on the host and dials `localhost:31415`, while
+  the backend listens inside the devcontainer where Claude Code started it —
+  the Foundry container is not part of this hop at all. `devcontainer.json`
   declares `forwardPorts: [31415]` so the hop exists without relying on VS
   Code's auto-detection — a rebuild or *Reload Window* is needed after changing
   it. Symptom when it's missing: `mcp-health.sh` reports the backend UP with no
   browser module connected. Do **not** forward 31414 — it is the loopback-only
   server↔backend control channel.
+- **Force "Connection Type" to WebSocket** in the module settings. The default
+  is *Auto*, which may negotiate WebRTC instead — a different path (31416,
+  unused locally) that leaves the forwarded 31415 idle and makes a correct
+  port-forward look broken.
+- **"Websocket Server Host"** in module settings is the other half of the same
+  lever: it is the address the browser dials. Leave it at `localhost` when 31415
+  is forwarded as above; point it at the devcontainer's IP only if you are
+  deliberately skipping the forward. One or the other — not both.
 - Write operations (create NPC/journal/scene) need **"Allow Write
   Operations"** enabled in the module settings.
 - `search-compendium` is name-only; use `list-creatures-by-criteria` for
