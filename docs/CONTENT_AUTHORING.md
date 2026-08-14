@@ -96,10 +96,44 @@ node scripts/content/build.mjs    --config content/<slug>.config.json
 ```
 
 `srcDir` is a directory under `content/` (default `src`); each module builds into
-its own `content/dist/<id>/`. Source-root precedence: explicit `srcRoot` arg >
-config `srcDir` > `content/src`. The full lifecycle (spark, author in the vault,
-package, play) lives in the vault guide
+its own `content/dist/<id>/`. Source-root precedence: `--src` / explicit
+`srcRoot` arg > config `srcDir` > `content/src`. The full lifecycle (spark,
+author in the vault, package, play) lives in the vault guide
 `examples/vault-skeleton/00 Index/Running a new game.md`.
+
+### Vault-hosted games (sources outside this repo)
+
+A game's module sources do **not** have to live in this repo. This repo is the
+pipeline; a game whose notes are already Obsidian-synced can keep its config and
+source tree beside those notes and never be committed here at all:
+
+```text
+03 Oneshots/<Game>/
+├── <Game>.md                       # GM index note
+├── Advert.md                       # GroupFlows recruitment post
+├── Assets/Maps/                    # Player + DM PNGs, .dd2vtt
+└── Foundry/
+    ├── <slug>.config.json          # no srcDir key — pass --src instead
+    ├── maps/                       # render_map.py specs
+    └── src/{actors,items,journals,scenes,tables}/
+```
+
+Build it by pointing both flags at the vault:
+
+```bash
+node scripts/content/build.mjs \
+  --config "<vault>/03 Oneshots/<Game>/Foundry/<slug>.config.json" \
+  --src    "<vault>/03 Oneshots/<Game>/Foundry/src"
+```
+
+Omit `srcDir` from a vault-hosted config — it resolves under `content/` and
+would silently point at the wrong tree. Output still lands in
+`content/dist/<id>/` (gitignored), so `sync-content.sh` is unchanged. For maps,
+`map-to-scene.sh --scenes-dir <vault>/.../Foundry/src/scenes` writes the Scene
+next to the other sources.
+
+Both models work. In-repo (`new-game.sh`) keeps a game versioned with the
+tooling; vault-hosted keeps the repo purely about process.
 
 ## Scenes as code
 
