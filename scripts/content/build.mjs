@@ -15,12 +15,14 @@ import { compilePack } from '@foundryvtt/foundryvtt-cli';
 // changes so the skill can detect stale consumer copies.
 export const TOOLING_VERSION = 1;
 
+// `plural` is the human label shown in Foundry's compendium sidebar — naive
+// `${type}s` would read "JournalEntrys" / "RollTables".
 export const COLLECTIONS = {
-  actors:   { key: 'actors',  type: 'Actor' },
-  items:    { key: 'items',   type: 'Item' },
-  journals: { key: 'journal', type: 'JournalEntry' },
-  scenes:   { key: 'scenes',  type: 'Scene' },
-  tables:   { key: 'tables',  type: 'RollTable' },
+  actors:   { key: 'actors',  type: 'Actor',        plural: 'Actors' },
+  items:    { key: 'items',   type: 'Item',         plural: 'Items' },
+  journals: { key: 'journal', type: 'JournalEntry', plural: 'Journals' },
+  scenes:   { key: 'scenes',  type: 'Scene',        plural: 'Scenes' },
+  tables:   { key: 'tables',  type: 'RollTable',    plural: 'Roll Tables' },
 };
 
 const REQUIRED_FIELDS = {
@@ -237,7 +239,7 @@ export function moduleManifest(builtTypes, config) {
   const labelPrefix = config.packLabelPrefix ?? config.title;
   const packs = builtTypes.map(src => [src, COLLECTIONS[src]]).map(([src, c]) => ({
     name: src,
-    label: `${labelPrefix} ${c.type}s`,
+    label: `${labelPrefix} ${c.plural}`,
     path: `packs/${src}`,
     type: c.type,
     ...(config.system ? { system: config.system } : {}),

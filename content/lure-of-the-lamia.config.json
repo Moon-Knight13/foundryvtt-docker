@@ -1,0 +1,16 @@
+{
+  "compatibility": {
+    "minimum": "12",
+    "verified": "13"
+  },
+  "id": "lure-of-the-lamia-oneshot",
+  "ownership": {
+    "ASSISTANT": "OWNER",
+    "PLAYER": "OBSERVER"
+  },
+  "packLabelPrefix": "Lure of the Lamia",
+  "srcDir": "src-lure-of-the-lamia",
+  "system": "dnd5e",
+  "title": "Lure of the Lamia",
+  "version": "1.0.0"
+}

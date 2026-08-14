@@ -1,0 +1,70 @@
+{
+  "img": "icons/svg/mystery-man.svg",
+  "items": [],
+  "name": "Giant Scorpion",
+  "prototypeToken": {
+    "actorLink": false,
+    "displayName": 20,
+    "disposition": -1,
+    "height": 2,
+    "name": "Giant Scorpion",
+    "width": 2
+  },
+  "system": {
+    "abilities": {
+      "cha": {
+        "value": 3
+      },
+      "con": {
+        "value": 15
+      },
+      "dex": {
+        "value": 13
+      },
+      "int": {
+        "value": 1
+      },
+      "str": {
+        "value": 15
+      },
+      "wis": {
+        "value": 9
+      }
+    },
+    "attributes": {
+      "ac": {
+        "calc": "flat",
+        "flat": 15
+      },
+      "hp": {
+        "max": 52,
+        "value": 52
+      },
+      "movement": {
+        "units": "ft",
+        "walk": 40
+      },
+      "senses": {
+        "blindsight": 60,
+        "units": "ft"
+      }
+    },
+    "details": {
+      "alignment": "Unaligned",
+      "biography": {
+        "value": "<p>The party may fall through the sand into her burrow while following Zephyr's map. She attacks in defence of three baby Scorpions crawling on her back &mdash; she is not evil, she is a mother in her own home. Amira fights alongside the party here.</p><h3>Stat block (SRD Giant Scorpion)</h3><p><strong>AC</strong> 15 (natural armour). <strong>HP</strong> 52 (7d10+14). <strong>Speed</strong> 40 ft. <strong>Senses</strong> blindsight 60 ft., passive Perception 9. <strong>Size</strong> Large.</p><p><strong>Multiattack.</strong> Three attacks: two with its claws and one with its sting.</p><p><strong>Claw.</strong> +4 to hit, reach 5 ft. Hit: 6 (1d8+2) bludgeoning damage, and the target is grappled (escape DC 12). The scorpion has two claws, each of which can grapple only one target.</p><p><strong>Sting.</strong> +4 to hit, reach 5 ft. Hit: 7 (1d10+2) piercing damage, and the target must make a DC 12 Constitution saving throw, taking 22 (4d10) poison damage on a failed save, or half as much on a success.</p><p><em>Table note:</em> a party that retreats or talks its way past the nest loses nothing but time. Killing the mother leaves three baby Scorpions.</p>"
+      },
+      "cr": 3,
+      "type": {
+        "value": "beast"
+      }
+    },
+    "traits": {
+      "languages": {
+        "value": []
+      },
+      "size": "lg"
+    }
+  },
+  "type": "npc"
+}

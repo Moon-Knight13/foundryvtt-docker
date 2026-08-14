@@ -1,0 +1,80 @@
+{
+  "name": "Bandit Hideout",
+  "grid": { "w": 28, "h": 20 },
+  "ppg": 72,
+  "floor": {
+    "shape": "polygon",
+    "color": [138, 124, 106],
+    "points": [
+      [1.0, 8.6], [4.2, 8.4], [4.4, 6.0], [7.0, 4.4],
+      [11.0, 3.2], [16.0, 2.6], [21.0, 3.6], [24.6, 6.0],
+      [26.6, 9.4], [26.4, 13.4], [24.0, 16.4], [19.6, 18.0],
+      [14.0, 18.4], [8.6, 17.4], [5.2, 15.0], [4.4, 12.0],
+      [4.2, 10.6], [1.0, 10.4]
+    ]
+  },
+  "walls": [],
+  "features": [
+    { "type": "door", "at": [4.3, 9.5], "dir": "w", "label": "ILLUSORY ROCKFALL" },
+    { "type": "rubble", "at": [2.4, 9.5], "size": 0.9 },
+
+    { "type": "pillar", "at": [8.6, 8.0], "size": 0.8 },
+    { "type": "pillar", "at": [15.6, 6.4], "size": 0.7 },
+    { "type": "pillar", "at": [22.2, 12.4], "size": 0.9 },
+    { "type": "pillar", "at": [11.0, 15.6], "size": 0.6 },
+
+    { "type": "marker", "at": [10.0, 12.0], "size": 1.5, "label": "Carpets" },
+    { "type": "marker", "at": [16.2, 14.0], "size": 1.3, "label": "Carpets" },
+    { "type": "marker", "at": [13.2, 5.2], "size": 1.0, "label": "Hung silks" },
+    { "type": "marker", "at": [21.6, 6.6], "size": 1.0, "label": "Hung silks" },
+
+    { "type": "marker", "at": [20.6, 10.4], "size": 1.6, "label": "Selyse's dais" },
+    { "type": "marker", "at": [24.4, 13.0], "size": 1.1, "label": "Hoard" },
+    { "type": "water", "at": [6.8, 14.2], "size": 0.9, "label": "POOL" },
+
+    { "type": "marker", "at": [19.6, 9.2], "size": 0.5 },
+    { "type": "marker", "at": [21.8, 9.4], "size": 0.5 },
+    { "type": "marker", "at": [20.6, 11.6], "size": 0.5 }
+  ],
+  "keys": [
+    {
+      "n": 1,
+      "at": [4.3, 9.5],
+      "label": "The rockfall",
+      "note": "SECRET: Zephyr's map ends at what looks like a collapsed entrance. The huge boulders are one of Selyse's illusions — DC 13 Investigation on close inspection, or simply walking into them."
+    },
+    {
+      "n": 2,
+      "at": [13.2, 5.2],
+      "label": "Torchlit approach",
+      "note": "Torches line the walls and gleam against fine silks. Bright light the whole length; no sneaking up on the far chamber."
+    },
+    {
+      "n": 3,
+      "at": [10.0, 12.0],
+      "label": "Carpets",
+      "note": "Draped to give the cave a more luxurious atmosphere. Two of the four rugs here are part of the 200gp hoard; the rest are illusion and vanish with Selyse."
+    },
+    {
+      "n": 4,
+      "at": [20.6, 10.4],
+      "label": "Selyse's dais",
+      "note": "SECRET: three Bandits stand here and one of them is Selyse in disguise (disguise self, at will). Confronted, she drops the form and tries to charm and recruit the party; she attacks if declined, aided by Amira. The other Bandits silently watch — they are geas'd and cannot help either side."
+    },
+    {
+      "n": 5,
+      "at": [24.4, 13.0],
+      "label": "The hoard",
+      "note": "Gemstones, jewellery, fine rugs and tapestries — 200gp total. Freed Bandits offer it to the party once Selyse and Amira are down."
+    }
+  ],
+  "lights": [
+    { "at": [8.4, 6.6], "range": 4, "color": "ffb45a", "intensity": 0.6, "shadows": true },
+    { "at": [13.4, 4.4], "range": 4, "color": "ffb45a", "intensity": 0.6, "shadows": true },
+    { "at": [19.0, 4.8], "range": 4, "color": "ffb45a", "intensity": 0.6, "shadows": true },
+    { "at": [23.4, 8.0], "range": 4, "color": "ffb45a", "intensity": 0.6, "shadows": true },
+    { "at": [7.0, 14.6], "range": 3, "color": "ffb45a", "intensity": 0.5, "shadows": true },
+    { "at": [17.0, 16.0], "range": 4, "color": "ffb45a", "intensity": 0.6, "shadows": true },
+    { "at": [20.6, 10.4], "range": 5, "color": "e8c46a", "intensity": 0.7, "shadows": true }
+  ]
+}

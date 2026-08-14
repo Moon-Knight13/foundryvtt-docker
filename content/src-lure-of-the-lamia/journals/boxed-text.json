@@ -1,0 +1,57 @@
+{
+  "name": "Read-Aloud Boxed Text",
+  "pages": [
+    {
+      "name": "1. The Desert March",
+      "sort": 0,
+      "text": {
+        "content": "<p><em>The sun casts its light on the red sand as you continue your march through the seemingly endless desert. The expanse of dunes would be a beautiful sight if you were looking at a landscape painting, less so as you trudge through it, sun-baked and slick with sweat.</em></p><p><em>As you continue down the desert road, you see that you're approaching a small town. This is the only resting point in sight, but it is still tantalisingly out of reach &mdash; a haven in the desert.</em></p>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    },
+    {
+      "name": "2. Desert Road",
+      "sort": 100,
+      "text": {
+        "content": "<p><em>The dusty road winds past sand dunes and rocky outcroppings towards a small town. A stone wall shields most of the town from view; only a guard tower rises above it.</em></p>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    },
+    {
+      "name": "3. Scorpion's Burrow",
+      "sort": 200,
+      "text": {
+        "content": "<p><em>It is strangely cool and damp in this subterranean tunnel. Very little sunlight reaches the depths, but you can make out writhing movements in one corner.</em></p>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    },
+    {
+      "name": "4. Bandit Hideout",
+      "sort": 300,
+      "text": {
+        "content": "<p><em>Torches line the walls and gleam against fine silks and carpets that are draped to give the cave a more luxurious atmosphere.</em></p>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    }
+  ]
+}

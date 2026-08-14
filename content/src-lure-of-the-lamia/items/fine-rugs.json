@@ -1,0 +1,21 @@
+{
+  "img": "icons/svg/item-bag.svg",
+  "name": "Fine Rugs",
+  "system": {
+    "description": {
+      "value": "<p>Thick woven rugs draped over the cave floor to give the hideout a more luxurious atmosphere. Bulky, but worth the haul back to town.</p><p>Part of the 200gp total the party can take from the hoard alongside the <em>Gemstones</em>, <em>Jewellery</em> and <em>Tapestries</em>.</p>"
+    },
+    "identified": true,
+    "price": {
+      "denomination": "gp",
+      "value": 40
+    },
+    "quantity": 3,
+    "rarity": "common",
+    "weight": {
+      "units": "lb",
+      "value": 25
+    }
+  },
+  "type": "loot"
+}

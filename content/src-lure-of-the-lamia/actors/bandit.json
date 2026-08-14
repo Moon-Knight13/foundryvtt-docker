@@ -1,0 +1,66 @@
+{
+  "img": "icons/svg/mystery-man.svg",
+  "items": [],
+  "name": "Bandit",
+  "prototypeToken": {
+    "actorLink": false,
+    "displayName": 20,
+    "disposition": -1,
+    "name": "Bandit"
+  },
+  "system": {
+    "abilities": {
+      "cha": {
+        "value": 10
+      },
+      "con": {
+        "value": 12
+      },
+      "dex": {
+        "value": 12
+      },
+      "int": {
+        "value": 10
+      },
+      "str": {
+        "value": 11
+      },
+      "wis": {
+        "value": 10
+      }
+    },
+    "attributes": {
+      "ac": {
+        "calc": "flat",
+        "flat": 12
+      },
+      "hp": {
+        "max": 11,
+        "value": 11
+      },
+      "movement": {
+        "units": "ft",
+        "walk": 30
+      }
+    },
+    "details": {
+      "alignment": "Neutral",
+      "biography": {
+        "value": "<p>One of Selyse's <em>geas</em>-held pawns. Three of them ambush the party on the desert road alongside Zephyr; three more wait deep in the hideout, one of whom is Selyse in disguise.</p><p>They fight without heart and without choice. Once Selyse and Amira are defeated, any survivors are free from control and offer the party treasure from the stolen hoard.</p><h3>Stat block (SRD Bandit)</h3><p><strong>AC</strong> 12 (leather armour). <strong>HP</strong> 11 (2d8+2). <strong>Speed</strong> 30 ft. <strong>Languages</strong> any one language (usually Common).</p><p><strong>Scimitar.</strong> +3 to hit, reach 5 ft. Hit: 4 (1d6+1) slashing damage.</p><p><strong>Light Crossbow.</strong> +3 to hit, range 80/320 ft. Hit: 5 (1d8+1) piercing damage.</p>"
+      },
+      "cr": 0.125,
+      "type": {
+        "value": "humanoid"
+      }
+    },
+    "traits": {
+      "languages": {
+        "value": [
+          "common"
+        ]
+      },
+      "size": "med"
+    }
+  },
+  "type": "npc"
+}

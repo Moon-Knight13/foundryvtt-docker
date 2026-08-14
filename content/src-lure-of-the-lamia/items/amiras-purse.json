@@ -1,0 +1,21 @@
+{
+  "img": "icons/svg/coins.svg",
+  "name": "Amira's Purse",
+  "system": {
+    "description": {
+      "value": "<p>A heavy guard-issue coin purse, embroidered with the town's sigil. Amira offers the party <strong>75gp each</strong> to help her clear the Bandit hideout &mdash; the money is real, and it is all in here.</p><p>The party can take it from her purse once she is defeated. For a party of four that is 300gp; scale the contents to the table size.</p>"
+    },
+    "identified": true,
+    "price": {
+      "denomination": "gp",
+      "value": 300
+    },
+    "quantity": 1,
+    "rarity": "common",
+    "weight": {
+      "units": "lb",
+      "value": 6
+    }
+  },
+  "type": "loot"
+}

@@ -1,0 +1,65 @@
+{
+  "name": "Scorpions Burrow",
+  "grid": { "w": 24, "h": 18 },
+  "ppg": 72,
+  "floor": {
+    "shape": "polygon",
+    "color": [126, 100, 72],
+    "points": [
+      [11.0, 0.8], [13.6, 1.0], [14.2, 3.4], [13.0, 5.2],
+      [16.0, 6.0], [19.6, 6.6], [21.6, 9.0], [21.4, 12.6],
+      [19.0, 15.4], [15.2, 16.8], [10.4, 16.6], [6.4, 15.0],
+      [3.4, 12.2], [2.6, 9.0], [4.0, 6.4], [7.4, 5.4],
+      [10.2, 4.6], [9.8, 2.4]
+    ]
+  },
+  "walls": [],
+  "features": [
+    { "type": "marker", "at": [12.2, 2.2], "size": 1.1, "label": "Sand fall" },
+    { "type": "rubble", "at": [11.8, 4.6], "size": 0.8 },
+
+    { "type": "rubble", "at": [6.6, 8.8], "size": 1.1, "label": "REMAINS" },
+    { "type": "rubble", "at": [8.4, 13.0], "size": 0.9, "label": "REMAINS" },
+    { "type": "rubble", "at": [16.6, 8.4], "size": 0.8 },
+    { "type": "rubble", "at": [13.0, 10.0], "size": 0.7 },
+
+    { "type": "pillar", "at": [9.2, 10.8], "size": 0.7 },
+    { "type": "pillar", "at": [14.8, 12.4], "size": 0.6 },
+    { "type": "water", "at": [4.9, 11.4], "size": 1.0, "label": "SEEP" },
+
+    { "type": "marker", "at": [18.4, 12.6], "size": 1.0, "label": "Giant Scorpion" },
+    { "type": "marker", "at": [19.6, 13.8], "size": 0.35, "label": "Brood" },
+    { "type": "marker", "at": [17.4, 13.9], "size": 0.35, "label": "Brood" },
+    { "type": "marker", "at": [19.0, 11.3], "size": 0.35, "label": "Brood" }
+  ],
+  "keys": [
+    {
+      "n": 1,
+      "at": [12.2, 2.2],
+      "label": "Sand fall",
+      "note": "Where the party drops in from the desert above. DC 12 Dexterity save or land prone; 1d6 falling damage either way. Climbing back out unaided is DC 15 Athletics."
+    },
+    {
+      "n": 2,
+      "at": [6.6, 8.8],
+      "label": "Rotting remains",
+      "note": "Past meals. DC 12 Investigation turns up a trader's signet and a scrap of guard-issue leather — the missing traders Amira 'tracked' six months ago."
+    },
+    {
+      "n": 3,
+      "at": [18.4, 12.6],
+      "label": "The nest",
+      "note": "The Giant Scorpion lies in wait here, three baby Scorpions on her back. She attacks in defence of the brood, not out of malice. Amira fights alongside the party."
+    },
+    {
+      "n": 4,
+      "at": [4.9, 11.4],
+      "label": "Water seep",
+      "note": "Difficult terrain, and the only reason anything lives down here. A party that thinks to follow it finds the crawl-out toward the hideout."
+    }
+  ],
+  "lights": [
+    { "at": [12.2, 2.2], "range": 5, "color": "ffe3a8", "intensity": 0.5 },
+    { "at": [18.4, 12.6], "range": 3, "color": "6f7f9a", "intensity": 0.3 }
+  ]
+}

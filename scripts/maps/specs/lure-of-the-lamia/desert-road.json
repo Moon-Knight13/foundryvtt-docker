@@ -1,0 +1,81 @@
+{
+  "name": "Desert Road",
+  "grid": { "w": 30, "h": 22 },
+  "ppg": 72,
+  "floor": {
+    "shape": "polygon",
+    "color": [214, 184, 132],
+    "points": [
+      [0.5, 0.5], [29.5, 0.5], [29.5, 21.5], [0.5, 21.5]
+    ]
+  },
+  "walls": [
+    [[24.0, 0.5], [24.0, 6.0], [25.5, 6.0], [25.5, 10.6]],
+    [[25.5, 13.4], [25.5, 21.5]]
+  ],
+  "features": [
+    { "type": "pillar", "at": [8.0, 6.0], "size": 1.2, "label": "RED ROCK" },
+    { "type": "pillar", "at": [9.6, 7.2], "size": 0.8 },
+    { "type": "pillar", "at": [7.0, 7.6], "size": 0.7 },
+    { "type": "rubble", "at": [10.4, 5.6], "size": 0.9 },
+
+    { "type": "pillar", "at": [16.5, 15.5], "size": 1.1, "label": "SPLIT ROCK" },
+    { "type": "pillar", "at": [17.9, 16.6], "size": 0.7 },
+    { "type": "rubble", "at": [15.3, 16.9], "size": 0.9 },
+
+    { "type": "pillar", "at": [4.0, 16.0], "size": 0.8 },
+    { "type": "rubble", "at": [5.3, 17.2], "size": 0.8 },
+    { "type": "rubble", "at": [21.0, 4.0], "size": 0.7 },
+    { "type": "pillar", "at": [22.4, 9.5], "size": 0.6 },
+    { "type": "rubble", "at": [2.6, 3.4], "size": 0.9 },
+    { "type": "rubble", "at": [13.0, 2.6], "size": 0.8 },
+    { "type": "rubble", "at": [20.6, 19.2], "size": 0.9 },
+    { "type": "rubble", "at": [11.6, 19.4], "size": 0.7 },
+
+    { "type": "pillar", "at": [24.8, 3.2], "size": 1.3, "label": "GUARD TOWER" },
+    { "type": "stairs", "at": [25.5, 12.0], "size": 1.6, "dir": "w", "label": "TOWN GATE" },
+
+    { "type": "marker", "at": [12.0, 11.0], "size": 0.8, "label": "Ambush point" },
+    { "type": "marker", "at": [9.4, 9.0], "size": 0.5, "label": "Swept tracks" },
+    { "type": "marker", "at": [17.2, 13.4], "size": 0.5, "label": "Swept tracks" }
+  ],
+  "keys": [
+    {
+      "n": 1,
+      "at": [12.0, 11.0],
+      "label": "Ambush point",
+      "note": "Zephyr and three Bandits break cover here as the party passes. They demand valuables; they do not want to be doing this."
+    },
+    {
+      "n": 2,
+      "at": [8.0, 6.0],
+      "label": "Red rock formation",
+      "note": "Bandit start position. Total cover until they move. DC 13 Stealth to hold it."
+    },
+    {
+      "n": 3,
+      "at": [16.5, 15.5],
+      "label": "Split rock",
+      "note": "Second Bandit position, closing the pincer from the south."
+    },
+    {
+      "n": 4,
+      "at": [9.4, 9.0],
+      "label": "Swept tracks",
+      "note": "Palm leaves were used to sweep the sand clean. DC 13 Perception (or passive 13) spots the too-smooth ground and denies the Bandits surprise."
+    },
+    {
+      "n": 5,
+      "at": [24.8, 3.2],
+      "label": "Guard tower",
+      "note": "SECRET: Amira is up here with a clear view of the whole ambush, watching it happen. She rides out only once the fight ends."
+    },
+    {
+      "n": 6,
+      "at": [25.5, 12.0],
+      "label": "Town gate",
+      "note": "A stone wall shields the town from view. Safety, a rest, and Amira's jurisdiction."
+    }
+  ],
+  "lights": []
+}

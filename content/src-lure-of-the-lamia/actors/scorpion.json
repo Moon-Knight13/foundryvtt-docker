@@ -1,0 +1,70 @@
+{
+  "img": "icons/svg/mystery-man.svg",
+  "items": [],
+  "name": "Scorpion",
+  "prototypeToken": {
+    "actorLink": false,
+    "displayName": 20,
+    "disposition": -1,
+    "height": 0.5,
+    "name": "Scorpion",
+    "width": 0.5
+  },
+  "system": {
+    "abilities": {
+      "cha": {
+        "value": 2
+      },
+      "con": {
+        "value": 8
+      },
+      "dex": {
+        "value": 11
+      },
+      "int": {
+        "value": 1
+      },
+      "str": {
+        "value": 2
+      },
+      "wis": {
+        "value": 8
+      }
+    },
+    "attributes": {
+      "ac": {
+        "calc": "flat",
+        "flat": 11
+      },
+      "hp": {
+        "max": 1,
+        "value": 1
+      },
+      "movement": {
+        "units": "ft",
+        "walk": 10
+      },
+      "senses": {
+        "blindsight": 10,
+        "units": "ft"
+      }
+    },
+    "details": {
+      "alignment": "Unaligned",
+      "biography": {
+        "value": "<p>A translucent newborn from the burrow brood. Three ride on the Giant Scorpion's back; the EASIER variant swaps the mother for three more of these.</p><h3>Stat block (SRD Scorpion)</h3><p><strong>AC</strong> 11 (natural armour). <strong>HP</strong> 1 (1d4-1). <strong>Speed</strong> 10 ft. <strong>Senses</strong> blindsight 10 ft., passive Perception 9. <strong>Size</strong> Tiny.</p><p><strong>Sting.</strong> +2 to hit, reach 5 ft. Hit: 1 piercing damage, and the target must make a DC 9 Constitution saving throw, taking 4 (1d4) poison damage on a failed save, or half as much on a success.</p>"
+      },
+      "cr": 0,
+      "type": {
+        "value": "beast"
+      }
+    },
+    "traits": {
+      "languages": {
+        "value": []
+      },
+      "size": "tiny"
+    }
+  },
+  "type": "npc"
+}

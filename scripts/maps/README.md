@@ -144,6 +144,21 @@ Notes are the place for secrets/hazards; they never appear on the Player map.
 optional. Arch features additionally bake a static moonlight wedge into the PNG
 itself.
 
+## Where specs live
+
+`examples/` holds reference specs for the tool itself. Specs for a real game go
+in `specs/<game-slug>/<map>.json` so they stay in git next to the module they
+feed — e.g. `specs/lure-of-the-lamia/bandit-hideout.json`. The rendered PNGs and
+`.dd2vtt` do **not** live here; they go to the game's `Assets/Maps/` under the
+vault mount, where Foundry can serve them.
+
+Two things bite when authoring a spec:
+
+- `size` is a **radius** in grid units, not a diameter. `size: 3` is six squares
+  across.
+- An unrecognised `type` silently falls back to a labelled disc. Stick to the
+  feature table above; use `marker` for anything decorative.
+
 ## Example
 
 `examples/belfry.json` reproduces the original belfry (octagon bell tower with

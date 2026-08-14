@@ -1,0 +1,115 @@
+{
+  "name": "Lure of the Lamia",
+  "pages": [
+    {
+      "name": "1. Overview",
+      "sort": 0,
+      "text": {
+        "content": "<p><strong>Mysterious &bull; Confrontation &bull; Desert Road &bull; Level 3&ndash;4</strong></p><p>A surprise encounter during a trek through the desert reveals a group of Bandits are the unwilling accomplices of a larcenous Lamia. The party must find and defeat the Lamia, without becoming the latest mind-controlled members of her gang.</p><h2>Running order</h2><ol><li><strong>Road Ambush</strong> &mdash; @UUID[Compendium.lure-of-the-lamia-oneshot.scenes.Scene.84b0e7a806073f77]{Desert Road}</li><li><strong>Amira's Appeal</strong> &mdash; same scene, after the fight</li><li><strong>Follow the Map / Scorpion Lair</strong> &mdash; @UUID[Compendium.lure-of-the-lamia-oneshot.scenes.Scene.e4123127f6dcfb77]{Scorpion's Burrow}</li><li><strong>Cat's Out of the Bag / Break the Spell</strong> &mdash; @UUID[Compendium.lure-of-the-lamia-oneshot.scenes.Scene.f98797f0d7f62ac3]{Bandit Hideout}</li></ol><h2>At the table</h2><p>Read-aloud text is in @UUID[Compendium.lure-of-the-lamia-oneshot.journals.JournalEntry.a017db00d4aeb497]{Read-Aloud Boxed Text}. Trek colour and town gossip is in @UUID[Compendium.lure-of-the-lamia-oneshot.tables.RollTable.ef35322c23fb6bdc]{Desert Road Rumours}.</p><h2>Quick stats</h2><table><thead><tr><th>Name</th><th>AC</th><th>HP</th><th>Init.</th><th>Key ability</th></tr></thead><tbody><tr><td>@UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.938f148d757eefb3]{Bandit}</td><td>12</td><td>11</td><td>+1</td><td>Carries two weapons</td></tr><tr><td>@UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.4cd3b7545623914c]{Giant Scorpion}</td><td>15</td><td>52</td><td>+1</td><td>Attacks three times</td></tr><tr><td>@UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.0005a96b81ec2ad1]{Selyse} (Lamia)</td><td>13</td><td>97</td><td>+1</td><td>Mind-control spells</td></tr><tr><td>@UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.4fb55a0f870e32d3]{Scorpion}</td><td>11</td><td>1</td><td>+0</td><td>Poisonous sting</td></tr><tr><td>@UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.181f9b48f670cd02]{Zephyr Silverwind} / @UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.273baebfa1ee7df6]{Amira Granger} (Spy)</td><td>12</td><td>27</td><td>+2</td><td>Multiple attacks</td></tr></tbody></table>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    },
+    {
+      "name": "2. Starting the Adventure",
+      "sort": 100,
+      "text": {
+        "content": "<p>Bandits are waiting to ambush the party as they draw closer to the town. However, the Bandits are the unwilling pawns of a local Lamia, who is using mind-control magic to force them to steal for her.</p><p>@UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.273baebfa1ee7df6]{Amira Granger}, the captain of the town's guard, is the Lamia's loyal servant, helping to keep her hidden and providing her with new followers. Amira has identified the party as viable candidates to be put under the Lamia's spell.</p><p>Set the scene, describe the silhouette of the nearby town and the rocks on the road, then read the opener in @UUID[Compendium.lure-of-the-lamia-oneshot.journals.JournalEntry.a017db00d4aeb497]{Read-Aloud Boxed Text}.</p>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    },
+    {
+      "name": "3. Suggested Story",
+      "sort": 200,
+      "text": {
+        "content": "<h2>A Strange Stickup <em>(Road Ambush)</em></h2><ul><li>As the party nears the town, they are ambushed by three @UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.938f148d757eefb3]{Bandits} and their leader, @UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.181f9b48f670cd02]{Zephyr Silverwind}, who demand the party surrender their valuables.</li><li>During the fight, Zephyr desperately forces out the word <em>\"Help\"</em> and hands the nearest party member a map to the Bandit hideout. Zephyr suffers immediate psychic damage and falls unconscious.</li></ul><h2>On Guard <em>(Amira's Appeal)</em></h2><ul><li>@UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.273baebfa1ee7df6]{Amira} appears on horseback as the conflict ends. Impressed by the party, she offers them a reward if they help her locate the Bandit hideout and recover the goods they have taken from others.</li><li>Zephyr and her crew are left too weak to travel and too groggy to give further information of use.</li><li>Following the map to the Bandit hideout, the party may fall through the sand into a @UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.4cd3b7545623914c]{Giant Scorpion}'s burrow. The creature attacks in defence of three baby @UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.4fb55a0f870e32d3]{Scorpions}. Amira fights alongside the party.</li></ul><h2>Cat's Out of the Bag <em>(Break the Spell)</em></h2><ul><li>Deep in the hideout, the party find three Bandits, one of which is @UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.0005a96b81ec2ad1]{Selyse} in disguise. If confronted, Selyse will reveal her true form and try to charm and recruit the party. She attacks if declined, aided by Amira. The other Bandits silently watch.</li><li>Once Selyse and Amira are defeated, any surviving Bandits are free from control and offer the party treasure from the stolen hoard. The party can make their way to rest safely in town.</li></ul>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    },
+    {
+      "name": "4. Important Characters",
+      "sort": 300,
+      "text": {
+        "content": "<h2>@UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.181f9b48f670cd02]{Zephyr Silverwind}</h2><p><strong>Human-elf, female, 27 (Spy).</strong> This bodyguard was escorting travellers through the desert when Selyse first took control of her mind. Something bubbles beneath the surface of her glowing white eyes, desperate to break free.</p><h2>@UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.273baebfa1ee7df6]{Amira Granger}</h2><p><strong>Human, female, 35 (Spy).</strong> This confident, uniformed figure is the captain of the local guard. She wears fine, gold ear cuffs. Amira has an easy, relaxed swagger, clearly comfortable with both her environment and the weapons strung at her hip.</p><h2>@UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.0005a96b81ec2ad1]{Selyse}</h2><p><strong>Lamia, female, 110 (Lamia).</strong> Vain and demanding, Selyse prefers to have others do her bidding, but isn't afraid to get her paws dirty. Gold jewellery adorns every inch of her, from the rings on her fingers, to the anklets above her massive paws. Her tail flicks menacingly.</p>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    },
+    {
+      "name": "5. Key Locations",
+      "sort": 400,
+      "text": {
+        "content": "<h2>@UUID[Compendium.lure-of-the-lamia-oneshot.scenes.Scene.84b0e7a806073f77]{Desert Road}</h2><p><em>The dusty road winds past sand dunes and rocky outcroppings towards a small town. A stone wall shields most of the town from view; only a guard tower rises above it.</em></p><ul><li>The Bandits are hiding behind a rock formation. They have used palm leaves to sweep away their tracks in the sand.</li><li>Amira is in the guard tower with a clear view of the Bandit ambush.</li></ul><h2>@UUID[Compendium.lure-of-the-lamia-oneshot.scenes.Scene.e4123127f6dcfb77]{Scorpion's Burrow}</h2><p><em>It is strangely cool and damp in this subterranean tunnel. Very little sunlight reaches the depths, but you can make out writhing movements in one corner.</em></p><ul><li>The burrow is damp and dark. The rotting remains of past meals are strewn about the space.</li><li>The Giant Scorpion lies in wait at the far corner of the burrow, her translucent brood of newborn Scorpions crawling on her back.</li></ul><h2>@UUID[Compendium.lure-of-the-lamia-oneshot.scenes.Scene.f98797f0d7f62ac3]{Bandit Hideout}</h2><p><em>Torches line the walls and gleam against fine silks and carpets that are draped to give the cave a more luxurious atmosphere.</em></p><ul><li>Zephyr's map indicates a rock fall as the entrance to the camp. On closer inspection, the huge boulders are a magical illusion.</li><li>The cave interior is decorated with a mixture of stolen treasure and illusions created by Selyse.</li></ul><p><em>GM maps:</em> each scene has a keyed DM render beside its player image in the vault, under <code>03 Oneshots/Lure of the Lamia/Assets/Maps/</code>.</p>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    },
+    {
+      "name": "6. Secrets and Clues",
+      "ownership": {
+        "default": 0
+      },
+      "sort": 500,
+      "text": {
+        "content": "<ol><li>Amira earns a decent salary in the town guard, but has always dreamed of a grander lifestyle.</li><li>Amira met Selyse six months ago, after tracking a group of missing traders to the Bandit hideout.</li><li>Selyse persuaded Amira to work with her <strong>without using magic</strong>, by promising a share of her riches.</li><li>Selyse uses the <em>Geas</em> spell to control the actions of her gang of Bandits, including Zephyr.</li><li>The hand-drawn map Zephyr gives the party is basic, but identifies some key rock formations.</li><li>Selyse rarely shows her true form to others, unless they have impressed her in some way.</li></ol>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    },
+    {
+      "name": "7. Quest Rewards",
+      "sort": 600,
+      "text": {
+        "content": "<p>Amira offers the party <strong>75gp each</strong> if they help her clear the Bandit hideout; the party can take this money from @UUID[Compendium.lure-of-the-lamia-oneshot.items.Item.e7ba3b5266e8c175]{Amira's Purse} when she is defeated.</p><p>They can also take @UUID[Compendium.lure-of-the-lamia-oneshot.items.Item.4c44ce3f39ae00a2]{Gemstones}, @UUID[Compendium.lure-of-the-lamia-oneshot.items.Item.7edaf953fa5fc32d]{Jewellery}, @UUID[Compendium.lure-of-the-lamia-oneshot.items.Item.e1ad35f0c9ec58a4]{Fine Rugs} and @UUID[Compendium.lure-of-the-lamia-oneshot.items.Item.7537921d1e9c7efb]{Tapestries} &mdash; <strong>worth 200gp total</strong> &mdash; from Selyse's hoard.</p>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    },
+    {
+      "name": "8. Scaling: Easier / Harder",
+      "ownership": {
+        "default": 0
+      },
+      "sort": 700,
+      "text": {
+        "content": "<h2>Easier</h2><p>Zephyr and Amira could use @UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.938f148d757eefb3]{Bandit} stats, and the @UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.4cd3b7545623914c]{Giant Scorpion} could swap for three more @UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.4fb55a0f870e32d3]{Scorpions}. Selyse could fight the party alone.</p><h2>Harder</h2><p>You could replace the Bandits with <strong>Thugs</strong> (SRD), and everyone in the hideout could attack the party.</p><h2>Notes</h2><ul><li>A level 3 party facing @UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.0005a96b81ec2ad1]{Selyse} plus Amira at full strength is a hard fight &mdash; the Easier column exists for a reason. At level 4 run it as written.</li><li>The burrow is optional pressure, not a required fight. A party that avoids the collapse skips it entirely.</li><li>Selyse's <em>charm person</em> and <em>suggestion</em> are the point of the adventure. Give the party the chance to be recruited, and mean it.</li></ul>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "img": "icons/svg/mystery-man.svg",
+  "items": [],
+  "name": "Zephyr Silverwind",
+  "prototypeToken": {
+    "actorLink": false,
+    "displayName": 20,
+    "disposition": -1,
+    "name": "Zephyr Silverwind"
+  },
+  "system": {
+    "abilities": {
+      "cha": {
+        "value": 16
+      },
+      "con": {
+        "value": 10
+      },
+      "dex": {
+        "value": 15
+      },
+      "int": {
+        "value": 12
+      },
+      "str": {
+        "value": 10
+      },
+      "wis": {
+        "value": 14
+      }
+    },
+    "attributes": {
+      "ac": {
+        "calc": "flat",
+        "flat": 12
+      },
+      "hp": {
+        "max": 27,
+        "value": 27
+      },
+      "movement": {
+        "units": "ft",
+        "walk": 30
+      }
+    },
+    "details": {
+      "alignment": "Lawful Neutral",
+      "biography": {
+        "value": "<p><em>Human-elf, female, 27.</em> This bodyguard was escorting travellers through the desert when Selyse first took control of her mind. Something bubbles beneath the surface of her glowing white eyes, desperate to break free.</p><p>Zephyr leads the road ambush and demands the party surrender their valuables &mdash; she has no choice. Mid-fight she desperately forces out the word <em>\"Help\"</em> and hands the nearest party member a hand-drawn map to the Bandit hideout; the <em>geas</em> punishes her immediately with psychic damage and she falls unconscious.</p><p>Afterwards she and her crew are left too weak to travel and too groggy to give further information of use. She is freed only when Selyse is defeated.</p><h3>Stat block (SRD Spy)</h3><p><strong>Skills</strong> Deception +5, Insight +4, Investigation +5, Perception +6, Persuasion +5, Sleight of Hand +4, Stealth +4. <strong>Passive Perception</strong> 16.</p><p><strong>Cunning Action.</strong> Bonus action Dash, Disengage, or Hide.</p><p><strong>Sneak Attack (1/turn).</strong> Extra 7 (2d6) damage on a qualifying weapon attack.</p><p><strong>Multiattack.</strong> Two melee attacks.</p><p><strong>Shortsword.</strong> +4 to hit, reach 5 ft. Hit: 5 (1d6+2) piercing damage.</p><p><strong>Hand Crossbow.</strong> +4 to hit, range 30/120 ft. Hit: 5 (1d6+2) piercing damage.</p><p><em>Table note:</em> she is a victim, not a villain. Pull punches if the party is winning slowly &mdash; the scene wants her alive and unconscious, not dead.</p>"
+      },
+      "cr": 1,
+      "type": {
+        "value": "humanoid"
+      }
+    },
+    "skills": {
+      "dec": {
+        "value": 1
+      },
+      "ins": {
+        "value": 1
+      },
+      "inv": {
+        "value": 1
+      },
+      "per": {
+        "value": 1
+      },
+      "prc": {
+        "value": 1
+      },
+      "slt": {
+        "value": 1
+      },
+      "ste": {
+        "value": 1
+      }
+    },
+    "traits": {
+      "languages": {
+        "value": [
+          "common",
+          "elvish"
+        ]
+      },
+      "size": "med"
+    }
+  },
+  "type": "npc"
+}

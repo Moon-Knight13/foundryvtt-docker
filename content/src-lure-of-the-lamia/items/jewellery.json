@@ -1,0 +1,21 @@
+{
+  "img": "icons/svg/item-bag.svg",
+  "name": "Jewellery",
+  "system": {
+    "description": {
+      "value": "<p>Gold rings, anklets and ear cuffs &mdash; the overflow of Selyse's collection, and the same fine work Amira wears at her ears. Anyone from the town who sees it will recognise a missing trader's piece.</p><p>Part of the 200gp total the party can take from the hoard alongside the <em>Gemstones</em>, <em>Fine Rugs</em> and <em>Tapestries</em>.</p>"
+    },
+    "identified": true,
+    "price": {
+      "denomination": "gp",
+      "value": 70
+    },
+    "quantity": 1,
+    "rarity": "common",
+    "weight": {
+      "units": "lb",
+      "value": 2
+    }
+  },
+  "type": "loot"
+}

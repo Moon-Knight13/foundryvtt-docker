@@ -29,6 +29,7 @@ flowchart TD
   J --> K{Play online?}
   K -->|Yes| L[Compile Foundry artifacts]
   K -->|No| M[Print / run in person]
+  L --> N[Write the GroupFlows advert, recruit on Discord]
 ```
 
 ## Quick start — buttons
@@ -66,6 +67,12 @@ type note(99 Inbox/New Map Brief, split) template
 action Map Brief Template
 templater true
 ```
+```button
+name 📣 New Advert
+type note(99 Inbox/New Advert, split) template
+action Advert Template
+templater true
+```
 
 ## Quick start — say it to Claude
 
@@ -98,6 +105,9 @@ session recap: <what happened> — write the recap and prep next session.
 ```text
 map for [[<location>]] — generate player + DM battlemaps (+ .dd2vtt) from the notes.
 ```
+```text
+write the GroupFlows advert for <game> — <N> players, level <X>, ~<H>h.
+```
 
 ## Creation cases (catalog)
 
@@ -118,6 +128,7 @@ map for [[<location>]] — generate player + DM battlemaps (+ .dd2vtt) from the 
 | A oneshot | Ready-to-run pregens | "make 5 L3 pregens" |
 | Another system | Converted prep | "convert … to Cairn" |
 | A loose pile | Cross-links + MOC | "link and index …" |
+| A ready game | GroupFlows recruitment post | "write the GroupFlows advert for …" |
 
 ## The three build modes (detail)
 
@@ -133,6 +144,12 @@ map for [[<location>]] — generate player + DM battlemaps (+ .dd2vtt) from the 
 A finished folder (`03 Oneshots/<Name>/` or `02 Campaigns/<Name>/`) in the house
 style: index/MOC, GM prep, scene/POI notes, NPC cards (Fantasy Statblocks),
 handouts, `Assets/`, Dataview auto-index.
+
+For an online game, also `Advert.md` — the **GroupFlows** recruitment post from
+[[Advert Template]]. The paste block (premise, slots, rules, tone, length,
+tools) is fenced so it copies into Discord clean, without the frontmatter or the
+GM-only notes underneath. Spoilers stay out of it: the premise is the hook the
+players see, not the twist they'll uncover.
 
 ## Package for Foundry (per game)
 Author in the vault first — it's the durable truth. When a game is table-ready

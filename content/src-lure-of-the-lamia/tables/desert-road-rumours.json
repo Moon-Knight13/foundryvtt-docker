@@ -1,0 +1,82 @@
+{
+  "description": "<p>Colour for the long trek before the ambush, and gossip the party can pick up in town afterwards. Roll or pick. Most are true; none of them name Selyse.</p>",
+  "displayRoll": true,
+  "formula": "1d8",
+  "img": "icons/svg/d20-grey.svg",
+  "name": "Desert Road Rumours",
+  "replacement": true,
+  "results": [
+    {
+      "description": "Three trade caravans have gone missing on this road in six months. The town guard filed reports on exactly none of them.",
+      "range": [
+        1,
+        1
+      ],
+      "type": "text",
+      "weight": 1
+    },
+    {
+      "description": "A merchant swears the bandit who robbed him was crying the whole time. Wouldn't meet his eye. Apologised.",
+      "range": [
+        2,
+        2
+      ],
+      "type": "text",
+      "weight": 1
+    },
+    {
+      "description": "Gold jewellery keeps turning up in the market at a third of its worth. Nobody asks where from. The captain of the guard wears a very fine pair of ear cuffs.",
+      "range": [
+        3,
+        3
+      ],
+      "type": "text",
+      "weight": 1
+    },
+    {
+      "description": "Scorpions have been coming up out of the sand closer to the road than anyone likes. Something drove them out of the deep dunes.",
+      "range": [
+        4,
+        4
+      ],
+      "type": "text",
+      "weight": 1
+    },
+    {
+      "description": "A goatherd points at a rockfall on the horizon and says it wasn't there last season. When you look again, you're less sure it's there now.",
+      "range": [
+        5,
+        5
+      ],
+      "type": "text",
+      "weight": 1
+    },
+    {
+      "description": "Someone in the tavern claims they saw a woman with the body of a lion drinking at the oasis at dusk. Everyone laughs. One person doesn't.",
+      "range": [
+        6,
+        6
+      ],
+      "type": "text",
+      "weight": 1
+    },
+    {
+      "description": "The guard captain personally 'investigated' the missing traders and closed the case in a day. She's been generous with drinks ever since.",
+      "range": [
+        7,
+        7
+      ],
+      "type": "text",
+      "weight": 1
+    },
+    {
+      "description": "Fresh palm leaves, cut and discarded, half-buried at the roadside. Nothing grows within a day's walk of here.",
+      "range": [
+        8,
+        8
+      ],
+      "type": "text",
+      "weight": 1
+    }
+  ]
+}

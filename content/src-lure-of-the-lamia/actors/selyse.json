@@ -1,0 +1,84 @@
+{
+  "img": "icons/svg/mystery-man.svg",
+  "items": [],
+  "name": "Selyse",
+  "prototypeToken": {
+    "actorLink": false,
+    "displayName": 20,
+    "disposition": -1,
+    "height": 2,
+    "name": "Selyse",
+    "width": 2
+  },
+  "system": {
+    "abilities": {
+      "cha": {
+        "value": 16
+      },
+      "con": {
+        "value": 15
+      },
+      "dex": {
+        "value": 13
+      },
+      "int": {
+        "value": 14
+      },
+      "str": {
+        "value": 16
+      },
+      "wis": {
+        "value": 15
+      }
+    },
+    "attributes": {
+      "ac": {
+        "calc": "flat",
+        "flat": 13
+      },
+      "hp": {
+        "max": 97,
+        "value": 97
+      },
+      "movement": {
+        "units": "ft",
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60,
+        "units": "ft"
+      }
+    },
+    "details": {
+      "alignment": "Chaotic Evil",
+      "biography": {
+        "value": "<p><em>Lamia, female, 110.</em> Vain and demanding, Selyse prefers to have others do her bidding, but isn't afraid to get her paws dirty. Gold jewellery adorns every inch of her, from the rings on her fingers to the anklets above her massive paws. Her tail flicks menacingly.</p><p>She rarely shows her true form to others unless they have impressed her in some way &mdash; in the hideout she is disguised as one of three Bandits. If confronted she reveals herself and tries to charm and recruit the party; she attacks if declined, aided by Amira, while the other Bandits silently watch.</p><h3>Stat block (SRD Lamia)</h3><p><strong>Skills</strong> Deception +7, Insight +4, Stealth +3. <strong>Senses</strong> darkvision 60 ft., passive Perception 12. <strong>Languages</strong> Abyssal, Common. <strong>Size</strong> Large.</p><p><strong>Innate Spellcasting.</strong> Spellcasting ability Charisma (save DC 13). At will: <em>disguise self</em> (any humanoid form), <em>major image</em>. 3/day each: <em>charm person</em>, <em>mirror image</em>, <em>scrying</em>, <em>suggestion</em>. 1/day: <em>geas</em>.</p><p><strong>Multiattack.</strong> Two attacks: one with its claws and one with its dagger or Intoxicating Touch.</p><p><strong>Claws.</strong> Melee weapon attack, +5 to hit, reach 5 ft. Hit: 14 (2d10+3) slashing damage.</p><p><strong>Dagger.</strong> Melee or ranged weapon attack, +5 to hit, reach 5 ft. or range 20/60 ft. Hit: 5 (1d4+3) piercing damage.</p><p><strong>Intoxicating Touch.</strong> Melee spell attack, +5 to hit, reach 5 ft. Hit: the target is magically cursed for 1 hour. Until the curse ends, the target has disadvantage on Wisdom saving throws and all ability checks.</p><p><em>Table note:</em> it is her 1/day <em>geas</em> that holds the Bandits, including Zephyr. Breaking her breaks the gang.</p>"
+      },
+      "cr": 4,
+      "type": {
+        "value": "monstrosity"
+      }
+    },
+    "skills": {
+      "dec": {
+        "value": 1
+      },
+      "ins": {
+        "value": 1
+      },
+      "ste": {
+        "value": 1
+      }
+    },
+    "traits": {
+      "languages": {
+        "value": [
+          "abyssal",
+          "common"
+        ]
+      },
+      "size": "lg"
+    }
+  },
+  "type": "npc"
+}

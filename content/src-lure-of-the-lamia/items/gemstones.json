@@ -1,0 +1,21 @@
+{
+  "img": "icons/svg/item-bag.svg",
+  "name": "Gemstones",
+  "system": {
+    "description": {
+      "value": "<p>A scatter of cut desert stones from Selyse's hoard &mdash; carnelian, jasper and one good piece of turquoise, most likely lifted from the mine road.</p><p>Part of the 200gp total the party can take from the hoard alongside the <em>Jewellery</em>, <em>Fine Rugs</em> and <em>Tapestries</em>.</p>"
+    },
+    "identified": true,
+    "price": {
+      "denomination": "gp",
+      "value": 60
+    },
+    "quantity": 8,
+    "rarity": "common",
+    "weight": {
+      "units": "lb",
+      "value": 0
+    }
+  },
+  "type": "loot"
+}

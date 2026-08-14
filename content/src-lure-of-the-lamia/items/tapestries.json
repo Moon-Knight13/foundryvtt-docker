@@ -1,0 +1,21 @@
+{
+  "img": "icons/svg/item-bag.svg",
+  "name": "Tapestries",
+  "system": {
+    "description": {
+      "value": "<p>Fine silks hung along the torchlit walls of the hideout. Some are real; at least one is an illusion Selyse never bothered to make solid, and vanishes the moment she dies.</p><p>Part of the 200gp total the party can take from the hoard alongside the <em>Gemstones</em>, <em>Jewellery</em> and <em>Fine Rugs</em>.</p>"
+    },
+    "identified": true,
+    "price": {
+      "denomination": "gp",
+      "value": 30
+    },
+    "quantity": 2,
+    "rarity": "common",
+    "weight": {
+      "units": "lb",
+      "value": 10
+    }
+  },
+  "type": "loot"
+}
