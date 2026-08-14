@@ -12,11 +12,18 @@
  *
  * Usage:
  *   node scripts/content/dd2vtt-to-scene.mjs <file.dd2vtt> --background <src> \
- *     [--out <path>] [--name "<Scene>"] [--grid-distance 5] [--global-light]
+ *     [--out <path>] [--name "<Scene>"] [--grid-distance 5] [--global-light] \
+ *     [--keys <spec.json> --keys-journal <path>]
+ *
+ * --keys reads the map spec's numbered `keys` — the ones render_map.py draws on
+ * the DM PNG — and emits a GM-only "<Scene> — GM Keys" journal (one page per
+ * key) plus a scene Note pinned at each key. The GM clicks pin 4 instead of
+ * reading the legend off the DM image.
  */
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { docId } from './build.mjs';
 
 const DEFAULT_PPG = 72;
 const DEFAULT_GRID_DISTANCE = 5;
@@ -87,6 +94,54 @@ export function lightFromDd2vtt(light, ppg, distance) {
   };
 }
 
+// A map spec's `keys` are what render_map.py draws as numbered circles on the DM
+// PNG and lists in its legend. The same array becomes a GM-only journal (one
+// page per key) plus a scene Note pinned at each key's coordinates, so the GM
+// clicks pin 4 instead of cross-referencing the legend by eye.
+//
+// The journal is addressed by the path build.mjs will stage it under, so the
+// ids here match the ones the compiled pack will carry.
+export function keysJournal(keys, sceneName, journalRelPath) {
+  const pages = keys.map((k, i) => ({
+    _id: docId(`${journalRelPath}#pages[${i}]`),
+    name: `${k.n}. ${k.label ?? 'Key'}`,
+    type: 'text',
+    title: { show: true, level: 1 },
+    // Keys routinely hold the scene's secrets — GM-only, like the rest of the
+    // GM shelf. Foundry hides a Note whose journal the player cannot see.
+    ownership: { default: 0 },
+    text: { content: `<p>${k.note ?? ''}</p>`, format: 1 },
+    sort: (i + 1) * 100,
+  }));
+  return {
+    _id: docId(journalRelPath),
+    name: `${sceneName} — GM Keys`,
+    ownership: { default: 0 },
+    pages,
+  };
+}
+
+// Foundry v13 removed the automatic migration of the legacy Note#icon string to
+// Note#texture.src (deprecated in v10), so a v13+ scene MUST use texture.src or
+// the pin renders without its icon. Fields beyond these are deliberately left
+// out and defaulted by Foundry rather than guessed at.
+const NOTE_ICON = 'icons/svg/book.svg';
+
+export function notesFromKeys(keys, ppg, journalRelPath) {
+  return keys.map((k, i) => {
+    const [gx, gy] = k.at ?? [0, 0];
+    return {
+      entryId: docId(journalRelPath),
+      pageId: docId(`${journalRelPath}#pages[${i}]`),
+      x: gx * ppg,
+      y: gy * ppg,
+      texture: { src: NOTE_ICON },
+      iconSize: 40,
+      text: `${k.n}. ${k.label ?? 'Key'}`,
+    };
+  });
+}
+
 export function sceneFromDd2vtt(dd, opts = {}) {
   const {
     name = 'Map',
@@ -94,6 +149,8 @@ export function sceneFromDd2vtt(dd, opts = {}) {
     gridDistance = DEFAULT_GRID_DISTANCE,
     globalLight = false,
     noLights = false,
+    keys = [],
+    journalRelPath,
   } = opts;
   const res = dd.resolution ?? {};
   const ppg = Number(res.pixels_per_grid ?? DEFAULT_PPG);
@@ -119,6 +176,7 @@ export function sceneFromDd2vtt(dd, opts = {}) {
     c: [px(w.c[0] + offsetX), px(w.c[1] + offsetY), px(w.c[2] + offsetX), px(w.c[3] + offsetY)],
   });
   const shiftLight = l => ({ ...l, x: px(l.x + offsetX), y: px(l.y + offsetY) });
+  const shiftNote = n => ({ ...n, x: px(n.x + offsetX), y: px(n.y + offsetY) });
 
   const walls = [
     ...wallsFromLOS(dd.line_of_sight, ppg),
@@ -128,6 +186,11 @@ export function sceneFromDd2vtt(dd, opts = {}) {
   // double up; --no-lights ships the baked map with no dynamic lights.
   const lights = (noLights ? [] : (dd.lights ?? []).map(l => lightFromDd2vtt(l, ppg, gridDistance)))
     .map(shiftLight);
+
+  // Pins only exist when the caller passed a spec's keys AND told us where the
+  // companion journal will live — without the path the ids could not resolve.
+  const notes =
+    keys.length && journalRelPath ? notesFromKeys(keys, ppg, journalRelPath).map(shiftNote) : [];
 
   const scene = {
     name,
@@ -141,6 +204,7 @@ export function sceneFromDd2vtt(dd, opts = {}) {
     environment: { globalLight: { enabled: globalLight } },
     walls,
     lights,
+    notes,
   };
   if (background) scene.background = { src: background };
   return scene;
@@ -161,6 +225,8 @@ export function parseArgs(argv) {
       case '--grid-distance': opts.gridDistance = Number(argv[++i]); break;
       case '--global-light': opts.globalLight = true; break;
       case '--no-lights': opts.noLights = true; break;
+      case '--keys': opts.keys = argv[++i]; break;
+      case '--keys-journal': opts.keysJournal = argv[++i]; break;
       default:
         if (arg.startsWith('-')) throw new Error(`Unknown argument: ${arg}`);
         if (input) throw new Error(`Unexpected extra argument: ${arg}`);
@@ -168,6 +234,9 @@ export function parseArgs(argv) {
     }
   }
   if (!input) throw new Error('Missing <file.dd2vtt> argument');
+  if (opts.keys && !opts.keysJournal) {
+    throw new Error('--keys requires --keys-journal <path>: the pins reference that journal by id');
+  }
   if (!opts.background) {
     throw new Error(
       '--background is required: the Foundry Data-relative path to the Player ' +
@@ -186,23 +255,47 @@ export async function convertFile(input, opts) {
       : value;
 
   const name = opts.name ?? path.basename(input).replace(/\.dd2vtt$/i, '');
-  const scene = sceneFromDd2vtt(dd, { ...opts, name });
+
+  // Pull the numbered keys straight from the map spec — the same array
+  // render_map.py drew on the DM PNG, so pins and legend cannot drift.
+  let keys = [];
+  let journalRelPath;
+  if (opts.keys) {
+    const spec = JSON.parse(await readFile(opts.keys, 'utf8'));
+    keys = Array.isArray(spec.keys) ? spec.keys : [];
+    // build.mjs derives ids from "<type>/<file>.json", so address the journal
+    // by the path it will be staged under, not by where it sits on disk.
+    journalRelPath = `journals/${path.basename(opts.keysJournal)}`;
+  }
+
+  const scene = sceneFromDd2vtt(dd, { ...opts, name, keys, journalRelPath });
   const out = opts.out ?? path.join(process.cwd(), `${name}.json`);
   await mkdir(path.dirname(out), { recursive: true });
   // Match pre-commit's pretty-format-json (sorted keys, 2-space indent,
   // trailing newline) so a freshly generated scene commits without the hook
   // rewriting it and failing the first attempt.
   await writeFile(out, `${JSON.stringify(scene, sortKeys, 2)}\n`);
-  return { out, scene };
+
+  let journalOut;
+  if (keys.length && opts.keysJournal) {
+    const journal = keysJournal(keys, name, journalRelPath);
+    journalOut = opts.keysJournal;
+    await mkdir(path.dirname(journalOut), { recursive: true });
+    await writeFile(journalOut, `${JSON.stringify(journal, sortKeys, 2)}\n`);
+  }
+
+  return { out, scene, journalOut };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const { input, opts } = parseArgs(process.argv.slice(2));
-    const { out, scene } = await convertFile(input, opts);
+    const { out, scene, journalOut } = await convertFile(input, opts);
     console.log(
-      `Wrote ${scene.name}: ${scene.walls.length} walls, ${scene.lights.length} lights -> ${out}`,
+      `Wrote ${scene.name}: ${scene.walls.length} walls, ${scene.lights.length} lights, ` +
+      `${scene.notes.length} pins -> ${out}`,
     );
+    if (journalOut) console.log(`Wrote GM keys journal (${scene.notes.length} pages) -> ${journalOut}`);
     console.log('Next: build + sync the module, then import the scene in Foundry.');
   } catch (err) {
     console.error(err.message);

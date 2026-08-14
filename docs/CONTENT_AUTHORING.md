@@ -157,6 +157,20 @@ consumes**, so the scene gets the same walls (from `line_of_sight`), doors
 not a separate UI step. `build.mjs` keys the embedded walls/lights via the
 `scenes` entry in its `EMBEDDED` map.
 
+**GM map pins.** `map-to-scene.sh` also passes the spec's numbered `keys` —
+the ones `render_map.py` draws as circles on the DM PNG — through
+`dd2vtt-to-scene.mjs --keys ... --keys-journal ...`. That emits a GM-only
+`<Scene> — GM Keys` journal (one page per key) into the module's `journals/`,
+plus a scene `Note` pinned at each key linking to its page. Clicking pin 4 in
+the VTT opens key 4, with the same numbering as the DM image, so the GM stops
+cross-referencing a PNG mid-session. The pages carry `ownership.default: 0`
+because keys routinely hold the scene's secrets, and Foundry hides a pin whose
+journal the player cannot see.
+
+> Foundry v13 removed the automatic migration of the legacy `Note#icon` string
+> to `Note#texture.src`, so the pins are emitted with `texture.src`. Don't
+> "simplify" that back to `icon` — the pin would import without its marker.
+
 **Scene stub (no walls).** Author a scene JSON by hand in
 `content/src-<slug>/scenes/` with just a `background.src` — the git-durable route
 when you don't need dynamic walls/lights.

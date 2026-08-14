@@ -93,10 +93,14 @@ if [[ -z "$BACKGROUND" ]]; then
   exit 1
 fi
 
-# Scene name = spec "name" (default "Map") unless overridden — must match the
-# filenames render_map.py derives.
+# render_map.py derives its output filenames from the spec's "name", so the
+# .dd2vtt is always found under SPEC_NAME. --name only overrides the scene's
+# DISPLAY name (e.g. spec "Scorpions Burrow" -> scene "Scorpion's Burrow"); it
+# must not be used to look files up, or an apostrophe in the display name sends
+# us hunting for a file that was never written under that spelling.
+SPEC_NAME="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("name","Map"))' "$SPEC")"
 if [[ -z "$NAME" ]]; then
-  NAME="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("name","Map"))' "$SPEC")"
+  NAME="$SPEC_NAME"
 fi
 
 if [[ -n "$SCENES_DIR_OVERRIDE" ]]; then
@@ -118,12 +122,20 @@ SLUG_NAME="$(printf '%s' "$NAME" |
   tr '[:upper:]' '[:lower:]' |
   sed -e "s/['\`]//g" -e 's/[^a-z0-9]\+/-/g' -e 's/^-\+//' -e 's/-\+$//')"
 
+# The spec's numbered keys become GM journal pins on the scene, matching the
+# numbered circles render_map.py draws on the DM PNG. The journal is a sibling
+# of the scenes dir so build.mjs picks it up as an ordinary source document.
+JOURNALS_DIR="$(dirname "$SCENES_DIR")/journals"
+mkdir -p "$JOURNALS_DIR"
+
 python3 "$REPO_ROOT/scripts/maps/render_map.py" "$SPEC" "$OUTDIR"
 
-node "$REPO_ROOT/scripts/content/dd2vtt-to-scene.mjs" "$OUTDIR/$NAME.dd2vtt" \
+node "$REPO_ROOT/scripts/content/dd2vtt-to-scene.mjs" "$OUTDIR/$SPEC_NAME.dd2vtt" \
   --background "$BACKGROUND" \
   --out "$SCENES_DIR/$SLUG_NAME.json" \
   --name "$NAME" \
+  --keys "$SPEC" \
+  --keys-journal "$JOURNALS_DIR/$SLUG_NAME-keys.json" \
   "${EXTRA[@]}"
 
 echo

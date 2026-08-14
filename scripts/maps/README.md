@@ -19,6 +19,10 @@ Writes into `<outdir>` (using the spec's `name`):
 | `<name> - DM.png` | The Player base **plus** a numbered red circle at each key, small feature labels, and a right-hand **legend panel** listing `n → label — note`. Secret/hazard notes live here only. |
 | `<name>.dd2vtt` | Universal VTT 0.3: `resolution`, base64 of the **Player** PNG, `line_of_sight` walls, `portals` (doors), `lights`, `environment`. |
 
+Via `map-to-scene.sh` you also get a compendium **Scene** (walls, lights, doors)
+and a GM-only **`<Scene> — GM Keys`** journal with a map pin per numbered key —
+see [`keys`](#keys).
+
 ## Dependency
 
 Pillow (PIL). **Installed in the devcontainer at container start** by
@@ -135,6 +139,14 @@ Glyphs are schematic (this is a "simple battlemap", not fine art).
 `{"n": <int>, "at": [x,y], "label": "...", "note": "..."}` — draws a numbered
 circle at `at` on the DM map and a matching legend row `n → label — note`.
 Notes are the place for secrets/hazards; they never appear on the Player map.
+
+Keys are also the source of the scene's **GM journal pins**. `map-to-scene.sh`
+passes them to `dd2vtt-to-scene.mjs --keys`, which emits a GM-only
+`<Scene> — GM Keys` journal (one page per key) beside the scene, plus a Note
+pinned at each key's coordinates linking to its page. Pin 4 on the map opens
+page 4 in Foundry, with the same numbering as the DM PNG legend — so the GM
+clicks instead of cross-referencing the image. Write a key once; the DM map and
+the VTT pin stay in sync because they read the same array.
 
 ### `lights`
 
