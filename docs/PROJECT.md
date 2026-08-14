@@ -196,6 +196,14 @@ Requirements and gotchas:
 
 - **A GM browser session must be open** — the module is client-side; every
   MCP tool fails without a logged-in GM tab.
+- **Port 31415 must be forwarded out of the devcontainer.** The module runs in
+  the browser *on the host* and dials `localhost:31415`; the backend listens
+  inside the devcontainer, where Claude Code started it. `devcontainer.json`
+  declares `forwardPorts: [31415]` so the hop exists without relying on VS
+  Code's auto-detection — a rebuild or *Reload Window* is needed after changing
+  it. Symptom when it's missing: `mcp-health.sh` reports the backend UP with no
+  browser module connected. Do **not** forward 31414 — it is the loopback-only
+  server↔backend control channel.
 - Write operations (create NPC/journal/scene) need **"Allow Write
   Operations"** enabled in the module settings.
 - `search-compendium` is name-only; use `list-creatures-by-criteria` for
