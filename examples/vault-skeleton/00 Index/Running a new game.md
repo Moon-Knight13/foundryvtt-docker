@@ -145,6 +145,34 @@ A finished folder (`03 Oneshots/<Name>/` or `02 Campaigns/<Name>/`) in the house
 style: index/MOC, GM prep, scene/POI notes, NPC cards (Fantasy Statblocks),
 handouts, `Assets/`, Dataview auto-index.
 
+### Definition of done
+
+A game is **not finished** until every one of these exists. `new-game.sh`
+scaffolds them all as stubs so a missing piece is visible in the vault rather
+than remembered — if a stub still says `REPLACE`, that part isn't done.
+
+| Piece | What it holds |
+|---|---|
+| `<Name>.md` | Index: premise, run order, GM shelf, Dataview blocks |
+| `GM Prep.md` | The truth, arc, pacing, scaling, safety, rewards |
+| `NPCs/` | One card per creature, each with a `statblock` block |
+| `Scenes/` | One note per scene: read-aloud, map embed, the beats |
+| `Tables/` | Rumour / loot tables as markdown tables |
+| `Handouts/` | Anything the players physically receive |
+| `Maps/` | Map briefs, or notes on the generator specs |
+| `Advert.md` | GroupFlows recruitment post — online games |
+| `Foundry/src/` | The above projected to JSON, **once**, at packaging |
+
+> [!important] Vault first, then project
+> The vault notes are the source of truth; the Foundry JSON is a projection of
+> them. Author the notes first and port once at packaging — never hand-maintain
+> both copies of an NPC. Building the JSON first means writing the same content
+> twice in two formats, and the two drift from that moment on.
+
+The compendium packs (`actors`, `items`, `journals`, `scenes`, `tables`) are the
+*output*, not the deliverable. A module that builds cleanly and a game that is
+ready to run are different things.
+
 For an online game, also `Advert.md` — the **GroupFlows** recruitment post from
 [[Advert Template]]. The paste block (premise, slots, rules, tone, length,
 tools) is fenced so it copies into Discord clean, without the frontmatter or the
@@ -156,18 +184,24 @@ Author in the vault first — it's the durable truth. When a game is table-ready
 **and** you're playing online, project it into Foundry. Foundry is a
 **rebuildable** view: wipe the world, re-run these pipes, lose nothing.
 
-Each game gets its **own** content module. One-time scaffold (in the devcontainer):
+Each game gets its **own** content module. One-time scaffold (in the devcontainer)
+— this creates the whole vault game folder, notes and Foundry sources together,
+and prints the definition-of-done checklist:
 
 ```text
 scripts/content/new-game.sh <slug> --type oneshot|campaign [--system dnd5e]
 ```
 
+The game lives in the vault; the repo is the pipeline. Add `--in-repo` for the
+older layout that keeps sources in `content/src-<slug>/`.
+
 Then run the pipes **in this order** (objects exist before notes/scenes link to them):
 
-1. **Objects** — Claude ports the NPC statblocks / items / tables into
-   `content/src-<slug>/`, then `build.mjs --config content/<slug>.config.json`,
-   then on the host `sync-content.sh --config …`; in Foundry, enable **that
-   game's** module and import its packs.
+1. **Objects** — Claude ports the NPC statblocks / items / tables into the
+   game's `Foundry/src/`, then `build.mjs --config <game>/Foundry/<slug>.config.json
+   --src <game>/Foundry/src`, then on the host `sync-content.sh --config …`; in
+   Foundry, enable **that game's** module and import its packs. (`--in-repo`
+   games use `content/src-<slug>/` and need no `--src`.)
 2. **Notes** — SoSly Obsidian Bridge import turns your prose notes into journals.
 3. **Maps** — ship the map as a compendium **Scene** (`render_map.py` →
    `dd2vtt-to-scene.mjs` → build) so it imports with the module, or point the
