@@ -45,6 +45,19 @@
       }
     }
   },
+  // The foundry-mcp-bridge module is CLIENT-SIDE: it runs in the GM's browser
+  // on the host and connects out to the MCP backend, which Claude Code starts
+  // inside this container. Without an explicit forward the browser's
+  // localhost:31415 hits the host, where nothing is listening, and every MCP
+  // tool reports "Foundry VTT module not connected" even though the backend is
+  // healthy. 31414 is loopback-only (server<->backend) and must NOT be exposed.
+  "forwardPorts": [31415],
+  "portsAttributes": {
+    "31415": {
+      "label": "Foundry MCP bridge (browser -> backend)",
+      "onAutoForward": "silent"
+    }
+  },
   "remoteUser": "node",
   "mounts": [
     "source=claude-code-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
