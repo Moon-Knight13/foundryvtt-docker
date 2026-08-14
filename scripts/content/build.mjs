@@ -15,12 +15,14 @@ import { compilePack } from '@foundryvtt/foundryvtt-cli';
 // changes so the skill can detect stale consumer copies.
 export const TOOLING_VERSION = 1;
 
+// `plural` is the human label shown in Foundry's compendium sidebar — naive
+// `${type}s` would read "JournalEntrys" / "RollTables".
 export const COLLECTIONS = {
-  actors:   { key: 'actors',  type: 'Actor' },
-  items:    { key: 'items',   type: 'Item' },
-  journals: { key: 'journal', type: 'JournalEntry' },
-  scenes:   { key: 'scenes',  type: 'Scene' },
-  tables:   { key: 'tables',  type: 'RollTable' },
+  actors:   { key: 'actors',  type: 'Actor',        plural: 'Actors' },
+  items:    { key: 'items',   type: 'Item',         plural: 'Items' },
+  journals: { key: 'journal', type: 'JournalEntry', plural: 'Journals' },
+  scenes:   { key: 'scenes',  type: 'Scene',        plural: 'Scenes' },
+  tables:   { key: 'tables',  type: 'RollTable',    plural: 'Roll Tables' },
 };
 
 const REQUIRED_FIELDS = {
@@ -207,6 +209,7 @@ export async function main({
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const argv = process.argv.slice(2);
   let configPath = DEFAULT_CONFIG_PATH;
+  let srcRoot;
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--config') {
       const p = argv[++i];
@@ -215,12 +218,22 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
         process.exit(1);
       }
       configPath = path.resolve(p);
+    } else if (argv[i] === '--src') {
+      // Source trees do not have to live in this repo. A game whose notes are
+      // Obsidian-synced can keep its module sources beside them and build from
+      // there; the repo stays the pipeline, not the content.
+      const p = argv[++i];
+      if (!p) {
+        console.error('--src requires a path');
+        process.exit(1);
+      }
+      srcRoot = path.resolve(p);
     } else {
       console.error(`Unknown argument: ${argv[i]}`);
       process.exit(1);
     }
   }
-  main({ configPath })
+  main({ configPath, srcRoot })
     .then(({ counts, config }) => {
       console.log(`Built ${config.id}:`, counts);
     })
@@ -237,7 +250,7 @@ export function moduleManifest(builtTypes, config) {
   const labelPrefix = config.packLabelPrefix ?? config.title;
   const packs = builtTypes.map(src => [src, COLLECTIONS[src]]).map(([src, c]) => ({
     name: src,
-    label: `${labelPrefix} ${c.type}s`,
+    label: `${labelPrefix} ${c.plural}`,
     path: `packs/${src}`,
     type: c.type,
     ...(config.system ? { system: config.system } : {}),

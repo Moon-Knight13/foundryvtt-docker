@@ -86,6 +86,49 @@ carries no note content and stays out of git.
   by the container's runtime UID or writes fail. Restart the Foundry stack
   (`docker compose up -d`) to apply.
 
+### This repo is the pipeline, not the content
+
+**Do not commit a game's content here.** Actors, journals, scenes, items, tables
+and map specs belong beside that game's Obsidian notes, where they are already
+synced:
+
+```text
+03 Oneshots/<Game>/Foundry/
+├── <slug>.config.json      # omit "srcDir" — it resolves under content/
+├── maps/                   # render_map.py specs
+└── src/{actors,items,journals,scenes,tables}/
+```
+
+`scripts/content/new-game.sh <slug>` scaffolds that whole layout — vault notes
+and Foundry sources together — and prints a definition-of-done checklist. Build
+without moving anything into the repo:
+
+```bash
+node scripts/content/build.mjs \
+  --config "<vault>/03 Oneshots/<Game>/Foundry/<slug>.config.json" \
+  --src    "<vault>/03 Oneshots/<Game>/Foundry/src"
+```
+
+Only **process** changes get committed here: tooling, docs, vault-skeleton
+templates. Committing game content duplicates a source of truth that Obsidian
+already syncs.
+
+The older in-repo layout still works (`new-game.sh --in-repo`), and
+`content/src-mourncastle/` plus the `content/src/` seed predate this and are
+deliberately left alone. See `docs/CONTENT_AUTHORING.md` for both models.
+
+### A game is more than its compendium
+
+The deliverable is the **vault folder**, not the module. A module that builds
+cleanly and a game that is ready to run are different things — the full manifest
+is under *Definition of done* in
+`examples/vault-skeleton/00 Index/Running a new game.md`, and `new-game.sh`
+creates every piece as a stub so a gap is visible rather than remembered.
+
+Vault notes are the source of truth; the Foundry JSON is a projection of them.
+Author the notes first and port once at packaging — never hand-maintain both
+copies of an NPC.
+
 ## Repo layout & where things live
 
 - `compose.yml` — the FoundryVTT stack. Live user data (worlds, modules,

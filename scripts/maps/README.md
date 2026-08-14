@@ -144,6 +144,31 @@ Notes are the place for secrets/hazards; they never appear on the Player map.
 optional. Arch features additionally bake a static moonlight wedge into the PNG
 itself.
 
+## Where specs live
+
+`examples/` holds reference specs for the tool itself. A real game's specs
+belong **with that game**, not in this repo — alongside its Obsidian notes, e.g.
+`03 Oneshots/<Game>/Foundry/maps/<map>.json`. Point `--scenes-dir` at the game's
+`Foundry/src/scenes/` so the generated Scene lands beside the rest of its
+sources:
+
+```bash
+scripts/maps/map-to-scene.sh "<vault>/<Game>/Foundry/maps/<map>.json" <slug> \
+  --outdir "<vault>/<Game>/Assets/Maps" \
+  --background "DnD/<Game>/Assets/Maps/<Name> - Player.png" \
+  --scenes-dir "<vault>/<Game>/Foundry/src/scenes"
+```
+
+Rendered PNGs and `.dd2vtt` go to the game's `Assets/Maps/` under the vault
+mount, where Foundry can serve them.
+
+Two things bite when authoring a spec:
+
+- `size` is a **radius** in grid units, not a diameter. `size: 3` is six squares
+  across.
+- An unrecognised `type` silently falls back to a labelled disc. Stick to the
+  feature table above; use `marker` for anything decorative.
+
 ## Example
 
 `examples/belfry.json` reproduces the original belfry (octagon bell tower with

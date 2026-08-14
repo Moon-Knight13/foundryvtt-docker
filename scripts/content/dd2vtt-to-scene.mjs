@@ -110,11 +110,15 @@ export function sceneFromDd2vtt(dd, opts = {}) {
   const PADDING = 0.25;
   const offsetX = Math.ceil((PADDING * width) / ppg) * ppg;
   const offsetY = Math.ceil((PADDING * height) / ppg) * ppg;
+  // Grid-unit coords times ppg accumulate float noise (1267.1999999999998).
+  // Sub-pixel precision is meaningless for placeables, and the long digit runs
+  // trip secret-scanning heuristics in the committed JSON.
+  const px = n => Math.round(n * 100) / 100;
   const shiftWall = w => ({
     ...w,
-    c: [w.c[0] + offsetX, w.c[1] + offsetY, w.c[2] + offsetX, w.c[3] + offsetY],
+    c: [px(w.c[0] + offsetX), px(w.c[1] + offsetY), px(w.c[2] + offsetX), px(w.c[3] + offsetY)],
   });
-  const shiftLight = l => ({ ...l, x: l.x + offsetX, y: l.y + offsetY });
+  const shiftLight = l => ({ ...l, x: px(l.x + offsetX), y: px(l.y + offsetY) });
 
   const walls = [
     ...wallsFromLOS(dd.line_of_sight, ppg),
@@ -176,11 +180,19 @@ export function parseArgs(argv) {
 
 export async function convertFile(input, opts) {
   const dd = JSON.parse(await readFile(input, 'utf8'));
+  const sortKeys = (_key, value) =>
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+      : value;
+
   const name = opts.name ?? path.basename(input).replace(/\.dd2vtt$/i, '');
   const scene = sceneFromDd2vtt(dd, { ...opts, name });
   const out = opts.out ?? path.join(process.cwd(), `${name}.json`);
   await mkdir(path.dirname(out), { recursive: true });
-  await writeFile(out, JSON.stringify(scene, null, 2));
+  // Match pre-commit's pretty-format-json (sorted keys, 2-space indent,
+  // trailing newline) so a freshly generated scene commits without the hook
+  // rewriting it and failing the first attempt.
+  await writeFile(out, `${JSON.stringify(scene, sortKeys, 2)}\n`);
   return { out, scene };
 }
 
