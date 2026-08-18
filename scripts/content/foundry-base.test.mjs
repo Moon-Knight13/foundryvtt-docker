@@ -16,6 +16,7 @@ import {
   addToCore,
   removeFromCore,
   sharedPrefix,
+  pullPlan,
   REPO_ROOT,
 } from './foundry-base.mjs';
 
@@ -305,6 +306,25 @@ test('removeFromCore drops a module and reports a no-op honestly', () => {
   const nothing = removeFromCore(BASE, 'never-there');
   assert.equal(nothing.removed, false);
   assert.equal(nothing.core.length, 1);
+});
+
+test('pull-games gates every game on art coverage between build and sync', () => {
+  // The gate BETWEEN build and sync is the point: an unproven module must not
+  // be able to reach Foundry through the batch path.
+  const plan = pullPlan({ config: '/v/g/lamia.config.json', src: '/v/g/src' });
+  assert.equal(plan.length, 3);
+  const scripts = plan.map(([cmd, args]) => path.basename(cmd === 'node' ? args[0] : cmd));
+  assert.deepEqual(scripts, ['build.mjs', 'art-coverage.mjs', 'sync-content.sh']);
+
+  const gateArgs = plan[1][1];
+  assert.ok(gateArgs.includes('--strict'), 'the batch path is the enforcing one');
+  assert.ok(gateArgs.includes('/v/g/lamia.config.json'));
+  assert.ok(gateArgs.includes('/v/g/src'), 'vault-hosted games pass their src through');
+
+  // A plain-string manifest entry (config only) still gets all three steps.
+  const plain = pullPlan('/v/g/lamia.config.json');
+  assert.equal(plain.length, 3);
+  assert.ok(!plain[1][1].includes('--src'));
 });
 
 test('sharedPrefix powers a "did you mean" that actually fires on typos', () => {

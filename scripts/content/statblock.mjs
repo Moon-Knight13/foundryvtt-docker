@@ -165,6 +165,16 @@ export function open5eFor(edition, referenceDir) {
   return null;
 }
 
+/** Same routing for the dnd5e compendium cache, which carries the token ART
+ * that Open5e lacks. The note names its edition; art inheritance must not
+ * need a hand-passed --srd once the cache exists. */
+export function srdFor(edition, referenceDir) {
+  const dir = referenceDir ?? path.join(REPO_ROOT, 'content', 'reference');
+  if (edition === '5.2') return path.join(dir, 'srd-52.json');
+  if (edition === '5.1') return path.join(dir, 'srd-51.json');
+  return null;
+}
+
 /** "SRD 5.1 (CC-BY-4.0) — Lamia" -> { edition: '5.1', base: 'Lamia' } */
 export function parseSource(source) {
   if (typeof source !== 'string') return {};
@@ -477,8 +487,15 @@ export async function compileNote(notePath, opts = {}) {
   // including a numeric AC for armour-wearing creatures, which the compendium
   // derives at runtime and therefore cannot provide.
   let art;
-  if (opts.srd) {
-    art = JSON.parse(await readFile(opts.srd, 'utf8')).creatures?.[base];
+  const srdPath = opts.srd ?? srdFor(edition, opts.reference);
+  if (srdPath) {
+    try {
+      art = JSON.parse(await readFile(srdPath, 'utf8')).creatures?.[base];
+    } catch (err) {
+      // The cache is optional unless explicitly requested — but a hand-passed
+      // --srd that cannot be read is an operator error, not a fallback.
+      if (opts.srd) throw err;
+    }
   }
 
   let reference = art;

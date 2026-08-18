@@ -21,6 +21,7 @@ import {
   parseArgs,
   compileNote,
   open5eFor,
+  srdFor,
   SKILL_KEYS,
   PLACEHOLDER_IMG,
 } from './statblock.mjs';
@@ -399,6 +400,32 @@ test('a bespoke named NPC never inherits a silhouette from the map', async () =>
   const { actor, warnings } = await compileNote(note, { artMap: mapPath });
   assert.equal(actor.img, PLACEHOLDER_IMG);
   assert.ok(warnings.some(w => w.includes(PLACEHOLDER_IMG)));
+});
+
+test('srdFor routes to the compendium cache matching the cited edition', async () => {
+  // Same doctrine as open5eFor: the note names its edition; art inheritance
+  // must not need a hand-passed --srd once the cache exists.
+  assert.match(srdFor('5.1', '/ref') ?? '', /srd-51\.json$/);
+  assert.match(srdFor('5.2', '/ref') ?? '', /srd-52\.json$/);
+  assert.equal(srdFor(undefined, '/ref'), null);
+});
+
+test('compileNote inherits SRD art without an explicit --srd flag', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'statblock-srdfor-'));
+  await writeFile(
+    path.join(dir, 'srd-51.json'),
+    JSON.stringify({
+      edition: '5.1',
+      creatures: { Goblin: { name: 'Goblin', tokenSrc: 'DnD/06 Assets/Tokens/srd/Goblin.webp' } },
+    }),
+  );
+  const note = path.join(dir, 'Gate Goblin.md');
+  await writeFile(
+    note,
+    '```statblock\nname: Gate Goblin\nsource: "SRD 5.1 (CC-BY-4.0) — Goblin"\ntype: humanoid\nac: 15\nhp: 7\ncr: 0.25\nstats: [8, 14, 10, 10, 8, 8]\n```\n',
+  );
+  const { actor } = await compileNote(note, { reference: dir });
+  assert.equal(actor.img, 'DnD/06 Assets/Tokens/srd/Goblin.webp');
 });
 
 test('an explicit image: still beats every map tier', async () => {
