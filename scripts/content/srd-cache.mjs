@@ -142,29 +142,93 @@ async function readDocs(dir) {
  * one file serves both the Obsidian card and the Foundry token. Returns the
  * number copied. Missing art is skipped, not fatal — some entries ship none.
  */
+/**
+ * Foundry token art may be a WILDCARD path, not a filename.
+ *
+ * `.../tokens/awakened-shrub-*.webp` is how a creature declares randomised
+ * token art: Foundry expands it at runtime and picks one. copyFile can never
+ * resolve it, so treating these as "file missing" reports a format as a fault.
+ */
+export function isWildcard(src) {
+  return typeof src === 'string' && src.includes('*');
+}
+
+/** Expand a wildcard token path against the installed data directory. */
+async function expandWildcard(dataDir, src) {
+  const abs = path.join(dataDir, 'Data', src);
+  const dir = path.dirname(abs);
+  const pattern = path.basename(abs);
+  // Only `*` is meaningful in a Foundry token path; anchor the rest literally.
+  const rx = new RegExp(
+    `^${pattern
+      .split('*')
+      .map(p => p.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
+      .join('.*')}$`,
+  );
+  try {
+    return (await readdir(dir))
+      .filter(f => rx.test(f))
+      .sort()
+      .map(f => path.join(dir, f));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Copy each creature's token art into `artDir`.
+ *
+ * Outcomes are counted separately because they mean different things and only
+ * some are actionable:
+ *
+ *   placeholder  the pack ships no art for this creature (Foundry's icon)
+ *   wildcard     randomised art whose files are not installed — usually a
+ *                premium module the operator does not own
+ *   missing      a literal path that simply is not there
+ *   copied       done
+ */
 export async function copyArt(index, dataDir, artDir) {
   await mkdir(artDir, { recursive: true });
-  // Three outcomes, and lumping them together made "copied 0" unreadable: a
-  // creature can carry Foundry's placeholder icon (the pack ships no art for
-  // it), or name a real file that is not installed (the system ships only some
-  // of the art it references), or copy fine. Only the middle case is worth
-  // acting on, so they are counted separately.
-  const stats = { copied: 0, placeholder: 0, missing: 0, missingExamples: [] };
+  const stats = {
+    copied: 0,
+    placeholder: 0,
+    wildcard: 0,
+    missing: 0,
+    missingExamples: [],
+    wildcardExamples: [],
+    modules: new Set(),
+  };
+
   for (const rec of Object.values(index)) {
     const src = rec.tokenSrc;
     if (!src || src.startsWith('icons/')) {
       stats.placeholder++;
       continue;
     }
+
+    let sources = [];
+    if (isWildcard(src)) {
+      // Resolvable for anyone who owns the module the art lives in.
+      sources = await expandWildcard(dataDir, src);
+      if (!sources.length) {
+        stats.wildcard++;
+        if (stats.wildcardExamples.length < 3) stats.wildcardExamples.push(src);
+        if (src.startsWith('modules/')) stats.modules.add(src.split('/')[1]);
+        continue;
+      }
+    } else {
+      sources = [path.join(dataDir, 'Data', src)];
+    }
+
     try {
-      await copyFile(
-        path.join(dataDir, 'Data', src),
-        path.join(artDir, `${rec.name}${path.extname(src)}`),
-      );
+      // One image per creature is enough for a statblock card, even where
+      // Foundry would randomise between several at the table.
+      await copyFile(sources[0], path.join(artDir, `${rec.name}${path.extname(sources[0])}`));
       stats.copied++;
     } catch {
       stats.missing++;
       if (stats.missingExamples.length < 3) stats.missingExamples.push(src);
+      if (src.startsWith('modules/')) stats.modules.add(src.split('/')[1]);
     }
   }
   return stats;
@@ -176,10 +240,19 @@ export function describeArt(stats, artDir) {
   if (stats.placeholder) {
     parts.push(`  ${stats.placeholder} creature(s) ship no art (Foundry placeholder icon)`);
   }
+  if (stats.wildcard) {
+    parts.push(
+      `  ${stats.wildcard} use randomised art whose files are not installed, e.g. ${stats.wildcardExamples.join(', ')}`,
+    );
+  }
   if (stats.missing) {
     parts.push(
       `  ${stats.missing} reference art that is not installed, e.g. ${stats.missingExamples.join(', ')}`,
     );
+  }
+  const modules = [...(stats.modules ?? [])];
+  if (modules.length) {
+    parts.push(`  that art lives in module(s) you do not have installed: ${modules.join(', ')}`);
   }
   return parts.join('\n');
 }

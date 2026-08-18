@@ -23,7 +23,10 @@ languages), and the *path* to each creature's token image.
 
 **Not cached:** descriptive text, trait and action prose, or any image bytes.
 
-The token art these files reference ships with the dnd5e system and stays where
+The token art these files reference is mostly NOT present: measured on a real
+install, 0 of 346 SRD 5.1 creatures and only 14 of 431 SRD 5.2 creatures have
+usable art, with a further 34 pointing into the paid `dnd-monster-manual`
+module. What art does exist ships with the dnd5e system and stays where
 the system installed it. `srd-cache.mjs --art` copies it into a vault purely so
 Obsidian can render a statblock card locally. The dnd5e system credits that art
 to [Forgotten Adventures](https://www.forgotten-adventures.net/) — check their

@@ -363,6 +363,28 @@ indexed because a statblock note cites which one it was written from
 genuinely differ. No network access and no running Foundry server: it opens the
 compendium LevelDB directly.
 
+### How much SRD art actually exists
+
+Measured against a real dnd5e install (system 5.3.3), and it is far less than
+the phrase "inherit the SRD token art" suggests:
+
+| Pack | Creatures | Copied | Ship no art | Randomised art not installed |
+| --- | --- | --- | --- | --- |
+| `dnd5e.monsters` (SRD 5.1) | 346 | **0** | 346 | 0 |
+| `dnd5e.actors24` (SRD 5.2) | 431 | **14** | 383 | 34 |
+
+The legacy SRD pack ships **no token art at all**. The 2024 pack ships a little,
+and points at rather more inside `modules/dnd-monster-manual/` — the paid
+official module — using *wildcard* paths like
+`.../tokens/awakened-shrub-*.webp`, which Foundry expands at runtime to
+randomise a token. `srd-cache.mjs` expands those too, so they resolve for anyone
+who owns that module and are reported as unavailable for anyone who does not.
+
+**So SRD inheritance is a bonus, not the plan.** For a named NPC, expect to
+supply art yourself in the game's `Assets/Tokens/` and point `image:` at it. The
+compiler's placeholder warning is there precisely because most creatures will
+not inherit anything.
+
 `--art` also copies each creature's token image into the vault. This is not
 optional decoration — a `systems/dnd5e/tokens/...` path resolves inside Foundry
 only, so without a real file in the vault the printed Fantasy Statblocks card
