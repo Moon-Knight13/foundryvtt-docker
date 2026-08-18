@@ -116,7 +116,7 @@ export async function loadConfig(configPath = DEFAULT_CONFIG_PATH) {
   return {
     description: 'Campaign content authored as code.',
     version: '1.0.0',
-    compatibility: { minimum: '12', verified: '13' },
+    compatibility: { minimum: '12', verified: '14' },
     ownership: { PLAYER: 'OBSERVER', ASSISTANT: 'OWNER' },
     ...raw,
   };

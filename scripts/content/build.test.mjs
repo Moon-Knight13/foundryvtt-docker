@@ -99,6 +99,10 @@ test('loadConfig applies defaults and validates id/title', async () => {
   assert.equal(config.version, '1.0.0');
   assert.deepEqual(config.ownership, { PLAYER: 'OBSERVER', ASSISTANT: 'OWNER' });
   assert.equal(config.system, undefined);
+  // Foundry 14 is the verified target: every pack this repo ships was imported
+  // and read back on 14.364 (dnd5e 5.3.3). CONFIG above deliberately keeps an
+  // explicit '13' so the override path stays covered too.
+  assert.deepEqual(config.compatibility, { minimum: '12', verified: '14' });
 
   await writeFile(file, JSON.stringify({ id: 'Bad Id', title: 'X' }));
   await assert.rejects(() => loadConfig(file), /kebab-case/);

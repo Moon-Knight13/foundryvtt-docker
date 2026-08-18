@@ -113,7 +113,7 @@ $SYSTEM_LINE
   "srcDir": "$SRC_DIR",
   "version": "1.0.0",
   "packLabelPrefix": "$TITLE",
-  "compatibility": { "minimum": "12", "verified": "13" },
+  "compatibility": { "minimum": "12", "verified": "14" },
   "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
 }
 EOF
@@ -177,7 +177,7 @@ cat >"$GAME_DIR/Foundry/$SLUG.config.json" <<EOF
 $SYSTEM_LINE
   "version": "1.0.0",
   "packLabelPrefix": "$TITLE",
-  "compatibility": { "minimum": "12", "verified": "13" },
+  "compatibility": { "minimum": "12", "verified": "14" },
   "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
 }
 EOF
