@@ -11,6 +11,7 @@ import {
   assertDataDir,
   explainArtError,
   describeArt,
+  isWildcard,
   PACKS,
 } from './srd-cache.mjs';
 
@@ -245,4 +246,74 @@ test('describeArt stays quiet when there is nothing to explain', () => {
     '/vault/tokens',
   );
   assert.equal(clean.split('\n').length, 1, 'no noise when every creature copied');
+});
+
+test('isWildcard recognises randomised token paths', () => {
+  // Foundry declares randomised token art with a glob, not a filename:
+  // ".../tokens/awakened-shrub-*.webp". copyFile can never resolve one, so
+  // reporting these as "file missing" reports a format as a fault.
+  assert.equal(isWildcard('modules/x/assets/tokens/awakened-shrub-*.webp'), true);
+  assert.equal(isWildcard('systems/dnd5e/tokens/humanoid/Bandit.webp'), false);
+  assert.equal(isWildcard(undefined), false);
+});
+
+test('copyArt expands a wildcard when the art is actually installed', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'srd-wild-'));
+  const data = path.join(dir, 'data');
+  await mkdir(path.join(data, 'Data', 'modules', 'have-it', 'tokens'), { recursive: true });
+  await writeFile(path.join(data, 'Data', 'modules/have-it/tokens/wolf-a.webp'), 'x');
+  await writeFile(path.join(data, 'Data', 'modules/have-it/tokens/wolf-b.webp'), 'x');
+
+  const artDir = path.join(dir, 'tokens');
+  const stats = await copyArt(
+    { Wolf: { name: 'Wolf', tokenSrc: 'modules/have-it/tokens/wolf-*.webp' } },
+    data,
+    artDir,
+  );
+
+  // One image per creature is enough for a printed card, even where Foundry
+  // would randomise between several at the table.
+  assert.equal(stats.copied, 1);
+  assert.equal(stats.wildcard, 0);
+  assert.deepEqual(await readdir(artDir), ['Wolf.webp']);
+});
+
+test('copyArt separates uninstalled randomised art from a plain missing file', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'srd-wild2-'));
+  const data = path.join(dir, 'data');
+  await mkdir(path.join(data, 'Data'), { recursive: true });
+
+  const stats = await copyArt(
+    {
+      Shrub: {
+        name: 'Awakened Shrub',
+        tokenSrc: 'modules/dnd-monster-manual/assets/tokens/awakened-shrub-*.webp',
+      },
+      Ghost: { name: 'Ghost', tokenSrc: 'systems/dnd5e/tokens/gone.webp' },
+    },
+    data,
+    path.join(dir, 'tokens'),
+  );
+
+  assert.equal(stats.wildcard, 1, 'the glob is a wildcard, not a missing file');
+  assert.equal(stats.missing, 1, 'the literal path really is missing');
+  // Naming the module is the actionable part: it is a premium one to buy or not.
+  assert.ok([...stats.modules].includes('dnd-monster-manual'));
+});
+
+test('describeArt names the module the missing art belongs to', () => {
+  const msg = describeArt(
+    {
+      copied: 14,
+      placeholder: 383,
+      wildcard: 34,
+      missing: 0,
+      wildcardExamples: ['modules/dnd-monster-manual/assets/tokens/cat-*.webp'],
+      missingExamples: [],
+      modules: new Set(['dnd-monster-manual']),
+    },
+    '/vault/tokens',
+  );
+  assert.match(msg, /34 use randomised art/);
+  assert.match(msg, /do not have installed: dnd-monster-manual/);
 });
