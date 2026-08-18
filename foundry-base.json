@@ -1,0 +1,117 @@
+{
+  "$comment": [
+    "Golden base: the pinned system and modules a rebuilt Foundry install needs.",
+    "Nothing here floats. 'Always latest' is the documented hazard, not the goal",
+    "(see docs/PROJECT.md on foundry-mcp module/server drift). Move a pin with",
+    "`node scripts/content/foundry-base.mjs update`, review the diff, commit it.",
+    "",
+    "Versions and manifest URLs are marked TODO where they must come from a real",
+    "install rather than a guess: a wrong module id fails at rebuild time, which",
+    "is the worst time. Fill them with:",
+    "  node scripts/content/foundry-base.mjs capture <world>",
+    "and promote what belongs into 'core' below."
+  ],
+  "core": [
+    {
+      "id": "foundry-mcp-bridge",
+      "manifest": "https://raw.githubusercontent.com/adambdooley/foundry-vtt-mcp/master/packages/foundry-module/module.json",
+      "note": "Pin must stay in step with MCP_VERSION in scripts/setup-mcp.sh.",
+      "title": "Foundry MCP Bridge",
+      "version": "0.8.2"
+    },
+    {
+      "id": "dd-import",
+      "manifest": "TODO",
+      "title": "Universal Battlemap Importer",
+      "version": "TODO"
+    },
+    {
+      "id": "ddb-importer",
+      "manifest": "TODO",
+      "title": "D&D Beyond Importer",
+      "version": "TODO"
+    },
+    {
+      "id": "TODO-obsidian-bridge",
+      "manifest": "TODO",
+      "title": "SoSly Obsidian Bridge",
+      "version": "TODO"
+    },
+    {
+      "id": "lib-wrapper",
+      "manifest": "TODO",
+      "note": "Dependency of several below; pinned so it cannot float.",
+      "title": "libWrapper",
+      "version": "TODO"
+    },
+    {
+      "id": "socketlib",
+      "manifest": "TODO",
+      "note": "Dependency of several below; pinned so it cannot float.",
+      "title": "socketlib",
+      "version": "TODO"
+    },
+    {
+      "id": "dice-so-nice",
+      "manifest": "TODO",
+      "note": "Renders 3D dice in WebGL on every client \u2014 a lag lever if the canvas-off test points at client rendering.",
+      "title": "Dice So Nice!",
+      "version": "TODO"
+    },
+    {
+      "id": "TODO-chat-commander",
+      "manifest": "TODO",
+      "title": "Chat Commander",
+      "version": "TODO"
+    },
+    {
+      "id": "TODO-chat-log-prune",
+      "manifest": "TODO",
+      "title": "Chat Log Prune",
+      "version": "TODO"
+    },
+    {
+      "id": "TODO-dice-tray",
+      "manifest": "TODO",
+      "title": "Dice Tray",
+      "version": "TODO"
+    },
+    {
+      "id": "TODO-less-chat",
+      "manifest": "TODO",
+      "title": "Less Chat",
+      "version": "TODO"
+    },
+    {
+      "id": "TODO-prime-performance",
+      "manifest": "TODO",
+      "title": "Prime Performance",
+      "version": "TODO"
+    },
+    {
+      "id": "TODO-enhancedcombathud",
+      "manifest": "TODO",
+      "title": "Argon / Enhanced Combat HUD",
+      "version": "TODO"
+    },
+    {
+      "id": "TODO-combat-tracker-dock",
+      "manifest": "TODO",
+      "title": "Carousel Combat Tracker",
+      "version": "TODO"
+    }
+  ],
+  "deliberatelyExcluded": {
+    "fa-battlemaps": "Large art asset pack; would bloat every snapshot. Install on demand.",
+    "mad-freecontent": "As above.",
+    "multi-token-edit": "Bulk placeable editor. Its main use is fixing up hand-built scenes; this pipeline generates walls, lights and notes from the map spec instead. Its presets are world-scoped and would not survive a rebuild anyway.",
+    "scene-packer": "Packages scenes with their dependencies \u2014 overlaps what the compendium pipeline already does."
+  },
+  "games": [],
+  "system": {
+    "id": "dnd5e",
+    "manifest": "https://github.com/foundryvtt/dnd5e/releases/latest/download/system.json",
+    "title": "D&D Fifth Edition",
+    "version": "5.3.3"
+  }
+}

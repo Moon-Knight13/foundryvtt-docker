@@ -1,48 +1,111 @@
 # Rebuilding FoundryVTT from durable sources
 
-FoundryVTT is treated as a **transient container**. All durable truth lives
-outside its world DB:
+FoundryVTT is treated as a **transient container**. Durable truth lives outside
+its world DB:
 
 - **Obsidian vault** (`~/Documents/DnD`, bind-mounted into Foundry at
-  `/data/Data/DnD`) — prose/notes, assets, map `.dd2vtt` files.
-- **Git content module(s)** — `content/src/*.json` compiled to a compendium
-  (see `CONTENT_AUTHORING.md`).
+  `/data/Data/DnD`) — prose, notes, assets, map specs, and the ```statblock
+  fences that Foundry actors are compiled from.
+- **Git content module(s)** — built from the vault (see `CONTENT_AUTHORING.md`).
 - **D&D Beyond** — player characters.
 
-So a world can be wiped and rebuilt without losing anything unique. Only
-**live-session state** (token positions, fog, combat tracker, the active scene)
-lives in the world, and that is meant to be transient.
+So a world can be wiped and rebuilt. But "transient" is not the same as "free",
+and the section below says exactly what a rebuild costs.
 
-## Foundry-side modules (install once)
+## What actually survives a wipe
+
+Foundry has two kinds of compendium, and the difference decides what you lose.
+
+| Kind | Lives in | Survives a world wipe? |
+| --- | --- | --- |
+| **Module** compendium (`dnd5e.monsters`, `lure-of-the-lamia-oneshot.actors`) | the module folder on disk | **Yes** |
+| **World** compendium (`world.ddb-<world>-ddb-spells`) | inside the world folder | **No** |
+
+Note the world id baked into that second pack name. All twelve
+`world.ddb-*` packs that ddb-importer creates are world-scoped, so a rebuild
+costs a **full ddb-importer re-run**. That is acceptable — D&D Beyond is the
+source of truth — but it is a step, not a freebie, and it used to be missing
+from this page.
+
+Genuinely transient, and fine to lose: token positions, fog of war, the combat
+tracker, the active scene.
+
+## The golden base
+
+`foundry-base.json` pins the system and the core module set;
+`scripts/content/foundry-base.mjs` acts on it. Run these on the **host** — the
+devcontainer has no docker socket and does not mount the Foundry data directory.
+
+```bash
+node scripts/content/foundry-base.mjs capture <world>   # read a live world into a pinned manifest
+node scripts/content/foundry-base.mjs provision         # install the pinned system + modules
+node scripts/content/foundry-base.mjs update [id...]    # move pins forward, deliberately
+node scripts/content/foundry-base.mjs snapshot          # copy the data dir as a restore point
+node scripts/content/foundry-base.mjs restore --yes     # put the snapshot back
+node scripts/content/foundry-base.mjs pull-games        # build + sync every game in the manifest
+```
+
+**Start with `capture`.** Do not hand-write module ids — a wrong one fails at
+rebuild time, which is the worst time. `capture` reads the world's
+`core.moduleConfiguration`, which is the only complete source: listing
+compendium packs shows only modules that ship packs, so every library and
+behaviour module (lib-wrapper, socketlib, most quality-of-life modules) is
+invisible that way.
+
+Capture reports, rather than decides:
+
+- modules **active in the world but not in core** — promote or ignore, but see
+  them first. Dropping `monks-active-tiles` silently breaks every scene built on
+  active tiles.
+- modules **in core but not enabled** in that world.
+
+**Pins do not float.** "Always latest" is the hazard this exists to prevent —
+`docs/PROJECT.md` records foundry-mcp module/server drift needing a deliberate
+`MCP_VERSION` bump. `update` resolves the newest version, rewrites the manifest,
+and leaves it in the working tree to review and commit. It also warns when
+`foundry-mcp-bridge` moves, because that pin and `MCP_VERSION` in
+`scripts/setup-mcp.sh` are the same fact.
+
+**Snapshots refuse to write inside the repo.** The data directory contains
+`license.json` and the admin key; a snapshot under the repo tree is one
+`git add -A` away from committing a licence key.
+
+## Foundry-side modules
 
 | Module | Role |
 | --- | --- |
-| **SoSly Obsidian Bridge** | journals ↔ Obsidian vault, **bidirectional** |
-| **Universal Battlemap Importer** (`dd-import`, moo-man) | `.dd2vtt` → scenes with walls/lights/doors |
+| **SoSly Obsidian Bridge** | journals ↔ Obsidian vault, bidirectional |
+| **Universal Battlemap Importer** (`dd-import`) | `.dd2vtt` → scenes with walls/lights/doors |
 | **ddb-importer** | D&D Beyond characters → Foundry actors |
-| your **content compendium module(s)** | built from `content/src/` (this repo) |
+| **foundry-mcp-bridge** | live-world tooling for Claude Code |
+| your **content compendium module(s)** | built from the vault |
 
-## Rebuild recipe
+## Rebuild drill
 
-1. **Fresh / wiped world.**
-2. **Objects:** enable the content compendium module(s) → NPCs / items / roll
-   tables (and any scene stubs) are available. (Build+sync from the repo first:
-   `node scripts/content/build.mjs [--config …]` then, on the host,
-   `./scripts/content/sync-content.sh [--config …]`. If Foundry runs in a
-   container, `docker compose restart` after syncing — it opens compendium packs
-   at container start, so a reload alone won't pick up the swapped LevelDB.)
-3. **Notes:** run the SoSly Obsidian Bridge import → vault notes become Foundry
-   journals. Leave it on for bidirectional sync (Foundry edits flow back to the
-   vault).
-4. **Maps:** for each map, Universal Battlemap Importer → point at the vault
-   `.dd2vtt` (`/data/Data/DnD/<game>/Assets/Maps/…`) → a scene with walls + lights.
-   *Or* ship the map as a compendium **Scene** (`scripts/content/dd2vtt-to-scene.mjs`
-   → build) so it imports with the module in step 2 — see `CONTENT_AUTHORING.md`
-   "Scenes as code".
-5. **Player characters:** ddb-importer → import each PC from D&D Beyond.
+Run this against the real stack — there is no second instance (see
+`docs/PROJECT.md`, "Testing changes against the live stack"). The snapshot is
+the undo. Do it **between sessions, not on game night**: Foundry is down while
+it runs.
 
-Assets (images/handouts) resolve automatically via the `/data/Data/DnD` mount —
-nothing is copied into the world.
+1. `foundry-base.mjs snapshot` — and confirm it exists before wiping anything.
+2. Wipe the world (or the data dir), then `foundry-base.mjs provision`.
+3. Launch Foundry, create a world, `foundry-base.mjs pull-games`.
+4. Enable the modules; import compendium packs with **"Keep Document IDs"**
+   ticked (see `CONTENT_AUTHORING.md`, *Rules that bite* — without it, scene map
+   pins render but open nothing).
+5. Re-run **ddb-importer**: its packs are world-scoped and did not survive.
+6. Run the SoSly bridge import to bring vault notes back as journals.
+7. **Check both surfaces**, because a game that imports is not the same as a
+   game that is ready to run:
+   - *Foundry* — scenes carry walls and lights, actors carry real art rather
+     than `mystery-man.svg`, and a GM map pin opens its journal page.
+   - *In person* — every NPC note still renders a Fantasy Statblocks card with a
+     portrait, handouts show their art full-size, and the Player map prints.
+8. On success the rebuild **is** the new state. On failure,
+   `foundry-base.mjs restore --yes`.
+
+Assets resolve through the `/data/Data/DnD` mount — nothing is copied into the
+world.
 
 ## Guardrails
 
@@ -52,11 +115,7 @@ nothing is copied into the world.
   stop.
 - **A journal is owned by one pipe** — the bridge (prose) **or** the compendium
   build (structured), never both.
-- **Keep the mount path stable** (`/data/Data/DnD`). Foundry scene/journal image
+- **Keep the mount path stable** (`/data/Data/DnD`). Scene and journal image
   references resolve against it; changing it breaks links on rebuild.
-
-## Optional: a world "setup" macro
-
-Most rebuild steps are UI clicks. A GM macro can collapse steps 2–3 (enable the
-content module, import its packs, trigger a bridge sync) into one run. Left as a
-per-world convenience; the recipe above is the source of truth.
+- **One licence, one active server.** There is no parallel test instance to fall
+  back on, which is why the snapshot comes first.

@@ -79,3 +79,7 @@ scripts/content/node_modules/
 
 # Sidebar symlink to the Obsidian notes vault (created at container start)
 /DnD
+
+# foundry-base.mjs capture output: one world's enabled modules, written for
+# review before promoting entries into foundry-base.json.
+/foundry-capture-*.json

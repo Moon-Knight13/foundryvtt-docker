@@ -141,9 +141,16 @@ copies of an NPC.
 - `deploy-setup.sh` — interactive environment setup. (The upstream
   image-source tree `src/` was removed — this fork runs the published felddy
   image.)
+- `foundry-base.json` — the pinned system + core module set a rebuilt Foundry
+  install needs. Nothing in it floats; move a pin with
+  `scripts/content/foundry-base.mjs update` and commit the change. See
+  `docs/FOUNDRY_REBUILD.md`.
 - `scripts/` — template foundation scripts (board, day-0) plus project
   scripts: `scripts/ci/*` (CI gates), `scripts/setup-mcp.sh`,
   `scripts/mcp-health.sh`, `scripts/content/*`, `scripts/maps/*`.
+  `scripts/content/foundry-base.mjs` is ops rather than content; it lives there
+  because that is where the Node tooling's `package.json` is, and `pull-games`
+  calls straight into `build.mjs`.
 
 ## Security — hard rules (mirrors .copilot-instructions.md)
 
