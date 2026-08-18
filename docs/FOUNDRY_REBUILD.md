@@ -38,6 +38,7 @@ devcontainer has no docker socket and does not mount the Foundry data directory.
 
 ```bash
 node scripts/content/foundry-base.mjs capture <world>   # read a live world into a pinned manifest
+node scripts/content/foundry-base.mjs promote <capture>  # fill core pins from a capture
 node scripts/content/foundry-base.mjs provision         # install the pinned system + modules
 node scripts/content/foundry-base.mjs update [id...]    # move pins forward, deliberately
 node scripts/content/foundry-base.mjs snapshot          # copy the data dir as a restore point
@@ -57,6 +58,26 @@ docker compose up -d
 
 The same applies to `srd-cache.mjs`, and to `snapshot`/`restore`, which must not
 copy a data directory a live server is writing to.
+
+**Never hand-write module ids.** This is not caution for its own sake: of the
+eight placeholders the first draft of `foundry-base.json` carried, six were
+wrong in ways no amount of care would have caught — Chat Commander is
+`_chatcommands` (leading underscore), Prime Performance is `fvtt-perf-optim`,
+Dice Tray is `dice-calculator`, and Argon is *two* modules
+(`enhancedcombathud` plus `enhancedcombathud-dnd5e`, the second being the half
+that makes it work under dnd5e).
+
+Run `capture`, then `promote` the result:
+
+```bash
+node scripts/content/foundry-base.mjs capture <world>
+node scripts/content/foundry-base.mjs promote foundry-capture-<world>.json
+```
+
+`capture` writes what a world actually has; `promote` copies those versions and
+manifest URLs into `foundry-base.json`. Deciding what belongs in core stays a
+human judgement — copying a version string does not, and hand-copying manifest
+URLs is exactly the transcription this pipeline exists to remove.
 
 **Start with `capture`.** Do not hand-write module ids — a wrong one fails at
 rebuild time, which is the worst time. `capture` reads the world's

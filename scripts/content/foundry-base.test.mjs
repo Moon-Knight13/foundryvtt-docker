@@ -171,3 +171,38 @@ test('assertDataDir explains a missing data dir instead of just reporting it', a
     },
   );
 });
+
+test('mergeCapture overwrites a placeholder manifest rather than keeping it', () => {
+  // The original merge did `pin.manifest || fresh.manifest`, which preserved
+  // "TODO" because a non-empty string is truthy — so a capture could never fill
+  // the very placeholders it exists to resolve.
+  const withPlaceholder = {
+    core: [{ id: '_chatcommands', version: 'TODO', manifest: 'TODO', title: 'Chat Commander' }],
+  };
+  const { core } = mergeCapture(withPlaceholder, {
+    modules: [
+      {
+        id: '_chatcommands',
+        version: '2.0.6',
+        manifest: 'https://example.invalid/_chatcommands.json',
+      },
+    ],
+  });
+  assert.equal(core[0].version, '2.0.6');
+  assert.equal(core[0].manifest, 'https://example.invalid/_chatcommands.json');
+  assert.equal(isInstallable(core[0]), true);
+});
+
+test('mergeCapture still protects a real pinned URL from being overwritten', () => {
+  const pinned = {
+    core: [{ id: 'dd-import', version: '1.0.0', manifest: 'https://example.invalid/pinned.json' }],
+  };
+  const { core } = mergeCapture(pinned, {
+    modules: [
+      { id: 'dd-import', version: '6.1.1', manifest: 'https://example.invalid/different.json' },
+    ],
+  });
+  // Version moves with the capture; the deliberately pinned URL does not.
+  assert.equal(core[0].version, '6.1.1');
+  assert.equal(core[0].manifest, 'https://example.invalid/pinned.json');
+});
