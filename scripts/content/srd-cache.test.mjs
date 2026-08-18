@@ -317,3 +317,73 @@ test('describeArt names the module the missing art belongs to', () => {
   assert.match(msg, /34 use randomised art/);
   assert.match(msg, /do not have installed: dnd-monster-manual/);
 });
+
+test('copyArt counts byte-identical art shared by many creatures as generic, not copied', async () => {
+  // Observed for real: dnd5e 5.3.3 ships one 8231-byte humanoid SVG under
+  // twelve different NPC names (Akra, Aoth, Beiro, ...). Counting those as
+  // "copied 14" reported 14 usable images where there were 2.
+  const dir = await mkdtemp(path.join(tmpdir(), 'srd-art-'));
+  const dataDir = path.join(dir, 'data');
+  const tokens = path.join(dataDir, 'Data', 'systems', 'dnd5e', 'tokens');
+  await mkdir(tokens, { recursive: true });
+  const same = '<svg>one generic silhouette</svg>';
+  for (const n of ['akra', 'aoth', 'beiro']) {
+    await writeFile(path.join(tokens, `${n}.svg`), same);
+  }
+  await writeFile(path.join(tokens, 'octopus.webp'), 'real distinct art');
+
+  const artDir = path.join(dir, 'out');
+  const stats = await copyArt(
+    {
+      Akra: { name: 'Akra', tokenSrc: 'systems/dnd5e/tokens/akra.svg' },
+      Aoth: { name: 'Aoth', tokenSrc: 'systems/dnd5e/tokens/aoth.svg' },
+      Beiro: { name: 'Beiro', tokenSrc: 'systems/dnd5e/tokens/beiro.svg' },
+      Octopus: { name: 'Octopus', tokenSrc: 'systems/dnd5e/tokens/octopus.webp' },
+    },
+    dataDir,
+    artDir,
+  );
+
+  assert.equal(stats.copied, 1, 'only the distinct image counts as real art');
+  assert.equal(stats.generic, 3, 'the shared silhouette is counted honestly');
+  // The files still land in the vault: Obsidian needs SOME file to embed.
+  const files = (await readdir(artDir)).sort();
+  assert.deepEqual(files, ['Akra.svg', 'Aoth.svg', 'Beiro.svg', 'Octopus.webp']);
+});
+
+test('two creatures sharing an image is coincidence, three is a template', async () => {
+  // A pair could legitimately share art (e.g. a swarm and its member); the
+  // generic threshold is >= 3 distinct creatures on one byte-identical file.
+  const dir = await mkdtemp(path.join(tmpdir(), 'srd-art-'));
+  const dataDir = path.join(dir, 'data');
+  const tokens = path.join(dataDir, 'Data', 'systems', 'dnd5e', 'tokens');
+  await mkdir(tokens, { recursive: true });
+  await writeFile(path.join(tokens, 'rat.webp'), 'rodent');
+  await writeFile(path.join(tokens, 'swarm.webp'), 'rodent');
+
+  const stats = await copyArt(
+    {
+      Rat: { name: 'Rat', tokenSrc: 'systems/dnd5e/tokens/rat.webp' },
+      Swarm: { name: 'Swarm of Rats', tokenSrc: 'systems/dnd5e/tokens/swarm.webp' },
+    },
+    dataDir,
+    path.join(dir, 'out'),
+  );
+  assert.equal(stats.copied, 2);
+  assert.equal(stats.generic, 0);
+});
+
+test('describeArt names the generic share so "copied 14" cannot mislead again', () => {
+  const msg = describeArt(
+    { copied: 2, generic: 12, placeholder: 383, missing: 0, missingExamples: [] },
+    '/vault/tokens',
+  );
+  assert.match(msg, /copied 2 token image/);
+  assert.match(msg, /12 creature\(s\) share one generic stand-in image/);
+  // And silence when the bucket is empty, like every other bucket.
+  const clean = describeArt(
+    { copied: 5, generic: 0, placeholder: 0, missing: 0, missingExamples: [] },
+    '/vault/tokens',
+  );
+  assert.doesNotMatch(clean, /generic/);
+});

@@ -654,6 +654,25 @@ async function cmdRemove(opts) {
   console.log(`removed ${id}; core is now ${core.length} module(s)`);
 }
 
+/**
+ * The per-game command sequence, as [cmd, args] pairs: build, then the art
+ * coverage gate in strict mode, then sync. The gate sits BETWEEN build and
+ * sync on purpose — an unproven module must not be able to reach Foundry.
+ */
+export function pullPlan(game) {
+  const config = typeof game === 'string' ? game : game.config;
+  const src = typeof game === 'string' ? undefined : game.src;
+  const srcArgs = src ? ['--src', src] : [];
+  return [
+    ['node', [path.join(SCRIPT_DIR, 'build.mjs'), '--config', config, ...srcArgs]],
+    [
+      'node',
+      [path.join(SCRIPT_DIR, 'art-coverage.mjs'), '--config', config, ...srcArgs, '--strict'],
+    ],
+    [path.join(SCRIPT_DIR, 'sync-content.sh'), ['--config', config]],
+  ];
+}
+
 async function cmdPullGames(opts) {
   const manifest = await loadManifest(opts.manifest);
   const games = manifest.games ?? [];
@@ -662,13 +681,8 @@ async function cmdPullGames(opts) {
     return;
   }
   for (const game of games) {
-    const config = typeof game === 'string' ? game : game.config;
-    const src = typeof game === 'string' ? undefined : game.src;
-    console.log(`\n=== ${config}`);
-    const buildArgs = [path.join(SCRIPT_DIR, 'build.mjs'), '--config', config];
-    if (src) buildArgs.push('--src', src);
-    await run('node', buildArgs);
-    await run(path.join(SCRIPT_DIR, 'sync-content.sh'), ['--config', config]);
+    console.log(`\n=== ${typeof game === 'string' ? game : game.config}`);
+    for (const [cmd, args] of pullPlan(game)) await run(cmd, args);
   }
 }
 

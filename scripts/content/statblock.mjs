@@ -20,9 +20,11 @@ import path from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
+import { resolveArt } from './art-resolve.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
+const DEFAULT_ART_MAP = path.join(REPO_ROOT, 'content', 'reference', 'art-map.json');
 
 // Fantasy Statblocks skill labels -> dnd5e skill keys. Note the three that are
 // routinely confused: per = Persuasion, prc = Perception, prf = Performance.
@@ -160,6 +162,16 @@ export function open5eFor(edition, referenceDir) {
   const dir = referenceDir ?? path.join(REPO_ROOT, 'content', 'reference');
   if (edition === '5.2') return path.join(dir, 'open5e-2024.json');
   if (edition === '5.1') return path.join(dir, 'open5e-2014.json');
+  return null;
+}
+
+/** Same routing for the dnd5e compendium cache, which carries the token ART
+ * that Open5e lacks. The note names its edition; art inheritance must not
+ * need a hand-passed --srd once the cache exists. */
+export function srdFor(edition, referenceDir) {
+  const dir = referenceDir ?? path.join(REPO_ROOT, 'content', 'reference');
+  if (edition === '5.2') return path.join(dir, 'srd-52.json');
+  if (edition === '5.1') return path.join(dir, 'srd-51.json');
   return null;
 }
 
@@ -350,8 +362,9 @@ export function toActor(fence, { name, disposition = -1, biographyIntro = '', im
   // fallback stays (an actor must have SOME img), but it is never silent.
   if (!img) {
     warnings.push(
-      `no art — falling back to ${PLACEHOLDER_IMG}. Give the fence a \`source:\` ` +
-        'so it inherits the SRD token, or an `image:` pointing at your own file.',
+      `no art — falling back to ${PLACEHOLDER_IMG}. Named NPCs need an \`image:\` ` +
+        "pointing at your own file in the game's Assets/Tokens/ " +
+        '(or `art_required: false` to accept a generic stand-in).',
     );
   }
 
@@ -366,7 +379,9 @@ export function toActor(fence, { name, disposition = -1, biographyIntro = '', im
       actorLink: false,
       displayName: 20,
       disposition,
-      ...(img ? { texture: { src: img } } : {}),
+      // The placeholder lands on the token too — without it the sheet showed
+      // the silhouette while the map showed nothing at all.
+      texture: { src: img ?? PLACEHOLDER_IMG },
     },
     system: {
       abilities,
@@ -473,8 +488,15 @@ export async function compileNote(notePath, opts = {}) {
   // including a numeric AC for armour-wearing creatures, which the compendium
   // derives at runtime and therefore cannot provide.
   let art;
-  if (opts.srd) {
-    art = JSON.parse(await readFile(opts.srd, 'utf8')).creatures?.[base];
+  const srdPath = opts.srd ?? srdFor(edition, opts.reference);
+  if (srdPath) {
+    try {
+      art = JSON.parse(await readFile(srdPath, 'utf8')).creatures?.[base];
+    } catch (err) {
+      // The cache is optional unless explicitly requested — but a hand-passed
+      // --srd that cannot be read is an operator error, not a fallback.
+      if (opts.srd) throw err;
+    }
   }
 
   let reference = art;
@@ -489,10 +511,37 @@ export async function compileNote(notePath, opts = {}) {
     }
   }
 
+  // Art resolution order: explicit image:, then the creature's real SRD token,
+  // then the curated icon map (art-resolve.mjs) — whose silhouette tier only a
+  // source:-inherited mook may use. A bespoke named NPC that reaches the map
+  // and misses resolves to nothing, and the placeholder warning fires.
+  let img = fence.image ?? art?.tokenSrc;
+  if (!img) {
+    let artMap = {};
+    try {
+      artMap = JSON.parse(await readFile(opts.artMap ?? DEFAULT_ART_MAP, 'utf8'));
+    } catch {
+      // No map is a resolvable state: the chain simply ends at `none`.
+    }
+    img = resolveArt(
+      {
+        // The note title is the actor's identity; the base is what it was
+        // built on. The resolver treats them as a mook only when they agree —
+        // "Bandit.md" on Bandit is a bandit, "Amira Granger.md" on Spy is a
+        // character whose art gap must stay visible.
+        name,
+        base,
+        type: fence.type,
+        art_required: fence.art_required,
+      },
+      artMap,
+    ).src;
+  }
+
   const { actor, warnings } = toActor(fence, {
     name,
     disposition: opts.disposition ?? parseDisposition(frontmatter.disposition),
-    img: fence.image ?? art?.tokenSrc,
+    img,
   });
 
   return {

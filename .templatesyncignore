@@ -66,6 +66,15 @@ scripts/ci/README.md
 #            --jq .content | base64 -d) .devcontainer/devcontainer.json
 # Expect exactly two hunks: the mounts entry, and nothing else.
 .devcontainer/devcontainer.json
+# Carries this fork's egress allowlist additions (www.dnd5eapi.co, the raster
+# token-art candidate for #88). Detaching was a deliberate user decision:
+# better API functionality over upstream firewall updates. Like
+# devcontainer.json above, this costs real security coverage — diff against the
+# template whenever its devcontainer changes:
+#   diff <(gh api repos/Moon-Knight13/claude_template_repo/contents/.devcontainer/init-firewall.sh \
+#            --jq .content | base64 -d) .devcontainer/init-firewall.sh
+# Expect exactly one hunk: the extra domain(s) in the critical-domains list.
+.devcontainer/init-firewall.sh
 
 # ── Deleted subsystems: keep sync from resurrecting them ──────────────────────
 # actions-template-sync only ADDS and UPDATES files; it never deletes. So a file

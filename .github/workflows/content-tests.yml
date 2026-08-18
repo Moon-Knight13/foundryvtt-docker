@@ -52,3 +52,9 @@ jobs:
 
       - name: Build the compendium module
         run: npm run build
+
+      # Report-only here: CI has no vault mount, so DnD/ paths cannot be
+      # resolved and a green run must not read as a coverage guarantee.
+      # The gating form (--strict, with $DND_VAULT_PATH) runs on the host.
+      - name: Report art coverage
+        run: npm run coverage:art
