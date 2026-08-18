@@ -10,6 +10,7 @@ import {
   copyArt,
   assertDataDir,
   explainArtError,
+  describeArt,
   PACKS,
 } from './srd-cache.mjs';
 
@@ -145,7 +146,9 @@ test('copyArt extracts real art and skips core placeholders', async () => {
     artDir,
   );
 
-  assert.equal(copied, 1, 'only the real, present image copies');
+  assert.equal(copied.copied, 1, 'only the real, present image copies');
+  assert.equal(copied.placeholder, 1, 'the mystery-man entry is counted, not ignored');
+  assert.equal(copied.missing, 1, 'the referenced-but-absent file is counted');
   // Named by creature, so a statblock note can reference it by name.
   assert.deepEqual(await readdir(artDir), ['Bandit.webp']);
 });
@@ -210,4 +213,36 @@ test('copyArt surfaces an unwritable target rather than copying nothing quietly'
       ),
     /EACCES|EROFS|permission denied|read-only/i,
   );
+});
+
+test('describeArt explains a low copy count instead of just stating it', () => {
+  // Observed for real: "copied 0" from SRD 5.1 and "copied 14" from 5.2, with
+  // no way to tell whether the art was absent, placeholder, or the path wrong.
+  const none = describeArt(
+    { copied: 0, placeholder: 346, missing: 0, missingExamples: [] },
+    '/vault/tokens',
+  );
+  assert.match(none, /copied 0 token image/);
+  assert.match(none, /346 creature\(s\) ship no art/);
+
+  const some = describeArt(
+    {
+      copied: 14,
+      placeholder: 400,
+      missing: 17,
+      missingExamples: ['systems/dnd5e/tokens/beast/Bat.webp'],
+    },
+    '/vault/tokens',
+  );
+  assert.match(some, /copied 14/);
+  assert.match(some, /17 reference art that is not installed/);
+  assert.match(some, /Bat\.webp/);
+});
+
+test('describeArt stays quiet when there is nothing to explain', () => {
+  const clean = describeArt(
+    { copied: 12, placeholder: 0, missing: 0, missingExamples: [] },
+    '/vault/tokens',
+  );
+  assert.equal(clean.split('\n').length, 1, 'no noise when every creature copied');
 });
