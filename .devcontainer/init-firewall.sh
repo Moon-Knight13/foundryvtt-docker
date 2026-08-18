@@ -94,6 +94,10 @@ done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | sort -u)
 # them, so allow their current A records explicitly.
 # pypi.org / files.pythonhosted.org are likewise Fastly-hosted (rotating IPs);
 # pre-commit needs them to pip-install its hook environments on first run.
+# www.dnd5eapi.co is this repo's raster token-art candidate (#88): the SRD
+# monster endpoint serves per-creature PNGs. NOTE it redirects image bodies to
+# S3, so the redirect target is a different host — measure the real hit rate
+# after a rebuild and extend this list if the images themselves 000 out.
 for domain in \
     "registry.npmjs.org" \
     "api.anthropic.com" \
@@ -104,7 +108,8 @@ for domain in \
     "files.pythonhosted.org" \
     "marketplace.visualstudio.com" \
     "vscode.blob.core.windows.net" \
-    "update.code.visualstudio.com"; do
+    "update.code.visualstudio.com" \
+    "www.dnd5eapi.co"; do
     echo "Resolving $domain..."
     ips=$(dig +noall +answer A "$domain" | awk '$4 == "A" {print $5}')
     if [ -z "$ips" ]; then
