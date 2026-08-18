@@ -46,6 +46,29 @@ node scripts/content/foundry-base.mjs restore --yes     # put the snapshot back
 node scripts/content/foundry-base.mjs pull-games        # build + sync every game in the manifest
 ```
 
+### Adjusting core
+
+The golden base is meant to be *tuned*, not guessed at once. Run the drill, see
+what breaks, add what was missing, run it again:
+
+```bash
+node scripts/content/foundry-base.mjs add <id> --from foundry-capture-<world>.json \
+  --note "why this is here"
+node scripts/content/foundry-base.mjs remove <id>
+```
+
+`add` takes the version and manifest URL from a capture file, or from the
+installed `module.json` when no `--from` is given. Either way the module tells us
+about itself — ids are routinely nothing like their titles, so nothing is typed.
+Adding the same module twice updates it rather than duplicating, an existing
+`note` survives a re-add, and a deliberately pinned URL is never overwritten.
+
+**Expect the first drill to find missing dependencies.** `provision` installs
+exactly what is pinned and does not resolve dependency chains, so a lean core can
+come up with a quality-of-life module quietly broken. That is the point of
+running it: each failure names a module to `add`, with a note saying why it
+earned its place.
+
 **Stop Foundry first.** `capture` reads a world's LevelDB settings store, and
 LevelDB takes an exclusive lock — a running Foundry holds it, and the raw error
 (`Database is not open`) looks like corruption rather than contention:
