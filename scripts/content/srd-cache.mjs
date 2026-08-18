@@ -29,6 +29,7 @@ import {
   access,
 } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { extractPack } from '@foundryvtt/foundryvtt-cli';
@@ -185,12 +186,21 @@ async function expandWildcard(dataDir, src) {
  *   wildcard     randomised art whose files are not installed — usually a
  *                premium module the operator does not own
  *   missing      a literal path that simply is not there
- *   copied       done
+ *   generic      copied, but the same bytes serve several creatures — a
+ *                stand-in template, not this creature's art
+ *   copied       done, and the image is genuinely this creature's
  */
+// One image cannot be three creatures' portrait. Two sharing bytes could be
+// legitimate (a swarm and its member); three or more is a template. Measured
+// for real: dnd5e 5.3.3 ships one 8231-byte humanoid SVG under twelve NPC
+// names, which this pipeline used to report as twelve usable images.
+const GENERIC_SHARE_THRESHOLD = 3;
+
 export async function copyArt(index, dataDir, artDir) {
   await mkdir(artDir, { recursive: true });
   const stats = {
     copied: 0,
+    generic: 0,
     placeholder: 0,
     wildcard: 0,
     missing: 0,
@@ -199,6 +209,9 @@ export async function copyArt(index, dataDir, artDir) {
     modules: new Set(),
   };
 
+  // First resolve every creature to its single source file, so shared bytes
+  // can be detected across the whole pack before anything is classified.
+  const resolved = [];
   for (const rec of Object.values(index)) {
     const src = rec.tokenSrc;
     if (!src || src.startsWith('icons/')) {
@@ -219,12 +232,30 @@ export async function copyArt(index, dataDir, artDir) {
     } else {
       sources = [path.join(dataDir, 'Data', src)];
     }
+    resolved.push({ rec, src, file: sources[0], hash: null });
+  }
 
+  const shareCount = new Map();
+  for (const entry of resolved) {
     try {
+      const buf = await readFile(entry.file);
+      entry.hash = createHash('sha256').update(buf).digest('hex');
+      shareCount.set(entry.hash, (shareCount.get(entry.hash) ?? 0) + 1);
+    } catch {
+      // Classified as missing below; examples recorded there.
+    }
+  }
+
+  for (const { rec, src, file, hash } of resolved) {
+    try {
+      if (hash === null) throw new Error(`unreadable: ${file}`);
       // One image per creature is enough for a statblock card, even where
-      // Foundry would randomise between several at the table.
-      await copyFile(sources[0], path.join(artDir, `${rec.name}${path.extname(sources[0])}`));
-      stats.copied++;
+      // Foundry would randomise between several at the table. Generic
+      // stand-ins are still copied — Obsidian needs SOME file to embed —
+      // but counted apart, so the copy count states real art coverage.
+      await copyFile(file, path.join(artDir, `${rec.name}${path.extname(file)}`));
+      if (shareCount.get(hash) >= GENERIC_SHARE_THRESHOLD) stats.generic++;
+      else stats.copied++;
     } catch {
       stats.missing++;
       if (stats.missingExamples.length < 3) stats.missingExamples.push(src);
@@ -237,6 +268,11 @@ export async function copyArt(index, dataDir, artDir) {
 /** One line per outcome, so a low copy count explains itself. */
 export function describeArt(stats, artDir) {
   const parts = [`  copied ${stats.copied} token image(s) to ${artDir}`];
+  if (stats.generic) {
+    parts.push(
+      `  ${stats.generic} creature(s) share one generic stand-in image (copied, but it is not their art)`,
+    );
+  }
   if (stats.placeholder) {
     parts.push(`  ${stats.placeholder} creature(s) ship no art (Foundry placeholder icon)`);
   }
