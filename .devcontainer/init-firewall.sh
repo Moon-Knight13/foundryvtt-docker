@@ -122,11 +122,23 @@ for domain in \
     done < <(echo "$ips")
 done
 
-# Resolve optional telemetry domains (do not fail startup if unavailable)
+# Resolve optional domains (do not fail startup if unavailable).
+#
+# api.open5e.com is not telemetry — it is the 5e rules API the content pipeline
+# checks authored stat blocks against (scripts/content/*). It belongs here
+# rather than in the critical block because the pipeline works offline from the
+# committed cache under content/reference/; only an explicit refresh needs the
+# network, so an unresolvable Open5e must not stop the container from starting.
+# It sits behind Cloudflare (104.21.x / 172.67.x) with rotating A records, the
+# same situation as the Fastly-hosted hosts noted above the critical block: the
+# firewall pins the IPs resolved at startup, so a long-lived container may see
+# a refresh start failing after Cloudflare moves it. Restart the container to
+# re-resolve.
 for domain in \
     "sentry.io" \
     "statsig.anthropic.com" \
-    "statsig.com"; do
+    "statsig.com" \
+    "api.open5e.com"; do
     echo "Resolving optional domain $domain..."
     ips=$(dig +noall +answer A "$domain" | awk '$4 == "A" {print $5}')
     if [ -z "$ips" ]; then
