@@ -18,7 +18,7 @@ Foundry has two kinds of compendium, and the difference decides what you lose.
 
 | Kind | Lives in | Survives a world wipe? |
 | --- | --- | --- |
-| **Module** compendium (`dnd5e.monsters`, `lure-of-the-lamia-oneshot.actors`) | the module folder on disk | **Yes** |
+| **Module** compendium (`dnd5e.monsters`, `<your-game>-oneshot.actors`) | the module folder on disk | **Yes** |
 | **World** compendium (`world.ddb-<world>-ddb-spells`) | inside the world folder | **No** |
 
 Note the world id baked into that second pack name. All twelve

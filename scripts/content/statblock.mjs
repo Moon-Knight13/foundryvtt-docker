@@ -14,8 +14,8 @@
 //                                      [--srd <content/reference/srd-51.json>]
 //
 // One note in, one actor out. The actor's NAME comes from the note's filename,
-// not the fence's `name:` — the card may read "Selyse (Lamia)" while the actor
-// is "Selyse".
+// not the fence's `name:` — the card may read "Vashti (Lamia)" while the actor
+// is "Vashti".
 import path from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import yaml from 'js-yaml';
@@ -121,7 +121,7 @@ export function parseFence(markdown) {
 
 /**
  * Read the note's YAML frontmatter. Some facts about an NPC are not stat-block
- * facts — Amira Granger is a Spy who starts the session as an ally, so her
+ * facts — an NPC built on the SRD Spy may start the session as an ally, so its
  * token disposition is neutral rather than hostile. That belongs to the note,
  * not to the shared SRD stat line.
  */

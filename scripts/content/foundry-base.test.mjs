@@ -130,9 +130,9 @@ test('snapshotPath defaults beside the data dir and tolerates a trailing slash',
 });
 
 test('parseArgs splits the command from its flags', () => {
-  const o = parseArgs(['capture', 'unravelled-plans', '--data', '/d']);
+  const o = parseArgs(['capture', 'my-world', '--data', '/d']);
   assert.equal(o.command, 'capture');
-  assert.deepEqual(o.positional, ['unravelled-plans']);
+  assert.deepEqual(o.positional, ['my-world']);
   assert.equal(o.data, '/d');
   assert.equal(parseArgs(['provision', '--dry-run']).dryRun, true);
   assert.equal(parseArgs(['restore', '--yes']).yes, true);

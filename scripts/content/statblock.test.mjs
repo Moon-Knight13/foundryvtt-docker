@@ -23,9 +23,10 @@ import {
   SKILL_KEYS,
 } from './statblock.mjs';
 
-// Selyse as she is actually written in the vault: a Lamia with custom prose.
-const SELYSE = {
-  name: 'Selyse (Lamia)',
+// A named NPC built on the SRD Lamia, in the shape a vault note actually uses:
+// base creature stats, a display name that differs from the note title.
+const LAMIA_NPC = {
+  name: 'Vashti (Lamia)',
   size: 'Large',
   type: 'monstrosity',
   alignment: 'Chaotic Evil',
@@ -56,7 +57,7 @@ test('abilityMod and profBonus follow the SRD tables', () => {
 });
 
 test('skillProficiency distinguishes proficiency from expertise', () => {
-  // The bug this exists to prevent: Selyse's Deception +7 on CHA 16 (+3) at
+  // The bug this exists to prevent: Deception +7 on a CHA 16 (+3) creature at
   // CR 4 (PB 2) is EXPERTISE. Storing multiplier 1 renders +5 at the table.
   assert.deepEqual(skillProficiency(7, 3, 2), { value: 2, flat: 0 });
   assert.deepEqual(skillProficiency(5, 3, 2), { value: 1, flat: 0 });
@@ -71,8 +72,8 @@ test('skillProficiency carries an unreachable bonus flat, and says so', () => {
 });
 
 test('parseFence pulls the statblock block out of a note', () => {
-  const note = `---\ntype: npc\n---\n\n# Selyse\n\n\`\`\`statblock\nname: Selyse\nac: 13\n\`\`\`\n\n## Links\n`;
-  assert.deepEqual(parseFence(note), { name: 'Selyse', ac: 13 });
+  const note = `---\ntype: npc\n---\n\n# Vashti\n\n\`\`\`statblock\nname: Vashti\nac: 13\n\`\`\`\n\n## Links\n`;
+  assert.deepEqual(parseFence(note), { name: 'Vashti', ac: 13 });
   assert.equal(parseFence('# no fence here'), null);
 });
 
@@ -126,10 +127,10 @@ test('parseLanguages separates real language keys from prose', () => {
 });
 
 test('parseFrontmatter and parseDisposition carry note-level facts', () => {
-  const note = '---\ntype: npc\ndisposition: neutral\n---\n\n# Amira\n';
+  const note = '---\ntype: npc\ndisposition: neutral\n---\n\n# Sable\n';
   assert.equal(parseFrontmatter(note).disposition, 'neutral');
   assert.deepEqual(parseFrontmatter('# no frontmatter'), {});
-  // Amira Granger is a Spy who starts the session as an ally — a note fact,
+  // An NPC built on the SRD Spy may start the session as an ally — a note fact,
   // not a stat-block fact, so it cannot come from the shared SRD line.
   assert.equal(parseDisposition('neutral'), 0);
   assert.equal(parseDisposition('friendly'), 1);
@@ -146,9 +147,9 @@ test('SKILL_KEYS keeps the three confusable skills apart', () => {
 });
 
 test('toActor produces the dnd5e npc shape the build already consumes', () => {
-  const { actor } = toActor(SELYSE, { name: 'Selyse' });
+  const { actor } = toActor(LAMIA_NPC, { name: 'Vashti' });
   // Actor name is the note title; the fence name is the card's display name.
-  assert.equal(actor.name, 'Selyse');
+  assert.equal(actor.name, 'Vashti');
   assert.equal(actor.type, 'npc');
   assert.deepEqual(actor.system.abilities.cha, { value: 16 });
   assert.deepEqual(actor.system.attributes.ac, { calc: 'flat', flat: 13 });
@@ -162,7 +163,7 @@ test('toActor produces the dnd5e npc shape the build already consumes', () => {
 });
 
 test('toActor derives expertise rather than trusting a flat multiplier', () => {
-  const { actor, warnings } = toActor(SELYSE, { name: 'Selyse' });
+  const { actor, warnings } = toActor(LAMIA_NPC, { name: 'Vashti' });
   assert.deepEqual(actor.system.skills.dec, { value: 2 }, 'Deception +7 is expertise');
   assert.deepEqual(actor.system.skills.ins, { value: 1 });
   assert.deepEqual(actor.system.skills.ste, { value: 1 });
@@ -170,14 +171,14 @@ test('toActor derives expertise rather than trusting a flat multiplier', () => {
 });
 
 test('toActor records saves as ability proficiency', () => {
-  const { actor } = toActor({ ...SELYSE, saves: [{ wisdom: 4 }] }, { name: 'S' });
+  const { actor } = toActor({ ...LAMIA_NPC, saves: [{ wisdom: 4 }] }, { name: 'S' });
   // WIS 15 (+2) at PB 2: +4 is proficiency.
   assert.equal(actor.system.abilities.wis.proficient, 1);
 });
 
 test('toActor warns instead of silently dropping an unknown skill', () => {
   const { actor, warnings } = toActor(
-    { ...SELYSE, skillsaves: [{ basketweaving: 3 }] },
+    { ...LAMIA_NPC, skillsaves: [{ basketweaving: 3 }] },
     { name: 'S' },
   );
   assert.ok(!actor.system.skills, 'no skills survive');
@@ -185,13 +186,16 @@ test('toActor warns instead of silently dropping an unknown skill', () => {
 });
 
 test('toActor wires art into both the portrait and the token', () => {
-  const { actor } = toActor(SELYSE, { name: 'Selyse', img: 'DnD/06 Assets/Tokens/srd/Lamia.webp' });
+  const { actor } = toActor(LAMIA_NPC, {
+    name: 'Vashti',
+    img: 'DnD/06 Assets/Tokens/srd/Lamia.webp',
+  });
   assert.equal(actor.img, 'DnD/06 Assets/Tokens/srd/Lamia.webp');
   assert.equal(actor.prototypeToken.texture.src, 'DnD/06 Assets/Tokens/srd/Lamia.webp');
 });
 
 test('biographyHtml renders traits and actions into the prose the actors use', () => {
-  const html = biographyHtml(SELYSE, '<p>Intro.</p>');
+  const html = biographyHtml(LAMIA_NPC, '<p>Intro.</p>');
   assert.ok(html.startsWith('<p>Intro.</p>'));
   assert.ok(html.includes('<h3>Traits</h3>'));
   assert.ok(html.includes('<strong>Innate Spellcasting.</strong>'));
@@ -210,29 +214,29 @@ const SRD_LAMIA = {
 };
 
 test('verify reports nothing when the fence matches its SRD base', () => {
-  assert.deepEqual(verify(SELYSE, SRD_LAMIA), []);
+  assert.deepEqual(verify(LAMIA_NPC, SRD_LAMIA), []);
 });
 
 test('verify reports a delta rather than failing', () => {
-  const deltas = verify({ ...SELYSE, hp: 120 }, SRD_LAMIA);
+  const deltas = verify({ ...LAMIA_NPC, hp: 120 }, SRD_LAMIA);
   assert.equal(deltas.length, 1);
   assert.deepEqual(deltas[0], { field: 'hp', authored: 120, srd: 97 });
 });
 
 test('deviations silences an intentional change, keeping it visible in review', () => {
-  assert.deepEqual(verify({ ...SELYSE, hp: 120, deviations: ['hp'] }, SRD_LAMIA), []);
+  assert.deepEqual(verify({ ...LAMIA_NPC, hp: 120, deviations: ['hp'] }, SRD_LAMIA), []);
 });
 
 test('verify skips fields the SRD cache cannot supply', () => {
   // Armour-wearing monsters have no stored AC; that must read as "not
   // checkable", never as a mismatch against 0.
   const armoured = { ...SRD_LAMIA, ac: undefined };
-  assert.deepEqual(verify(SELYSE, armoured), []);
-  assert.deepEqual(verify(SELYSE, null), []);
+  assert.deepEqual(verify(LAMIA_NPC, armoured), []);
+  assert.deepEqual(verify(LAMIA_NPC, null), []);
 });
 
 test('verify catches a wrong ability score', () => {
-  const deltas = verify({ ...SELYSE, stats: [16, 13, 15, 14, 15, 10] }, SRD_LAMIA);
+  const deltas = verify({ ...LAMIA_NPC, stats: [16, 13, 15, 14, 15, 10] }, SRD_LAMIA);
   assert.deepEqual(deltas, [{ field: 'cha', authored: 10, srd: 16 }]);
 });
 
@@ -247,8 +251,8 @@ test('parseArgs requires a note and rejects junk', () => {
 
 test('compileNote reads a note end to end and names the actor from the file', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'statblock-'));
-  const note = path.join(dir, 'Selyse.md');
-  const fence = Object.entries(SELYSE)
+  const note = path.join(dir, 'Vashti.md');
+  const fence = Object.entries(LAMIA_NPC)
     .filter(([k]) => !['traits', 'actions', 'stats', 'skillsaves'].includes(k))
     .map(([k, v]) => `${k}: ${typeof v === 'string' ? JSON.stringify(v) : v}`)
     .join('\n');
@@ -258,7 +262,7 @@ test('compileNote reads a note end to end and names the actor from the file', as
   );
 
   const { actor, base, edition, deltas } = await compileNote(note);
-  assert.equal(actor.name, 'Selyse', 'named from the filename, not the fence');
+  assert.equal(actor.name, 'Vashti', 'named from the filename, not the fence');
   assert.equal(base, 'Lamia');
   assert.equal(edition, '5.1');
   assert.deepEqual(deltas, [], 'no SRD index supplied, so nothing to diff');
@@ -267,13 +271,13 @@ test('compileNote reads a note end to end and names the actor from the file', as
 
 test('compileNote takes disposition from the note frontmatter', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'statblock-'));
-  const note = path.join(dir, 'Amira Granger.md');
+  const note = path.join(dir, 'Sable Vance.md');
   await writeFile(
     note,
-    '---\ntype: npc\ndisposition: neutral\n---\n\n```statblock\nname: Amira\nac: 12\nhp: 27\ncr: 1\nstats: [10, 15, 10, 12, 14, 16]\n```\n',
+    '---\ntype: npc\ndisposition: neutral\n---\n\n```statblock\nname: Vashti\nac: 12\nhp: 27\ncr: 1\nstats: [10, 15, 10, 12, 14, 16]\n```\n',
   );
   const { actor } = await compileNote(note);
-  assert.equal(actor.name, 'Amira Granger');
+  assert.equal(actor.name, 'Sable Vance');
   assert.equal(actor.prototypeToken.disposition, 0, 'neutral, not hostile');
 });
 

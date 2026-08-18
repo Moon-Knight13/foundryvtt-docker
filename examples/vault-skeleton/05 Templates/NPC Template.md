@@ -30,7 +30,7 @@ tags: [ttrpg, npc]
 > actor JSON. Never hand-maintain a second copy — edit here and recompile.
 >
 > The actor is named after **this note's filename**, so a card headed
-> "Selyse (Lamia)" still becomes an actor called "Selyse".
+> "Vashti (Lamia)" still becomes an actor called "Vashti".
 
 ```statblock
 name: <% tp.file.title %>
