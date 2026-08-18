@@ -20,7 +20,9 @@ import {
   verify,
   parseArgs,
   compileNote,
+  open5eFor,
   SKILL_KEYS,
+  PLACEHOLDER_IMG,
 } from './statblock.mjs';
 
 // A named NPC built on the SRD Lamia, in the shape a vault note actually uses:
@@ -167,7 +169,13 @@ test('toActor derives expertise rather than trusting a flat multiplier', () => {
   assert.deepEqual(actor.system.skills.dec, { value: 2 }, 'Deception +7 is expertise');
   assert.deepEqual(actor.system.skills.ins, { value: 1 });
   assert.deepEqual(actor.system.skills.ste, { value: 1 });
-  assert.deepEqual(warnings, [], 'all three bonuses are cleanly reachable');
+  // No SKILL warnings: all three bonuses are cleanly reachable. The art warning
+  // is expected here and checked separately.
+  assert.deepEqual(
+    warnings.filter(w => w.startsWith('skill ')),
+    [],
+    'all three bonuses are cleanly reachable',
+  );
 });
 
 test('toActor records saves as ability proficiency', () => {
@@ -286,4 +294,55 @@ test('compileNote fails loudly on a note with no statblock', async () => {
   const note = path.join(dir, 'Empty.md');
   await writeFile(note, '# Just prose\n');
   await assert.rejects(() => compileNote(note), /no ```statblock fence found/);
+});
+
+test('open5eFor routes to the index matching the cited edition', () => {
+  // Load-bearing: the 2024 rules restat creatures. The SRD Lamia is a
+  // monstrosity with Stealth +3 in 5.1 and a fiend with Stealth +5 in 5.2, and
+  // the SRD Spy is Medium in 5.1 but Small in 5.2. Checking a 5.1 note against
+  // the 2024 index invents deltas that are not errors.
+  assert.match(open5eFor('5.1', '/ref'), /open5e-2014\.json$/);
+  assert.match(open5eFor('5.2', '/ref'), /open5e-2024\.json$/);
+  assert.equal(open5eFor(undefined, '/ref'), null, 'no edition cited, no index');
+  assert.equal(open5eFor('9.9', '/ref'), null);
+});
+
+// Open5e supplies STATED skill bonuses; the dnd5e compendium does not.
+const OPEN5E_LAMIA = {
+  name: 'Lamia',
+  ac: 13,
+  hp: 97,
+  cr: 4,
+  size: 'lg',
+  type: 'monstrosity',
+  abilities: { str: 16, dex: 13, con: 15, int: 14, wis: 15, cha: 16 },
+  skills: { dec: 7, ins: 4, ste: 3 },
+};
+
+test('verify compares stated skill bonuses when the reference has them', () => {
+  assert.deepEqual(verify(LAMIA_NPC, OPEN5E_LAMIA), [], 'the vault fence matches SRD 5.1');
+
+  const wrong = { ...LAMIA_NPC, skillsaves: [{ deception: 4 }] };
+  assert.deepEqual(verify(wrong, OPEN5E_LAMIA), [
+    { field: 'skill.deception', authored: 4, srd: 7 },
+  ]);
+});
+
+test('verify skips skills when the reference cannot supply them', () => {
+  // The dnd5e compendium stores a proficiency multiplier, not a bonus, so its
+  // records carry no `skills` — that must read as "not checkable".
+  const compendiumStyle = { ...OPEN5E_LAMIA, skills: undefined };
+  assert.deepEqual(verify({ ...LAMIA_NPC, skillsaves: [{ deception: 99 }] }, compendiumStyle), []);
+});
+
+test('toActor warns rather than silently shipping a blank silhouette', () => {
+  const { actor, warnings } = toActor(LAMIA_NPC, { name: 'Vashti' });
+  assert.equal(actor.img, PLACEHOLDER_IMG);
+  assert.ok(
+    warnings.some(w => w.includes(PLACEHOLDER_IMG)),
+    'falling back to placeholder art must be reported',
+  );
+  // With art, no warning.
+  const withArt = toActor(LAMIA_NPC, { name: 'Vashti', img: 'DnD/x/Lamia.webp' });
+  assert.ok(!withArt.warnings.some(w => w.includes(PLACEHOLDER_IMG)));
 });

@@ -18,7 +18,11 @@
 // is "Vashti".
 import path from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
+
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
 
 // Fantasy Statblocks skill labels -> dnd5e skill keys. Note the three that are
 // routinely confused: per = Persuasion, prc = Perception, prf = Performance.
@@ -131,6 +135,9 @@ export function parseFrontmatter(markdown) {
   return yaml.load(m[1]) ?? {};
 }
 
+/** Foundry's default actor art. Valid, but a blank silhouette at the table. */
+export const PLACEHOLDER_IMG = 'icons/svg/mystery-man.svg';
+
 const DISPOSITIONS = { hostile: -1, neutral: 0, friendly: 1, secret: -2 };
 
 /** Frontmatter `disposition:` accepts a word or the raw Foundry number. */
@@ -139,6 +146,21 @@ export function parseDisposition(value, fallback = -1) {
   if (typeof value === 'number') return value;
   const key = String(value).trim().toLowerCase();
   return DISPOSITIONS[key] ?? fallback;
+}
+
+/**
+ * Pick the Open5e index matching the edition a note cites.
+ *
+ * This is load-bearing, not tidiness: the 2024 rules genuinely restat
+ * creatures. The SRD Lamia is a monstrosity with Stealth +3 in 5.1 and a fiend
+ * with Stealth +5 in 5.2, and the SRD Spy is Medium in 5.1 and Small in 5.2.
+ * Checking a note written from one edition against the other invents deltas.
+ */
+export function open5eFor(edition, referenceDir) {
+  const dir = referenceDir ?? path.join(REPO_ROOT, 'content', 'reference');
+  if (edition === '5.2') return path.join(dir, 'open5e-2024.json');
+  if (edition === '5.1') return path.join(dir, 'open5e-2014.json');
+  return null;
 }
 
 /** "SRD 5.1 (CC-BY-4.0) — Lamia" -> { edition: '5.1', base: 'Lamia' } */
@@ -323,11 +345,21 @@ export function toActor(fence, { name, disposition = -1, biographyIntro = '', im
   }
   for (const [k, v] of Object.entries(saves)) abilities[k].proficient = v;
 
+  // A blank silhouette is the single most visible way this pipeline can ship
+  // something wrong: it looks fine in the JSON and looks broken on the map. The
+  // fallback stays (an actor must have SOME img), but it is never silent.
+  if (!img) {
+    warnings.push(
+      `no art — falling back to ${PLACEHOLDER_IMG}. Give the fence a \`source:\` ` +
+        'so it inherits the SRD token, or an `image:` pointing at your own file.',
+    );
+  }
+
   const hp = Number(fence.hp ?? 0);
   const actor = {
     name,
     type: 'npc',
-    img: img ?? 'icons/svg/mystery-man.svg',
+    img: img ?? PLACEHOLDER_IMG,
     items: [],
     prototypeToken: {
       name,
@@ -394,6 +426,20 @@ export function verify(fence, srd) {
   const stats = Array.isArray(fence.stats) ? fence.stats : [];
   ABILITIES.forEach((k, i) => cmp(k, stats[i], srd.abilities?.[k]));
 
+  // Skill bonuses, when the reference supplies them as STATED numbers (Open5e
+  // does; the dnd5e compendium does not, because it stores a proficiency
+  // multiplier and derives the number). Comparing the printed bonus directly
+  // catches the same class of error as the expertise derivation in toActor, but
+  // from the other side: there we ask "what multiplier yields this bonus?", here
+  // "is this the bonus the published creature actually has?".
+  if (srd.skills) {
+    for (const [label, stated] of pairs(fence.skillsaves)) {
+      const key = SKILL_KEYS[String(label).toLowerCase()];
+      if (!key) continue; // already warned about during compilation
+      cmp(`skill.${label}`, Number(stated), srd.skills[key]);
+    }
+  }
+
   return deltas;
 }
 
@@ -422,22 +468,37 @@ export async function compileNote(notePath, opts = {}) {
   const name = path.basename(notePath, path.extname(notePath));
   const { base, edition } = parseSource(fence.source);
 
-  let srd;
+  // Two references, deliberately. The dnd5e compendium cache supplies token
+  // ART (Open5e ships none), and Open5e supplies the authoritative STATS —
+  // including a numeric AC for armour-wearing creatures, which the compendium
+  // derives at runtime and therefore cannot provide.
+  let art;
   if (opts.srd) {
-    const index = JSON.parse(await readFile(opts.srd, 'utf8'));
-    srd = index.creatures?.[base];
+    art = JSON.parse(await readFile(opts.srd, 'utf8')).creatures?.[base];
+  }
+
+  let reference = art;
+  const open5ePath = opts.open5e ?? open5eFor(edition, opts.reference);
+  if (open5ePath) {
+    try {
+      const index = JSON.parse(await readFile(open5ePath, 'utf8'));
+      // Merge, not replace: keep the compendium's tokenSrc, prefer Open5e's stats.
+      if (index.creatures?.[base]) reference = { ...art, ...index.creatures[base] };
+    } catch {
+      // No cache for this edition — fall back to the compendium alone.
+    }
   }
 
   const { actor, warnings } = toActor(fence, {
     name,
     disposition: opts.disposition ?? parseDisposition(frontmatter.disposition),
-    img: fence.image ?? srd?.tokenSrc,
+    img: fence.image ?? art?.tokenSrc,
   });
 
   return {
     actor,
     warnings,
-    deltas: verify(fence, srd),
+    deltas: verify(fence, reference),
     base,
     edition,
     exact: fence.exact === true,

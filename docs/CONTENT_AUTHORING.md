@@ -235,10 +235,47 @@ exactly that bug in three of them.
 Where a bonus is not reachable from any multiplier, the remainder is stored as a
 flat `bonuses.check` **and warned about**, since that case is usually a typo.
 
-### Checking against the SRD base
+### Checking against the published creature
 
-`source: SRD 5.1 (CC-BY-4.0) — Lamia` names the base creature. With `--srd`
-pointing at a cache index, the compiler diffs the fence against it.
+`source: SRD 5.1 (CC-BY-4.0) — Lamia` names the base creature and the edition.
+The compiler checks the fence against **two** references, which answer different
+questions:
+
+| Reference | Built by | Answers |
+| --- | --- | --- |
+| `open5e-{2014,2024}.json` | `open5e-cache.mjs` | *is this faithful to the published creature?* |
+| `srd-5{1,2}.json` | `srd-cache.mjs` | *will this render correctly in my Foundry?* |
+
+A disagreement between them is information, not an error.
+
+Open5e supplies two things the dnd5e compendium cannot:
+
+- **A numeric AC.** The compendium stores `{calc: "default", flat: null}` for
+  armour-wearing creatures and derives AC at runtime, so a Bandit's AC of 12 was
+  simply not checkable. Open5e states it.
+- **Stated skill bonuses**, in the same form the fence writes them. That catches
+  the same class of error as the expertise derivation above, from the other
+  side: there the question is *what multiplier yields this bonus?*, here it is
+  *is this the bonus the creature actually has?*
+
+**The edition matters, and is not cosmetic.** The 2024 rules restat creatures:
+the SRD Lamia is a *monstrosity* with Stealth **+3** in 5.1 and a *fiend* with
+Stealth **+5** in 5.2; the SRD Spy is Medium in 5.1 and Small in 5.2. The
+compiler picks the index from the `source:` line, so a note written from one
+edition is never checked against the other.
+
+Refresh the Open5e caches — network, but nothing else needs it:
+
+```bash
+node scripts/content/open5e-cache.mjs
+```
+
+That reads the [open5e-api](https://github.com/open5e/open5e-api) fixtures from
+GitHub (already reachable; no firewall change) and writes
+`content/reference/open5e-{2014,2024}.json`, which are **committed** so builds
+and CI stay offline.
+
+### How divergence is reported
 
 Divergence is *expected* — a named NPC built on a Spy is meant to differ — so a
 difference is reported as a **delta for a human to read, never an error**. Mark
@@ -246,9 +283,17 @@ the intentional ones with `deviations: [hp, ac]` in the fence, which keeps them
 visible in review rather than invisible; `exact: true` promotes any remaining
 delta to an error.
 
-Fields the cache cannot supply are skipped, not failed. Armour-wearing monsters
-have no stored AC (see below), and treating that as a mismatch would flag every
-one of them.
+Fields a reference cannot supply are skipped, not failed: a missing value means
+*not checkable*, never *zero*. The dnd5e compendium carries no stated skill
+bonuses at all, so those are only compared when Open5e is available.
+
+### Art coverage
+
+An actor with no art still compiles — Foundry requires *some* `img` — but it is
+never silent. The compiler warns when it falls back to `icons/svg/mystery-man.svg`,
+because a blank silhouette is the most visible way this pipeline can ship
+something wrong: fine in the JSON, obviously broken on the map. Give the fence a
+`source:` so it inherits the SRD token, or an `image:` pointing at your own file.
 
 ## Handout art: showable in Foundry
 

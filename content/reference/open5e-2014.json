@@ -1,0 +1,9549 @@
+{
+  "edition": "2014",
+  "srd": "5.1",
+  "source": "open5e-api/data/v2/wizards-of-the-coast/srd-2014",
+  "licence": "CC-BY-4.0",
+  "creatures": {
+    "Aboleth": {
+      "name": "Aboleth",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 135,
+      "hpFormula": "18d10+36",
+      "cr": 10,
+      "size": "lg",
+      "type": "aberration",
+      "abilities": {
+        "str": 21,
+        "dex": 9,
+        "con": 15,
+        "int": 18,
+        "wis": 15,
+        "cha": 18
+      },
+      "saves": {
+        "con": 6,
+        "int": 8,
+        "wis": 6
+      },
+      "skills": {
+        "his": 12,
+        "prc": 10
+      },
+      "speed": {
+        "walk": 10,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Deep Speech, telepathy 120 ft."
+    },
+    "Acolyte": {
+      "name": "Acolyte",
+      "ac": 10,
+      "hp": 9,
+      "hpFormula": "2d8",
+      "cr": 0.25,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 10,
+        "dex": 10,
+        "con": 10,
+        "int": 10,
+        "wis": 14,
+        "cha": 11
+      },
+      "skills": {
+        "med": 4,
+        "rel": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language (usually Common)"
+    },
+    "Adult Black Dragon": {
+      "name": "Adult Black Dragon",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 195,
+      "hpFormula": "17d12+85",
+      "cr": 14,
+      "size": "huge",
+      "type": "dragon",
+      "abilities": {
+        "str": 23,
+        "dex": 14,
+        "con": 21,
+        "int": 14,
+        "wis": 13,
+        "cha": 17
+      },
+      "saves": {
+        "dex": 7,
+        "con": 10,
+        "wis": 6,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 11,
+        "ste": 7
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Adult Blue Dragon": {
+      "name": "Adult Blue Dragon",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 225,
+      "hpFormula": "18d12+108",
+      "cr": 16,
+      "size": "huge",
+      "type": "dragon",
+      "abilities": {
+        "str": 25,
+        "dex": 10,
+        "con": 23,
+        "int": 16,
+        "wis": 15,
+        "cha": 19
+      },
+      "saves": {
+        "dex": 5,
+        "con": 11,
+        "wis": 7,
+        "cha": 9
+      },
+      "skills": {
+        "prc": 12,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "burrow": 30
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Adult Brass Dragon": {
+      "name": "Adult Brass Dragon",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 172,
+      "hpFormula": "15d12+75",
+      "cr": 13,
+      "size": "huge",
+      "type": "dragon",
+      "abilities": {
+        "str": 23,
+        "dex": 10,
+        "con": 21,
+        "int": 14,
+        "wis": 13,
+        "cha": 17
+      },
+      "saves": {
+        "dex": 5,
+        "con": 10,
+        "wis": 6,
+        "cha": 8
+      },
+      "skills": {
+        "his": 7,
+        "prc": 11,
+        "per": 8,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "burrow": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Adult Bronze Dragon": {
+      "name": "Adult Bronze Dragon",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 212,
+      "hpFormula": "17d12+102",
+      "cr": 15,
+      "size": "huge",
+      "type": "dragon",
+      "abilities": {
+        "str": 25,
+        "dex": 10,
+        "con": 23,
+        "int": 16,
+        "wis": 15,
+        "cha": 19
+      },
+      "saves": {
+        "dex": 5,
+        "con": 11,
+        "wis": 7,
+        "cha": 9
+      },
+      "skills": {
+        "ins": 7,
+        "prc": 12,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Adult Copper Dragon": {
+      "name": "Adult Copper Dragon",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 184,
+      "hpFormula": "16d12+80",
+      "cr": 14,
+      "size": "huge",
+      "type": "dragon",
+      "abilities": {
+        "str": 23,
+        "dex": 12,
+        "con": 21,
+        "int": 18,
+        "wis": 15,
+        "cha": 17
+      },
+      "saves": {
+        "dex": 6,
+        "con": 10,
+        "wis": 7,
+        "cha": 8
+      },
+      "skills": {
+        "dec": 8,
+        "prc": 12,
+        "ste": 6
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "climb": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Adult Gold Dragon": {
+      "name": "Adult Gold Dragon",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 256,
+      "hpFormula": "19d12+133",
+      "cr": 17,
+      "size": "huge",
+      "type": "dragon",
+      "abilities": {
+        "str": 27,
+        "dex": 14,
+        "con": 25,
+        "int": 16,
+        "wis": 15,
+        "cha": 24
+      },
+      "saves": {
+        "dex": 8,
+        "con": 13,
+        "wis": 8,
+        "cha": 13
+      },
+      "skills": {
+        "ins": 8,
+        "prc": 14,
+        "per": 13,
+        "ste": 8
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Adult Green Dragon": {
+      "name": "Adult Green Dragon",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 207,
+      "hpFormula": "18d12+90",
+      "cr": 15,
+      "size": "huge",
+      "type": "dragon",
+      "abilities": {
+        "str": 23,
+        "dex": 12,
+        "con": 21,
+        "int": 18,
+        "wis": 15,
+        "cha": 17
+      },
+      "saves": {
+        "dex": 6,
+        "con": 10,
+        "wis": 7,
+        "cha": 8
+      },
+      "skills": {
+        "dec": 8,
+        "ins": 7,
+        "prc": 12,
+        "per": 8,
+        "ste": 6
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Adult Red Dragon": {
+      "name": "Adult Red Dragon",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 256,
+      "hpFormula": "19d12+133",
+      "cr": 17,
+      "size": "huge",
+      "type": "dragon",
+      "abilities": {
+        "str": 27,
+        "dex": 10,
+        "con": 25,
+        "int": 16,
+        "wis": 13,
+        "cha": 21
+      },
+      "saves": {
+        "dex": 6,
+        "con": 13,
+        "wis": 7,
+        "cha": 11
+      },
+      "skills": {
+        "prc": 13,
+        "ste": 6
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "climb": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Adult Silver Dragon": {
+      "name": "Adult Silver Dragon",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 243,
+      "hpFormula": "18d12+126",
+      "cr": 16,
+      "size": "huge",
+      "type": "dragon",
+      "abilities": {
+        "str": 27,
+        "dex": 10,
+        "con": 25,
+        "int": 16,
+        "wis": 13,
+        "cha": 21
+      },
+      "saves": {
+        "dex": 5,
+        "con": 12,
+        "wis": 6,
+        "cha": 10
+      },
+      "skills": {
+        "arc": 8,
+        "his": 8,
+        "prc": 11,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Adult White Dragon": {
+      "name": "Adult White Dragon",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 200,
+      "hpFormula": "16d12+96",
+      "cr": 13,
+      "size": "huge",
+      "type": "dragon",
+      "abilities": {
+        "str": 22,
+        "dex": 10,
+        "con": 22,
+        "int": 8,
+        "wis": 12,
+        "cha": 12
+      },
+      "saves": {
+        "dex": 5,
+        "con": 11,
+        "wis": 6,
+        "cha": 6
+      },
+      "skills": {
+        "prc": 11,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40,
+        "burrow": 30
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Air Elemental": {
+      "name": "Air Elemental",
+      "ac": 15,
+      "hp": 90,
+      "hpFormula": "12d10+24",
+      "cr": 5,
+      "size": "lg",
+      "type": "elemental",
+      "abilities": {
+        "str": 14,
+        "dex": 20,
+        "con": 14,
+        "int": 6,
+        "wis": 10,
+        "cha": 6
+      },
+      "speed": {
+        "fly": 90
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Auran"
+    },
+    "Ancient Black Dragon": {
+      "name": "Ancient Black Dragon",
+      "ac": 22,
+      "acDetail": "natural armor",
+      "hp": 367,
+      "hpFormula": "21d20+147",
+      "cr": 21,
+      "size": "grg",
+      "type": "dragon",
+      "abilities": {
+        "str": 27,
+        "dex": 14,
+        "con": 25,
+        "int": 16,
+        "wis": 15,
+        "cha": 19
+      },
+      "saves": {
+        "dex": 9,
+        "con": 14,
+        "wis": 9,
+        "cha": 11
+      },
+      "skills": {
+        "prc": 16,
+        "ste": 9
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Ancient Blue Dragon": {
+      "name": "Ancient Blue Dragon",
+      "ac": 22,
+      "acDetail": "natural armor",
+      "hp": 481,
+      "hpFormula": "26d20+208",
+      "cr": 23,
+      "size": "grg",
+      "type": "dragon",
+      "abilities": {
+        "str": 29,
+        "dex": 10,
+        "con": 27,
+        "int": 18,
+        "wis": 17,
+        "cha": 21
+      },
+      "saves": {
+        "dex": 7,
+        "con": 15,
+        "wis": 10,
+        "cha": 12
+      },
+      "skills": {
+        "prc": 17,
+        "ste": 7
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "burrow": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Ancient Brass Dragon": {
+      "name": "Ancient Brass Dragon",
+      "ac": 20,
+      "acDetail": "natural armor",
+      "hp": 297,
+      "hpFormula": "17d20+119",
+      "cr": 20,
+      "size": "grg",
+      "type": "dragon",
+      "abilities": {
+        "str": 27,
+        "dex": 10,
+        "con": 25,
+        "int": 16,
+        "wis": 15,
+        "cha": 19
+      },
+      "saves": {
+        "dex": 6,
+        "con": 13,
+        "wis": 8,
+        "cha": 10
+      },
+      "skills": {
+        "his": 9,
+        "prc": 14,
+        "per": 10,
+        "ste": 6
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "burrow": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Ancient Bronze Dragon": {
+      "name": "Ancient Bronze Dragon",
+      "ac": 22,
+      "acDetail": "natural armor",
+      "hp": 444,
+      "hpFormula": "24d20+192",
+      "cr": 22,
+      "size": "grg",
+      "type": "dragon",
+      "abilities": {
+        "str": 29,
+        "dex": 10,
+        "con": 27,
+        "int": 18,
+        "wis": 17,
+        "cha": 21
+      },
+      "saves": {
+        "dex": 7,
+        "con": 15,
+        "wis": 10,
+        "cha": 12
+      },
+      "skills": {
+        "ins": 10,
+        "prc": 17,
+        "ste": 7
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Ancient Copper Dragon": {
+      "name": "Ancient Copper Dragon",
+      "ac": 21,
+      "acDetail": "natural armor",
+      "hp": 350,
+      "hpFormula": "20d20+140",
+      "cr": 21,
+      "size": "grg",
+      "type": "dragon",
+      "abilities": {
+        "str": 27,
+        "dex": 12,
+        "con": 25,
+        "int": 20,
+        "wis": 17,
+        "cha": 19
+      },
+      "saves": {
+        "dex": 8,
+        "con": 14,
+        "wis": 10,
+        "cha": 11
+      },
+      "skills": {
+        "dec": 11,
+        "prc": 17,
+        "ste": 8
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "climb": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Ancient Gold Dragon": {
+      "name": "Ancient Gold Dragon",
+      "ac": 22,
+      "acDetail": "natural armor",
+      "hp": 546,
+      "hpFormula": "28d20+252",
+      "cr": 24,
+      "size": "grg",
+      "type": "dragon",
+      "abilities": {
+        "str": 30,
+        "dex": 14,
+        "con": 29,
+        "int": 18,
+        "wis": 17,
+        "cha": 28
+      },
+      "saves": {
+        "dex": 9,
+        "con": 16,
+        "wis": 10,
+        "cha": 16
+      },
+      "skills": {
+        "ins": 10,
+        "prc": 17,
+        "per": 16,
+        "ste": 9
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Ancient Green Dragon": {
+      "name": "Ancient Green Dragon",
+      "ac": 21,
+      "acDetail": "natural armor",
+      "hp": 385,
+      "hpFormula": "22d20+154",
+      "cr": 22,
+      "size": "grg",
+      "type": "dragon",
+      "abilities": {
+        "str": 27,
+        "dex": 12,
+        "con": 25,
+        "int": 20,
+        "wis": 17,
+        "cha": 19
+      },
+      "saves": {
+        "dex": 8,
+        "con": 14,
+        "wis": 10,
+        "cha": 11
+      },
+      "skills": {
+        "dec": 11,
+        "ins": 10,
+        "prc": 17,
+        "per": 11,
+        "ste": 8
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Ancient Red Dragon": {
+      "name": "Ancient Red Dragon",
+      "ac": 22,
+      "acDetail": "natural armor",
+      "hp": 546,
+      "hpFormula": "28d20+252",
+      "cr": 24,
+      "size": "grg",
+      "type": "dragon",
+      "abilities": {
+        "str": 30,
+        "dex": 10,
+        "con": 29,
+        "int": 18,
+        "wis": 15,
+        "cha": 23
+      },
+      "saves": {
+        "dex": 7,
+        "con": 16,
+        "wis": 9,
+        "cha": 13
+      },
+      "skills": {
+        "prc": 16,
+        "ste": 7
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "climb": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Ancient Silver Dragon": {
+      "name": "Ancient Silver Dragon",
+      "ac": 22,
+      "acDetail": "natural armor",
+      "hp": 487,
+      "hpFormula": "25d20+225",
+      "cr": 23,
+      "size": "grg",
+      "type": "dragon",
+      "abilities": {
+        "str": 30,
+        "dex": 10,
+        "con": 29,
+        "int": 18,
+        "wis": 15,
+        "cha": 23
+      },
+      "saves": {
+        "dex": 7,
+        "con": 16,
+        "wis": 9,
+        "cha": 13
+      },
+      "skills": {
+        "arc": 11,
+        "his": 11,
+        "prc": 16,
+        "ste": 7
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Ancient White Dragon": {
+      "name": "Ancient White Dragon",
+      "ac": 20,
+      "acDetail": "natural armor",
+      "hp": 333,
+      "hpFormula": "18d20+144",
+      "cr": 20,
+      "size": "grg",
+      "type": "dragon",
+      "abilities": {
+        "str": 26,
+        "dex": 10,
+        "con": 26,
+        "int": 10,
+        "wis": 13,
+        "cha": 14
+      },
+      "saves": {
+        "dex": 6,
+        "con": 14,
+        "wis": 7,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 13,
+        "ste": 6
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40,
+        "burrow": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Androsphinx": {
+      "name": "Androsphinx",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 199,
+      "hpFormula": "19d10+95",
+      "cr": 17,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 22,
+        "dex": 10,
+        "con": 20,
+        "int": 16,
+        "wis": 18,
+        "cha": 23
+      },
+      "saves": {
+        "dex": 6,
+        "con": 11,
+        "int": 9,
+        "wis": 10
+      },
+      "skills": {
+        "arc": 9,
+        "prc": 10,
+        "rel": 15
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 60
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "Common, Sphinx"
+    },
+    "Animated Armor": {
+      "name": "Animated Armor",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 33,
+      "hpFormula": "6d8+6",
+      "cr": 1,
+      "size": "med",
+      "type": "construct",
+      "abilities": {
+        "str": 14,
+        "dex": 11,
+        "con": 13,
+        "int": 1,
+        "wis": 3,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 25
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Ankheg": {
+      "name": "Ankheg",
+      "ac": 14,
+      "acDetail": "14 (natural armor), 11 while prone",
+      "hp": 39,
+      "hpFormula": "6d10+6",
+      "cr": 2,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 17,
+        "dex": 11,
+        "con": 13,
+        "int": 1,
+        "wis": 13,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 30,
+        "burrow": 10
+      },
+      "senses": {
+        "darkvision": 60,
+        "tremorsense": 60
+      },
+      "languages": ""
+    },
+    "Ape": {
+      "name": "Ape",
+      "ac": 12,
+      "hp": 19,
+      "hpFormula": "3d8+6",
+      "cr": 0.5,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 16,
+        "dex": 14,
+        "con": 14,
+        "int": 6,
+        "wis": 12,
+        "cha": 7
+      },
+      "skills": {
+        "ath": 5,
+        "prc": 3
+      },
+      "speed": {
+        "walk": 30,
+        "climb": 30
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Archmage": {
+      "name": "Archmage",
+      "ac": 12,
+      "acDetail": "15 with _mage armor_",
+      "hp": 99,
+      "hpFormula": "18d8+18",
+      "cr": 12,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 10,
+        "dex": 14,
+        "con": 12,
+        "int": 20,
+        "wis": 15,
+        "cha": 16
+      },
+      "saves": {
+        "int": 9,
+        "wis": 6
+      },
+      "skills": {
+        "arc": 13,
+        "his": 13
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any six languages"
+    },
+    "Assassin": {
+      "name": "Assassin",
+      "ac": 15,
+      "acDetail": "studded leather",
+      "hp": 78,
+      "hpFormula": "12d8+24",
+      "cr": 8,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 11,
+        "dex": 16,
+        "con": 14,
+        "int": 13,
+        "wis": 11,
+        "cha": 10
+      },
+      "saves": {
+        "dex": 6,
+        "int": 4
+      },
+      "skills": {
+        "acr": 6,
+        "dec": 3,
+        "prc": 3,
+        "ste": 9
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "Thieves' cant plus any two languages"
+    },
+    "Awakened Shrub": {
+      "name": "Awakened Shrub",
+      "ac": 9,
+      "hp": 10,
+      "hpFormula": "3d6",
+      "cr": 0,
+      "size": "sm",
+      "type": "plant",
+      "abilities": {
+        "str": 3,
+        "dex": 8,
+        "con": 11,
+        "int": 10,
+        "wis": 10,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 20
+      },
+      "senses": {},
+      "languages": "one language known by its creator"
+    },
+    "Awakened Tree": {
+      "name": "Awakened Tree",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 59,
+      "hpFormula": "7d12+14",
+      "cr": 2,
+      "size": "huge",
+      "type": "plant",
+      "abilities": {
+        "str": 19,
+        "dex": 6,
+        "con": 15,
+        "int": 10,
+        "wis": 10,
+        "cha": 7
+      },
+      "speed": {
+        "walk": 20
+      },
+      "senses": {},
+      "languages": "one language known by its creator"
+    },
+    "Axe Beak": {
+      "name": "Axe Beak",
+      "ac": 11,
+      "hp": 19,
+      "hpFormula": "3d10+3",
+      "cr": 0.25,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 14,
+        "dex": 12,
+        "con": 12,
+        "int": 2,
+        "wis": 10,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Azer": {
+      "name": "Azer",
+      "ac": 17,
+      "acDetail": "natural armor, shield",
+      "hp": 39,
+      "hpFormula": "6d8+12",
+      "cr": 2,
+      "size": "med",
+      "type": "elemental",
+      "abilities": {
+        "str": 17,
+        "dex": 12,
+        "con": 15,
+        "int": 12,
+        "wis": 13,
+        "cha": 10
+      },
+      "saves": {
+        "con": 4
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "Ignan"
+    },
+    "Baboon": {
+      "name": "Baboon",
+      "ac": 12,
+      "hp": 3,
+      "hpFormula": "1d6",
+      "cr": 0,
+      "size": "sm",
+      "type": "beast",
+      "abilities": {
+        "str": 8,
+        "dex": 14,
+        "con": 11,
+        "int": 4,
+        "wis": 12,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 30,
+        "climb": 30
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Badger": {
+      "name": "Badger",
+      "ac": 10,
+      "hp": 3,
+      "hpFormula": "1d4+1",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 4,
+        "dex": 11,
+        "con": 12,
+        "int": 2,
+        "wis": 12,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 20,
+        "burrow": 5
+      },
+      "senses": {
+        "darkvision": 30
+      },
+      "languages": ""
+    },
+    "Balor": {
+      "name": "Balor",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 262,
+      "hpFormula": "21d12+126",
+      "cr": 19,
+      "size": "huge",
+      "type": "fiend",
+      "abilities": {
+        "str": 26,
+        "dex": 15,
+        "con": 22,
+        "int": 20,
+        "wis": 16,
+        "cha": 22
+      },
+      "saves": {
+        "str": 14,
+        "con": 12,
+        "wis": 9,
+        "cha": 12
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "Abyssal, telepathy 120 ft."
+    },
+    "Bandit": {
+      "name": "Bandit",
+      "ac": 12,
+      "acDetail": "leather armor",
+      "hp": 11,
+      "hpFormula": "2d8+2",
+      "cr": 0.125,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 11,
+        "dex": 12,
+        "con": 12,
+        "int": 10,
+        "wis": 10,
+        "cha": 10
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language (usually Common)"
+    },
+    "Bandit Captain": {
+      "name": "Bandit Captain",
+      "ac": 15,
+      "acDetail": "studded leather",
+      "hp": 65,
+      "hpFormula": "10d8+20",
+      "cr": 2,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 15,
+        "dex": 16,
+        "con": 14,
+        "int": 14,
+        "wis": 11,
+        "cha": 14
+      },
+      "saves": {
+        "str": 4,
+        "dex": 5,
+        "wis": 2
+      },
+      "skills": {
+        "ath": 4,
+        "dec": 4
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any two languages"
+    },
+    "Barbed Devil": {
+      "name": "Barbed Devil",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 110,
+      "hpFormula": "13d8+52",
+      "cr": 5,
+      "size": "med",
+      "type": "fiend",
+      "abilities": {
+        "str": 16,
+        "dex": 17,
+        "con": 18,
+        "int": 12,
+        "wis": 14,
+        "cha": 14
+      },
+      "saves": {
+        "str": 6,
+        "con": 7,
+        "wis": 5,
+        "cha": 5
+      },
+      "skills": {
+        "dec": 5,
+        "ins": 5,
+        "prc": 8
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Infernal, telepathy 120 ft."
+    },
+    "Basilisk": {
+      "name": "Basilisk",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 52,
+      "hpFormula": "8d8+16",
+      "cr": 3,
+      "size": "med",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 16,
+        "dex": 8,
+        "con": 15,
+        "int": 2,
+        "wis": 8,
+        "cha": 7
+      },
+      "speed": {
+        "walk": 20
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Bat": {
+      "name": "Bat",
+      "ac": 12,
+      "hp": 1,
+      "hpFormula": "1d4-1",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 2,
+        "dex": 15,
+        "con": 8,
+        "int": 2,
+        "wis": 12,
+        "cha": 4
+      },
+      "speed": {
+        "walk": 5,
+        "fly": 30
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Bearded Devil": {
+      "name": "Bearded Devil",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 52,
+      "hpFormula": "8d8+16",
+      "cr": 3,
+      "size": "med",
+      "type": "fiend",
+      "abilities": {
+        "str": 16,
+        "dex": 15,
+        "con": 15,
+        "int": 9,
+        "wis": 11,
+        "cha": 11
+      },
+      "saves": {
+        "str": 5,
+        "con": 4,
+        "wis": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Infernal, telepathy 120 ft."
+    },
+    "Behir": {
+      "name": "Behir",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 168,
+      "hpFormula": "16d12+64",
+      "cr": 11,
+      "size": "huge",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 23,
+        "dex": 16,
+        "con": 18,
+        "int": 7,
+        "wis": 14,
+        "cha": 12
+      },
+      "skills": {
+        "prc": 6,
+        "ste": 7
+      },
+      "speed": {
+        "walk": 50,
+        "climb": 40
+      },
+      "senses": {
+        "darkvision": 90
+      },
+      "languages": "Draconic"
+    },
+    "Berserker": {
+      "name": "Berserker",
+      "ac": 13,
+      "acDetail": "hide armor",
+      "hp": 67,
+      "hpFormula": "9d8+27",
+      "cr": 2,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 16,
+        "dex": 12,
+        "con": 17,
+        "int": 9,
+        "wis": 11,
+        "cha": 9
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language (usually Common)"
+    },
+    "Black Bear": {
+      "name": "Black Bear",
+      "ac": 11,
+      "acDetail": "natural armor",
+      "hp": 19,
+      "hpFormula": "3d8+6",
+      "cr": 0.5,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 15,
+        "dex": 10,
+        "con": 14,
+        "int": 2,
+        "wis": 12,
+        "cha": 7
+      },
+      "speed": {
+        "walk": 40,
+        "climb": 30
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Black Dragon Wyrmling": {
+      "name": "Black Dragon Wyrmling",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 33,
+      "hpFormula": "6d8+6",
+      "cr": 2,
+      "size": "med",
+      "type": "dragon",
+      "abilities": {
+        "str": 15,
+        "dex": 14,
+        "con": 13,
+        "int": 10,
+        "wis": 11,
+        "cha": 13
+      },
+      "saves": {
+        "dex": 4,
+        "con": 3,
+        "wis": 2,
+        "cha": 3
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60,
+        "swim": 30
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "Draconic"
+    },
+    "Black Pudding": {
+      "name": "Black Pudding",
+      "ac": 7,
+      "hp": 85,
+      "hpFormula": "10d10+30",
+      "cr": 4,
+      "size": "lg",
+      "type": "ooze",
+      "abilities": {
+        "str": 16,
+        "dex": 5,
+        "con": 16,
+        "int": 1,
+        "wis": 6,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 20,
+        "climb": 20
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Blink Dog": {
+      "name": "Blink Dog",
+      "ac": 13,
+      "hp": 22,
+      "hpFormula": "4d8+4",
+      "cr": 0.25,
+      "size": "med",
+      "type": "fey",
+      "abilities": {
+        "str": 12,
+        "dex": 17,
+        "con": 12,
+        "int": 10,
+        "wis": 13,
+        "cha": 11
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": "Blink Dog, understands Sylvan but can't speak it"
+    },
+    "Blood Hawk": {
+      "name": "Blood Hawk",
+      "ac": 12,
+      "hp": 7,
+      "hpFormula": "2d6",
+      "cr": 0.125,
+      "size": "sm",
+      "type": "beast",
+      "abilities": {
+        "str": 6,
+        "dex": 14,
+        "con": 10,
+        "int": 3,
+        "wis": 14,
+        "cha": 5
+      },
+      "skills": {
+        "prc": 4
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 60
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Blue Dragon Wyrmling": {
+      "name": "Blue Dragon Wyrmling",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 52,
+      "hpFormula": "8d8+16",
+      "cr": 3,
+      "size": "med",
+      "type": "dragon",
+      "abilities": {
+        "str": 17,
+        "dex": 10,
+        "con": 15,
+        "int": 12,
+        "wis": 11,
+        "cha": 15
+      },
+      "saves": {
+        "dex": 2,
+        "con": 4,
+        "wis": 2,
+        "cha": 4
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 2
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60,
+        "burrow": 15
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "Draconic"
+    },
+    "Boar": {
+      "name": "Boar",
+      "ac": 11,
+      "acDetail": "natural armor",
+      "hp": 11,
+      "hpFormula": "2d8+2",
+      "cr": 0.25,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 13,
+        "dex": 11,
+        "con": 12,
+        "int": 2,
+        "wis": 9,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Bone Devil": {
+      "name": "Bone Devil",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 142,
+      "hpFormula": "15d10+60",
+      "cr": 9,
+      "size": "lg",
+      "type": "fiend",
+      "abilities": {
+        "str": 18,
+        "dex": 16,
+        "con": 18,
+        "int": 13,
+        "wis": 14,
+        "cha": 16
+      },
+      "saves": {
+        "int": 5,
+        "wis": 6,
+        "cha": 7
+      },
+      "skills": {
+        "dec": 7,
+        "ins": 6
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 40
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Infernal, telepathy 120 ft."
+    },
+    "Brass Dragon Wyrmling": {
+      "name": "Brass Dragon Wyrmling",
+      "ac": 16,
+      "acDetail": "natural armor",
+      "hp": 16,
+      "hpFormula": "3d8+3",
+      "cr": 1,
+      "size": "med",
+      "type": "dragon",
+      "abilities": {
+        "str": 15,
+        "dex": 10,
+        "con": 13,
+        "int": 10,
+        "wis": 11,
+        "cha": 13
+      },
+      "saves": {
+        "dex": 2,
+        "con": 3,
+        "wis": 2,
+        "cha": 3
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 2
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60,
+        "burrow": 15
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "Draconic"
+    },
+    "Bronze Dragon Wyrmling": {
+      "name": "Bronze Dragon Wyrmling",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 32,
+      "hpFormula": "5d8+10",
+      "cr": 2,
+      "size": "med",
+      "type": "dragon",
+      "abilities": {
+        "str": 17,
+        "dex": 10,
+        "con": 15,
+        "int": 12,
+        "wis": 11,
+        "cha": 15
+      },
+      "saves": {
+        "dex": 2,
+        "con": 4,
+        "wis": 2,
+        "cha": 4
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 2
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60,
+        "swim": 30
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "Draconic"
+    },
+    "Brown Bear": {
+      "name": "Brown Bear",
+      "ac": 11,
+      "acDetail": "natural armor",
+      "hp": 34,
+      "hpFormula": "4d10+12",
+      "cr": 1,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 19,
+        "dex": 10,
+        "con": 16,
+        "int": 2,
+        "wis": 13,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 3
+      },
+      "speed": {
+        "walk": 40,
+        "climb": 30
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Bugbear": {
+      "name": "Bugbear",
+      "ac": 16,
+      "acDetail": "hide armor, shield",
+      "hp": 27,
+      "hpFormula": "5d8+5",
+      "cr": 1,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 15,
+        "dex": 14,
+        "con": 13,
+        "int": 8,
+        "wis": 11,
+        "cha": 9
+      },
+      "skills": {
+        "ste": 6,
+        "sur": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common, Goblin"
+    },
+    "Bulette": {
+      "name": "Bulette",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 94,
+      "hpFormula": "9d10+45",
+      "cr": 5,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 19,
+        "dex": 11,
+        "con": 21,
+        "int": 2,
+        "wis": 10,
+        "cha": 5
+      },
+      "skills": {
+        "prc": 6
+      },
+      "speed": {
+        "walk": 40,
+        "burrow": 40
+      },
+      "senses": {
+        "darkvision": 60,
+        "tremorsense": 60
+      },
+      "languages": ""
+    },
+    "Camel": {
+      "name": "Camel",
+      "ac": 9,
+      "hp": 15,
+      "hpFormula": "2d10+4",
+      "cr": 0.125,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 16,
+        "dex": 8,
+        "con": 14,
+        "int": 2,
+        "wis": 8,
+        "cha": 5
+      },
+      "saves": {
+        "str": 0,
+        "dex": 0,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "skills": {
+        "acr": 0,
+        "ani": 0,
+        "arc": 0,
+        "ath": 0,
+        "dec": 0,
+        "his": 0,
+        "ins": 0,
+        "itm": 0,
+        "inv": 0,
+        "med": 0,
+        "nat": 0,
+        "prc": 0,
+        "prf": 0,
+        "per": 0,
+        "rel": 0,
+        "slt": 0,
+        "ste": 0,
+        "sur": 0
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Cat": {
+      "name": "Cat",
+      "ac": 12,
+      "hp": 2,
+      "hpFormula": "1d4",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 3,
+        "dex": 15,
+        "con": 10,
+        "int": 3,
+        "wis": 12,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 40,
+        "climb": 30
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Centaur": {
+      "name": "Centaur",
+      "ac": 12,
+      "hp": 45,
+      "hpFormula": "6d10+12",
+      "cr": 2,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 18,
+        "dex": 14,
+        "con": 14,
+        "int": 9,
+        "wis": 13,
+        "cha": 11
+      },
+      "skills": {
+        "ath": 6,
+        "prc": 3,
+        "sur": 3
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {},
+      "languages": "Elvish, Sylvan"
+    },
+    "Chain Devil": {
+      "name": "Chain Devil",
+      "ac": 16,
+      "acDetail": "natural armor",
+      "hp": 85,
+      "hpFormula": "10d8+40",
+      "cr": 11,
+      "size": "med",
+      "type": "fiend",
+      "abilities": {
+        "str": 18,
+        "dex": 15,
+        "con": 18,
+        "int": 11,
+        "wis": 12,
+        "cha": 14
+      },
+      "saves": {
+        "con": 7,
+        "wis": 4,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Infernal, telepathy 120 ft."
+    },
+    "Chimera": {
+      "name": "Chimera",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 114,
+      "hpFormula": "12d10+48",
+      "cr": 6,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 19,
+        "dex": 11,
+        "con": 19,
+        "int": 3,
+        "wis": 14,
+        "cha": 10
+      },
+      "skills": {
+        "prc": 8
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "understands Draconic but can't speak"
+    },
+    "Chuul": {
+      "name": "Chuul",
+      "ac": 16,
+      "acDetail": "natural armor",
+      "hp": 93,
+      "hpFormula": "11d10+33",
+      "cr": 4,
+      "size": "lg",
+      "type": "aberration",
+      "abilities": {
+        "str": 19,
+        "dex": 10,
+        "con": 16,
+        "int": 5,
+        "wis": 11,
+        "cha": 5
+      },
+      "skills": {
+        "prc": 4
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "understands Deep Speech but can't speak"
+    },
+    "Clay Golem": {
+      "name": "Clay Golem",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 133,
+      "hpFormula": "14d10+56",
+      "cr": 9,
+      "size": "lg",
+      "type": "construct",
+      "abilities": {
+        "str": 20,
+        "dex": 9,
+        "con": 18,
+        "int": 3,
+        "wis": 8,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 20
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "understands the languages of its creator but can't speak"
+    },
+    "Cloaker": {
+      "name": "Cloaker",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 78,
+      "hpFormula": "12d10+12",
+      "cr": 8,
+      "size": "lg",
+      "type": "aberration",
+      "abilities": {
+        "str": 17,
+        "dex": 15,
+        "con": 12,
+        "int": 13,
+        "wis": 12,
+        "cha": 14
+      },
+      "skills": {
+        "ste": 5
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Deep Speech, Undercommon"
+    },
+    "Cloud Giant": {
+      "name": "Cloud Giant",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 200,
+      "hpFormula": "16d12+96",
+      "cr": 9,
+      "size": "huge",
+      "type": "giant",
+      "abilities": {
+        "str": 27,
+        "dex": 10,
+        "con": 22,
+        "int": 12,
+        "wis": 16,
+        "cha": 16
+      },
+      "saves": {
+        "con": 10,
+        "wis": 7,
+        "cha": 7
+      },
+      "skills": {
+        "ins": 7,
+        "prc": 7
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": "Common, Giant"
+    },
+    "Cockatrice": {
+      "name": "Cockatrice",
+      "ac": 11,
+      "hp": 27,
+      "hpFormula": "6d6+6",
+      "cr": 0.5,
+      "size": "sm",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 6,
+        "dex": 12,
+        "con": 12,
+        "int": 2,
+        "wis": 13,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 20,
+        "fly": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Commoner": {
+      "name": "Commoner",
+      "ac": 10,
+      "hp": 4,
+      "hpFormula": "1d8",
+      "cr": 0,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 10,
+        "dex": 10,
+        "con": 10,
+        "int": 10,
+        "wis": 10,
+        "cha": 10
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language (usually Common)"
+    },
+    "Constrictor Snake": {
+      "name": "Constrictor Snake",
+      "ac": 12,
+      "hp": 13,
+      "hpFormula": "2d10+2",
+      "cr": 0.25,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 15,
+        "dex": 14,
+        "con": 12,
+        "int": 1,
+        "wis": 10,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 30
+      },
+      "senses": {
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Copper Dragon Wyrmling": {
+      "name": "Copper Dragon Wyrmling",
+      "ac": 16,
+      "acDetail": "natural armor",
+      "hp": 22,
+      "hpFormula": "4d8+4",
+      "cr": 1,
+      "size": "med",
+      "type": "dragon",
+      "abilities": {
+        "str": 15,
+        "dex": 12,
+        "con": 13,
+        "int": 14,
+        "wis": 11,
+        "cha": 13
+      },
+      "saves": {
+        "dex": 3,
+        "con": 3,
+        "wis": 2,
+        "cha": 3
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60,
+        "climb": 30
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "Draconic"
+    },
+    "Couatl": {
+      "name": "Couatl",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 97,
+      "hpFormula": "13d8+39",
+      "cr": 4,
+      "size": "med",
+      "type": "celestial",
+      "abilities": {
+        "str": 16,
+        "dex": 20,
+        "con": 17,
+        "int": 18,
+        "wis": 20,
+        "cha": 18
+      },
+      "saves": {
+        "con": 5,
+        "wis": 7,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 90
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "all, telepathy 120 ft."
+    },
+    "Crab": {
+      "name": "Crab",
+      "ac": 11,
+      "acDetail": "natural armor",
+      "hp": 2,
+      "hpFormula": "1d4",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 2,
+        "dex": 11,
+        "con": 10,
+        "int": 1,
+        "wis": 8,
+        "cha": 2
+      },
+      "skills": {
+        "ste": 2
+      },
+      "speed": {
+        "walk": 20,
+        "swim": 20
+      },
+      "senses": {
+        "blindsight": 30
+      },
+      "languages": ""
+    },
+    "Crocodile": {
+      "name": "Crocodile",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 19,
+      "hpFormula": "3d10+3",
+      "cr": 0.5,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 15,
+        "dex": 10,
+        "con": 13,
+        "int": 2,
+        "wis": 10,
+        "cha": 5
+      },
+      "skills": {
+        "ste": 2
+      },
+      "speed": {
+        "walk": 20,
+        "swim": 20
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Cult Fanatic": {
+      "name": "Cult Fanatic",
+      "ac": 13,
+      "acDetail": "leather armor",
+      "hp": 22,
+      "hpFormula": "6d8+6",
+      "cr": 2,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 11,
+        "dex": 14,
+        "con": 12,
+        "int": 10,
+        "wis": 13,
+        "cha": 14
+      },
+      "skills": {
+        "dec": 4,
+        "per": 4,
+        "rel": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language (usually Common)"
+    },
+    "Cultist": {
+      "name": "Cultist",
+      "ac": 12,
+      "acDetail": "leather armor",
+      "hp": 9,
+      "hpFormula": "2d8",
+      "cr": 0.125,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 11,
+        "dex": 12,
+        "con": 10,
+        "int": 10,
+        "wis": 11,
+        "cha": 10
+      },
+      "skills": {
+        "dec": 2,
+        "rel": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language (usually Common)"
+    },
+    "Darkmantle": {
+      "name": "Darkmantle",
+      "ac": 11,
+      "hp": 22,
+      "hpFormula": "5d6+5",
+      "cr": 0.5,
+      "size": "sm",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 16,
+        "dex": 12,
+        "con": 13,
+        "int": 2,
+        "wis": 10,
+        "cha": 5
+      },
+      "skills": {
+        "ste": 3
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 30
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Death Dog": {
+      "name": "Death Dog",
+      "ac": 12,
+      "hp": 39,
+      "hpFormula": "6d8+12",
+      "cr": 1,
+      "size": "med",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 15,
+        "dex": 14,
+        "con": 14,
+        "int": 3,
+        "wis": 13,
+        "cha": 6
+      },
+      "skills": {
+        "prc": 5,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": ""
+    },
+    "Deep Gnome (Svirfneblin)": {
+      "name": "Deep Gnome (Svirfneblin)",
+      "ac": 15,
+      "acDetail": "chain shirt",
+      "hp": 16,
+      "hpFormula": "3d6+6",
+      "cr": 0.5,
+      "size": "sm",
+      "type": "humanoid",
+      "abilities": {
+        "str": 15,
+        "dex": 14,
+        "con": 14,
+        "int": 12,
+        "wis": 10,
+        "cha": 9
+      },
+      "skills": {
+        "inv": 3,
+        "prc": 2,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 20
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Gnomish, Terran, Undercommon"
+    },
+    "Deer": {
+      "name": "Deer",
+      "ac": 13,
+      "hp": 4,
+      "hpFormula": "1d8",
+      "cr": 0,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 11,
+        "dex": 16,
+        "con": 11,
+        "int": 2,
+        "wis": 14,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Deva": {
+      "name": "Deva",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 136,
+      "hpFormula": "16d8+64",
+      "cr": 10,
+      "size": "med",
+      "type": "celestial",
+      "abilities": {
+        "str": 18,
+        "dex": 18,
+        "con": 18,
+        "int": 17,
+        "wis": 20,
+        "cha": 20
+      },
+      "saves": {
+        "wis": 9,
+        "cha": 9
+      },
+      "skills": {
+        "ins": 9,
+        "prc": 9
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 90
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "all, telepathy 120 ft."
+    },
+    "Dire Wolf": {
+      "name": "Dire Wolf",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 37,
+      "hpFormula": "5d10+10",
+      "cr": 1,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 17,
+        "dex": 15,
+        "con": 15,
+        "int": 3,
+        "wis": 12,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Djinni": {
+      "name": "Djinni",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 161,
+      "hpFormula": "14d10+84",
+      "cr": 11,
+      "size": "lg",
+      "type": "elemental",
+      "abilities": {
+        "str": 21,
+        "dex": 15,
+        "con": 22,
+        "int": 15,
+        "wis": 16,
+        "cha": 20
+      },
+      "saves": {
+        "dex": 6,
+        "wis": 7,
+        "cha": 9
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 90
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Auran"
+    },
+    "Donkey": {
+      "name": "Donkey",
+      "ac": 10,
+      "hp": 11,
+      "cr": 0,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 14,
+        "dex": 10,
+        "con": 13,
+        "int": 2,
+        "wis": 10,
+        "cha": 5
+      },
+      "saves": {
+        "str": 0,
+        "dex": 0,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "skills": {
+        "acr": 0,
+        "ani": 0,
+        "arc": 0,
+        "ath": 0,
+        "dec": 0,
+        "his": 0,
+        "ins": 0,
+        "itm": 0,
+        "inv": 0,
+        "med": 0,
+        "nat": 0,
+        "prc": 0,
+        "prf": 0,
+        "per": 0,
+        "rel": 0,
+        "slt": 0,
+        "ste": 0,
+        "sur": 0
+      },
+      "speed": {},
+      "senses": {},
+      "languages": ""
+    },
+    "Doppelganger": {
+      "name": "Doppelganger",
+      "ac": 14,
+      "hp": 52,
+      "hpFormula": "8d8+16",
+      "cr": 3,
+      "size": "med",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 11,
+        "dex": 18,
+        "con": 14,
+        "int": 11,
+        "wis": 12,
+        "cha": 14
+      },
+      "skills": {
+        "dec": 6,
+        "ins": 3
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common"
+    },
+    "Draft Horse": {
+      "name": "Draft Horse",
+      "ac": 10,
+      "hp": 19,
+      "hpFormula": "3d10+3",
+      "cr": 0.25,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 18,
+        "dex": 10,
+        "con": 12,
+        "int": 2,
+        "wis": 11,
+        "cha": 7
+      },
+      "saves": {
+        "str": 0,
+        "dex": 0,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "skills": {
+        "acr": 0,
+        "ani": 0,
+        "arc": 0,
+        "ath": 0,
+        "dec": 0,
+        "his": 0,
+        "ins": 0,
+        "itm": 0,
+        "inv": 0,
+        "med": 0,
+        "nat": 0,
+        "prc": 0,
+        "prf": 0,
+        "per": 0,
+        "rel": 0,
+        "slt": 0,
+        "ste": 0,
+        "sur": 0
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Dragon Turtle": {
+      "name": "Dragon Turtle",
+      "ac": 20,
+      "acDetail": "natural armor",
+      "hp": 341,
+      "hpFormula": "22d20+110",
+      "cr": 17,
+      "size": "grg",
+      "type": "dragon",
+      "abilities": {
+        "str": 25,
+        "dex": 10,
+        "con": 20,
+        "int": 10,
+        "wis": 12,
+        "cha": 12
+      },
+      "saves": {
+        "dex": 6,
+        "con": 11,
+        "wis": 7
+      },
+      "speed": {
+        "walk": 20,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Aquan, Draconic"
+    },
+    "Dretch": {
+      "name": "Dretch",
+      "ac": 11,
+      "acDetail": "natural armor",
+      "hp": 18,
+      "hpFormula": "4d6+4",
+      "cr": 0.25,
+      "size": "sm",
+      "type": "fiend",
+      "abilities": {
+        "str": 11,
+        "dex": 11,
+        "con": 12,
+        "int": 5,
+        "wis": 8,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 20
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Abyssal, telepathy 60 ft. (works only with creatures that understand Abyssal)"
+    },
+    "Drider": {
+      "name": "Drider",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 123,
+      "hpFormula": "13d10+52",
+      "cr": 6,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 16,
+        "dex": 16,
+        "con": 18,
+        "int": 13,
+        "wis": 14,
+        "cha": 12
+      },
+      "skills": {
+        "prc": 5,
+        "ste": 9
+      },
+      "speed": {
+        "walk": 30,
+        "climb": 30
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Elvish, Undercommon"
+    },
+    "Drow": {
+      "name": "Drow",
+      "ac": 15,
+      "acDetail": "chain shirt",
+      "hp": 13,
+      "hpFormula": "3d8",
+      "cr": 0.25,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 10,
+        "dex": 14,
+        "con": 10,
+        "int": 11,
+        "wis": 11,
+        "cha": 12
+      },
+      "skills": {
+        "prc": 2,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Elvish, Undercommon"
+    },
+    "Druid": {
+      "name": "Druid",
+      "ac": 11,
+      "acDetail": "16 with _barkskin_",
+      "hp": 27,
+      "hpFormula": "5d8+5",
+      "cr": 2,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 10,
+        "dex": 12,
+        "con": 13,
+        "int": 12,
+        "wis": 15,
+        "cha": 11
+      },
+      "skills": {
+        "med": 4,
+        "nat": 3,
+        "prc": 4
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "Druidic plus any two languages"
+    },
+    "Dryad": {
+      "name": "Dryad",
+      "ac": 11,
+      "acDetail": "16 with _barkskin_",
+      "hp": 22,
+      "hpFormula": "5d8",
+      "cr": 1,
+      "size": "med",
+      "type": "fey",
+      "abilities": {
+        "str": 10,
+        "dex": 12,
+        "con": 11,
+        "int": 14,
+        "wis": 15,
+        "cha": 18
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Elvish, Sylvan"
+    },
+    "Duergar": {
+      "name": "Duergar",
+      "ac": 16,
+      "acDetail": "scale mail, shield",
+      "hp": 26,
+      "hpFormula": "4d8+8",
+      "cr": 1,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 14,
+        "dex": 11,
+        "con": 14,
+        "int": 11,
+        "wis": 10,
+        "cha": 9
+      },
+      "speed": {
+        "walk": 25
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Dwarvish, Undercommon"
+    },
+    "Dust Mephit": {
+      "name": "Dust Mephit",
+      "ac": 12,
+      "hp": 17,
+      "hpFormula": "5d6",
+      "cr": 0.5,
+      "size": "sm",
+      "type": "elemental",
+      "abilities": {
+        "str": 5,
+        "dex": 14,
+        "con": 10,
+        "int": 9,
+        "wis": 11,
+        "cha": 10
+      },
+      "skills": {
+        "prc": 2,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Auran, Terran"
+    },
+    "Eagle": {
+      "name": "Eagle",
+      "ac": 12,
+      "hp": 3,
+      "hpFormula": "1d6",
+      "cr": 0,
+      "size": "sm",
+      "type": "beast",
+      "abilities": {
+        "str": 6,
+        "dex": 15,
+        "con": 10,
+        "int": 2,
+        "wis": 14,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 4
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 60
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Earth Elemental": {
+      "name": "Earth Elemental",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 126,
+      "hpFormula": "12d10+60",
+      "cr": 5,
+      "size": "lg",
+      "type": "elemental",
+      "abilities": {
+        "str": 20,
+        "dex": 8,
+        "con": 20,
+        "int": 5,
+        "wis": 10,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 30,
+        "burrow": 30
+      },
+      "senses": {
+        "darkvision": 60,
+        "tremorsense": 60
+      },
+      "languages": "Terran"
+    },
+    "Efreeti": {
+      "name": "Efreeti",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 200,
+      "hpFormula": "16d10+112",
+      "cr": 11,
+      "size": "lg",
+      "type": "elemental",
+      "abilities": {
+        "str": 22,
+        "dex": 12,
+        "con": 24,
+        "int": 16,
+        "wis": 15,
+        "cha": 16
+      },
+      "saves": {
+        "int": 7,
+        "wis": 6,
+        "cha": 7
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 60
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Ignan"
+    },
+    "Elephant": {
+      "name": "Elephant",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 76,
+      "hpFormula": "8d12+24",
+      "cr": 4,
+      "size": "huge",
+      "type": "beast",
+      "abilities": {
+        "str": 22,
+        "dex": 9,
+        "con": 17,
+        "int": 3,
+        "wis": 11,
+        "cha": 6
+      },
+      "saves": {
+        "str": 0,
+        "dex": 0,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "skills": {
+        "acr": 0,
+        "ani": 0,
+        "arc": 0,
+        "ath": 0,
+        "dec": 0,
+        "his": 0,
+        "ins": 0,
+        "itm": 0,
+        "inv": 0,
+        "med": 0,
+        "nat": 0,
+        "prc": 0,
+        "prf": 0,
+        "per": 0,
+        "rel": 0,
+        "slt": 0,
+        "ste": 0,
+        "sur": 0
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Elf, Drow": {
+      "name": "Elf, Drow",
+      "ac": 15,
+      "hp": 13,
+      "cr": 0,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 10,
+        "dex": 14,
+        "con": 10,
+        "int": 11,
+        "wis": 11,
+        "cha": 12
+      },
+      "skills": {
+        "prc": 2,
+        "ste": 4
+      },
+      "speed": {},
+      "senses": {},
+      "languages": ""
+    },
+    "Elk": {
+      "name": "Elk",
+      "ac": 10,
+      "hp": 13,
+      "hpFormula": "2d10+2",
+      "cr": 0.25,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 16,
+        "dex": 10,
+        "con": 12,
+        "int": 2,
+        "wis": 10,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Erinyes": {
+      "name": "Erinyes",
+      "ac": 18,
+      "acDetail": "plate",
+      "hp": 153,
+      "hpFormula": "18d8+72",
+      "cr": 12,
+      "size": "med",
+      "type": "fiend",
+      "abilities": {
+        "str": 18,
+        "dex": 16,
+        "con": 18,
+        "int": 14,
+        "wis": 14,
+        "cha": 18
+      },
+      "saves": {
+        "dex": 7,
+        "con": 8,
+        "wis": 6,
+        "cha": 8
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "Infernal, telepathy 120 ft."
+    },
+    "Ettercap": {
+      "name": "Ettercap",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 44,
+      "hpFormula": "8d8+8",
+      "cr": 2,
+      "size": "med",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 14,
+        "dex": 15,
+        "con": 13,
+        "int": 7,
+        "wis": 12,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 4,
+        "sur": 3
+      },
+      "speed": {
+        "walk": 30,
+        "climb": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Ettin": {
+      "name": "Ettin",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 85,
+      "hpFormula": "10d10+30",
+      "cr": 4,
+      "size": "lg",
+      "type": "giant",
+      "abilities": {
+        "str": 21,
+        "dex": 8,
+        "con": 17,
+        "int": 6,
+        "wis": 10,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 4
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Giant, Orc"
+    },
+    "Fire Elemental": {
+      "name": "Fire Elemental",
+      "ac": 13,
+      "hp": 102,
+      "hpFormula": "12d10+36",
+      "cr": 5,
+      "size": "lg",
+      "type": "elemental",
+      "abilities": {
+        "str": 10,
+        "dex": 17,
+        "con": 16,
+        "int": 6,
+        "wis": 10,
+        "cha": 7
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Ignan"
+    },
+    "Fire Giant": {
+      "name": "Fire Giant",
+      "ac": 18,
+      "acDetail": "plate",
+      "hp": 162,
+      "hpFormula": "13d12+78",
+      "cr": 9,
+      "size": "huge",
+      "type": "giant",
+      "abilities": {
+        "str": 25,
+        "dex": 9,
+        "con": 23,
+        "int": 10,
+        "wis": 14,
+        "cha": 13
+      },
+      "saves": {
+        "dex": 3,
+        "con": 10,
+        "cha": 5
+      },
+      "skills": {
+        "ath": 11,
+        "prc": 6
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "Giant"
+    },
+    "Flesh Golem": {
+      "name": "Flesh Golem",
+      "ac": 9,
+      "hp": 93,
+      "hpFormula": "11d8+44",
+      "cr": 5,
+      "size": "med",
+      "type": "construct",
+      "abilities": {
+        "str": 19,
+        "dex": 9,
+        "con": 18,
+        "int": 6,
+        "wis": 10,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "understands the languages of its creator but can't speak"
+    },
+    "Flying Snake": {
+      "name": "Flying Snake",
+      "ac": 14,
+      "hp": 5,
+      "hpFormula": "2d4",
+      "cr": 0.125,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 4,
+        "dex": 18,
+        "con": 11,
+        "int": 2,
+        "wis": 12,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60,
+        "swim": 30
+      },
+      "senses": {
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Flying Sword": {
+      "name": "Flying Sword",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 17,
+      "hpFormula": "5d6",
+      "cr": 0.25,
+      "size": "sm",
+      "type": "construct",
+      "abilities": {
+        "str": 12,
+        "dex": 15,
+        "con": 11,
+        "int": 1,
+        "wis": 5,
+        "cha": 1
+      },
+      "saves": {
+        "dex": 4
+      },
+      "speed": {
+        "fly": 50
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Frog": {
+      "name": "Frog",
+      "ac": 11,
+      "hp": 1,
+      "hpFormula": "1d4-1",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 1,
+        "dex": 13,
+        "con": 8,
+        "int": 1,
+        "wis": 8,
+        "cha": 3
+      },
+      "skills": {
+        "prc": 1,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 20,
+        "swim": 20
+      },
+      "senses": {
+        "darkvision": 30
+      },
+      "languages": ""
+    },
+    "Frost Giant": {
+      "name": "Frost Giant",
+      "ac": 15,
+      "acDetail": "patchwork armor",
+      "hp": 138,
+      "hpFormula": "12d12+60",
+      "cr": 8,
+      "size": "huge",
+      "type": "giant",
+      "abilities": {
+        "str": 23,
+        "dex": 9,
+        "con": 21,
+        "int": 9,
+        "wis": 10,
+        "cha": 12
+      },
+      "saves": {
+        "con": 8,
+        "wis": 3,
+        "cha": 4
+      },
+      "skills": {
+        "ath": 9,
+        "prc": 3
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": "Giant"
+    },
+    "Gargoyle": {
+      "name": "Gargoyle",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 52,
+      "hpFormula": "7d8+21",
+      "cr": 2,
+      "size": "med",
+      "type": "elemental",
+      "abilities": {
+        "str": 15,
+        "dex": 11,
+        "con": 16,
+        "int": 6,
+        "wis": 11,
+        "cha": 7
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Terran"
+    },
+    "Gelatinous Cube": {
+      "name": "Gelatinous Cube",
+      "ac": 6,
+      "hp": 84,
+      "hpFormula": "8d10+40",
+      "cr": 2,
+      "size": "lg",
+      "type": "ooze",
+      "abilities": {
+        "str": 14,
+        "dex": 3,
+        "con": 20,
+        "int": 1,
+        "wis": 6,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 15
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Ghast": {
+      "name": "Ghast",
+      "ac": 13,
+      "hp": 36,
+      "hpFormula": "8d8",
+      "cr": 2,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 16,
+        "dex": 17,
+        "con": 10,
+        "int": 11,
+        "wis": 10,
+        "cha": 8
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common"
+    },
+    "Ghost": {
+      "name": "Ghost",
+      "ac": 11,
+      "hp": 45,
+      "hpFormula": "10d8",
+      "cr": 4,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 7,
+        "dex": 13,
+        "con": 10,
+        "int": 10,
+        "wis": 12,
+        "cha": 17
+      },
+      "speed": {
+        "fly": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "any languages it knew in life"
+    },
+    "Ghoul": {
+      "name": "Ghoul",
+      "ac": 12,
+      "hp": 22,
+      "hpFormula": "5d8",
+      "cr": 1,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 13,
+        "dex": 15,
+        "con": 10,
+        "int": 7,
+        "wis": 10,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common"
+    },
+    "Giant Ape": {
+      "name": "Giant Ape",
+      "ac": 12,
+      "hp": 157,
+      "hpFormula": "15d12+60",
+      "cr": 7,
+      "size": "huge",
+      "type": "beast",
+      "abilities": {
+        "str": 23,
+        "dex": 14,
+        "con": 18,
+        "int": 7,
+        "wis": 12,
+        "cha": 7
+      },
+      "skills": {
+        "ath": 9,
+        "prc": 4
+      },
+      "speed": {
+        "walk": 40,
+        "climb": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Giant Badger": {
+      "name": "Giant Badger",
+      "ac": 10,
+      "hp": 13,
+      "hpFormula": "2d8+4",
+      "cr": 0.25,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 13,
+        "dex": 10,
+        "con": 15,
+        "int": 2,
+        "wis": 12,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 30,
+        "burrow": 10
+      },
+      "senses": {
+        "darkvision": 30
+      },
+      "languages": ""
+    },
+    "Giant Bat": {
+      "name": "Giant Bat",
+      "ac": 13,
+      "hp": 22,
+      "hpFormula": "4d10",
+      "cr": 0.25,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 15,
+        "dex": 16,
+        "con": 11,
+        "int": 2,
+        "wis": 12,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 60
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Giant Boar": {
+      "name": "Giant Boar",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 42,
+      "hpFormula": "5d10+15",
+      "cr": 2,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 17,
+        "dex": 10,
+        "con": 16,
+        "int": 2,
+        "wis": 7,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Giant Centipede": {
+      "name": "Giant Centipede",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 4,
+      "hpFormula": "1d6+1",
+      "cr": 0.25,
+      "size": "sm",
+      "type": "beast",
+      "abilities": {
+        "str": 5,
+        "dex": 14,
+        "con": 12,
+        "int": 1,
+        "wis": 7,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 30,
+        "climb": 30
+      },
+      "senses": {
+        "blindsight": 30
+      },
+      "languages": ""
+    },
+    "Giant Constrictor Snake": {
+      "name": "Giant Constrictor Snake",
+      "ac": 12,
+      "hp": 60,
+      "hpFormula": "8d12+8",
+      "cr": 2,
+      "size": "huge",
+      "type": "beast",
+      "abilities": {
+        "str": 19,
+        "dex": 14,
+        "con": 12,
+        "int": 1,
+        "wis": 10,
+        "cha": 3
+      },
+      "skills": {
+        "prc": 2
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 30
+      },
+      "senses": {
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Giant Crab": {
+      "name": "Giant Crab",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 13,
+      "hpFormula": "3d8",
+      "cr": 0.125,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 13,
+        "dex": 15,
+        "con": 11,
+        "int": 1,
+        "wis": 9,
+        "cha": 3
+      },
+      "skills": {
+        "ste": 4
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 30
+      },
+      "senses": {
+        "blindsight": 30
+      },
+      "languages": ""
+    },
+    "Giant Crocodile": {
+      "name": "Giant Crocodile",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 85,
+      "hpFormula": "9d12+27",
+      "cr": 5,
+      "size": "huge",
+      "type": "beast",
+      "abilities": {
+        "str": 21,
+        "dex": 9,
+        "con": 17,
+        "int": 2,
+        "wis": 10,
+        "cha": 7
+      },
+      "skills": {
+        "ste": 5
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Giant Eagle": {
+      "name": "Giant Eagle",
+      "ac": 13,
+      "hp": 26,
+      "hpFormula": "4d10+4",
+      "cr": 1,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 16,
+        "dex": 17,
+        "con": 13,
+        "int": 8,
+        "wis": 14,
+        "cha": 10
+      },
+      "skills": {
+        "prc": 4
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 80
+      },
+      "senses": {},
+      "languages": "Giant Eagle, understands Common and Auran but can't speak"
+    },
+    "Giant Elk": {
+      "name": "Giant Elk",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 42,
+      "hpFormula": "5d12+10",
+      "cr": 2,
+      "size": "huge",
+      "type": "beast",
+      "abilities": {
+        "str": 19,
+        "dex": 16,
+        "con": 14,
+        "int": 7,
+        "wis": 14,
+        "cha": 10
+      },
+      "skills": {
+        "prc": 4
+      },
+      "speed": {
+        "walk": 60
+      },
+      "senses": {},
+      "languages": "Giant Elk, understands Common, Elvish, and Sylvan but can't speak"
+    },
+    "Giant Fire Beetle": {
+      "name": "Giant Fire Beetle",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 4,
+      "hpFormula": "1d6+1",
+      "cr": 0,
+      "size": "sm",
+      "type": "beast",
+      "abilities": {
+        "str": 8,
+        "dex": 10,
+        "con": 12,
+        "int": 1,
+        "wis": 7,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "blindsight": 30
+      },
+      "languages": ""
+    },
+    "Giant Frog": {
+      "name": "Giant Frog",
+      "ac": 11,
+      "hp": 18,
+      "hpFormula": "4d8",
+      "cr": 0.25,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 12,
+        "dex": 13,
+        "con": 11,
+        "int": 2,
+        "wis": 10,
+        "cha": 3
+      },
+      "skills": {
+        "prc": 2,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 30
+      },
+      "senses": {
+        "darkvision": 30
+      },
+      "languages": ""
+    },
+    "Giant Goat": {
+      "name": "Giant Goat",
+      "ac": 11,
+      "acDetail": "natural armor",
+      "hp": 19,
+      "hpFormula": "3d10+3",
+      "cr": 0.5,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 17,
+        "dex": 11,
+        "con": 12,
+        "int": 3,
+        "wis": 12,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Giant Hyena": {
+      "name": "Giant Hyena",
+      "ac": 12,
+      "hp": 45,
+      "hpFormula": "6d10+12",
+      "cr": 1,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 16,
+        "dex": 14,
+        "con": 14,
+        "int": 2,
+        "wis": 12,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 3
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Giant Lizard": {
+      "name": "Giant Lizard",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 19,
+      "hpFormula": "3d10+3",
+      "cr": 0.25,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 15,
+        "dex": 12,
+        "con": 13,
+        "int": 2,
+        "wis": 10,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 30,
+        "climb": 30
+      },
+      "senses": {
+        "darkvision": 30
+      },
+      "languages": ""
+    },
+    "Giant Octopus": {
+      "name": "Giant Octopus",
+      "ac": 11,
+      "hp": 52,
+      "hpFormula": "8d10+8",
+      "cr": 1,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 17,
+        "dex": 13,
+        "con": 13,
+        "int": 4,
+        "wis": 10,
+        "cha": 4
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 10,
+        "swim": 60
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Giant Owl": {
+      "name": "Giant Owl",
+      "ac": 12,
+      "hp": 19,
+      "hpFormula": "3d10+3",
+      "cr": 0.25,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 13,
+        "dex": 15,
+        "con": 12,
+        "int": 8,
+        "wis": 13,
+        "cha": 10
+      },
+      "skills": {
+        "prc": 5,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 5,
+        "fly": 60
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Giant Owl, understands Common, Elvish, and Sylvan but can't speak"
+    },
+    "Giant Poisonous Snake": {
+      "name": "Giant Poisonous Snake",
+      "ac": 14,
+      "hp": 11,
+      "hpFormula": "2d8+2",
+      "cr": 0.25,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 10,
+        "dex": 18,
+        "con": 13,
+        "int": 2,
+        "wis": 10,
+        "cha": 3
+      },
+      "skills": {
+        "prc": 2
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 30
+      },
+      "senses": {
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Giant Rat": {
+      "name": "Giant Rat",
+      "ac": 12,
+      "hp": 7,
+      "hpFormula": "2d6",
+      "cr": 0.125,
+      "size": "sm",
+      "type": "beast",
+      "abilities": {
+        "str": 7,
+        "dex": 15,
+        "con": 11,
+        "int": 2,
+        "wis": 10,
+        "cha": 4
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Giant Rat (Diseased)": {
+      "name": "Giant Rat (Diseased)",
+      "ac": 12,
+      "hp": 7,
+      "hpFormula": "2d6",
+      "cr": 0.125,
+      "size": "sm",
+      "type": "beast",
+      "abilities": {
+        "str": 7,
+        "dex": 15,
+        "con": 11,
+        "int": 2,
+        "wis": 10,
+        "cha": 4
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Giant Scorpion": {
+      "name": "Giant Scorpion",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 52,
+      "hpFormula": "7d10+14",
+      "cr": 3,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 15,
+        "dex": 13,
+        "con": 15,
+        "int": 1,
+        "wis": 9,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Giant Sea Horse": {
+      "name": "Giant Sea Horse",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 16,
+      "hpFormula": "3d10",
+      "cr": 0.5,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 12,
+        "dex": 15,
+        "con": 11,
+        "int": 2,
+        "wis": 12,
+        "cha": 5
+      },
+      "speed": {
+        "swim": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Giant Shark": {
+      "name": "Giant Shark",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 126,
+      "hpFormula": "11d12+55",
+      "cr": 5,
+      "size": "huge",
+      "type": "beast",
+      "abilities": {
+        "str": 23,
+        "dex": 11,
+        "con": 21,
+        "int": 1,
+        "wis": 10,
+        "cha": 5
+      },
+      "skills": {
+        "prc": 3
+      },
+      "speed": {
+        "swim": 50
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Giant Spider": {
+      "name": "Giant Spider",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 26,
+      "hpFormula": "4d10+4",
+      "cr": 1,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 14,
+        "dex": 16,
+        "con": 12,
+        "int": 2,
+        "wis": 11,
+        "cha": 4
+      },
+      "skills": {
+        "ste": 7
+      },
+      "speed": {
+        "walk": 30,
+        "climb": 30
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Giant Toad": {
+      "name": "Giant Toad",
+      "ac": 11,
+      "hp": 39,
+      "hpFormula": "6d10+6",
+      "cr": 1,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 15,
+        "dex": 13,
+        "con": 13,
+        "int": 2,
+        "wis": 10,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 20,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 30
+      },
+      "languages": ""
+    },
+    "Giant Vulture": {
+      "name": "Giant Vulture",
+      "ac": 10,
+      "hp": 22,
+      "hpFormula": "3d10+6",
+      "cr": 1,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 15,
+        "dex": 10,
+        "con": 15,
+        "int": 6,
+        "wis": 12,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 3
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 60
+      },
+      "senses": {},
+      "languages": "understands Common but can't speak"
+    },
+    "Giant Wasp": {
+      "name": "Giant Wasp",
+      "ac": 12,
+      "hp": 13,
+      "hpFormula": "3d8",
+      "cr": 0.5,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 10,
+        "dex": 14,
+        "con": 10,
+        "int": 1,
+        "wis": 10,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Giant Weasel": {
+      "name": "Giant Weasel",
+      "ac": 13,
+      "hp": 9,
+      "hpFormula": "2d8",
+      "cr": 0.125,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 11,
+        "dex": 16,
+        "con": 10,
+        "int": 4,
+        "wis": 12,
+        "cha": 5
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Giant Wolf Spider": {
+      "name": "Giant Wolf Spider",
+      "ac": 13,
+      "hp": 11,
+      "hpFormula": "2d8+2",
+      "cr": 0.25,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 12,
+        "dex": 16,
+        "con": 13,
+        "int": 3,
+        "wis": 12,
+        "cha": 4
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 7
+      },
+      "speed": {
+        "walk": 40,
+        "climb": 40
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Gibbering Mouther": {
+      "name": "Gibbering Mouther",
+      "ac": 9,
+      "hp": 67,
+      "hpFormula": "9d8+27",
+      "cr": 2,
+      "size": "med",
+      "type": "aberration",
+      "abilities": {
+        "str": 10,
+        "dex": 8,
+        "con": 16,
+        "int": 3,
+        "wis": 10,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 10,
+        "swim": 10
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Glabrezu": {
+      "name": "Glabrezu",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 157,
+      "hpFormula": "15d10+75",
+      "cr": 9,
+      "size": "lg",
+      "type": "fiend",
+      "abilities": {
+        "str": 20,
+        "dex": 15,
+        "con": 21,
+        "int": 19,
+        "wis": 17,
+        "cha": 16
+      },
+      "saves": {
+        "str": 9,
+        "con": 9,
+        "wis": 7,
+        "cha": 7
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "Abyssal, telepathy 120 ft."
+    },
+    "Gladiator": {
+      "name": "Gladiator",
+      "ac": 16,
+      "acDetail": "studded leather, shield",
+      "hp": 112,
+      "hpFormula": "15d8+45",
+      "cr": 5,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 18,
+        "dex": 15,
+        "con": 16,
+        "int": 10,
+        "wis": 12,
+        "cha": 15
+      },
+      "saves": {
+        "str": 7,
+        "dex": 5,
+        "con": 6
+      },
+      "skills": {
+        "ath": 10,
+        "itm": 5
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language (usually Common)"
+    },
+    "Gnoll": {
+      "name": "Gnoll",
+      "ac": 15,
+      "acDetail": "hide armor, shield",
+      "hp": 22,
+      "hpFormula": "5d8",
+      "cr": 0.5,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 14,
+        "dex": 12,
+        "con": 11,
+        "int": 6,
+        "wis": 10,
+        "cha": 7
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Gnoll"
+    },
+    "Gnome, Deep (Svirfneblin)": {
+      "name": "Gnome, Deep (Svirfneblin)",
+      "ac": 15,
+      "hp": 16,
+      "cr": 0,
+      "size": "sm",
+      "type": "humanoid",
+      "abilities": {
+        "str": 15,
+        "dex": 14,
+        "con": 14,
+        "int": 12,
+        "wis": 10,
+        "cha": 9
+      },
+      "skills": {
+        "inv": 3,
+        "prc": 2,
+        "ste": 4
+      },
+      "speed": {},
+      "senses": {},
+      "languages": ""
+    },
+    "Goat": {
+      "name": "Goat",
+      "ac": 10,
+      "hp": 4,
+      "hpFormula": "1d8",
+      "cr": 0,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 12,
+        "dex": 10,
+        "con": 11,
+        "int": 2,
+        "wis": 10,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Goblin": {
+      "name": "Goblin",
+      "ac": 15,
+      "acDetail": "leather armor, shield",
+      "hp": 7,
+      "hpFormula": "2d6",
+      "cr": 0.25,
+      "size": "sm",
+      "type": "humanoid",
+      "abilities": {
+        "str": 8,
+        "dex": 14,
+        "con": 10,
+        "int": 10,
+        "wis": 8,
+        "cha": 8
+      },
+      "skills": {
+        "ste": 6
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common, Goblin"
+    },
+    "Gold Dragon Wyrmling": {
+      "name": "Gold Dragon Wyrmling",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 60,
+      "hpFormula": "8d8+24",
+      "cr": 3,
+      "size": "med",
+      "type": "dragon",
+      "abilities": {
+        "str": 19,
+        "dex": 14,
+        "con": 17,
+        "int": 14,
+        "wis": 11,
+        "cha": 16
+      },
+      "saves": {
+        "dex": 4,
+        "con": 5,
+        "wis": 2,
+        "cha": 5
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60,
+        "swim": 30
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "Draconic"
+    },
+    "Gorgon": {
+      "name": "Gorgon",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 114,
+      "hpFormula": "12d10+48",
+      "cr": 5,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 20,
+        "dex": 11,
+        "con": 18,
+        "int": 2,
+        "wis": 12,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 4
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Gray Ooze": {
+      "name": "Gray Ooze",
+      "ac": 8,
+      "hp": 22,
+      "hpFormula": "3d8+9",
+      "cr": 0.5,
+      "size": "med",
+      "type": "ooze",
+      "abilities": {
+        "str": 12,
+        "dex": 6,
+        "con": 16,
+        "int": 1,
+        "wis": 6,
+        "cha": 2
+      },
+      "skills": {
+        "ste": 2
+      },
+      "speed": {
+        "walk": 10,
+        "climb": 10
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Green Dragon Wyrmling": {
+      "name": "Green Dragon Wyrmling",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 38,
+      "hpFormula": "7d8+7",
+      "cr": 2,
+      "size": "med",
+      "type": "dragon",
+      "abilities": {
+        "str": 15,
+        "dex": 12,
+        "con": 13,
+        "int": 14,
+        "wis": 11,
+        "cha": 13
+      },
+      "saves": {
+        "dex": 3,
+        "con": 3,
+        "wis": 2,
+        "cha": 3
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60,
+        "swim": 30
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "Draconic"
+    },
+    "Green Hag": {
+      "name": "Green Hag",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 82,
+      "hpFormula": "11d8+33",
+      "cr": 3,
+      "size": "med",
+      "type": "fey",
+      "abilities": {
+        "str": 18,
+        "dex": 12,
+        "con": 16,
+        "int": 13,
+        "wis": 14,
+        "cha": 14
+      },
+      "skills": {
+        "arc": 3,
+        "dec": 4,
+        "prc": 4,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common, Draconic, Sylvan"
+    },
+    "Grick": {
+      "name": "Grick",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 27,
+      "hpFormula": "6d8",
+      "cr": 2,
+      "size": "med",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 14,
+        "dex": 14,
+        "con": 11,
+        "int": 3,
+        "wis": 14,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 30,
+        "climb": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Griffon": {
+      "name": "Griffon",
+      "ac": 12,
+      "hp": 59,
+      "hpFormula": "7d10+21",
+      "cr": 2,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 18,
+        "dex": 15,
+        "con": 16,
+        "int": 2,
+        "wis": 13,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 5
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 80
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Grimlock": {
+      "name": "Grimlock",
+      "ac": 11,
+      "hp": 11,
+      "hpFormula": "2d8+2",
+      "cr": 0.25,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 16,
+        "dex": 12,
+        "con": 12,
+        "int": 9,
+        "wis": 8,
+        "cha": 6
+      },
+      "skills": {
+        "ath": 5,
+        "prc": 3,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "blindsight": 3010
+      },
+      "languages": "Undercommon"
+    },
+    "Guard": {
+      "name": "Guard",
+      "ac": 16,
+      "acDetail": "chain shirt, shield",
+      "hp": 11,
+      "hpFormula": "2d8+2",
+      "cr": 0.125,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 13,
+        "dex": 12,
+        "con": 12,
+        "int": 10,
+        "wis": 11,
+        "cha": 10
+      },
+      "skills": {
+        "prc": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language (usually Common)"
+    },
+    "Guardian Naga": {
+      "name": "Guardian Naga",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 127,
+      "hpFormula": "15d10+45",
+      "cr": 10,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 19,
+        "dex": 18,
+        "con": 16,
+        "int": 16,
+        "wis": 19,
+        "cha": 18
+      },
+      "saves": {
+        "dex": 8,
+        "con": 7,
+        "int": 7,
+        "wis": 8,
+        "cha": 8
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Celestial, Common"
+    },
+    "Gynosphinx": {
+      "name": "Gynosphinx",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 136,
+      "hpFormula": "16d10+48",
+      "cr": 11,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 18,
+        "dex": 15,
+        "con": 16,
+        "int": 18,
+        "wis": 18,
+        "cha": 18
+      },
+      "skills": {
+        "arc": 12,
+        "his": 12,
+        "prc": 8,
+        "rel": 8
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 60
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "Common, Sphinx"
+    },
+    "Half-Red Dragon Veteran": {
+      "name": "Half-Red Dragon Veteran",
+      "ac": 18,
+      "acDetail": "plate",
+      "hp": 65,
+      "hpFormula": "10d8+20",
+      "cr": 5,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 16,
+        "dex": 13,
+        "con": 14,
+        "int": 10,
+        "wis": 11,
+        "cha": 10
+      },
+      "skills": {
+        "ath": 5,
+        "prc": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "Common, Draconic"
+    },
+    "Harpy": {
+      "name": "Harpy",
+      "ac": 11,
+      "hp": 38,
+      "hpFormula": "7d8+7",
+      "cr": 1,
+      "size": "med",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 12,
+        "dex": 13,
+        "con": 12,
+        "int": 7,
+        "wis": 10,
+        "cha": 13
+      },
+      "speed": {
+        "walk": 20,
+        "fly": 40
+      },
+      "senses": {},
+      "languages": "Common"
+    },
+    "Hawk": {
+      "name": "Hawk",
+      "ac": 13,
+      "hp": 1,
+      "hpFormula": "1d4-1",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 5,
+        "dex": 16,
+        "con": 8,
+        "int": 2,
+        "wis": 14,
+        "cha": 6
+      },
+      "skills": {
+        "prc": 4
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 60
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Hell Hound": {
+      "name": "Hell Hound",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 45,
+      "hpFormula": "7d8+14",
+      "cr": 3,
+      "size": "med",
+      "type": "fiend",
+      "abilities": {
+        "str": 17,
+        "dex": 12,
+        "con": 14,
+        "int": 6,
+        "wis": 13,
+        "cha": 6
+      },
+      "skills": {
+        "prc": 5
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "understands Infernal but can't speak it"
+    },
+    "Hezrou": {
+      "name": "Hezrou",
+      "ac": 16,
+      "acDetail": "natural armor",
+      "hp": 136,
+      "hpFormula": "13d10+65",
+      "cr": 8,
+      "size": "lg",
+      "type": "fiend",
+      "abilities": {
+        "str": 19,
+        "dex": 17,
+        "con": 20,
+        "int": 5,
+        "wis": 12,
+        "cha": 13
+      },
+      "saves": {
+        "str": 7,
+        "con": 8,
+        "wis": 4
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Abyssal, telepathy 120 ft."
+    },
+    "Hill Giant": {
+      "name": "Hill Giant",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 105,
+      "hpFormula": "10d12+40",
+      "cr": 5,
+      "size": "huge",
+      "type": "giant",
+      "abilities": {
+        "str": 21,
+        "dex": 8,
+        "con": 19,
+        "int": 5,
+        "wis": 9,
+        "cha": 6
+      },
+      "skills": {
+        "prc": 2
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": "Giant"
+    },
+    "Hippogriff": {
+      "name": "Hippogriff",
+      "ac": 11,
+      "hp": 19,
+      "hpFormula": "3d10+3",
+      "cr": 1,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 17,
+        "dex": 13,
+        "con": 13,
+        "int": 2,
+        "wis": 12,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 5
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 60
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Hobgoblin": {
+      "name": "Hobgoblin",
+      "ac": 18,
+      "acDetail": "chain mail, shield",
+      "hp": 11,
+      "hpFormula": "2d8+2",
+      "cr": 0.5,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 13,
+        "dex": 12,
+        "con": 12,
+        "int": 10,
+        "wis": 10,
+        "cha": 9
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common, Goblin"
+    },
+    "Homunculus": {
+      "name": "Homunculus",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 5,
+      "hpFormula": "2d4",
+      "cr": 0,
+      "size": "tiny",
+      "type": "construct",
+      "abilities": {
+        "str": 4,
+        "dex": 15,
+        "con": 11,
+        "int": 10,
+        "wis": 10,
+        "cha": 7
+      },
+      "speed": {
+        "walk": 20,
+        "fly": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "understands the languages of its creator but can't speak"
+    },
+    "Horned Devil": {
+      "name": "Horned Devil",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 178,
+      "hpFormula": "17d10+85",
+      "cr": 11,
+      "size": "lg",
+      "type": "fiend",
+      "abilities": {
+        "str": 22,
+        "dex": 17,
+        "con": 21,
+        "int": 12,
+        "wis": 16,
+        "cha": 17
+      },
+      "saves": {
+        "str": 10,
+        "dex": 7,
+        "wis": 7,
+        "cha": 7
+      },
+      "speed": {
+        "walk": 20,
+        "fly": 60
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Infernal, telepathy 120 ft."
+    },
+    "Hunter Shark": {
+      "name": "Hunter Shark",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 45,
+      "hpFormula": "6d10+12",
+      "cr": 2,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 18,
+        "dex": 13,
+        "con": 15,
+        "int": 1,
+        "wis": 10,
+        "cha": 4
+      },
+      "skills": {
+        "prc": 2
+      },
+      "speed": {
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 30
+      },
+      "languages": ""
+    },
+    "Hydra": {
+      "name": "Hydra",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 172,
+      "hpFormula": "15d12+75",
+      "cr": 8,
+      "size": "huge",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 20,
+        "dex": 12,
+        "con": 20,
+        "int": 2,
+        "wis": 10,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 6
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Hyena": {
+      "name": "Hyena",
+      "ac": 11,
+      "hp": 5,
+      "hpFormula": "1d8+1",
+      "cr": 0,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 11,
+        "dex": 13,
+        "con": 12,
+        "int": 2,
+        "wis": 12,
+        "cha": 5
+      },
+      "skills": {
+        "prc": 3
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Ice Devil": {
+      "name": "Ice Devil",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 180,
+      "hpFormula": "19d10+76",
+      "cr": 14,
+      "size": "lg",
+      "type": "fiend",
+      "abilities": {
+        "str": 21,
+        "dex": 14,
+        "con": 18,
+        "int": 18,
+        "wis": 15,
+        "cha": 18
+      },
+      "saves": {
+        "dex": 7,
+        "con": 9,
+        "wis": 7,
+        "cha": 9
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 60
+      },
+      "languages": "Infernal, telepathy 120 ft."
+    },
+    "Ice Mephit": {
+      "name": "Ice Mephit",
+      "ac": 11,
+      "hp": 21,
+      "hpFormula": "6d6",
+      "cr": 0.5,
+      "size": "sm",
+      "type": "elemental",
+      "abilities": {
+        "str": 7,
+        "dex": 13,
+        "con": 10,
+        "int": 9,
+        "wis": 11,
+        "cha": 12
+      },
+      "skills": {
+        "prc": 2,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Aquan, Auran"
+    },
+    "Imp": {
+      "name": "Imp",
+      "ac": 13,
+      "hp": 10,
+      "hpFormula": "3d4+3",
+      "cr": 1,
+      "size": "tiny",
+      "type": "fiend",
+      "abilities": {
+        "str": 6,
+        "dex": 17,
+        "con": 13,
+        "int": 11,
+        "wis": 12,
+        "cha": 14
+      },
+      "skills": {
+        "dec": 4,
+        "ins": 3,
+        "per": 4,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 20,
+        "fly": 40
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Infernal, Common"
+    },
+    "Invisible Stalker": {
+      "name": "Invisible Stalker",
+      "ac": 14,
+      "hp": 104,
+      "hpFormula": "16d8+32",
+      "cr": 6,
+      "size": "med",
+      "type": "elemental",
+      "abilities": {
+        "str": 16,
+        "dex": 19,
+        "con": 14,
+        "int": 10,
+        "wis": 15,
+        "cha": 11
+      },
+      "skills": {
+        "prc": 8,
+        "ste": 10
+      },
+      "speed": {
+        "walk": 50,
+        "fly": 50
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Auran, understands Common but doesn't speak it"
+    },
+    "Iron Golem": {
+      "name": "Iron Golem",
+      "ac": 20,
+      "acDetail": "natural armor",
+      "hp": 210,
+      "hpFormula": "20d10+100",
+      "cr": 16,
+      "size": "lg",
+      "type": "construct",
+      "abilities": {
+        "str": 24,
+        "dex": 9,
+        "con": 20,
+        "int": 3,
+        "wis": 11,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "understands the languages of its creator but can't speak"
+    },
+    "Jackal": {
+      "name": "Jackal",
+      "ac": 12,
+      "hp": 3,
+      "hpFormula": "1d6",
+      "cr": 0,
+      "size": "sm",
+      "type": "beast",
+      "abilities": {
+        "str": 8,
+        "dex": 15,
+        "con": 11,
+        "int": 3,
+        "wis": 12,
+        "cha": 6
+      },
+      "skills": {
+        "prc": 3
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Killer Whale": {
+      "name": "Killer Whale",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 90,
+      "hpFormula": "12d12+12",
+      "cr": 3,
+      "size": "huge",
+      "type": "beast",
+      "abilities": {
+        "str": 19,
+        "dex": 10,
+        "con": 13,
+        "int": 3,
+        "wis": 12,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 3
+      },
+      "speed": {
+        "swim": 60
+      },
+      "senses": {
+        "blindsight": 120
+      },
+      "languages": ""
+    },
+    "Knight": {
+      "name": "Knight",
+      "ac": 18,
+      "acDetail": "plate",
+      "hp": 52,
+      "hpFormula": "8d8+16",
+      "cr": 3,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 16,
+        "dex": 11,
+        "con": 14,
+        "int": 11,
+        "wis": 11,
+        "cha": 15
+      },
+      "saves": {
+        "con": 4,
+        "wis": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language (usually Common)"
+    },
+    "Kobold": {
+      "name": "Kobold",
+      "ac": 12,
+      "hp": 5,
+      "hpFormula": "2d6-2",
+      "cr": 0.125,
+      "size": "sm",
+      "type": "humanoid",
+      "abilities": {
+        "str": 7,
+        "dex": 15,
+        "con": 9,
+        "int": 8,
+        "wis": 7,
+        "cha": 8
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common, Draconic"
+    },
+    "Kraken": {
+      "name": "Kraken",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 472,
+      "hpFormula": "27d20+189",
+      "cr": 23,
+      "size": "grg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 30,
+        "dex": 11,
+        "con": 25,
+        "int": 22,
+        "wis": 18,
+        "cha": 20
+      },
+      "saves": {
+        "str": 17,
+        "dex": 7,
+        "con": 14,
+        "int": 13,
+        "wis": 11
+      },
+      "speed": {
+        "walk": 20,
+        "swim": 60
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "understands Abyssal, Celestial, Infernal, and Primordial but can't speak, telepathy 120 ft."
+    },
+    "Lamia": {
+      "name": "Lamia",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 97,
+      "hpFormula": "13d10+26",
+      "cr": 4,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 16,
+        "dex": 13,
+        "con": 15,
+        "int": 14,
+        "wis": 15,
+        "cha": 16
+      },
+      "skills": {
+        "dec": 7,
+        "ins": 4,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Abyssal, Common"
+    },
+    "Lemure": {
+      "name": "Lemure",
+      "ac": 7,
+      "hp": 13,
+      "hpFormula": "3d8",
+      "cr": 0,
+      "size": "med",
+      "type": "fiend",
+      "abilities": {
+        "str": 10,
+        "dex": 5,
+        "con": 11,
+        "int": 1,
+        "wis": 11,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 15
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "understands infernal but can't speak"
+    },
+    "Lich": {
+      "name": "Lich",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 135,
+      "hpFormula": "18d8+54",
+      "cr": 21,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 11,
+        "dex": 16,
+        "con": 16,
+        "int": 20,
+        "wis": 14,
+        "cha": 16
+      },
+      "saves": {
+        "con": 10,
+        "int": 12,
+        "wis": 9
+      },
+      "skills": {
+        "arc": 18,
+        "his": 12,
+        "ins": 9,
+        "prc": 9
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "Common plus up to five other languages"
+    },
+    "Lion": {
+      "name": "Lion",
+      "ac": 12,
+      "hp": 26,
+      "hpFormula": "4d10+4",
+      "cr": 1,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 17,
+        "dex": 15,
+        "con": 13,
+        "int": 3,
+        "wis": 12,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 6
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Lizard": {
+      "name": "Lizard",
+      "ac": 10,
+      "hp": 2,
+      "hpFormula": "1d4",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 2,
+        "dex": 11,
+        "con": 10,
+        "int": 1,
+        "wis": 8,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 20,
+        "climb": 20
+      },
+      "senses": {
+        "darkvision": 30
+      },
+      "languages": ""
+    },
+    "Lizardfolk": {
+      "name": "Lizardfolk",
+      "ac": 15,
+      "acDetail": "natural armor, shield",
+      "hp": 22,
+      "hpFormula": "4d8+4",
+      "cr": 0.5,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 15,
+        "dex": 10,
+        "con": 13,
+        "int": 7,
+        "wis": 12,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 4,
+        "sur": 5
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 30
+      },
+      "senses": {},
+      "languages": "Draconic"
+    },
+    "Mage": {
+      "name": "Mage",
+      "ac": 12,
+      "acDetail": "15 with _mage armor_",
+      "hp": 40,
+      "hpFormula": "9d8",
+      "cr": 6,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 9,
+        "dex": 14,
+        "con": 11,
+        "int": 17,
+        "wis": 12,
+        "cha": 11
+      },
+      "saves": {
+        "int": 6,
+        "wis": 4
+      },
+      "skills": {
+        "arc": 6,
+        "his": 6
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any four languages"
+    },
+    "Magma Mephit": {
+      "name": "Magma Mephit",
+      "ac": 11,
+      "hp": 22,
+      "hpFormula": "5d6+5",
+      "cr": 0.5,
+      "size": "sm",
+      "type": "elemental",
+      "abilities": {
+        "str": 8,
+        "dex": 12,
+        "con": 12,
+        "int": 7,
+        "wis": 10,
+        "cha": 10
+      },
+      "skills": {
+        "ste": 3
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Ignan, Terran"
+    },
+    "Magmin": {
+      "name": "Magmin",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 9,
+      "hpFormula": "2d6+2",
+      "cr": 0.5,
+      "size": "sm",
+      "type": "elemental",
+      "abilities": {
+        "str": 7,
+        "dex": 15,
+        "con": 12,
+        "int": 8,
+        "wis": 11,
+        "cha": 10
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Ignan"
+    },
+    "Mammoth": {
+      "name": "Mammoth",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 126,
+      "hpFormula": "11d12+55",
+      "cr": 6,
+      "size": "huge",
+      "type": "beast",
+      "abilities": {
+        "str": 24,
+        "dex": 9,
+        "con": 21,
+        "int": 3,
+        "wis": 11,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Manticore": {
+      "name": "Manticore",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 68,
+      "hpFormula": "8d10+24",
+      "cr": 3,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 17,
+        "dex": 16,
+        "con": 17,
+        "int": 7,
+        "wis": 12,
+        "cha": 8
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 50
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Marilith": {
+      "name": "Marilith",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 189,
+      "hpFormula": "18d10+90",
+      "cr": 16,
+      "size": "lg",
+      "type": "fiend",
+      "abilities": {
+        "str": 18,
+        "dex": 20,
+        "con": 20,
+        "int": 18,
+        "wis": 16,
+        "cha": 20
+      },
+      "saves": {
+        "str": 9,
+        "con": 10,
+        "wis": 8,
+        "cha": 10
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "Abyssal, telepathy 120 ft."
+    },
+    "Mastiff": {
+      "name": "Mastiff",
+      "ac": 12,
+      "hp": 5,
+      "hpFormula": "1d8+1",
+      "cr": 0.125,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 13,
+        "dex": 14,
+        "con": 12,
+        "int": 3,
+        "wis": 12,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 3
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Medusa": {
+      "name": "Medusa",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 127,
+      "hpFormula": "17d8+51",
+      "cr": 6,
+      "size": "med",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 10,
+        "dex": 15,
+        "con": 16,
+        "int": 12,
+        "wis": 13,
+        "cha": 15
+      },
+      "skills": {
+        "dec": 5,
+        "ins": 4,
+        "prc": 4,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common"
+    },
+    "Merfolk": {
+      "name": "Merfolk",
+      "ac": 11,
+      "hp": 11,
+      "hpFormula": "2d8+2",
+      "cr": 0.125,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 10,
+        "dex": 13,
+        "con": 12,
+        "int": 11,
+        "wis": 11,
+        "cha": 12
+      },
+      "skills": {
+        "prc": 2
+      },
+      "speed": {
+        "walk": 10,
+        "swim": 40
+      },
+      "senses": {},
+      "languages": "Aquan, Common"
+    },
+    "Merrow": {
+      "name": "Merrow",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 45,
+      "hpFormula": "6d10+12",
+      "cr": 2,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 18,
+        "dex": 10,
+        "con": 15,
+        "int": 8,
+        "wis": 10,
+        "cha": 9
+      },
+      "speed": {
+        "walk": 10,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Abyssal, Aquan"
+    },
+    "Mimic": {
+      "name": "Mimic",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 58,
+      "hpFormula": "9d8+18",
+      "cr": 2,
+      "size": "med",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 17,
+        "dex": 12,
+        "con": 15,
+        "int": 5,
+        "wis": 13,
+        "cha": 8
+      },
+      "skills": {
+        "ste": 5
+      },
+      "speed": {
+        "walk": 15
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Minotaur": {
+      "name": "Minotaur",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 76,
+      "hpFormula": "9d10+27",
+      "cr": 3,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 18,
+        "dex": 11,
+        "con": 16,
+        "int": 6,
+        "wis": 16,
+        "cha": 9
+      },
+      "skills": {
+        "prc": 7
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Abyssal"
+    },
+    "Minotaur Skeleton": {
+      "name": "Minotaur Skeleton",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 67,
+      "hpFormula": "9d10+18",
+      "cr": 2,
+      "size": "lg",
+      "type": "undead",
+      "abilities": {
+        "str": 18,
+        "dex": 11,
+        "con": 15,
+        "int": 6,
+        "wis": 8,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "understands Abyssal but can't speak"
+    },
+    "Mule": {
+      "name": "Mule",
+      "ac": 10,
+      "hp": 11,
+      "hpFormula": "2d8+2",
+      "cr": 0.125,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 14,
+        "dex": 10,
+        "con": 13,
+        "int": 2,
+        "wis": 10,
+        "cha": 5
+      },
+      "saves": {
+        "str": 0,
+        "dex": 0,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "skills": {
+        "acr": 0,
+        "ani": 0,
+        "arc": 0,
+        "ath": 0,
+        "dec": 0,
+        "his": 0,
+        "ins": 0,
+        "itm": 0,
+        "inv": 0,
+        "med": 0,
+        "nat": 0,
+        "prc": 0,
+        "prf": 0,
+        "per": 0,
+        "rel": 0,
+        "slt": 0,
+        "ste": 0,
+        "sur": 0
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Mummy": {
+      "name": "Mummy",
+      "ac": 11,
+      "acDetail": "natural armor",
+      "hp": 58,
+      "hpFormula": "9d8+18",
+      "cr": 3,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 16,
+        "dex": 8,
+        "con": 15,
+        "int": 6,
+        "wis": 10,
+        "cha": 12
+      },
+      "saves": {
+        "wis": 2
+      },
+      "speed": {
+        "walk": 20
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "the languages it knew in life"
+    },
+    "Mummy Lord": {
+      "name": "Mummy Lord",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 97,
+      "hpFormula": "13d8+39",
+      "cr": 15,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 18,
+        "dex": 10,
+        "con": 17,
+        "int": 11,
+        "wis": 18,
+        "cha": 16
+      },
+      "saves": {
+        "con": 8,
+        "int": 5,
+        "wis": 9,
+        "cha": 8
+      },
+      "skills": {
+        "his": 5,
+        "rel": 5
+      },
+      "speed": {
+        "walk": 20
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "the languages it knew in life"
+    },
+    "Nalfeshnee": {
+      "name": "Nalfeshnee",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 184,
+      "hpFormula": "16d10+96",
+      "cr": 13,
+      "size": "lg",
+      "type": "fiend",
+      "abilities": {
+        "str": 21,
+        "dex": 10,
+        "con": 22,
+        "int": 19,
+        "wis": 12,
+        "cha": 15
+      },
+      "saves": {
+        "con": 11,
+        "int": 9,
+        "wis": 6,
+        "cha": 7
+      },
+      "speed": {
+        "walk": 20,
+        "fly": 30
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "Abyssal, telepathy 120 ft."
+    },
+    "Night Hag": {
+      "name": "Night Hag",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 112,
+      "hpFormula": "15d8+45",
+      "cr": 5,
+      "size": "med",
+      "type": "fiend",
+      "abilities": {
+        "str": 18,
+        "dex": 15,
+        "con": 16,
+        "int": 16,
+        "wis": 14,
+        "cha": 16
+      },
+      "skills": {
+        "dec": 7,
+        "ins": 6,
+        "prc": 6,
+        "ste": 6
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Abyssal, Common, Infernal, Primordial"
+    },
+    "Nightmare": {
+      "name": "Nightmare",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 68,
+      "hpFormula": "8d10+24",
+      "cr": 3,
+      "size": "lg",
+      "type": "fiend",
+      "abilities": {
+        "str": 18,
+        "dex": 15,
+        "con": 16,
+        "int": 10,
+        "wis": 13,
+        "cha": 15
+      },
+      "speed": {
+        "walk": 60,
+        "fly": 90
+      },
+      "senses": {},
+      "languages": "understands Abyssal, Common, and Infernal but can't speak"
+    },
+    "Noble": {
+      "name": "Noble",
+      "ac": 15,
+      "acDetail": "breastplate",
+      "hp": 9,
+      "hpFormula": "2d8",
+      "cr": 0.125,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 11,
+        "dex": 12,
+        "con": 11,
+        "int": 12,
+        "wis": 14,
+        "cha": 16
+      },
+      "skills": {
+        "dec": 5,
+        "ins": 4,
+        "per": 5
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any two languages"
+    },
+    "Ochre Jelly": {
+      "name": "Ochre Jelly",
+      "ac": 8,
+      "hp": 45,
+      "hpFormula": "6d10+12",
+      "cr": 2,
+      "size": "lg",
+      "type": "ooze",
+      "abilities": {
+        "str": 15,
+        "dex": 6,
+        "con": 14,
+        "int": 2,
+        "wis": 6,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 10,
+        "climb": 10
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Octopus": {
+      "name": "Octopus",
+      "ac": 12,
+      "hp": 3,
+      "hpFormula": "1d6",
+      "cr": 0,
+      "size": "sm",
+      "type": "beast",
+      "abilities": {
+        "str": 4,
+        "dex": 15,
+        "con": 11,
+        "int": 3,
+        "wis": 10,
+        "cha": 4
+      },
+      "skills": {
+        "prc": 2,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 5,
+        "swim": 30
+      },
+      "senses": {
+        "darkvision": 30
+      },
+      "languages": ""
+    },
+    "Ogre": {
+      "name": "Ogre",
+      "ac": 11,
+      "acDetail": "hide armor",
+      "hp": 59,
+      "hpFormula": "7d10+21",
+      "cr": 2,
+      "size": "lg",
+      "type": "giant",
+      "abilities": {
+        "str": 19,
+        "dex": 8,
+        "con": 16,
+        "int": 5,
+        "wis": 7,
+        "cha": 7
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common, Giant"
+    },
+    "Ogre Zombie": {
+      "name": "Ogre Zombie",
+      "ac": 8,
+      "hp": 85,
+      "hpFormula": "9d10+36",
+      "cr": 2,
+      "size": "lg",
+      "type": "undead",
+      "abilities": {
+        "str": 19,
+        "dex": 6,
+        "con": 18,
+        "int": 3,
+        "wis": 6,
+        "cha": 5
+      },
+      "saves": {
+        "wis": 0
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "understands Common and Giant but can't speak"
+    },
+    "Oni": {
+      "name": "Oni",
+      "ac": 16,
+      "acDetail": "chain mail",
+      "hp": 110,
+      "hpFormula": "13d10+39",
+      "cr": 7,
+      "size": "lg",
+      "type": "giant",
+      "abilities": {
+        "str": 19,
+        "dex": 11,
+        "con": 16,
+        "int": 14,
+        "wis": 12,
+        "cha": 15
+      },
+      "saves": {
+        "dex": 3,
+        "con": 6,
+        "wis": 4,
+        "cha": 5
+      },
+      "skills": {
+        "arc": 5,
+        "dec": 8,
+        "prc": 4
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common, Giant"
+    },
+    "Orc": {
+      "name": "Orc",
+      "ac": 13,
+      "acDetail": "hide armor",
+      "hp": 15,
+      "hpFormula": "2d8+6",
+      "cr": 0.5,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 16,
+        "dex": 12,
+        "con": 16,
+        "int": 7,
+        "wis": 11,
+        "cha": 10
+      },
+      "skills": {
+        "itm": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common, Orc"
+    },
+    "Otyugh": {
+      "name": "Otyugh",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 114,
+      "hpFormula": "12d10+48",
+      "cr": 5,
+      "size": "lg",
+      "type": "aberration",
+      "abilities": {
+        "str": 16,
+        "dex": 11,
+        "con": 19,
+        "int": 6,
+        "wis": 13,
+        "cha": 6
+      },
+      "saves": {
+        "con": 7
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Otyugh"
+    },
+    "Owl": {
+      "name": "Owl",
+      "ac": 11,
+      "hp": 1,
+      "hpFormula": "1d4-1",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 3,
+        "dex": 13,
+        "con": 8,
+        "int": 2,
+        "wis": 12,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 5,
+        "fly": 60
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": ""
+    },
+    "Owlbear": {
+      "name": "Owlbear",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 59,
+      "hpFormula": "7d10+21",
+      "cr": 3,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 20,
+        "dex": 12,
+        "con": 17,
+        "int": 3,
+        "wis": 12,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 3
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Panther": {
+      "name": "Panther",
+      "ac": 12,
+      "hp": 13,
+      "hpFormula": "3d8",
+      "cr": 0.25,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 14,
+        "dex": 15,
+        "con": 10,
+        "int": 3,
+        "wis": 14,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 6
+      },
+      "speed": {
+        "walk": 50,
+        "climb": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Pegasus": {
+      "name": "Pegasus",
+      "ac": 12,
+      "hp": 59,
+      "hpFormula": "7d10+21",
+      "cr": 2,
+      "size": "lg",
+      "type": "celestial",
+      "abilities": {
+        "str": 18,
+        "dex": 15,
+        "con": 16,
+        "int": 10,
+        "wis": 15,
+        "cha": 13
+      },
+      "saves": {
+        "dex": 4,
+        "wis": 4,
+        "cha": 3
+      },
+      "skills": {
+        "prc": 6
+      },
+      "speed": {
+        "walk": 60,
+        "fly": 90
+      },
+      "senses": {},
+      "languages": "understands Celestial, Common, Elvish, and Sylvan but can't speak"
+    },
+    "Phase Spider": {
+      "name": "Phase Spider",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 32,
+      "hpFormula": "5d10+5",
+      "cr": 3,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 15,
+        "dex": 15,
+        "con": 12,
+        "int": 6,
+        "wis": 10,
+        "cha": 6
+      },
+      "skills": {
+        "ste": 6
+      },
+      "speed": {
+        "walk": 30,
+        "climb": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Pit Fiend": {
+      "name": "Pit Fiend",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 300,
+      "hpFormula": "24d10+168",
+      "cr": 20,
+      "size": "lg",
+      "type": "fiend",
+      "abilities": {
+        "str": 26,
+        "dex": 14,
+        "con": 24,
+        "int": 22,
+        "wis": 18,
+        "cha": 24
+      },
+      "saves": {
+        "dex": 8,
+        "con": 13,
+        "wis": 10
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "Infernal, telepathy 120 ft."
+    },
+    "Planetar": {
+      "name": "Planetar",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 200,
+      "hpFormula": "16d10+112",
+      "cr": 16,
+      "size": "lg",
+      "type": "celestial",
+      "abilities": {
+        "str": 24,
+        "dex": 20,
+        "con": 24,
+        "int": 19,
+        "wis": 22,
+        "cha": 25
+      },
+      "saves": {
+        "con": 12,
+        "wis": 11,
+        "cha": 12
+      },
+      "skills": {
+        "prc": 11
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 120
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "all, telepathy 120 ft."
+    },
+    "Plesiosaurus": {
+      "name": "Plesiosaurus",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 68,
+      "hpFormula": "8d10+24",
+      "cr": 2,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 18,
+        "dex": 15,
+        "con": 16,
+        "int": 2,
+        "wis": 12,
+        "cha": 5
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 20,
+        "swim": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Poisonous Snake": {
+      "name": "Poisonous Snake",
+      "ac": 13,
+      "hp": 2,
+      "hpFormula": "1d4",
+      "cr": 0.125,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 2,
+        "dex": 16,
+        "con": 11,
+        "int": 1,
+        "wis": 10,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 30
+      },
+      "senses": {
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Polar Bear": {
+      "name": "Polar Bear",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 42,
+      "hpFormula": "5d10+15",
+      "cr": 2,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 20,
+        "dex": 10,
+        "con": 16,
+        "int": 2,
+        "wis": 13,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 3
+      },
+      "speed": {
+        "walk": 40,
+        "swim": 30
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Pony": {
+      "name": "Pony",
+      "ac": 10,
+      "hp": 11,
+      "hpFormula": "2d8+2",
+      "cr": 0.125,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 15,
+        "dex": 10,
+        "con": 13,
+        "int": 2,
+        "wis": 11,
+        "cha": 7
+      },
+      "saves": {
+        "str": 0,
+        "dex": 0,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "skills": {
+        "acr": 0,
+        "ani": 0,
+        "arc": 0,
+        "ath": 0,
+        "dec": 0,
+        "his": 0,
+        "ins": 0,
+        "itm": 0,
+        "inv": 0,
+        "med": 0,
+        "nat": 0,
+        "prc": 0,
+        "prf": 0,
+        "per": 0,
+        "rel": 0,
+        "slt": 0,
+        "ste": 0,
+        "sur": 0
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Priest": {
+      "name": "Priest",
+      "ac": 13,
+      "acDetail": "chain shirt",
+      "hp": 27,
+      "hpFormula": "5d8+5",
+      "cr": 2,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 10,
+        "dex": 10,
+        "con": 12,
+        "int": 13,
+        "wis": 16,
+        "cha": 13
+      },
+      "skills": {
+        "med": 7,
+        "per": 3,
+        "rel": 5
+      },
+      "speed": {
+        "walk": 25
+      },
+      "senses": {},
+      "languages": "any two languages"
+    },
+    "Pseudodragon": {
+      "name": "Pseudodragon",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 7,
+      "hpFormula": "2d4+2",
+      "cr": 0.25,
+      "size": "tiny",
+      "type": "dragon",
+      "abilities": {
+        "str": 6,
+        "dex": 15,
+        "con": 13,
+        "int": 10,
+        "wis": 12,
+        "cha": 10
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 15,
+        "fly": 60
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "understands Common and Draconic but can't speak"
+    },
+    "Purple Worm": {
+      "name": "Purple Worm",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 247,
+      "hpFormula": "15d20+90",
+      "cr": 15,
+      "size": "grg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 28,
+        "dex": 7,
+        "con": 22,
+        "int": 1,
+        "wis": 8,
+        "cha": 4
+      },
+      "saves": {
+        "con": 11,
+        "wis": 4
+      },
+      "speed": {
+        "walk": 50,
+        "burrow": 30
+      },
+      "senses": {
+        "blindsight": 30,
+        "tremorsense": 60
+      },
+      "languages": ""
+    },
+    "Quasit": {
+      "name": "Quasit",
+      "ac": 13,
+      "hp": 7,
+      "hpFormula": "3d4",
+      "cr": 1,
+      "size": "tiny",
+      "type": "fiend",
+      "abilities": {
+        "str": 5,
+        "dex": 17,
+        "con": 10,
+        "int": 7,
+        "wis": 10,
+        "cha": 10
+      },
+      "skills": {
+        "ste": 5
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Abyssal, Common"
+    },
+    "Quipper": {
+      "name": "Quipper",
+      "ac": 13,
+      "hp": 1,
+      "hpFormula": "1d4-1",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 2,
+        "dex": 16,
+        "con": 9,
+        "int": 1,
+        "wis": 7,
+        "cha": 2
+      },
+      "speed": {
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Rakshasa": {
+      "name": "Rakshasa",
+      "ac": 16,
+      "acDetail": "natural armor",
+      "hp": 110,
+      "hpFormula": "13d8+52",
+      "cr": 13,
+      "size": "med",
+      "type": "fiend",
+      "abilities": {
+        "str": 14,
+        "dex": 17,
+        "con": 18,
+        "int": 13,
+        "wis": 16,
+        "cha": 20
+      },
+      "skills": {
+        "dec": 10,
+        "ins": 8
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common, Infernal"
+    },
+    "Rat": {
+      "name": "Rat",
+      "ac": 10,
+      "hp": 1,
+      "hpFormula": "1d4-1",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 2,
+        "dex": 11,
+        "con": 9,
+        "int": 2,
+        "wis": 10,
+        "cha": 4
+      },
+      "speed": {
+        "walk": 20
+      },
+      "senses": {
+        "darkvision": 30
+      },
+      "languages": ""
+    },
+    "Raven": {
+      "name": "Raven",
+      "ac": 12,
+      "hp": 1,
+      "hpFormula": "1d4-1",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 2,
+        "dex": 14,
+        "con": 8,
+        "int": 2,
+        "wis": 12,
+        "cha": 6
+      },
+      "skills": {
+        "prc": 3
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Red Dragon Wyrmling": {
+      "name": "Red Dragon Wyrmling",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 75,
+      "hpFormula": "10d8+30",
+      "cr": 4,
+      "size": "med",
+      "type": "dragon",
+      "abilities": {
+        "str": 19,
+        "dex": 10,
+        "con": 17,
+        "int": 12,
+        "wis": 11,
+        "cha": 15
+      },
+      "saves": {
+        "dex": 2,
+        "con": 5,
+        "wis": 2,
+        "cha": 4
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 2
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60,
+        "climb": 30
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "Draconic"
+    },
+    "Reef Shark": {
+      "name": "Reef Shark",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 22,
+      "hpFormula": "4d8+1",
+      "cr": 0.5,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 14,
+        "dex": 13,
+        "con": 13,
+        "int": 1,
+        "wis": 10,
+        "cha": 4
+      },
+      "skills": {
+        "prc": 2
+      },
+      "speed": {
+        "swim": 40
+      },
+      "senses": {
+        "blindsight": 30
+      },
+      "languages": ""
+    },
+    "Remorhaz": {
+      "name": "Remorhaz",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 195,
+      "hpFormula": "17d12+85",
+      "cr": 11,
+      "size": "huge",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 24,
+        "dex": 13,
+        "con": 21,
+        "int": 4,
+        "wis": 10,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 30,
+        "burrow": 20
+      },
+      "senses": {
+        "darkvision": 60,
+        "tremorsense": 60
+      },
+      "languages": ""
+    },
+    "Rhinoceros": {
+      "name": "Rhinoceros",
+      "ac": 11,
+      "acDetail": "natural armor",
+      "hp": 45,
+      "hpFormula": "6d10+12",
+      "cr": 2,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 21,
+        "dex": 8,
+        "con": 15,
+        "int": 2,
+        "wis": 12,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Riding Horse": {
+      "name": "Riding Horse",
+      "ac": 10,
+      "hp": 13,
+      "hpFormula": "2d10+2",
+      "cr": 0.25,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 16,
+        "dex": 10,
+        "con": 12,
+        "int": 2,
+        "wis": 11,
+        "cha": 7
+      },
+      "saves": {
+        "str": 0,
+        "dex": 0,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "skills": {
+        "acr": 0,
+        "ani": 0,
+        "arc": 0,
+        "ath": 0,
+        "dec": 0,
+        "his": 0,
+        "ins": 0,
+        "itm": 0,
+        "inv": 0,
+        "med": 0,
+        "nat": 0,
+        "prc": 0,
+        "prf": 0,
+        "per": 0,
+        "rel": 0,
+        "slt": 0,
+        "ste": 0,
+        "sur": 0
+      },
+      "speed": {
+        "walk": 60
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Roc": {
+      "name": "Roc",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 248,
+      "hpFormula": "16d20+80",
+      "cr": 11,
+      "size": "grg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 28,
+        "dex": 10,
+        "con": 20,
+        "int": 3,
+        "wis": 10,
+        "cha": 9
+      },
+      "saves": {
+        "dex": 4,
+        "con": 9,
+        "wis": 4,
+        "cha": 3
+      },
+      "skills": {
+        "prc": 4
+      },
+      "speed": {
+        "walk": 20,
+        "fly": 120
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Roper": {
+      "name": "Roper",
+      "ac": 20,
+      "acDetail": "natural armor",
+      "hp": 93,
+      "hpFormula": "11d10+33",
+      "cr": 5,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 18,
+        "dex": 8,
+        "con": 17,
+        "int": 7,
+        "wis": 16,
+        "cha": 6
+      },
+      "skills": {
+        "prc": 6,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 10,
+        "climb": 10
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Rug of Smothering": {
+      "name": "Rug of Smothering",
+      "ac": 12,
+      "hp": 33,
+      "hpFormula": "6d10",
+      "cr": 2,
+      "size": "lg",
+      "type": "construct",
+      "abilities": {
+        "str": 17,
+        "dex": 14,
+        "con": 10,
+        "int": 1,
+        "wis": 3,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 10
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Rust Monster": {
+      "name": "Rust Monster",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 27,
+      "hpFormula": "5d8+5",
+      "cr": 0.5,
+      "size": "med",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 13,
+        "dex": 12,
+        "con": 13,
+        "int": 2,
+        "wis": 13,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Saber-Toothed Tiger": {
+      "name": "Saber-Toothed Tiger",
+      "ac": 12,
+      "hp": 52,
+      "hpFormula": "7d10+14",
+      "cr": 2,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 18,
+        "dex": 14,
+        "con": 15,
+        "int": 3,
+        "wis": 12,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 6
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Sahuagin": {
+      "name": "Sahuagin",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 22,
+      "hpFormula": "4d8+4",
+      "cr": 0.5,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 13,
+        "dex": 11,
+        "con": 12,
+        "int": 12,
+        "wis": 13,
+        "cha": 9
+      },
+      "skills": {
+        "prc": 5
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Sahuagin"
+    },
+    "Salamander": {
+      "name": "Salamander",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 90,
+      "hpFormula": "12d10+24",
+      "cr": 5,
+      "size": "lg",
+      "type": "elemental",
+      "abilities": {
+        "str": 18,
+        "dex": 14,
+        "con": 15,
+        "int": 11,
+        "wis": 10,
+        "cha": 12
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Ignan"
+    },
+    "Satyr": {
+      "name": "Satyr",
+      "ac": 14,
+      "acDetail": "leather armor",
+      "hp": 31,
+      "hpFormula": "7d8",
+      "cr": 0.5,
+      "size": "med",
+      "type": "fey",
+      "abilities": {
+        "str": 12,
+        "dex": 16,
+        "con": 11,
+        "int": 12,
+        "wis": 10,
+        "cha": 14
+      },
+      "skills": {
+        "prc": 2,
+        "prf": 6,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": "Common, Elvish, Sylvan"
+    },
+    "Scorpion": {
+      "name": "Scorpion",
+      "ac": 11,
+      "acDetail": "natural armor",
+      "hp": 1,
+      "hpFormula": "1d4-1",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 2,
+        "dex": 11,
+        "con": 8,
+        "int": 1,
+        "wis": 8,
+        "cha": 2
+      },
+      "speed": {
+        "walk": 10
+      },
+      "senses": {
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Scout": {
+      "name": "Scout",
+      "ac": 13,
+      "acDetail": "leather armor",
+      "hp": 16,
+      "hpFormula": "3d8+3",
+      "cr": 0.5,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 11,
+        "dex": 14,
+        "con": 12,
+        "int": 11,
+        "wis": 13,
+        "cha": 11
+      },
+      "skills": {
+        "nat": 4,
+        "prc": 5,
+        "ste": 6,
+        "sur": 5
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language (usually Common)"
+    },
+    "Sea Hag": {
+      "name": "Sea Hag",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 52,
+      "hpFormula": "7d8+21",
+      "cr": 2,
+      "size": "med",
+      "type": "fey",
+      "abilities": {
+        "str": 16,
+        "dex": 13,
+        "con": 16,
+        "int": 12,
+        "wis": 12,
+        "cha": 13
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Aquan, Common, Giant"
+    },
+    "Sea Horse": {
+      "name": "Sea Horse",
+      "ac": 11,
+      "hp": 1,
+      "hpFormula": "1d4-1",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 1,
+        "dex": 12,
+        "con": 8,
+        "int": 1,
+        "wis": 10,
+        "cha": 2
+      },
+      "speed": {
+        "swim": 20
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Shadow": {
+      "name": "Shadow",
+      "ac": 12,
+      "hp": 16,
+      "hpFormula": "3d8+3",
+      "cr": 0.5,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 6,
+        "dex": 14,
+        "con": 13,
+        "int": 6,
+        "wis": 10,
+        "cha": 8
+      },
+      "skills": {
+        "ste": 4
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Shambling Mound": {
+      "name": "Shambling Mound",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 136,
+      "hpFormula": "16d10+48",
+      "cr": 5,
+      "size": "lg",
+      "type": "plant",
+      "abilities": {
+        "str": 18,
+        "dex": 8,
+        "con": 16,
+        "int": 5,
+        "wis": 10,
+        "cha": 5
+      },
+      "skills": {
+        "ste": 2
+      },
+      "speed": {
+        "walk": 20,
+        "swim": 20
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Shield Guardian": {
+      "name": "Shield Guardian",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 142,
+      "hpFormula": "15d10+60",
+      "cr": 7,
+      "size": "lg",
+      "type": "construct",
+      "abilities": {
+        "str": 18,
+        "dex": 8,
+        "con": 18,
+        "int": 7,
+        "wis": 10,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "understands commands given in any language but can't speak"
+    },
+    "Shrieker": {
+      "name": "Shrieker",
+      "ac": 5,
+      "hp": 13,
+      "hpFormula": "3d8",
+      "cr": 0,
+      "size": "med",
+      "type": "plant",
+      "abilities": {
+        "str": 1,
+        "dex": 1,
+        "con": 10,
+        "int": 1,
+        "wis": 3,
+        "cha": 1
+      },
+      "speed": {},
+      "senses": {
+        "blindsight": 30
+      },
+      "languages": ""
+    },
+    "Silver Dragon Wyrmling": {
+      "name": "Silver Dragon Wyrmling",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 45,
+      "hpFormula": "6d8+18",
+      "cr": 2,
+      "size": "med",
+      "type": "dragon",
+      "abilities": {
+        "str": 19,
+        "dex": 10,
+        "con": 17,
+        "int": 12,
+        "wis": 11,
+        "cha": 15
+      },
+      "saves": {
+        "dex": 2,
+        "con": 5,
+        "wis": 2,
+        "cha": 4
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 2
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "Draconic"
+    },
+    "Skeleton": {
+      "name": "Skeleton",
+      "ac": 13,
+      "acDetail": "armor scraps",
+      "hp": 13,
+      "hpFormula": "2d8+4",
+      "cr": 0.25,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 10,
+        "dex": 14,
+        "con": 15,
+        "int": 6,
+        "wis": 8,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "understands the languages it knew in life but can't speak"
+    },
+    "Solar": {
+      "name": "Solar",
+      "ac": 21,
+      "acDetail": "natural armor",
+      "hp": 243,
+      "hpFormula": "18d10+144",
+      "cr": 21,
+      "size": "lg",
+      "type": "celestial",
+      "abilities": {
+        "str": 26,
+        "dex": 22,
+        "con": 26,
+        "int": 25,
+        "wis": 25,
+        "cha": 30
+      },
+      "saves": {
+        "int": 14,
+        "wis": 14,
+        "cha": 17
+      },
+      "skills": {
+        "prc": 14
+      },
+      "speed": {
+        "walk": 50,
+        "fly": 150
+      },
+      "senses": {
+        "truesight": 120
+      },
+      "languages": "all, telepathy 120 ft."
+    },
+    "Specter": {
+      "name": "Specter",
+      "ac": 12,
+      "hp": 22,
+      "hpFormula": "5d8",
+      "cr": 1,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 1,
+        "dex": 14,
+        "con": 11,
+        "int": 10,
+        "wis": 10,
+        "cha": 11
+      },
+      "speed": {
+        "fly": 50
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "understands all languages it knew in life but can't speak"
+    },
+    "Spider": {
+      "name": "Spider",
+      "ac": 12,
+      "hp": 1,
+      "hpFormula": "1d4-1",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 2,
+        "dex": 14,
+        "con": 8,
+        "int": 1,
+        "wis": 10,
+        "cha": 2
+      },
+      "skills": {
+        "ste": 4
+      },
+      "speed": {
+        "walk": 20,
+        "climb": 20
+      },
+      "senses": {
+        "darkvision": 30
+      },
+      "languages": ""
+    },
+    "Spirit Naga": {
+      "name": "Spirit Naga",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 75,
+      "hpFormula": "10d10+20",
+      "cr": 8,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 18,
+        "dex": 17,
+        "con": 14,
+        "int": 16,
+        "wis": 15,
+        "cha": 16
+      },
+      "saves": {
+        "dex": 6,
+        "con": 5,
+        "wis": 5,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Abyssal, Common"
+    },
+    "Sprite": {
+      "name": "Sprite",
+      "ac": 15,
+      "acDetail": "leather armor",
+      "hp": 2,
+      "hpFormula": "1d4",
+      "cr": 0.25,
+      "size": "tiny",
+      "type": "fey",
+      "abilities": {
+        "str": 3,
+        "dex": 18,
+        "con": 10,
+        "int": 14,
+        "wis": 13,
+        "cha": 11
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 8
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 40
+      },
+      "senses": {},
+      "languages": "Common, Elvish, Sylvan"
+    },
+    "Spy": {
+      "name": "Spy",
+      "ac": 12,
+      "hp": 27,
+      "hpFormula": "6d8",
+      "cr": 1,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 10,
+        "dex": 15,
+        "con": 10,
+        "int": 12,
+        "wis": 14,
+        "cha": 16
+      },
+      "skills": {
+        "dec": 5,
+        "ins": 4,
+        "inv": 5,
+        "prc": 6,
+        "per": 5,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any two languages"
+    },
+    "Steam Mephit": {
+      "name": "Steam Mephit",
+      "ac": 10,
+      "hp": 21,
+      "hpFormula": "6d6",
+      "cr": 0.25,
+      "size": "sm",
+      "type": "elemental",
+      "abilities": {
+        "str": 5,
+        "dex": 11,
+        "con": 10,
+        "int": 11,
+        "wis": 10,
+        "cha": 12
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Aquan, Ignan"
+    },
+    "Stirge": {
+      "name": "Stirge",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 2,
+      "hpFormula": "1d4",
+      "cr": 0.125,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 4,
+        "dex": 16,
+        "con": 11,
+        "int": 2,
+        "wis": 8,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Stone Giant": {
+      "name": "Stone Giant",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 126,
+      "hpFormula": "11d12+55",
+      "cr": 7,
+      "size": "huge",
+      "type": "giant",
+      "abilities": {
+        "str": 23,
+        "dex": 15,
+        "con": 20,
+        "int": 10,
+        "wis": 12,
+        "cha": 9
+      },
+      "saves": {
+        "dex": 5,
+        "con": 8,
+        "wis": 4
+      },
+      "skills": {
+        "ath": 12,
+        "prc": 4
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Giant"
+    },
+    "Stone Golem": {
+      "name": "Stone Golem",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 178,
+      "hpFormula": "17d10+85",
+      "cr": 10,
+      "size": "lg",
+      "type": "construct",
+      "abilities": {
+        "str": 22,
+        "dex": 9,
+        "con": 20,
+        "int": 3,
+        "wis": 11,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "understands the languages of its creator but can't speak"
+    },
+    "Storm Giant": {
+      "name": "Storm Giant",
+      "ac": 16,
+      "acDetail": "scale mail",
+      "hp": 230,
+      "hpFormula": "20d12+100",
+      "cr": 13,
+      "size": "huge",
+      "type": "giant",
+      "abilities": {
+        "str": 29,
+        "dex": 14,
+        "con": 20,
+        "int": 16,
+        "wis": 18,
+        "cha": 18
+      },
+      "saves": {
+        "str": 14,
+        "con": 10,
+        "wis": 9,
+        "cha": 9
+      },
+      "skills": {
+        "arc": 8,
+        "ath": 14,
+        "his": 8,
+        "prc": 9
+      },
+      "speed": {
+        "walk": 50,
+        "swim": 50
+      },
+      "senses": {},
+      "languages": "Common, Giant"
+    },
+    "Succubus/Incubus": {
+      "name": "Succubus/Incubus",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 66,
+      "hpFormula": "12d8+12",
+      "cr": 4,
+      "size": "med",
+      "type": "fiend",
+      "abilities": {
+        "str": 8,
+        "dex": 17,
+        "con": 13,
+        "int": 15,
+        "wis": 12,
+        "cha": 20
+      },
+      "skills": {
+        "dec": 9,
+        "ins": 5,
+        "prc": 5,
+        "per": 9,
+        "ste": 7
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Abyssal, Common, Infernal, telepathy 60 ft."
+    },
+    "Swarm of Bats": {
+      "name": "Swarm of Bats",
+      "ac": 12,
+      "hp": 22,
+      "hpFormula": "5d8",
+      "cr": 0.25,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 5,
+        "dex": 15,
+        "con": 10,
+        "int": 2,
+        "wis": 12,
+        "cha": 4
+      },
+      "speed": {
+        "fly": 30
+      },
+      "senses": {
+        "blindsight": 60
+      },
+      "languages": ""
+    },
+    "Swarm of Beetles": {
+      "name": "Swarm of Beetles",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 22,
+      "hpFormula": "5d8",
+      "cr": 0.5,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 3,
+        "dex": 13,
+        "con": 10,
+        "int": 1,
+        "wis": 7,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 20,
+        "climb": 20,
+        "burrow": 5
+      },
+      "senses": {
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Swarm of Centipedes": {
+      "name": "Swarm of Centipedes",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 22,
+      "hpFormula": "5d8",
+      "cr": 0.5,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 3,
+        "dex": 13,
+        "con": 10,
+        "int": 1,
+        "wis": 7,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 20,
+        "climb": 20
+      },
+      "senses": {
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Swarm of Insects": {
+      "name": "Swarm of Insects",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 22,
+      "hpFormula": "5d8",
+      "cr": 0.5,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 3,
+        "dex": 13,
+        "con": 10,
+        "int": 1,
+        "wis": 7,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 20,
+        "climb": 20
+      },
+      "senses": {
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Swarm of Poisonous Snakes": {
+      "name": "Swarm of Poisonous Snakes",
+      "ac": 14,
+      "hp": 36,
+      "hpFormula": "8d8",
+      "cr": 2,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 8,
+        "dex": 18,
+        "con": 11,
+        "int": 1,
+        "wis": 10,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 30
+      },
+      "senses": {
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Swarm of Quippers": {
+      "name": "Swarm of Quippers",
+      "ac": 13,
+      "hp": 28,
+      "hpFormula": "8d8-8",
+      "cr": 1,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 13,
+        "dex": 16,
+        "con": 9,
+        "int": 1,
+        "wis": 7,
+        "cha": 2
+      },
+      "speed": {
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Swarm of Rats": {
+      "name": "Swarm of Rats",
+      "ac": 10,
+      "hp": 24,
+      "hpFormula": "7d8-7",
+      "cr": 0.25,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 9,
+        "dex": 11,
+        "con": 9,
+        "int": 2,
+        "wis": 10,
+        "cha": 3
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 30
+      },
+      "languages": ""
+    },
+    "Swarm of Ravens": {
+      "name": "Swarm of Ravens",
+      "ac": 12,
+      "hp": 24,
+      "hpFormula": "7d8-7",
+      "cr": 0.25,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 6,
+        "dex": 14,
+        "con": 8,
+        "int": 3,
+        "wis": 12,
+        "cha": 6
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Swarm of Spiders": {
+      "name": "Swarm of Spiders",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 22,
+      "hpFormula": "5d8",
+      "cr": 0.5,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 3,
+        "dex": 13,
+        "con": 10,
+        "int": 1,
+        "wis": 7,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 20,
+        "climb": 20
+      },
+      "senses": {
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Swarm of Wasps": {
+      "name": "Swarm of Wasps",
+      "ac": 12,
+      "acDetail": "natural armor",
+      "hp": 22,
+      "hpFormula": "5d8",
+      "cr": 0.5,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 3,
+        "dex": 13,
+        "con": 10,
+        "int": 1,
+        "wis": 7,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 5,
+        "fly": 30
+      },
+      "senses": {
+        "blindsight": 10
+      },
+      "languages": ""
+    },
+    "Tarrasque": {
+      "name": "Tarrasque",
+      "ac": 25,
+      "acDetail": "natural armor",
+      "hp": 676,
+      "hpFormula": "33d20+330",
+      "cr": 30,
+      "size": "grg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 30,
+        "dex": 11,
+        "con": 30,
+        "int": 3,
+        "wis": 11,
+        "cha": 11
+      },
+      "saves": {
+        "int": 5,
+        "wis": 9,
+        "cha": 9
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "blindsight": 120
+      },
+      "languages": ""
+    },
+    "Thug": {
+      "name": "Thug",
+      "ac": 11,
+      "acDetail": "leather armor",
+      "hp": 32,
+      "hpFormula": "5d8+10",
+      "cr": 0.5,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 15,
+        "dex": 11,
+        "con": 14,
+        "int": 10,
+        "wis": 10,
+        "cha": 11
+      },
+      "skills": {
+        "itm": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language (usually Common)"
+    },
+    "Tiger": {
+      "name": "Tiger",
+      "ac": 12,
+      "hp": 37,
+      "hpFormula": "5d10+10",
+      "cr": 1,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 17,
+        "dex": 15,
+        "con": 14,
+        "int": 3,
+        "wis": 12,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 6
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Treant": {
+      "name": "Treant",
+      "ac": 16,
+      "acDetail": "natural armor",
+      "hp": 138,
+      "hpFormula": "12d12+60",
+      "cr": 9,
+      "size": "huge",
+      "type": "plant",
+      "abilities": {
+        "str": 23,
+        "dex": 8,
+        "con": 21,
+        "int": 12,
+        "wis": 16,
+        "cha": 12
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "Common, Druidic, Elvish, Sylvan"
+    },
+    "Tribal Warrior": {
+      "name": "Tribal Warrior",
+      "ac": 12,
+      "acDetail": "hide armor",
+      "hp": 11,
+      "hpFormula": "2d8+2",
+      "cr": 0.125,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 13,
+        "dex": 11,
+        "con": 12,
+        "int": 8,
+        "wis": 11,
+        "cha": 8
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language"
+    },
+    "Triceratops": {
+      "name": "Triceratops",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 95,
+      "hpFormula": "10d12+30",
+      "cr": 5,
+      "size": "huge",
+      "type": "beast",
+      "abilities": {
+        "str": 22,
+        "dex": 9,
+        "con": 17,
+        "int": 2,
+        "wis": 11,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Troll": {
+      "name": "Troll",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 84,
+      "hpFormula": "8d10+40",
+      "cr": 5,
+      "size": "lg",
+      "type": "giant",
+      "abilities": {
+        "str": 18,
+        "dex": 13,
+        "con": 20,
+        "int": 7,
+        "wis": 9,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Giant"
+    },
+    "Tyrannosaurus Rex": {
+      "name": "Tyrannosaurus Rex",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 136,
+      "hpFormula": "13d12+52",
+      "cr": 8,
+      "size": "huge",
+      "type": "beast",
+      "abilities": {
+        "str": 25,
+        "dex": 10,
+        "con": 19,
+        "int": 2,
+        "wis": 12,
+        "cha": 9
+      },
+      "skills": {
+        "prc": 4
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Unicorn": {
+      "name": "Unicorn",
+      "ac": 12,
+      "hp": 67,
+      "hpFormula": "9d10+18",
+      "cr": 5,
+      "size": "lg",
+      "type": "celestial",
+      "abilities": {
+        "str": 18,
+        "dex": 14,
+        "con": 15,
+        "int": 11,
+        "wis": 17,
+        "cha": 16
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Celestial, Elvish, Sylvan, telepathy 60 ft."
+    },
+    "Vampire": {
+      "name": "Vampire",
+      "ac": 16,
+      "acDetail": "natural armor",
+      "hp": 144,
+      "hpFormula": "17d8+68",
+      "cr": 13,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 18,
+        "dex": 18,
+        "con": 18,
+        "int": 17,
+        "wis": 15,
+        "cha": 18
+      },
+      "saves": {
+        "dex": 9,
+        "wis": 7,
+        "cha": 9
+      },
+      "skills": {
+        "prc": 7,
+        "ste": 9
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "the languages it knew in life"
+    },
+    "Vampire Spawn": {
+      "name": "Vampire Spawn",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 82,
+      "hpFormula": "11d8+33",
+      "cr": 5,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 16,
+        "dex": 16,
+        "con": 16,
+        "int": 11,
+        "wis": 10,
+        "cha": 12
+      },
+      "saves": {
+        "dex": 6,
+        "wis": 3
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 6
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "the languages it knew in life"
+    },
+    "Veteran": {
+      "name": "Veteran",
+      "ac": 17,
+      "acDetail": "splint",
+      "hp": 58,
+      "hpFormula": "9d8+18",
+      "cr": 3,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 16,
+        "dex": 13,
+        "con": 14,
+        "int": 10,
+        "wis": 11,
+        "cha": 10
+      },
+      "skills": {
+        "ath": 5,
+        "prc": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "any one language (usually Common)"
+    },
+    "Violet Fungus": {
+      "name": "Violet Fungus",
+      "ac": 5,
+      "hp": 18,
+      "hpFormula": "4d8",
+      "cr": 0.25,
+      "size": "med",
+      "type": "plant",
+      "abilities": {
+        "str": 3,
+        "dex": 1,
+        "con": 10,
+        "int": 1,
+        "wis": 3,
+        "cha": 1
+      },
+      "speed": {
+        "walk": 5
+      },
+      "senses": {
+        "blindsight": 30
+      },
+      "languages": ""
+    },
+    "Vrock": {
+      "name": "Vrock",
+      "ac": 15,
+      "acDetail": "natural armor",
+      "hp": 104,
+      "hpFormula": "11d10+44",
+      "cr": 6,
+      "size": "lg",
+      "type": "fiend",
+      "abilities": {
+        "str": 17,
+        "dex": 15,
+        "con": 18,
+        "int": 8,
+        "wis": 13,
+        "cha": 8
+      },
+      "saves": {
+        "dex": 5,
+        "wis": 4,
+        "cha": 2
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 60
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "Abyssal, telepathy 120 ft."
+    },
+    "Vulture": {
+      "name": "Vulture",
+      "ac": 10,
+      "hp": 5,
+      "hpFormula": "1d8+1",
+      "cr": 0,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 7,
+        "dex": 10,
+        "con": 13,
+        "int": 2,
+        "wis": 12,
+        "cha": 4
+      },
+      "skills": {
+        "prc": 3
+      },
+      "speed": {
+        "walk": 10,
+        "fly": 50
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Warhorse": {
+      "name": "Warhorse",
+      "ac": 11,
+      "hp": 19,
+      "hpFormula": "3d10+3",
+      "cr": 0.5,
+      "size": "lg",
+      "type": "beast",
+      "abilities": {
+        "str": 18,
+        "dex": 12,
+        "con": 13,
+        "int": 2,
+        "wis": 12,
+        "cha": 7
+      },
+      "saves": {
+        "str": 0,
+        "dex": 0,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "skills": {
+        "acr": 0,
+        "ani": 0,
+        "arc": 0,
+        "ath": 0,
+        "dec": 0,
+        "his": 0,
+        "ins": 0,
+        "itm": 0,
+        "inv": 0,
+        "med": 0,
+        "nat": 0,
+        "prc": 0,
+        "prf": 0,
+        "per": 0,
+        "rel": 0,
+        "slt": 0,
+        "ste": 0,
+        "sur": 0
+      },
+      "speed": {
+        "walk": 60
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Warhorse Skeleton": {
+      "name": "Warhorse Skeleton",
+      "ac": 13,
+      "acDetail": "barding scraps",
+      "hp": 22,
+      "hpFormula": "3d10+6",
+      "cr": 0.5,
+      "size": "lg",
+      "type": "undead",
+      "abilities": {
+        "str": 18,
+        "dex": 12,
+        "con": 15,
+        "int": 2,
+        "wis": 8,
+        "cha": 5
+      },
+      "speed": {
+        "walk": 60
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Water Elemental": {
+      "name": "Water Elemental",
+      "ac": 14,
+      "acDetail": "natural armor",
+      "hp": 114,
+      "hpFormula": "12d10+48",
+      "cr": 5,
+      "size": "lg",
+      "type": "elemental",
+      "abilities": {
+        "str": 18,
+        "dex": 14,
+        "con": 18,
+        "int": 5,
+        "wis": 10,
+        "cha": 8
+      },
+      "speed": {
+        "walk": 30,
+        "swim": 90
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Aquan"
+    },
+    "Weasel": {
+      "name": "Weasel",
+      "ac": 13,
+      "hp": 1,
+      "hpFormula": "1d4-1",
+      "cr": 0,
+      "size": "tiny",
+      "type": "beast",
+      "abilities": {
+        "str": 3,
+        "dex": 16,
+        "con": 8,
+        "int": 2,
+        "wis": 12,
+        "cha": 3
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Werebear": {
+      "name": "Werebear",
+      "ac": 10,
+      "acDetail": "10 in humanoid form, 11 (natural armor) in bear and hybrid form",
+      "hp": 135,
+      "hpFormula": "18d8+54",
+      "cr": 5,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 19,
+        "dex": 10,
+        "con": 17,
+        "int": 11,
+        "wis": 12,
+        "cha": 12
+      },
+      "skills": {
+        "prc": 7
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "Common (can't speak in bear form)"
+    },
+    "Wereboar": {
+      "name": "Wereboar",
+      "ac": 10,
+      "acDetail": "10 in humanoid form, 11 (natural armor) in boar or hybrid form",
+      "hp": 78,
+      "hpFormula": "12d8+24",
+      "cr": 4,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 17,
+        "dex": 10,
+        "con": 15,
+        "int": 10,
+        "wis": 11,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 2
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "Common (can't speak in boar form)"
+    },
+    "Wererat": {
+      "name": "Wererat",
+      "ac": 12,
+      "hp": 33,
+      "hpFormula": "6d8+6",
+      "cr": 2,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 10,
+        "dex": 15,
+        "con": 12,
+        "int": 11,
+        "wis": 10,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 2,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common (can't speak in rat form)"
+    },
+    "Weretiger": {
+      "name": "Weretiger",
+      "ac": 12,
+      "hp": 120,
+      "hpFormula": "16d8+48",
+      "cr": 4,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 17,
+        "dex": 15,
+        "con": 16,
+        "int": 10,
+        "wis": 13,
+        "cha": 11
+      },
+      "skills": {
+        "prc": 5,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Common (can't speak in tiger form)"
+    },
+    "Werewolf": {
+      "name": "Werewolf",
+      "ac": 11,
+      "acDetail": "11 in humanoid form, 12 (natural armor) in wolf or hybrid form",
+      "hp": 58,
+      "hpFormula": "9d8+18",
+      "cr": 3,
+      "size": "med",
+      "type": "humanoid",
+      "abilities": {
+        "str": 15,
+        "dex": 13,
+        "con": 14,
+        "int": 10,
+        "wis": 11,
+        "cha": 10
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {},
+      "languages": "Common (can't speak in wolf form)"
+    },
+    "White Dragon Wyrmling": {
+      "name": "White Dragon Wyrmling",
+      "ac": 16,
+      "acDetail": "natural armor",
+      "hp": 32,
+      "hpFormula": "5d8+10",
+      "cr": 2,
+      "size": "med",
+      "type": "dragon",
+      "abilities": {
+        "str": 14,
+        "dex": 10,
+        "con": 14,
+        "int": 5,
+        "wis": 10,
+        "cha": 11
+      },
+      "saves": {
+        "dex": 2,
+        "con": 4,
+        "wis": 2,
+        "cha": 2
+      },
+      "skills": {
+        "prc": 4,
+        "ste": 2
+      },
+      "speed": {
+        "walk": 30,
+        "fly": 60,
+        "swim": 30,
+        "burrow": 15
+      },
+      "senses": {
+        "darkvision": 60,
+        "blindsight": 10
+      },
+      "languages": "Draconic"
+    },
+    "Wight": {
+      "name": "Wight",
+      "ac": 14,
+      "acDetail": "studded leather",
+      "hp": 45,
+      "hpFormula": "6d8+18",
+      "cr": 3,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 15,
+        "dex": 14,
+        "con": 16,
+        "int": 10,
+        "wis": 13,
+        "cha": 15
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 30
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "the languages it knew in life"
+    },
+    "Will-o'-Wisp": {
+      "name": "Will-o'-Wisp",
+      "ac": 19,
+      "hp": 22,
+      "hpFormula": "9d4",
+      "cr": 2,
+      "size": "tiny",
+      "type": "undead",
+      "abilities": {
+        "str": 1,
+        "dex": 28,
+        "con": 10,
+        "int": 13,
+        "wis": 14,
+        "cha": 11
+      },
+      "speed": {
+        "fly": 50
+      },
+      "senses": {
+        "darkvision": 120
+      },
+      "languages": "the languages it knew in life"
+    },
+    "Winter Wolf": {
+      "name": "Winter Wolf",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 75,
+      "hpFormula": "10d10+20",
+      "cr": 3,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 18,
+        "dex": 13,
+        "con": 14,
+        "int": 7,
+        "wis": 12,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 5,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {},
+      "languages": "Common, Giant, Winter Wolf"
+    },
+    "Wolf": {
+      "name": "Wolf",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 11,
+      "hpFormula": "2d8+2",
+      "cr": 0.25,
+      "size": "med",
+      "type": "beast",
+      "abilities": {
+        "str": 12,
+        "dex": 15,
+        "con": 12,
+        "int": 3,
+        "wis": 12,
+        "cha": 6
+      },
+      "skills": {
+        "prc": 3,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 40
+      },
+      "senses": {},
+      "languages": ""
+    },
+    "Worg": {
+      "name": "Worg",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 26,
+      "hpFormula": "4d10+4",
+      "cr": 0.5,
+      "size": "lg",
+      "type": "monstrosity",
+      "abilities": {
+        "str": 16,
+        "dex": 13,
+        "con": 13,
+        "int": 7,
+        "wis": 11,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 4
+      },
+      "speed": {
+        "walk": 50
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "Goblin, Worg"
+    },
+    "Wraith": {
+      "name": "Wraith",
+      "ac": 13,
+      "hp": 67,
+      "hpFormula": "9d8+27",
+      "cr": 5,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 6,
+        "dex": 16,
+        "con": 16,
+        "int": 12,
+        "wis": 14,
+        "cha": 15
+      },
+      "speed": {
+        "fly": 60
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "the languages it knew in life"
+    },
+    "Wyvern": {
+      "name": "Wyvern",
+      "ac": 13,
+      "acDetail": "natural armor",
+      "hp": 110,
+      "hpFormula": "13d10+39",
+      "cr": 6,
+      "size": "lg",
+      "type": "dragon",
+      "abilities": {
+        "str": 19,
+        "dex": 10,
+        "con": 16,
+        "int": 5,
+        "wis": 12,
+        "cha": 6
+      },
+      "skills": {
+        "prc": 4
+      },
+      "speed": {
+        "walk": 20,
+        "fly": 80
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": ""
+    },
+    "Xorn": {
+      "name": "Xorn",
+      "ac": 19,
+      "acDetail": "natural armor",
+      "hp": 73,
+      "hpFormula": "7d8+42",
+      "cr": 5,
+      "size": "med",
+      "type": "elemental",
+      "abilities": {
+        "str": 17,
+        "dex": 10,
+        "con": 22,
+        "int": 11,
+        "wis": 10,
+        "cha": 11
+      },
+      "skills": {
+        "prc": 6,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 20,
+        "burrow": 20
+      },
+      "senses": {
+        "darkvision": 60,
+        "tremorsense": 60
+      },
+      "languages": "Terran"
+    },
+    "Young Black Dragon": {
+      "name": "Young Black Dragon",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 127,
+      "hpFormula": "15d10+45",
+      "cr": 7,
+      "size": "lg",
+      "type": "dragon",
+      "abilities": {
+        "str": 19,
+        "dex": 14,
+        "con": 17,
+        "int": 12,
+        "wis": 11,
+        "cha": 15
+      },
+      "saves": {
+        "dex": 5,
+        "con": 6,
+        "wis": 3,
+        "cha": 5
+      },
+      "skills": {
+        "prc": 6,
+        "ste": 5
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 30
+      },
+      "languages": "Common, Draconic"
+    },
+    "Young Blue Dragon": {
+      "name": "Young Blue Dragon",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 152,
+      "hpFormula": "16d10+64",
+      "cr": 9,
+      "size": "lg",
+      "type": "dragon",
+      "abilities": {
+        "str": 21,
+        "dex": 10,
+        "con": 19,
+        "int": 14,
+        "wis": 13,
+        "cha": 17
+      },
+      "saves": {
+        "dex": 4,
+        "con": 8,
+        "wis": 5,
+        "cha": 7
+      },
+      "skills": {
+        "prc": 9,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "burrow": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 30
+      },
+      "languages": "Common, Draconic"
+    },
+    "Young Brass Dragon": {
+      "name": "Young Brass Dragon",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 110,
+      "hpFormula": "13d10+39",
+      "cr": 6,
+      "size": "lg",
+      "type": "dragon",
+      "abilities": {
+        "str": 19,
+        "dex": 10,
+        "con": 17,
+        "int": 12,
+        "wis": 11,
+        "cha": 15
+      },
+      "saves": {
+        "dex": 3,
+        "con": 6,
+        "wis": 3,
+        "cha": 5
+      },
+      "skills": {
+        "prc": 6,
+        "per": 5,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "burrow": 20
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 30
+      },
+      "languages": "Common, Draconic"
+    },
+    "Young Bronze Dragon": {
+      "name": "Young Bronze Dragon",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 142,
+      "hpFormula": "15d10+60",
+      "cr": 8,
+      "size": "lg",
+      "type": "dragon",
+      "abilities": {
+        "str": 21,
+        "dex": 10,
+        "con": 19,
+        "int": 14,
+        "wis": 13,
+        "cha": 17
+      },
+      "saves": {
+        "dex": 3,
+        "con": 7,
+        "wis": 4,
+        "cha": 6
+      },
+      "skills": {
+        "ins": 4,
+        "prc": 7,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 30
+      },
+      "languages": "Common, Draconic"
+    },
+    "Young Copper Dragon": {
+      "name": "Young Copper Dragon",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 119,
+      "hpFormula": "14d10+42",
+      "cr": 7,
+      "size": "lg",
+      "type": "dragon",
+      "abilities": {
+        "str": 19,
+        "dex": 12,
+        "con": 17,
+        "int": 16,
+        "wis": 13,
+        "cha": 15
+      },
+      "saves": {
+        "dex": 4,
+        "con": 6,
+        "wis": 4,
+        "cha": 5
+      },
+      "skills": {
+        "dec": 5,
+        "prc": 7,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "climb": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 30
+      },
+      "languages": "Common, Draconic"
+    },
+    "Young Gold Dragon": {
+      "name": "Young Gold Dragon",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 178,
+      "hpFormula": "17d10+85",
+      "cr": 10,
+      "size": "lg",
+      "type": "dragon",
+      "abilities": {
+        "str": 23,
+        "dex": 14,
+        "con": 21,
+        "int": 16,
+        "wis": 13,
+        "cha": 20
+      },
+      "saves": {
+        "dex": 6,
+        "con": 9,
+        "wis": 5,
+        "cha": 9
+      },
+      "skills": {
+        "ins": 5,
+        "prc": 9,
+        "per": 9,
+        "ste": 6
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 30
+      },
+      "languages": "Common, Draconic"
+    },
+    "Young Green Dragon": {
+      "name": "Young Green Dragon",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 136,
+      "hpFormula": "16d10+48",
+      "cr": 8,
+      "size": "lg",
+      "type": "dragon",
+      "abilities": {
+        "str": 19,
+        "dex": 12,
+        "con": 17,
+        "int": 16,
+        "wis": 13,
+        "cha": 15
+      },
+      "saves": {
+        "dex": 4,
+        "con": 6,
+        "wis": 4,
+        "cha": 5
+      },
+      "skills": {
+        "dec": 5,
+        "prc": 7,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 30
+      },
+      "languages": "Common, Draconic"
+    },
+    "Young Red Dragon": {
+      "name": "Young Red Dragon",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 178,
+      "hpFormula": "17d10+85",
+      "cr": 10,
+      "size": "lg",
+      "type": "dragon",
+      "abilities": {
+        "str": 23,
+        "dex": 10,
+        "con": 21,
+        "int": 14,
+        "wis": 11,
+        "cha": 19
+      },
+      "saves": {
+        "dex": 4,
+        "con": 9,
+        "wis": 4,
+        "cha": 8
+      },
+      "skills": {
+        "prc": 8,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "climb": 40
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 30
+      },
+      "languages": "Common, Draconic"
+    },
+    "Young Silver Dragon": {
+      "name": "Young Silver Dragon",
+      "ac": 18,
+      "acDetail": "natural armor",
+      "hp": 168,
+      "hpFormula": "16d10+80",
+      "cr": 9,
+      "size": "lg",
+      "type": "dragon",
+      "abilities": {
+        "str": 23,
+        "dex": 10,
+        "con": 21,
+        "int": 14,
+        "wis": 11,
+        "cha": 19
+      },
+      "saves": {
+        "dex": 4,
+        "con": 9,
+        "wis": 4,
+        "cha": 8
+      },
+      "skills": {
+        "arc": 6,
+        "his": 6,
+        "prc": 8,
+        "ste": 4
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 30
+      },
+      "languages": "Common, Draconic"
+    },
+    "Young White Dragon": {
+      "name": "Young White Dragon",
+      "ac": 17,
+      "acDetail": "natural armor",
+      "hp": 133,
+      "hpFormula": "14d10+56",
+      "cr": 6,
+      "size": "lg",
+      "type": "dragon",
+      "abilities": {
+        "str": 18,
+        "dex": 10,
+        "con": 18,
+        "int": 6,
+        "wis": 11,
+        "cha": 12
+      },
+      "saves": {
+        "dex": 3,
+        "con": 7,
+        "wis": 3,
+        "cha": 4
+      },
+      "skills": {
+        "prc": 6,
+        "ste": 3
+      },
+      "speed": {
+        "walk": 40,
+        "fly": 80,
+        "swim": 40,
+        "burrow": 20
+      },
+      "senses": {
+        "darkvision": 120,
+        "blindsight": 30
+      },
+      "languages": "Common, Draconic"
+    },
+    "Zombie": {
+      "name": "Zombie",
+      "ac": 8,
+      "hp": 22,
+      "hpFormula": "3d8+9",
+      "cr": 0.25,
+      "size": "med",
+      "type": "undead",
+      "abilities": {
+        "str": 13,
+        "dex": 6,
+        "con": 16,
+        "int": 3,
+        "wis": 6,
+        "cha": 5
+      },
+      "saves": {
+        "wis": 0
+      },
+      "speed": {
+        "walk": 20
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "languages": "understands the languages it knew in life but can't speak"
+    }
+  }
+}
