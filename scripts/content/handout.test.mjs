@@ -121,7 +121,7 @@ test('parseArgs requires a note and rejects junk', () => {
 });
 
 test('slug keeps filenames kebab-case so ids stay stable', () => {
-  assert.equal(slug("Zephyr's Map"), 'zephyrs-map');
+  assert.equal(slug("Traveller's Map"), 'travellers-map');
 });
 
 /** Build a small vault: one game, one handout, art in Assets/Art. */
@@ -158,7 +158,7 @@ test('resolveAsset returns null when the file is nowhere in the vault', async ()
 
 test('compileHandout turns a real note into player-visible image pages', async () => {
   const { vault, game } = await fixture();
-  const note = path.join(game, 'Handouts', "Zephyr's Map.md");
+  const note = path.join(game, 'Handouts', "Traveller's Map.md");
   await writeFile(
     note,
     '---\ntype: handout\nplayer_visible: true\n---\n\n# The Map\n\nProse the bridge owns.\n\n![[crooked-map.webp|Drawn in charcoal]]\n',
@@ -170,7 +170,7 @@ test('compileHandout turns a real note into player-visible image pages', async (
 
   assert.deepEqual(unresolved, []);
   assert.equal(playerVisible, true);
-  assert.equal(journal.name, "Zephyr's Map — Art");
+  assert.equal(journal.name, "Traveller's Map — Art");
   assert.equal(journal.pages.length, 1, 'prose is NOT emitted — the bridge owns it');
   assert.equal(journal.pages[0].type, 'image');
   assert.equal(journal.pages[0].src, 'DnD/03 Oneshots/My Game/Assets/Art/crooked-map.webp');
