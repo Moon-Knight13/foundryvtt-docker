@@ -178,14 +178,14 @@ export function sceneFromDd2vtt(dd, opts = {}) {
   const shiftLight = l => ({ ...l, x: px(l.x + offsetX), y: px(l.y + offsetY) });
   const shiftNote = n => ({ ...n, x: px(n.x + offsetX), y: px(n.y + offsetY) });
 
-  const walls = [
-    ...wallsFromLOS(dd.line_of_sight, ppg),
-    ...doorsFromPortals(dd.portals, ppg),
-  ].map(shiftWall);
+  const walls = [...wallsFromLOS(dd.line_of_sight, ppg), ...doorsFromPortals(dd.portals, ppg)].map(
+    shiftWall,
+  );
   // render_map bakes light into the Player PNG, so its dynamic lights would
   // double up; --no-lights ships the baked map with no dynamic lights.
-  const lights = (noLights ? [] : (dd.lights ?? []).map(l => lightFromDd2vtt(l, ppg, gridDistance)))
-    .map(shiftLight);
+  const lights = (
+    noLights ? [] : (dd.lights ?? []).map(l => lightFromDd2vtt(l, ppg, gridDistance))
+  ).map(shiftLight);
 
   // Pins only exist when the caller passed a spec's keys AND told us where the
   // companion journal will live — without the path the ids could not resolve.
@@ -219,14 +219,30 @@ export function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     switch (arg) {
-      case '--background': opts.background = argv[++i]; break;
-      case '--out': opts.out = argv[++i]; break;
-      case '--name': opts.name = argv[++i]; break;
-      case '--grid-distance': opts.gridDistance = Number(argv[++i]); break;
-      case '--global-light': opts.globalLight = true; break;
-      case '--no-lights': opts.noLights = true; break;
-      case '--keys': opts.keys = argv[++i]; break;
-      case '--keys-journal': opts.keysJournal = argv[++i]; break;
+      case '--background':
+        opts.background = argv[++i];
+        break;
+      case '--out':
+        opts.out = argv[++i];
+        break;
+      case '--name':
+        opts.name = argv[++i];
+        break;
+      case '--grid-distance':
+        opts.gridDistance = Number(argv[++i]);
+        break;
+      case '--global-light':
+        opts.globalLight = true;
+        break;
+      case '--no-lights':
+        opts.noLights = true;
+        break;
+      case '--keys':
+        opts.keys = argv[++i];
+        break;
+      case '--keys-journal':
+        opts.keysJournal = argv[++i];
+        break;
       default:
         if (arg.startsWith('-')) throw new Error(`Unknown argument: ${arg}`);
         if (input) throw new Error(`Unexpected extra argument: ${arg}`);
@@ -240,8 +256,8 @@ export function parseArgs(argv) {
   if (!opts.background) {
     throw new Error(
       '--background is required: the Foundry Data-relative path to the Player ' +
-      'PNG under the vault mount (e.g. "DnD/<game>/Assets/Maps/<name> - Player.png"). ' +
-      'The compendium ships no image.',
+        'PNG under the vault mount (e.g. "DnD/<game>/Assets/Maps/<name> - Player.png"). ' +
+        'The compendium ships no image.',
     );
   }
   return { input, opts };
@@ -293,9 +309,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const { out, scene, journalOut } = await convertFile(input, opts);
     console.log(
       `Wrote ${scene.name}: ${scene.walls.length} walls, ${scene.lights.length} lights, ` +
-      `${scene.notes.length} pins -> ${out}`,
+        `${scene.notes.length} pins -> ${out}`,
     );
-    if (journalOut) console.log(`Wrote GM keys journal (${scene.notes.length} pages) -> ${journalOut}`);
+    if (journalOut)
+      console.log(`Wrote GM keys journal (${scene.notes.length} pages) -> ${journalOut}`);
     console.log('Next: build + sync the module, then import the scene in Foundry.');
   } catch (err) {
     console.error(err.message);

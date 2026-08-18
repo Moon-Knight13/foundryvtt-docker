@@ -23,23 +23,44 @@ import yaml from 'js-yaml';
 // Fantasy Statblocks skill labels -> dnd5e skill keys. Note the three that are
 // routinely confused: per = Persuasion, prc = Perception, prf = Performance.
 export const SKILL_KEYS = {
-  acrobatics: 'acr', 'animal handling': 'ani', arcana: 'arc', athletics: 'ath',
-  deception: 'dec', history: 'his', insight: 'ins', intimidation: 'itm',
-  investigation: 'inv', medicine: 'med', nature: 'nat', perception: 'prc',
-  performance: 'prf', persuasion: 'per', religion: 'rel',
-  'sleight of hand': 'slt', stealth: 'ste', survival: 'sur',
+  acrobatics: 'acr',
+  'animal handling': 'ani',
+  arcana: 'arc',
+  athletics: 'ath',
+  deception: 'dec',
+  history: 'his',
+  insight: 'ins',
+  intimidation: 'itm',
+  investigation: 'inv',
+  medicine: 'med',
+  nature: 'nat',
+  perception: 'prc',
+  performance: 'prf',
+  persuasion: 'per',
+  religion: 'rel',
+  'sleight of hand': 'slt',
+  stealth: 'ste',
+  survival: 'sur',
 };
 
 export const ABILITY_KEYS = {
-  strength: 'str', dexterity: 'dex', constitution: 'con',
-  intelligence: 'int', wisdom: 'wis', charisma: 'cha',
+  strength: 'str',
+  dexterity: 'dex',
+  constitution: 'con',
+  intelligence: 'int',
+  wisdom: 'wis',
+  charisma: 'cha',
 };
 
 const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
 const SIZES = {
-  tiny: 'tiny', small: 'sm', medium: 'med',
-  large: 'lg', huge: 'huge', gargantuan: 'grg',
+  tiny: 'tiny',
+  small: 'sm',
+  medium: 'med',
+  large: 'lg',
+  huge: 'huge',
+  gargantuan: 'grg',
 };
 
 /** "1/8" -> 0.125. Stat blocks write CR as a fraction; YAML yields a string. */
@@ -85,8 +106,9 @@ export function skillProficiency(stated, mod, pb) {
   return {
     value,
     flat: need - value * pb,
-    note: `+${stated} is not reachable from a ${mod >= 0 ? '+' : ''}${mod} modifier `
-      + `with proficiency ${pb}; storing multiplier ${value} plus a flat ${need - value * pb}`,
+    note:
+      `+${stated} is not reachable from a ${mod >= 0 ? '+' : ''}${mod} modifier ` +
+      `with proficiency ${pb}; storing multiplier ${value} plus a flat ${need - value * pb}`,
   };
 }
 
@@ -124,7 +146,12 @@ export function parseSource(source) {
   if (typeof source !== 'string') return {};
   const edition = source.match(/SRD\s+(\d+\.\d+)/)?.[1];
   // The base creature is whatever follows the em dash (or a plain hyphen).
-  const base = source.split(/\s+[—–-]\s+/).slice(1).join(' - ').trim() || undefined;
+  const base =
+    source
+      .split(/\s+[—–-]\s+/)
+      .slice(1)
+      .join(' - ')
+      .trim() || undefined;
   return { edition, base };
 }
 
@@ -160,9 +187,27 @@ export function parseSenses(senses) {
 // block that reads "any two languages" is not a language — writing it into
 // `value` invents a key Foundry cannot resolve, and the entry renders blank.
 export const LANGUAGE_KEYS = new Set([
-  'common', 'dwarvish', 'elvish', 'giant', 'gnomish', 'goblin', 'halfling',
-  'orc', 'abyssal', 'celestial', 'draconic', 'deep', 'infernal', 'primordial',
-  'sylvan', 'undercommon', 'aquan', 'auran', 'ignan', 'terran', 'druidic',
+  'common',
+  'dwarvish',
+  'elvish',
+  'giant',
+  'gnomish',
+  'goblin',
+  'halfling',
+  'orc',
+  'abyssal',
+  'celestial',
+  'draconic',
+  'deep',
+  'infernal',
+  'primordial',
+  'sylvan',
+  'undercommon',
+  'aquan',
+  'auran',
+  'ignan',
+  'terran',
+  'druidic',
   'cant',
 ]);
 
@@ -189,7 +234,8 @@ function pairs(list) {
   if (!list) return [];
   if (Array.isArray(list)) {
     return list.flatMap(item =>
-      typeof item === 'object' && item !== null ? Object.entries(item) : []);
+      typeof item === 'object' && item !== null ? Object.entries(item) : [],
+    );
   }
   return Object.entries(list);
 }
@@ -198,9 +244,7 @@ function pairs(list) {
 export function biographyHtml(fence, extra = '') {
   const section = (heading, entries) => {
     if (!entries?.length) return '';
-    const body = entries
-      .map(e => `<p><strong>${e.name}.</strong> ${e.desc ?? ''}</p>`)
-      .join('');
+    const body = entries.map(e => `<p><strong>${e.name}.</strong> ${e.desc ?? ''}</p>`).join('');
     return `<h3>${heading}</h3>${body}`;
   };
   return [
@@ -208,7 +252,9 @@ export function biographyHtml(fence, extra = '') {
     section('Traits', fence.traits),
     section('Actions', fence.actions),
     section('Reactions', fence.reactions),
-  ].filter(Boolean).join('');
+  ]
+    .filter(Boolean)
+    .join('');
 }
 
 /**
@@ -236,11 +282,30 @@ export function toActor(fence, { name, disposition = -1, biographyIntro = '', im
       continue;
     }
     const abilityFor = {
-      acr: 'dex', ani: 'wis', arc: 'int', ath: 'str', dec: 'cha', his: 'int',
-      ins: 'wis', itm: 'cha', inv: 'int', med: 'wis', nat: 'int', prc: 'wis',
-      prf: 'cha', per: 'cha', rel: 'int', slt: 'dex', ste: 'dex', sur: 'wis',
+      acr: 'dex',
+      ani: 'wis',
+      arc: 'int',
+      ath: 'str',
+      dec: 'cha',
+      his: 'int',
+      ins: 'wis',
+      itm: 'cha',
+      inv: 'int',
+      med: 'wis',
+      nat: 'int',
+      prc: 'wis',
+      prf: 'cha',
+      per: 'cha',
+      rel: 'int',
+      slt: 'dex',
+      ste: 'dex',
+      sur: 'wis',
     }[key];
-    const { value, flat, note } = skillProficiency(stated, abilityMod(abilities[abilityFor].value), pb);
+    const { value, flat, note } = skillProficiency(
+      stated,
+      abilityMod(abilities[abilityFor].value),
+      pb,
+    );
     skills[key] = flat ? { value, bonuses: { check: String(flat) } } : { value };
     if (note) warnings.push(`skill ${label}: ${note}`);
   }
@@ -369,7 +434,14 @@ export async function compileNote(notePath, opts = {}) {
     img: fence.image ?? srd?.tokenSrc,
   });
 
-  return { actor, warnings, deltas: verify(fence, srd), base, edition, exact: fence.exact === true };
+  return {
+    actor,
+    warnings,
+    deltas: verify(fence, srd),
+    base,
+    edition,
+    exact: fence.exact === true,
+  };
 }
 
 export async function main(argv = process.argv.slice(2)) {
@@ -381,7 +453,9 @@ export async function main(argv = process.argv.slice(2)) {
     console.warn(`delta vs SRD ${base}: ${d.field} authored ${d.authored}, SRD ${d.srd}`);
   }
   if (deltas.length && exact) {
-    throw new Error(`${opts.note}: exact: true, but ${deltas.length} field(s) diverge from SRD ${base}`);
+    throw new Error(
+      `${opts.note}: exact: true, but ${deltas.length} field(s) diverge from SRD ${base}`,
+    );
   }
 
   const json = `${JSON.stringify(actor, null, 2)}\n`;

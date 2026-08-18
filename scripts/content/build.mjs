@@ -18,19 +18,19 @@ export const TOOLING_VERSION = 1;
 // `plural` is the human label shown in Foundry's compendium sidebar — naive
 // `${type}s` would read "JournalEntrys" / "RollTables".
 export const COLLECTIONS = {
-  actors:   { key: 'actors',  type: 'Actor',        plural: 'Actors' },
-  items:    { key: 'items',   type: 'Item',         plural: 'Items' },
+  actors: { key: 'actors', type: 'Actor', plural: 'Actors' },
+  items: { key: 'items', type: 'Item', plural: 'Items' },
   journals: { key: 'journal', type: 'JournalEntry', plural: 'Journals' },
-  scenes:   { key: 'scenes',  type: 'Scene',        plural: 'Scenes' },
-  tables:   { key: 'tables',  type: 'RollTable',    plural: 'Roll Tables' },
+  scenes: { key: 'scenes', type: 'Scene', plural: 'Scenes' },
+  tables: { key: 'tables', type: 'RollTable', plural: 'Roll Tables' },
 };
 
 const REQUIRED_FIELDS = {
-  actors:   ['name', 'type'],
-  items:    ['name', 'type'],
+  actors: ['name', 'type'],
+  items: ['name', 'type'],
   journals: ['name', 'pages'],
-  scenes:   ['name'],
-  tables:   ['name', 'results'],
+  scenes: ['name'],
+  tables: ['name', 'results'],
 };
 
 export function docId(relPath) {
@@ -57,7 +57,17 @@ const EMBEDDED = {
   items: ['effects'],
   journal: ['pages', 'categories'],
   tables: ['results'],
-  scenes: ['walls', 'lights', 'tokens', 'notes', 'sounds', 'tiles', 'drawings', 'templates', 'regions'],
+  scenes: [
+    'walls',
+    'lights',
+    'tokens',
+    'notes',
+    'sounds',
+    'tiles',
+    'drawings',
+    'templates',
+    'regions',
+  ],
 };
 
 function assignKeys(doc, collection, sublevelPrefix, idPrefix, seed) {
@@ -84,13 +94,15 @@ export function validateLinks(doc, relPath, moduleId, idType) {
   const errors = [];
   const pattern = new RegExp(
     `@UUID\\[Compendium\\.${moduleId}\\.([a-z]+)\\.([A-Za-z]+)\\.([a-f0-9]{16})\\]`,
-    'g'
+    'g',
   );
   for (const [, pack, , id16] of JSON.stringify(doc).matchAll(pattern)) {
     if (!(id16 in idType)) {
       errors.push(`${relPath}: broken @UUID link — no source file has id ${id16} (pack "${pack}")`);
     } else if (idType[id16] !== pack) {
-      errors.push(`${relPath}: @UUID link points at pack "${pack}" but id ${id16} lives in "${idType[id16]}"`);
+      errors.push(
+        `${relPath}: @UUID link points at pack "${pack}" but id ${id16} lives in "${idType[id16]}"`,
+      );
     }
   }
   return errors;
@@ -248,14 +260,16 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 // only when the config declares one; omitted means system-agnostic.
 export function moduleManifest(builtTypes, config) {
   const labelPrefix = config.packLabelPrefix ?? config.title;
-  const packs = builtTypes.map(src => [src, COLLECTIONS[src]]).map(([src, c]) => ({
-    name: src,
-    label: `${labelPrefix} ${c.plural}`,
-    path: `packs/${src}`,
-    type: c.type,
-    ...(config.system ? { system: config.system } : {}),
-    ownership: config.ownership,
-  }));
+  const packs = builtTypes
+    .map(src => [src, COLLECTIONS[src]])
+    .map(([src, c]) => ({
+      name: src,
+      label: `${labelPrefix} ${c.plural}`,
+      path: `packs/${src}`,
+      type: c.type,
+      ...(config.system ? { system: config.system } : {}),
+      ownership: config.ownership,
+    }));
   return {
     id: config.id,
     title: config.title,

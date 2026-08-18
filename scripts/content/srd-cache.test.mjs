@@ -14,12 +14,23 @@ const BANDIT = {
   type: 'npc',
   img: 'systems/dnd5e/tokens/humanoid/Bandit.webp',
   system: {
-    abilities: { str: { value: 11 }, dex: { value: 12 }, con: { value: 12 }, int: { value: 10 }, wis: { value: 10 }, cha: { value: 10 } },
+    abilities: {
+      str: { value: 11 },
+      dex: { value: 12 },
+      con: { value: 12 },
+      int: { value: 10 },
+      wis: { value: 10 },
+      cha: { value: 10 },
+    },
     attributes: {
       ac: { flat: null, calc: 'default' },
       hp: { value: 11, max: 11, formula: '2d8 + 2' },
       movement: { walk: '30', fly: 0, swim: 0, units: null, hover: false },
-      senses: { units: null, special: '', ranges: { darkvision: null, blindsight: null, tremorsense: null, truesight: null } },
+      senses: {
+        units: null,
+        special: '',
+        ranges: { darkvision: null, blindsight: null, tremorsense: null, truesight: null },
+      },
     },
     details: { cr: 0.125, type: { value: 'humanoid' } },
     traits: { size: 'med', languages: { value: ['common', 'cant'] } },
@@ -32,7 +43,14 @@ const LAMIA = {
   name: 'Lamia',
   img: 'systems/dnd5e/tokens/monstrosity/Lamia.webp',
   system: {
-    abilities: { str: { value: 16 }, dex: { value: 13 }, con: { value: 15 }, int: { value: 14 }, wis: { value: 15 }, cha: { value: 16 } },
+    abilities: {
+      str: { value: 16 },
+      dex: { value: 13 },
+      con: { value: 15 },
+      int: { value: 14 },
+      wis: { value: 15 },
+      cha: { value: 16 },
+    },
     attributes: {
       ac: { flat: 13, calc: 'natural' },
       hp: { max: 97, formula: '13d10 + 26' },
@@ -103,7 +121,9 @@ test('parseArgs defaults out to content/reference and rejects junk', () => {
 test('copyArt extracts real art and skips core placeholders', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'srd-art-'));
   const dataDir = path.join(dir, 'data');
-  await mkdir(path.join(dataDir, 'Data', 'systems', 'dnd5e', 'tokens', 'humanoid'), { recursive: true });
+  await mkdir(path.join(dataDir, 'Data', 'systems', 'dnd5e', 'tokens', 'humanoid'), {
+    recursive: true,
+  });
   await writeFile(path.join(dataDir, 'Data', 'systems/dnd5e/tokens/humanoid/Bandit.webp'), 'fake');
 
   const artDir = path.join(dir, 'tokens');
@@ -123,6 +143,12 @@ test('copyArt extracts real art and skips core placeholders', async () => {
 });
 
 test('both SRD editions are indexed so a note can cite either', () => {
-  assert.deepEqual(PACKS.map(p => p.edition), ['5.1', '5.2']);
-  assert.deepEqual(PACKS.map(p => p.out), ['srd-51.json', 'srd-52.json']);
+  assert.deepEqual(
+    PACKS.map(p => p.edition),
+    ['5.1', '5.2'],
+  );
+  assert.deepEqual(
+    PACKS.map(p => p.out),
+    ['srd-51.json', 'srd-52.json'],
+  );
 });

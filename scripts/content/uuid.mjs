@@ -31,7 +31,7 @@ for (let i = 0; i < argv.length; i += 1) {
 const [relPath, displayName] = positional;
 if (!relPath) {
   console.error(
-    'Usage: node scripts/content/uuid.mjs [--config <path>] <type>/<file>.json ["Display Name"]'
+    'Usage: node scripts/content/uuid.mjs [--config <path>] <type>/<file>.json ["Display Name"]',
   );
   process.exit(1);
 }
@@ -40,7 +40,7 @@ const type = relPath.split('/')[0];
 const collection = COLLECTIONS[type];
 if (!collection || !relPath.endsWith('.json')) {
   console.error(
-    `Path must look like <type>/<file>.json with type one of: ${Object.keys(COLLECTIONS).join(', ')}`
+    `Path must look like <type>/<file>.json with type one of: ${Object.keys(COLLECTIONS).join(', ')}`,
   );
   process.exit(1);
 }

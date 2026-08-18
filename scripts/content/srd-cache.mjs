@@ -113,8 +113,9 @@ export function parseArgs(argv) {
     else if (a === '--art') opts.art = argv[++i];
     else throw new Error(`Unknown argument: ${a}`);
   }
-  opts.data ??= process.env.FOUNDRY_DATA_PATH
-    || path.join(process.env.HOME ?? '', '.local', 'share', 'FoundryVTT');
+  opts.data ??=
+    process.env.FOUNDRY_DATA_PATH ||
+    path.join(process.env.HOME ?? '', '.local', 'share', 'FoundryVTT');
   opts.out ??= path.join(REPO_ROOT, 'content', 'reference');
   return opts;
 }
@@ -137,7 +138,10 @@ export async function copyArt(index, dataDir, artDir) {
     const src = rec.tokenSrc;
     if (!src || src.startsWith('icons/')) continue; // core placeholder, not real art
     try {
-      await copyFile(path.join(dataDir, 'Data', src), path.join(artDir, `${rec.name}${path.extname(src)}`));
+      await copyFile(
+        path.join(dataDir, 'Data', src),
+        path.join(artDir, `${rec.name}${path.extname(src)}`),
+      );
       copied++;
     } catch {
       // no shipped art for this creature — expected for some entries
@@ -157,10 +161,15 @@ export async function main(argv = process.argv.slice(2)) {
       await extractPack(path.join(systemPacks, pack), tmp, { log: false });
       const creatures = srdIndex(await readDocs(tmp));
       const dest = path.join(opts.out, out);
-      await writeFile(dest, `${JSON.stringify({ edition, source: `dnd5e/${pack}`, creatures }, null, 2)}\n`);
+      await writeFile(
+        dest,
+        `${JSON.stringify({ edition, source: `dnd5e/${pack}`, creatures }, null, 2)}\n`,
+      );
       console.log(`${dest}: ${Object.keys(creatures).length} creatures (SRD ${edition})`);
       if (opts.art) {
-        console.log(`  copied ${await copyArt(creatures, opts.data, opts.art)} token images to ${opts.art}`);
+        console.log(
+          `  copied ${await copyArt(creatures, opts.data, opts.art)} token images to ${opts.art}`,
+        );
       }
     } catch (err) {
       console.error(`Skipping ${pack}: ${err.message}`);

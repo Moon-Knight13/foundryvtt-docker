@@ -4,9 +4,23 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
-  abilityMod, profBonus, parseCR, skillProficiency, parseFence, parseFrontmatter,
-  parseDisposition, parseSource, parseSpeed, parseSenses, parseLanguages,
-  biographyHtml, toActor, verify, parseArgs, compileNote, SKILL_KEYS,
+  abilityMod,
+  profBonus,
+  parseCR,
+  skillProficiency,
+  parseFence,
+  parseFrontmatter,
+  parseDisposition,
+  parseSource,
+  parseSpeed,
+  parseSenses,
+  parseLanguages,
+  biographyHtml,
+  toActor,
+  verify,
+  parseArgs,
+  compileNote,
+  SKILL_KEYS,
 } from './statblock.mjs';
 
 // Selyse as she is actually written in the vault: a Lamia with custom prose.
@@ -64,7 +78,10 @@ test('parseFence pulls the statblock block out of a note', () => {
 
 test('parseSource reads the edition and the base creature', () => {
   assert.deepEqual(parseSource('SRD 5.1 (CC-BY-4.0) — Lamia'), { edition: '5.1', base: 'Lamia' });
-  assert.deepEqual(parseSource('SRD 5.2 (CC-BY-4.0) — Giant Scorpion'), { edition: '5.2', base: 'Giant Scorpion' });
+  assert.deepEqual(parseSource('SRD 5.2 (CC-BY-4.0) — Giant Scorpion'), {
+    edition: '5.2',
+    base: 'Giant Scorpion',
+  });
   assert.deepEqual(parseSource(undefined), {});
 });
 
@@ -84,7 +101,10 @@ test('parseSpeed and parseSenses normalise prose to fields', () => {
   assert.deepEqual(parseSpeed('30 ft.'), { units: 'ft', walk: 30 });
   assert.deepEqual(parseSpeed('30 ft., fly 60 ft.'), { units: 'ft', walk: 30, fly: 60 });
   // Passive Perception is derived by the system, not stored.
-  assert.deepEqual(parseSenses('darkvision 60 ft., passive Perception 12'), { darkvision: 60, units: 'ft' });
+  assert.deepEqual(parseSenses('darkvision 60 ft., passive Perception 12'), {
+    darkvision: 60,
+    units: 'ft',
+  });
   // No special senses means no senses object at all, not a bare units marker.
   assert.deepEqual(parseSenses('passive Perception 12'), {});
 });
@@ -95,9 +115,13 @@ test('parseLanguages separates real language keys from prose', () => {
   // key Foundry cannot resolve, and the entry renders blank at the table.
   assert.deepEqual(parseLanguages('any two languages'), { value: [], custom: 'any two languages' });
   assert.deepEqual(parseLanguages('Common, any one other language'), {
-    value: ['common'], custom: 'any one other language',
+    value: ['common'],
+    custom: 'any one other language',
   });
-  assert.deepEqual(parseLanguages("Common, Thieves' Cant"), { value: ['common', 'cant'], custom: '' });
+  assert.deepEqual(parseLanguages("Common, Thieves' Cant"), {
+    value: ['common', 'cant'],
+    custom: '',
+  });
   assert.deepEqual(parseLanguages('—'), { value: [], custom: '' });
 });
 
@@ -152,7 +176,10 @@ test('toActor records saves as ability proficiency', () => {
 });
 
 test('toActor warns instead of silently dropping an unknown skill', () => {
-  const { actor, warnings } = toActor({ ...SELYSE, skillsaves: [{ basketweaving: 3 }] }, { name: 'S' });
+  const { actor, warnings } = toActor(
+    { ...SELYSE, skillsaves: [{ basketweaving: 3 }] },
+    { name: 'S' },
+  );
   assert.ok(!actor.system.skills, 'no skills survive');
   assert.match(warnings[0], /unknown skill "basketweaving"/);
 });
@@ -173,7 +200,12 @@ test('biographyHtml renders traits and actions into the prose the actors use', (
 });
 
 const SRD_LAMIA = {
-  name: 'Lamia', ac: 13, hp: 97, cr: 4, size: 'lg', type: 'monstrosity',
+  name: 'Lamia',
+  ac: 13,
+  hp: 97,
+  cr: 4,
+  size: 'lg',
+  type: 'monstrosity',
   abilities: { str: 16, dex: 13, con: 15, int: 14, wis: 15, cha: 16 },
 };
 
@@ -220,7 +252,10 @@ test('compileNote reads a note end to end and names the actor from the file', as
     .filter(([k]) => !['traits', 'actions', 'stats', 'skillsaves'].includes(k))
     .map(([k, v]) => `${k}: ${typeof v === 'string' ? JSON.stringify(v) : v}`)
     .join('\n');
-  await writeFile(note, `---\ntype: npc\n---\n\n\`\`\`statblock\n${fence}\nstats: [16, 13, 15, 14, 15, 16]\n\`\`\`\n`);
+  await writeFile(
+    note,
+    `---\ntype: npc\n---\n\n\`\`\`statblock\n${fence}\nstats: [16, 13, 15, 14, 15, 16]\n\`\`\`\n`,
+  );
 
   const { actor, base, edition, deltas } = await compileNote(note);
   assert.equal(actor.name, 'Selyse', 'named from the filename, not the fence');
@@ -233,7 +268,10 @@ test('compileNote reads a note end to end and names the actor from the file', as
 test('compileNote takes disposition from the note frontmatter', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'statblock-'));
   const note = path.join(dir, 'Amira Granger.md');
-  await writeFile(note, '---\ntype: npc\ndisposition: neutral\n---\n\n```statblock\nname: Amira\nac: 12\nhp: 27\ncr: 1\nstats: [10, 15, 10, 12, 14, 16]\n```\n');
+  await writeFile(
+    note,
+    '---\ntype: npc\ndisposition: neutral\n---\n\n```statblock\nname: Amira\nac: 12\nhp: 27\ncr: 1\nstats: [10, 15, 10, 12, 14, 16]\n```\n',
+  );
   const { actor } = await compileNote(note);
   assert.equal(actor.name, 'Amira Granger');
   assert.equal(actor.prototypeToken.disposition, 0, 'neutral, not hostile');

@@ -4,8 +4,14 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
-  docId, validateDoc, prepareDoc, moduleManifest, validateLinks, loadConfig,
-  resolveSrcRoot, COLLECTIONS,
+  docId,
+  validateDoc,
+  prepareDoc,
+  moduleManifest,
+  validateLinks,
+  loadConfig,
+  resolveSrcRoot,
+  COLLECTIONS,
 } from './build.mjs';
 
 const CONFIG = {
@@ -79,7 +85,10 @@ test('moduleManifest omits system when config has none', () => {
 
 test('moduleManifest declares only built packs', () => {
   const m = moduleManifest(['actors', 'journals'], CONFIG);
-  assert.deepEqual(m.packs.map(p => p.name), ['actors', 'journals']);
+  assert.deepEqual(
+    m.packs.map(p => p.name),
+    ['actors', 'journals'],
+  );
 });
 
 test('COLLECTIONS maps journal and table collections correctly', () => {
@@ -108,7 +117,10 @@ test('loadConfig applies defaults and validates id/title', async () => {
   await assert.rejects(() => loadConfig(file), /kebab-case/);
   await writeFile(file, JSON.stringify({ id: 'ok-id' }));
   await assert.rejects(() => loadConfig(file), /"title" is required/);
-  await assert.rejects(() => loadConfig(path.join(dir, 'missing.json')), /Cannot read module config/);
+  await assert.rejects(
+    () => loadConfig(path.join(dir, 'missing.json')),
+    /Cannot read module config/,
+  );
 });
 
 test('resolveSrcRoot: explicit arg > config srcDir > default content/src', () => {
@@ -124,8 +136,15 @@ test('resolveSrcRoot: explicit arg > config srcDir > default content/src', () =>
 test('validateLinks resolves ids and pack placement', () => {
   const targetId = docId('actors/vela.json');
   const idType = { [targetId]: 'actors' };
-  const link = who =>
-    ({ name: 'J', pages: [{ type: 'text', text: { content: `see @UUID[Compendium.test-content.actors.Actor.${who}]{Vela}` } }] });
+  const link = who => ({
+    name: 'J',
+    pages: [
+      {
+        type: 'text',
+        text: { content: `see @UUID[Compendium.test-content.actors.Actor.${who}]{Vela}` },
+      },
+    ],
+  });
 
   assert.deepEqual(validateLinks(link(targetId), 'journals/j.json', 'test-content', idType), []);
 
@@ -133,11 +152,24 @@ test('validateLinks resolves ids and pack placement', () => {
   const errs = validateLinks(link(missing), 'journals/j.json', 'test-content', idType);
   assert.ok(errs.some(e => e.includes('broken @UUID link')));
 
-  const wrongPack = { name: 'J', pages: [{ type: 'text', text: { content: `@UUID[Compendium.test-content.items.Item.${targetId}]{Vela}` } }] };
+  const wrongPack = {
+    name: 'J',
+    pages: [
+      {
+        type: 'text',
+        text: { content: `@UUID[Compendium.test-content.items.Item.${targetId}]{Vela}` },
+      },
+    ],
+  };
   const packErrs = validateLinks(wrongPack, 'journals/j.json', 'test-content', idType);
   assert.ok(packErrs.some(e => e.includes('lives in "actors"')));
 
   // Links to other modules/compendia are not ours to validate.
-  const foreign = { name: 'J', pages: [{ type: 'text', text: { content: `@UUID[Compendium.dnd5e.monsters.Actor.${missing}]{Rat}` } }] };
+  const foreign = {
+    name: 'J',
+    pages: [
+      { type: 'text', text: { content: `@UUID[Compendium.dnd5e.monsters.Actor.${missing}]{Rat}` } },
+    ],
+  };
   assert.deepEqual(validateLinks(foreign, 'journals/j.json', 'test-content', idType), []);
 });

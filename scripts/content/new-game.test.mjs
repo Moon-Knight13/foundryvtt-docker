@@ -90,7 +90,15 @@ test('new-game.sh rejects a bad slug and a bad type', () => {
 test('new-game.sh scaffolds the full vault game folder by default', async () => {
   const vault = await mkdtemp(path.join(os.tmpdir(), 'vault-'));
   try {
-    const out = run(['zzz-vault-game', '--vault', vault, '--system', 'dnd5e', '--title', 'ZZZ Vault Game']);
+    const out = run([
+      'zzz-vault-game',
+      '--vault',
+      vault,
+      '--system',
+      'dnd5e',
+      '--title',
+      'ZZZ Vault Game',
+    ]);
     const game = path.join(vault, '03 Oneshots', 'ZZZ Vault Game');
 
     // Every note a finished game needs exists as a stub — the scaffold is the
@@ -98,11 +106,22 @@ test('new-game.sh scaffolds the full vault game folder by default', async () => 
     for (const note of ['ZZZ Vault Game.md', 'GM Prep.md', 'Advert.md']) {
       assert.ok(existsSync(path.join(game, note)), `expected ${note}`);
     }
-    for (const dir of ['Handouts', 'Maps', 'NPCs', 'Scenes', 'Tables', 'Assets/Maps', 'Foundry/maps']) {
+    for (const dir of [
+      'Handouts',
+      'Maps',
+      'NPCs',
+      'Scenes',
+      'Tables',
+      'Assets/Maps',
+      'Foundry/maps',
+    ]) {
       assert.ok(existsSync(path.join(game, dir)), `expected ${dir}/`);
     }
     for (const type of TYPE_DIRS) {
-      assert.ok(existsSync(path.join(game, 'Foundry', 'src', type)), `expected Foundry/src/${type}/`);
+      assert.ok(
+        existsSync(path.join(game, 'Foundry', 'src', type)),
+        `expected Foundry/src/${type}/`,
+      );
     }
 
     // A vault-hosted config must NOT carry srcDir — it resolves under the
