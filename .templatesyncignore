@@ -64,24 +64,6 @@ scripts/ci/README.md
 # template whenever the template's devcontainer changes:
 #   diff <(gh api repos/Moon-Knight13/claude_template_repo/contents/.devcontainer/devcontainer.json \
 #            --jq .content | base64 -d) .devcontainer/devcontainer.json
-# Carries one project-owned egress allowlist entry: api.open5e.com, the 5e rules
-# API the content pipeline verifies authored stat blocks against. Sync merges
-# with -X theirs, so without this the entry is silently reverted and the next
-# refresh fails with a bare connection error long after anyone remembers why.
-#
-# TRADE-OFF, and it is a bigger one than devcontainer.json above: this is a
-# SECURITY CONTROL, so pinning it means upstream hardening of the firewall stops
-# arriving. Diff it against the template whenever the template's firewall
-# changes, and port improvements by hand:
-#   diff <(gh api repos/Moon-Knight13/claude_template_repo/contents/.devcontainer/init-firewall.sh \
-#            --jq .content | base64 -d) .devcontainer/init-firewall.sh
-# Expect exactly one hunk: the optional-domains block.
-#
-# The allowlist entry is a CONVENIENCE, not a dependency — the pipeline reads a
-# committed cache under content/reference/ and needs no network for a normal
-# build or for CI. If this entry is ever lost, only an in-container refresh
-# breaks, and it can be run from the host instead.
-.devcontainer/init-firewall.sh
 # Expect exactly two hunks: the mounts entry, and nothing else.
 .devcontainer/devcontainer.json
 
