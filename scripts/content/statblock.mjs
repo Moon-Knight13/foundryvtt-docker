@@ -20,9 +20,11 @@ import path from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
+import { resolveArt } from './art-resolve.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
+const DEFAULT_ART_MAP = path.join(REPO_ROOT, 'content', 'reference', 'art-map.json');
 
 // Fantasy Statblocks skill labels -> dnd5e skill keys. Note the three that are
 // routinely confused: per = Persuasion, prc = Perception, prf = Performance.
@@ -366,7 +368,9 @@ export function toActor(fence, { name, disposition = -1, biographyIntro = '', im
       actorLink: false,
       displayName: 20,
       disposition,
-      ...(img ? { texture: { src: img } } : {}),
+      // The placeholder lands on the token too — without it the sheet showed
+      // the silhouette while the map showed nothing at all.
+      texture: { src: img ?? PLACEHOLDER_IMG },
     },
     system: {
       abilities,
@@ -489,10 +493,35 @@ export async function compileNote(notePath, opts = {}) {
     }
   }
 
+  // Art resolution order: explicit image:, then the creature's real SRD token,
+  // then the curated icon map (art-resolve.mjs) — whose silhouette tier only a
+  // source:-inherited mook may use. A bespoke named NPC that reaches the map
+  // and misses resolves to nothing, and the placeholder warning fires.
+  let img = fence.image ?? art?.tokenSrc;
+  if (!img) {
+    let artMap = {};
+    try {
+      artMap = JSON.parse(await readFile(opts.artMap ?? DEFAULT_ART_MAP, 'utf8'));
+    } catch {
+      // No map is a resolvable state: the chain simply ends at `none`.
+    }
+    img = resolveArt(
+      {
+        // The map is keyed by SRD creature names, so a mook looks up its base
+        // creature; a bespoke NPC can only match by its own name.
+        name: base ?? name,
+        type: fence.type,
+        source: fence.source,
+        art_required: fence.art_required,
+      },
+      artMap,
+    ).src;
+  }
+
   const { actor, warnings } = toActor(fence, {
     name,
     disposition: opts.disposition ?? parseDisposition(frontmatter.disposition),
-    img: fence.image ?? art?.tokenSrc,
+    img,
   });
 
   return {

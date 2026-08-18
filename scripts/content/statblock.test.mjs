@@ -346,3 +346,66 @@ test('toActor warns rather than silently shipping a blank silhouette', () => {
   const withArt = toActor(LAMIA_NPC, { name: 'Vashti', img: 'DnD/x/Lamia.webp' });
   assert.ok(!withArt.warnings.some(w => w.includes(PLACEHOLDER_IMG)));
 });
+
+test('an artless token still shows the placeholder, not a blank texture', () => {
+  // The portrait fell back to PLACEHOLDER_IMG but the token texture used to be
+  // omitted entirely, so the map showed nothing at all where the sheet showed
+  // the silhouette.
+  const { actor } = toActor(LAMIA_NPC, { name: 'Vashti' });
+  assert.equal(actor.prototypeToken.texture.src, PLACEHOLDER_IMG);
+});
+
+const TEST_ART_MAP = {
+  byName: { Goblin: { icon: 'caro-asercion/goblin.svg', artist: 'Caro Asercion' } },
+  byType: { humanoid: { icon: 'delapouite/person.svg', artist: 'Delapouite' } },
+};
+
+async function noteWith(body, filename = 'Note.md') {
+  const dir = await mkdtemp(path.join(tmpdir(), 'statblock-art-'));
+  const note = path.join(dir, filename);
+  await writeFile(note, body);
+  const mapPath = path.join(dir, 'art-map.json');
+  await writeFile(mapPath, JSON.stringify(TEST_ART_MAP));
+  return { note, mapPath };
+}
+
+test('a mook inherits the curated icon for its SRD base creature', async () => {
+  const { note, mapPath } = await noteWith(
+    '```statblock\nname: Gate Goblin\nsource: "SRD 5.1 (CC-BY-4.0) — Goblin"\ntype: humanoid\nac: 15\nhp: 7\ncr: 0.25\nstats: [8, 14, 10, 10, 8, 8]\n```\n',
+    'Gate Goblin.md',
+  );
+  const { actor, warnings } = await compileNote(note, { artMap: mapPath });
+  assert.equal(actor.img, 'DnD/06 Assets/Tokens/generic/caro-asercion/goblin.svg');
+  assert.equal(actor.prototypeToken.texture.src, actor.img, 'token gets the same icon');
+  assert.ok(!warnings.some(w => w.includes(PLACEHOLDER_IMG)), 'resolved art is not a warning');
+});
+
+test('a mook with an unmapped name falls back to its type silhouette', async () => {
+  const { note, mapPath } = await noteWith(
+    '```statblock\nname: Cult Fanatic\nsource: "SRD 5.1 (CC-BY-4.0) — Cult Fanatic"\ntype: humanoid\nac: 13\nhp: 33\ncr: 2\nstats: [11, 14, 12, 10, 13, 14]\n```\n',
+    'Cult Fanatic.md',
+  );
+  const { actor } = await compileNote(note, { artMap: mapPath });
+  assert.equal(actor.img, 'DnD/06 Assets/Tokens/generic/delapouite/person.svg');
+});
+
+test('a bespoke named NPC never inherits a silhouette from the map', async () => {
+  // No source: means someone authored this character; a generic outline would
+  // hide exactly the gap the coverage gate exists to catch.
+  const { note, mapPath } = await noteWith(
+    '```statblock\nname: Zanna the Blade\ntype: humanoid\nac: 15\nhp: 65\ncr: 3\nstats: [12, 18, 12, 13, 12, 14]\n```\n',
+    'Zanna the Blade.md',
+  );
+  const { actor, warnings } = await compileNote(note, { artMap: mapPath });
+  assert.equal(actor.img, PLACEHOLDER_IMG);
+  assert.ok(warnings.some(w => w.includes(PLACEHOLDER_IMG)));
+});
+
+test('an explicit image: still beats every map tier', async () => {
+  const { note, mapPath } = await noteWith(
+    '```statblock\nname: Gate Goblin\nsource: "SRD 5.1 (CC-BY-4.0) — Goblin"\ntype: humanoid\nimage: "DnD/My Game/Assets/Tokens/gate-goblin.webp"\nac: 15\nhp: 7\ncr: 0.25\nstats: [8, 14, 10, 10, 8, 8]\n```\n',
+    'Gate Goblin.md',
+  );
+  const { actor } = await compileNote(note, { artMap: mapPath });
+  assert.equal(actor.img, 'DnD/My Game/Assets/Tokens/gate-goblin.webp');
+});
