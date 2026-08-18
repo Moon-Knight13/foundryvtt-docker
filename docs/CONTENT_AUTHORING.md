@@ -250,6 +250,45 @@ Fields the cache cannot supply are skipped, not failed. Armour-wearing monsters
 have no stored AC (see below), and treating that as a mismatch would flag every
 one of them.
 
+## Handout art: showable in Foundry
+
+Until now every journal page this pipeline produced was `type: "text"`, so art
+could not be shared in-world at all. `handout.mjs` fixes that:
+
+```bash
+node scripts/content/handout.mjs "<vault>/03 Oneshots/<Game>/Handouts/<Note>.md"
+```
+
+It reads the note's image embeds — Obsidian `![[art.webp|caption]]` wikilinks or
+standard `![caption](art.webp)` — resolves each filename against the game's
+`Assets/` and then the wider vault, and emits a journal of **image pages** into
+`Foundry/src/journals/`. In Foundry the GM right-clicks a page → **Show to
+Players**; `player_visible: true` in the frontmatter makes it Observer-level so
+players can reopen it later. `player_visible: false` keeps it GM-only.
+
+**Images only, on purpose.** *Notes to the table* states the rule: a journal is
+owned by one pipe — the SoSly Obsidian Bridge (prose) or the compendium build
+(structured) — never both. The bridge already carries handout text, so emitting
+prose here would create exactly the duplication that rule forbids. For the same
+reason the journal is named `<Note> — Art`, which cannot collide with the
+bridge's copy.
+
+`src` is Data-relative (`DnD/03 Oneshots/…/Assets/Art/x.webp`), resolved at
+runtime through the vault mount — the same convention scene backgrounds use, so
+**one file serves the printed handout and the Foundry page**. Commented-out
+embeds are ignored, and an embed whose file cannot be found is an error rather
+than a silently blank frame at the table.
+
+### Where art lives
+
+`new-game.sh` scaffolds three asset folders, and the distinction matters:
+
+| Folder | For | Source |
+| --- | --- | --- |
+| `Assets/Maps/` | battlemaps | `render_map.py` |
+| `Assets/Tokens/` | per-NPC token art | SRD (`srd-cache.mjs --art`) or your own, pointed at by `image:` in a fence |
+| `Assets/Art/` | full illustrations to show players | yours — the SRD ships token art only, which does not enlarge well |
+
 ## SRD reference cache
 
 `scripts/content/srd-cache.mjs` distils the dnd5e system's SRD monster packs

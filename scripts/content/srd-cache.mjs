@@ -194,9 +194,14 @@ export async function main(argv = process.argv.slice(2)) {
   const failed = [];
 
   for (const { pack, edition, out } of PACKS) {
+    const packDir = path.join(systemPacks, pack);
+    // extractPack on a missing path creates an empty database and dies with a
+    // misleading "Iterator is not open", so check before blaming a lock.
+    const packExists = existsSync(packDir);
     const tmp = await mkdtemp(path.join(tmpdir(), `srd-${pack}-`));
     try {
-      await extractPack(path.join(systemPacks, pack), tmp, { log: false });
+      if (!packExists) throw new Error(`no such pack directory: ${packDir}`);
+      await extractPack(packDir, tmp, { log: false });
       const creatures = srdIndex(await readDocs(tmp));
       const dest = path.join(opts.out, out);
       await writeFile(
@@ -213,7 +218,9 @@ export async function main(argv = process.argv.slice(2)) {
       // A locked database is not a pack to skip past — it means Foundry is
       // running, and every pack will fail the same way. Say so once and stop,
       // rather than printing two shrugs and exiting 0 with no cache written.
-      if (isLockError(err)) throw new Error(explainLevelError(err, `the ${pack} pack`));
+      if (isLockError(err, { pathExists: packExists })) {
+        throw new Error(explainLevelError(err, `the ${pack} pack`, { pathExists: packExists }));
+      }
       console.error(`Skipping ${pack}: ${err.message}`);
       failed.push(pack);
     } finally {

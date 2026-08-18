@@ -60,3 +60,24 @@ test('a genuinely held LevelDB lock is detected, not just its error string', asy
     await holder.close();
   }
 });
+
+test('a missing path is not reported as a lock', () => {
+  // extractPack on a path that does not exist creates an empty database and
+  // fails with the SAME "Iterator is not open" message a real lock produces.
+  // Treating that as a lock sends you to stop Foundry over a path typo.
+  const err = { message: 'Iterator is not open: cannot call next() after close()' };
+  assert.equal(isLockError(err, { pathExists: false }), false);
+  assert.equal(isLockError(err, { pathExists: true }), true);
+  // An actual lock is still identified either way, because the cause says so.
+  const locked = { cause: { message: 'IO error: lock /x/LOCK: already held by process' } };
+  assert.equal(isLockError(locked, { pathExists: false }), true);
+});
+
+test('explainLevelError passes the path hint through', () => {
+  const err = { message: 'Iterator is not open: cannot call next() after close()' };
+  assert.match(explainLevelError(err, 'the pack', { pathExists: false }), /Iterator is not open/);
+  assert.match(
+    explainLevelError(err, 'the pack', { pathExists: true }),
+    /docker compose stop foundry/,
+  );
+});

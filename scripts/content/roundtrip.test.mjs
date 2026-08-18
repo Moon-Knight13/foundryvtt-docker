@@ -165,3 +165,54 @@ test('build fails on broken @UUID cross-link', async () => {
   const { counts } = await main({ srcRoot, distRoot, configPath });
   assert.equal(counts.journals, 1);
 });
+
+test('image journal pages survive the build with src and ownership intact', async () => {
+  // The whole point of handout.mjs: a page Foundry renders as a picture the GM
+  // can "Show to Players". If compilePack mangles `src` or the ownership level,
+  // the art silently stops being shareable.
+  const { srcRoot, distRoot, configPath } = await workspace('fvtt-image-page-');
+  await mkdir(path.join(srcRoot, 'journals'), { recursive: true });
+  await writeFile(
+    path.join(srcRoot, 'journals', 'ransom-note-art.json'),
+    JSON.stringify({
+      name: 'The Ransom Note — Art',
+      ownership: { default: 2 },
+      pages: [
+        {
+          name: 'Drawn in charcoal',
+          type: 'image',
+          src: 'DnD/03 Oneshots/My Game/Assets/Art/crooked-map.webp',
+          image: { caption: 'Drawn in charcoal' },
+          title: { show: true, level: 1 },
+          ownership: { default: 2 },
+          sort: 100,
+        },
+      ],
+    }),
+  );
+
+  await main({ srcRoot, distRoot, configPath });
+
+  const outDir = path.join(distRoot, 'extract-image');
+  await mkdir(outDir, { recursive: true });
+  // NOTE: the pack DIRECTORY is named for the source folder ('journals');
+  // 'journal' is only the LevelDB sublevel. Pointing extractPack at a path that
+  // does not exist creates an empty database and fails with a misleading
+  // "Iterator is not open".
+  await extractPack(path.join(distRoot, MODULE_ID, 'packs', 'journals'), outDir, { log: false });
+
+  const files = (await readdir(outDir)).filter(f => f.endsWith('.json'));
+  const docs = await Promise.all(
+    files.map(async f => JSON.parse(await readFile(path.join(outDir, f), 'utf8'))),
+  );
+  const journal = docs.find(d => d.name === 'The Ransom Note — Art');
+  assert.ok(journal, 'the art journal round-tripped');
+
+  const page = journal.pages[0];
+  assert.equal(page.type, 'image');
+  // A Data-relative path with spaces is exactly what the vault mount produces.
+  assert.equal(page.src, 'DnD/03 Oneshots/My Game/Assets/Art/crooked-map.webp');
+  assert.equal(page.image.caption, 'Drawn in charcoal');
+  assert.equal(page.ownership.default, 2, 'players can reopen it');
+  assert.ok(page._id, 'build assigned a stable id');
+});
