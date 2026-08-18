@@ -43,8 +43,7 @@ content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Dat
    data dir):
 
    ```bash
-   ./scripts/content/sync-content.sh --test   # test instance (FOUNDRY_TEST_DATA_PATH)
-   ./scripts/content/sync-content.sh          # production data dir
+   ./scripts/content/sync-content.sh          # Foundry data dir ($FOUNDRY_DATA_PATH)
    ```
 
 4. **Import** (you, in the Foundry UI): enable the "Troubled Waters Content"

@@ -45,13 +45,15 @@ Three files are deliberately kept despite their subsystem being off:
   exactly what that chain needs. Do not delete them while `devcontainer.json`
   still references them — it is template-owned, so it cannot be fixed here.
 
-One rough edge to know about: `/next-issue` and `/run-epic` still mention
-`delegate-local.sh`, and the board issue templates still offer `Local` as a
-Route value. Those files are template-owned, so editing them here would just be
-reverted by the next sync. Ignore those instructions — `CLAUDE.md` states that
-the routing protocol applies only when `SUBSYSTEM_ROUTING=true`, and that is
-authoritative. The upstream fix is for the board subsystem to degrade
-gracefully when routing is off.
+`/next-issue`, `/run-epic` and `docs/KANBAN_WORKFLOW.md` used to tell agents to
+delegate `Route=Local` work through `delegate-local.sh` — a script this repo
+deleted. Documenting "ignore that" was not enough, because a slash command is
+read directly and without this file's framing, so those three had the dead
+references removed and were added to `.templatesyncignore` to keep the fix. The
+trade-off is recorded there: they no longer receive upstream board updates, and
+the entries should be dropped once the board subsystem degrades gracefully with
+routing off. The board's Route dropdown still offers `Local`; a card carrying it
+is stale metadata, not an instruction to delegate.
 
 ## Notes vault (Obsidian)
 
@@ -136,12 +138,12 @@ copies of an NPC.
   (default `~/.local/share/FoundryVTT`) — **not** the repo's gitignored
   `data/` placeholder directory. Worlds live under `<data>/Data/worlds/`,
   modules under `<data>/Data/modules/`.
-- `deploy-setup.sh` — interactive environment setup; `BACKUP_RESTORE.md`
-  documents the SCP/rsync backup flow. (The upstream image-source tree
-  `src/` was removed — this fork runs the published felddy image.)
-- `scripts/` — template foundation scripts (board, routing, day-0) plus
-  project scripts: `scripts/ci/*` (CI gates), `scripts/setup-mcp.sh`,
-  `scripts/test-instance.sh`.
+- `deploy-setup.sh` — interactive environment setup. (The upstream
+  image-source tree `src/` was removed — this fork runs the published felddy
+  image.)
+- `scripts/` — template foundation scripts (board, day-0) plus project
+  scripts: `scripts/ci/*` (CI gates), `scripts/setup-mcp.sh`,
+  `scripts/mcp-health.sh`, `scripts/content/*`, `scripts/maps/*`.
 
 ## Security — hard rules (mirrors .copilot-instructions.md)
 
@@ -309,32 +311,25 @@ From a rough idea to playable content:
 4. Scene/token tools (MCP) — stage encounters in the live world from the
    imported compendium content; dice-request tools during play.
 
-## Safe A/B testing (protecting the live worlds)
+## Testing changes against the live stack
 
-Never experiment against the production instance. Use the isolated test stack:
+There is no second instance. `scripts/test-instance.sh` used to clone the data
+dir onto a stack on :30001, on the premise that live worlds were irreplaceable.
+That premise no longer holds — a world is rebuildable from the vault, the git
+content module and D&D Beyond (see `docs/FOUNDRY_REBUILD.md`) — and one Foundry
+licence permits only one active server, so the two stacks could never run at
+once anyway.
 
-```bash
-./scripts/test-instance.sh up       # clone data → second stack on :30001
-./scripts/test-instance.sh down     # stop test stack, keep the clone
-./scripts/test-instance.sh destroy  # stop + delete the clone
-```
+Test against the real stack, with a data-dir snapshot as the undo path:
 
-Procedure:
+1. Snapshot the data dir before anything risky
+   (`rsync -a <data>/ <data>.bak-YYYYMMDD/`).
+2. Install/enable the module, turn on Allow Write Operations, exercise it.
+3. Rollback if needed: disable/uninstall the module (worlds are unaffected by a
+   module removal) or restore the snapshot.
 
-1. `up`, then open <http://localhost:30001> — a full clone (worlds included) on
-   an isolated compose project (`foundry-test`).
-2. Install/enable the MCP bridge module **in the test instance only**; enable
-   Allow Write Operations there; exercise the MCP workflows on the cloned
-   world. Production on :30000 stays untouched.
-3. Only after the test proves out: take a timestamped backup
-   (`rsync -a <data>/ <data>.bak-YYYYMMDD/`), install the module in
-   production, then `destroy` the test clone.
-4. Rollback: disable/uninstall the module (worlds unaffected) or restore the
-   backup.
-
-Caveat: avoid *actively playing* both instances at once — one Foundry license
-permits one active server; use one at a time during testing. The cloned data
-dir carries the license and admin key, so the test instance needs no re-entry.
+Do this between sessions rather than on game night — the stack is down while a
+restore runs.
 
 ## Repository topology & issue routing
 

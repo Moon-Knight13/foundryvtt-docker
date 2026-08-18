@@ -106,123 +106,6 @@ ensure_foundry_admin_key() {
   fi
 }
 
-configure_backup_restore() {
-  local existing_host
-  local existing_user
-  local existing_ip
-  local default_user
-  local default_ip
-  local default_path
-  local default_local_path
-  local default_key
-  local backup_user
-  local backup_ip
-  local backup_path
-  local backup_key
-  local backup_local_path
-  local expanded_key
-  local expanded_local_path
-  local normalized_local_path
-  local key_confirm
-  local install_confirm
-
-  if ! command -v rsync &> /dev/null; then
-    echo "⚠️  rsync is required for idempotent backup sync and is not installed."
-    echo "Install it, then rerun backup restore setup."
-    echo "  Debian/Ubuntu: sudo apt-get install -y rsync"
-    echo "  Fedora/RHEL:   sudo dnf install -y rsync"
-    echo "  Arch:          sudo pacman -S rsync"
-    read -p "Install rsync now and continue? (y/n) [default: y]: " -r install_confirm
-    install_confirm=${install_confirm:-y}
-    if [[ ! $install_confirm =~ ^[Yy]$ ]]; then
-      echo "⏭️  Skipping backup restore configuration."
-      return 0
-    fi
-    if ! command -v rsync &> /dev/null; then
-      echo "❌ rsync is still not available. Install it and run setup again."
-      return 0
-    fi
-  fi
-
-  existing_host=$(get_env_value "BACKUP_REMOTE_HOST")
-  existing_user=$(get_env_value "BACKUP_REMOTE_USER")
-  existing_ip=$(get_env_value "BACKUP_REMOTE_IP")
-
-  if [ -z "$existing_user" ] && [[ "$existing_host" == *"@"* ]]; then
-    existing_user=${existing_host%@*}
-  fi
-  if [ -z "$existing_ip" ] && [[ "$existing_host" == *"@"* ]]; then
-    existing_ip=${existing_host#*@}
-  fi
-
-  default_user=${existing_user:-$USER}
-  default_ip=${existing_ip:-}
-  default_path=$(get_env_value "BACKUP_REMOTE_PATH")
-  default_path=${default_path:-$HOME/.local/share/FoundryVTT}
-  default_path=$(normalize_foundry_root_path "$default_path")
-  default_local_path=$(get_env_value "BACKUP_LOCAL_PATH")
-  default_local_path=${default_local_path:-$default_path}
-  default_local_path=$(normalize_foundry_root_path "$default_local_path")
-  default_key=$(get_env_value "BACKUP_SSH_KEY")
-  default_key=${default_key:-$HOME/.ssh/witcher}
-
-  prompt_env "BACKUP_REMOTE_USER" "Remote SSH username" false "$default_user"
-  prompt_env "BACKUP_REMOTE_IP" "Remote host or IP" false "$default_ip"
-  prompt_env "BACKUP_REMOTE_PATH" "Remote FoundryVTT data path" false "$default_path"
-  prompt_env "BACKUP_LOCAL_PATH" "Local FoundryVTT mirror path" false "$default_local_path"
-
-  while true; do
-    prompt_env "BACKUP_SSH_KEY" "SSH key path" false "$default_key"
-    backup_key=$(get_env_value "BACKUP_SSH_KEY")
-    expanded_key=${backup_key/#\~/$HOME}
-
-    if [ ! -f "$expanded_key" ]; then
-      echo "⚠️  SSH key file not found: $expanded_key"
-      read -p "Try a different SSH key path? (y/n) [default: y]: " -r key_confirm
-      key_confirm=${key_confirm:-y}
-      if [[ ! $key_confirm =~ ^[Yy]$ ]]; then
-        break
-      fi
-      continue
-    fi
-
-    read -p "Use SSH key $expanded_key ? (y/n) [default: y]: " -r key_confirm
-    key_confirm=${key_confirm:-y}
-    if [[ $key_confirm =~ ^[Yy]$ ]]; then
-      break
-    fi
-  done
-
-  backup_user=$(get_env_value "BACKUP_REMOTE_USER")
-  backup_ip=$(get_env_value "BACKUP_REMOTE_IP")
-  backup_path=$(get_env_value "BACKUP_REMOTE_PATH")
-  backup_path=$(normalize_foundry_root_path "$backup_path")
-  backup_key=$(get_env_value "BACKUP_SSH_KEY")
-  backup_local_path=$(get_env_value "BACKUP_LOCAL_PATH")
-  backup_local_path=${backup_local_path:-$backup_path}
-  backup_local_path=$(normalize_foundry_root_path "$backup_local_path")
-  expanded_key=${backup_key/#\~/$HOME}
-  expanded_local_path=${backup_local_path/#\~/$HOME}
-  normalized_local_path=${expanded_local_path%/}
-
-  set_env_value "BACKUP_REMOTE_HOST" "${backup_user}@${backup_ip}"
-  set_env_value "BACKUP_REMOTE_PATH" "$backup_path"
-  set_env_value "BACKUP_LOCAL_PATH" "$backup_local_path"
-  set_env_value "FOUNDRY_BACKUPS_PATH" "$normalized_local_path/Backups"
-
-  echo ""
-  echo "📥 Syncing FoundryVTT data from remote host with rsync..."
-  mkdir -p "$expanded_local_path"
-
-  if rsync -avz --progress -e "ssh -i $expanded_key" "${backup_user}@${backup_ip}:$backup_path/" "$expanded_local_path/"; then
-    echo "✅ FoundryVTT data synced successfully"
-    echo "📁 Local data mirror path: $expanded_local_path"
-    echo "📁 Container backups mount path: $normalized_local_path/Backups"
-  else
-    echo "⚠️  Could not sync data. Verify SSH user, host/IP, key, and path are correct."
-  fi
-}
-
 echo "🚀 FoundryVTT Docker Deployment Setup"
 echo "======================================"
 echo ""
@@ -270,21 +153,6 @@ if [ ! -f .env ]; then
   fi
 
   echo ""
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "💾 Optional: Restore from Remote Backups"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "Restore FoundryVTT backups from another laptop via SCP"
-  echo "Requires SSH key-based authentication setup"
-  echo ""
-
-  read -p "Do you want to restore backups from a remote host? (y/n) [default: n]: " -r enable_backup_restore
-  enable_backup_restore=${enable_backup_restore:-n}
-
-  if [[ $enable_backup_restore =~ ^[Yy]$ ]]; then
-    configure_backup_restore
-  fi
-
-  echo ""
 else
   echo "✅ .env already exists"
   echo ""
@@ -295,17 +163,6 @@ echo "⚡ Validating required Foundry settings"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 ensure_foundry_auth
 ensure_foundry_admin_key
-echo ""
-
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "💾 Optional: Configure/Run Backup Restore"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-read -p "Do you want to configure or run remote backup restore now? (y/n) [default: n]: " -r run_backup_restore
-run_backup_restore=${run_backup_restore:-n}
-
-if [[ $run_backup_restore =~ ^[Yy]$ ]]; then
-  configure_backup_restore
-fi
 echo ""
 
 # Check Docker
@@ -352,13 +209,5 @@ if grep -q "CF_TUNNEL_TOKEN=" .env && ! grep -q "^CF_TUNNEL_TOKEN=$" .env; then
   echo ""
 fi
 
-if grep -q "BACKUP_REMOTE_HOST=" .env && ! grep -q "^BACKUP_REMOTE_HOST=$" .env; then
-  echo "2. Restore backups inside container:"
-  echo "   docker compose up -d"
-  echo "   docker compose exec foundry /bin/bash"
-  echo "   # In the container, use FoundryVTT UI to restore from /data/Backups"
-  echo ""
-fi
-
-echo "📖 For more information, see QUICKSTART.md or DEPLOYMENT.md"
+echo "📖 For more information, see README.md or DEPLOYMENT.md"
 echo ""

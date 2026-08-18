@@ -16,7 +16,7 @@ command below is the manual fallback.
 |---------|--------|---------|
 | **Status** (columns) | Backlog → Todo → Ready → In Progress → In Review → Done | The at-a-glance overview and delivery stage |
 | **BMAD Stage** (field) | Discovery … Security & Release | Which planning stage a card came from (mostly on epics) |
-| **Route** (field) | Human · Claude · Local | Who should work the card — derived from `scripts/route-model.sh` |
+| **Route** (field) | Human · Claude | Who should work the card — derived from `scripts/route-model.sh` |
 | `agent-ready` (label) | — | Card is triaged and may be claimed by an agent session |
 | `wip` (label) + assignee | — | Card is claimed; a claim lock — **do not touch** |
 
@@ -25,8 +25,12 @@ policy as CLAUDE.md via `scripts/suggest-route.sh`, so the board never disagrees
 with how work is actually routed:
 
 - `Human` — complex/high-risk (architecture, security, deep-debug, cross-cutting, risk=high).
-- `Local` — simple work the local model handles (`scripts/ask-local.sh`).
 - `Claude` — agentic work for a Claude session.
+
+This repo sets `SUBSYSTEM_ROUTING=false`, so `route-model.sh` classifies Human vs
+Claude only. The board's Route dropdown still offers a third value, `Local`, left
+over from the routing subsystem; a card carrying it is stale metadata, not an
+instruction to delegate — work it as Claude.
 
 ## One-time setup (day 0)
 
