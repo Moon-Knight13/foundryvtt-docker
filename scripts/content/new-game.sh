@@ -162,7 +162,10 @@ if [[ -e "$GAME_DIR" ]]; then
 fi
 
 mkdir -p "$GAME_DIR"/{Handouts,Maps,NPCs,Scenes,Tables}
-mkdir -p "$GAME_DIR/Assets/Maps"
+# Maps: render_map.py output. Tokens: custom token art for named NPCs, pointed
+# at by `image:` in a statblock fence. Art: full illustrations you show players
+# (SRD ships token art only, and it does not enlarge well).
+mkdir -p "$GAME_DIR/Assets"/{Maps,Tokens,Art}
 mkdir -p "$GAME_DIR/Foundry/maps"
 for type in actors items journals scenes tables; do
   mkdir -p "$GAME_DIR/Foundry/src/$type"
@@ -341,7 +344,7 @@ done
 echo "Scaffolded $TYPE \"$TITLE\" ($ID)"
 echo "  game:    $GAME_DIR"
 echo "  notes:   $TITLE.md, GM Prep.md$([[ "$TYPE" == "oneshot" ]] && echo ", Advert.md")"
-echo "  folders: Handouts/ Maps/ NPCs/ Scenes/ Tables/ Assets/Maps/"
+echo "  folders: Handouts/ Maps/ NPCs/ Scenes/ Tables/ Assets/{Maps,Tokens,Art}/"
 echo "  foundry: Foundry/$SLUG.config.json + Foundry/src/{actors,items,journals,scenes,tables}/"
 echo
 echo "Definition of done — a finished game has ALL of these:"
