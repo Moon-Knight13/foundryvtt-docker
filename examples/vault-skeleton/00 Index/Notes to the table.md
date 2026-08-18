@@ -80,8 +80,8 @@ to rebuild (see the rebuild recipe above).
 
 Note → **Map Brief** ([[Map Brief Template]]) → **default:** Claude runs the generator
 (`scripts/maps/render_map.py`) → **two maps + a `.dd2vtt`**:
-- **`<name> - Player.png`** — clean; embedded in the location note / shown to players.
-- **`<name> - DM.png`** — numbered key + hazard/secret notes; GM-only.
+- **`<name> - Player.webp`** — clean; embedded in the location note / shown to players.
+- **`<name> - DM.webp`** — numbered key + hazard/secret notes; GM-only.
 - **`<name>.dd2vtt`** — Foundry scene (walls + lights) via Universal Battlemap Importer.
 Print either for in-person. For **painted art**, build in **DungeonMapBuilder** (or Dungeon
 Scrawl / Watabou / AI) and drop it in `Assets/Maps/` to replace the generated background.

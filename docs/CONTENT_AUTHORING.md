@@ -146,7 +146,7 @@ then convert its `.dd2vtt` into a Scene document:
 ```bash
 python3 scripts/maps/render_map.py <spec>.json <outdir>
 node scripts/content/dd2vtt-to-scene.mjs "<outdir>/<name>.dd2vtt" \
-  --background "DnD/<game>/Assets/Maps/<name> - Player.png" \
+  --background "DnD/<game>/Assets/Maps/<name> - Player.webp" \
   --out content/src-<slug>/scenes/<name>.json
 # or both steps at once:
 scripts/maps/map-to-scene.sh <spec>.json <slug> --outdir <dir> --background <src>

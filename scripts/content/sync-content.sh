@@ -17,13 +17,21 @@ DRY_RUN=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --config)
-      CONFIG="${2:?--config requires a path}"; shift 2 ;;
+      CONFIG="${2:?--config requires a path}"
+      shift 2
+      ;;
     --data)
-      DATA_PATH="${2:?--data requires a path}"; shift 2 ;;
+      DATA_PATH="${2:?--data requires a path}"
+      shift 2
+      ;;
     --dry-run)
-      DRY_RUN=(--dry-run -v); shift ;;
+      DRY_RUN=(--dry-run -v)
+      shift
+      ;;
     *)
-      echo "Unknown argument: $1" >&2; exit 1 ;;
+      echo "Unknown argument: $1" >&2
+      exit 1
+      ;;
   esac
 done
 
@@ -50,7 +58,7 @@ if [[ ! -d "$MODULES_DIR" ]]; then
   exit 1
 fi
 
-if command -v rsync >/dev/null 2>&1; then
+if command -v rsync > /dev/null 2>&1; then
   rsync -a --delete "${DRY_RUN[@]}" "$MODULE_DIR/" "$MODULES_DIR/$MODULE_ID/"
 else
   if [[ ${#DRY_RUN[@]} -gt 0 ]]; then

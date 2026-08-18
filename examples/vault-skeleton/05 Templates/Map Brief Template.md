@@ -34,7 +34,7 @@ Claude compiles this brief into a **map spec** and runs the generator:
 ```bash
 python3 scripts/maps/render_map.py <spec>.json "<game>/Assets/Maps/"
 ```
-→ **`<name> - Player.png`** (clean, show players), **`<name> - DM.png`** (numbered
+→ **`<name> - Player.webp`** (clean, show players), **`<name> - DM.webp`** (numbered
 key + hazard/secret notes, GM-only), and **`<name>.dd2vtt`** (Foundry walls + lights,
 via **Universal Battlemap Importer**). Claude embeds the Player map in the location
 note; the DM map stays a GM callout. Print either for in-person.

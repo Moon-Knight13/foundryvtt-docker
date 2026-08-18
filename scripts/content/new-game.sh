@@ -105,7 +105,7 @@ if [[ "$IN_REPO" -eq 1 ]]; then
     exit 1
   fi
 
-  cat >"$CONFIG_FILE" <<EOF
+  cat > "$CONFIG_FILE" << EOF
 {
   "id": "$ID",
   "title": "$TITLE",
@@ -170,7 +170,7 @@ done
 
 # The module config. No "srcDir": that key resolves under content/ in this repo
 # and would silently point at the wrong tree — build with --src instead.
-cat >"$GAME_DIR/Foundry/$SLUG.config.json" <<EOF
+cat > "$GAME_DIR/Foundry/$SLUG.config.json" << EOF
 {
   "id": "$ID",
   "title": "$TITLE",
@@ -184,7 +184,7 @@ EOF
 
 TAG="$SLUG"
 
-cat >"$GAME_DIR/$TITLE.md" <<EOF
+cat > "$GAME_DIR/$TITLE.md" << EOF
 ---
 title: $TITLE
 type: $TYPE
@@ -241,7 +241,7 @@ docker compose restart
 REPLACE
 EOF
 
-cat >"$GAME_DIR/GM Prep.md" <<EOF
+cat > "$GAME_DIR/GM Prep.md" << EOF
 ---
 type: session
 system: $SYSTEM_FM
@@ -285,7 +285,7 @@ REPLACE
 EOF
 
 if [[ "$TYPE" == "oneshot" ]]; then
-  cat >"$GAME_DIR/Advert.md" <<EOF
+  cat > "$GAME_DIR/Advert.md" << EOF
 ---
 type: handout
 system: $SYSTEM_FM
@@ -334,7 +334,7 @@ EOF
 fi
 
 for dir in Handouts Maps NPCs Scenes Tables; do
-  cat >"$GAME_DIR/$dir/.gitkeep" <<EOF
+  cat > "$GAME_DIR/$dir/.gitkeep" << EOF
 EOF
 done
 
