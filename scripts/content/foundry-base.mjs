@@ -276,7 +276,7 @@ export function parseArgs(argv) {
   return opts;
 }
 
-const USAGE = `Usage:
+export const USAGE = `Usage:
   foundry-base.mjs capture <world> [--data <path>]   read a world's enabled modules into a pinned manifest
   foundry-base.mjs provision [--dry-run]             install the pinned system + modules
   foundry-base.mjs promote <capture.json>            fill core pins from a capture
@@ -542,6 +542,18 @@ async function cmdPullGames(opts) {
   }
 }
 
+// Kept beside the switch below so a new command has to appear in both, and the
+// test that compares this with USAGE fails if either is forgotten.
+export const COMMANDS = [
+  'capture',
+  'provision',
+  'promote',
+  'update',
+  'snapshot',
+  'restore',
+  'pull-games',
+];
+
 export async function main(argv = process.argv.slice(2)) {
   const opts = parseArgs(argv);
   switch (opts.command) {
@@ -549,6 +561,8 @@ export async function main(argv = process.argv.slice(2)) {
       return cmdCapture(opts);
     case 'provision':
       return cmdProvision(opts);
+    case 'promote':
+      return cmdPromote(opts);
     case 'update':
       return cmdUpdate(opts);
     case 'snapshot':

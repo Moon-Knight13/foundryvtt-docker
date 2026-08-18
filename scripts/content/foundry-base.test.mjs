@@ -11,6 +11,8 @@ import {
   dataDir,
   isInstallable,
   assertDataDir,
+  USAGE,
+  COMMANDS,
   REPO_ROOT,
 } from './foundry-base.mjs';
 
@@ -205,4 +207,30 @@ test('mergeCapture still protects a real pinned URL from being overwritten', () 
   // Version moves with the capture; the deliberately pinned URL does not.
   assert.equal(core[0].version, '6.1.1');
   assert.equal(core[0].manifest, 'https://example.invalid/pinned.json');
+});
+
+test('every command in the usage text is actually dispatchable', () => {
+  // `promote` shipped documented in USAGE, defined as cmdPromote, and missing
+  // from the switch — so the tool advertised a command that answered "Unknown
+  // command: promote". Nothing caught it because the module still imported
+  // cleanly. This pins usage text and dispatch table to each other.
+  const advertised = [...USAGE.matchAll(/^\s+foundry-base\.mjs (\S+)/gm)].map(m => m[1]);
+  assert.ok(advertised.length >= 6, `expected several commands, found ${advertised.length}`);
+  for (const cmd of advertised) {
+    assert.ok(COMMANDS.includes(cmd), `"${cmd}" is documented but not dispatchable`);
+  }
+});
+
+test('every dispatchable command is documented', () => {
+  // The reverse: a command that works but nobody knows about.
+  const advertised = [...USAGE.matchAll(/^\s+foundry-base\.mjs (\S+)/gm)].map(m => m[1]);
+  for (const cmd of COMMANDS) {
+    assert.ok(advertised.includes(cmd), `"${cmd}" is dispatchable but undocumented`);
+  }
+});
+
+test('an unknown command is rejected, not silently ignored', async () => {
+  const { main } = await import('./foundry-base.mjs');
+  await assert.rejects(() => main(['definitely-not-a-command']), /Unknown command/);
+  await assert.rejects(() => main([]), /No command given/);
 });

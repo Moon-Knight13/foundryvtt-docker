@@ -144,21 +144,44 @@ async function readDocs(dir) {
  */
 export async function copyArt(index, dataDir, artDir) {
   await mkdir(artDir, { recursive: true });
-  let copied = 0;
+  // Three outcomes, and lumping them together made "copied 0" unreadable: a
+  // creature can carry Foundry's placeholder icon (the pack ships no art for
+  // it), or name a real file that is not installed (the system ships only some
+  // of the art it references), or copy fine. Only the middle case is worth
+  // acting on, so they are counted separately.
+  const stats = { copied: 0, placeholder: 0, missing: 0, missingExamples: [] };
   for (const rec of Object.values(index)) {
     const src = rec.tokenSrc;
-    if (!src || src.startsWith('icons/')) continue; // core placeholder, not real art
+    if (!src || src.startsWith('icons/')) {
+      stats.placeholder++;
+      continue;
+    }
     try {
       await copyFile(
         path.join(dataDir, 'Data', src),
         path.join(artDir, `${rec.name}${path.extname(src)}`),
       );
-      copied++;
+      stats.copied++;
     } catch {
-      // no shipped art for this creature — expected for some entries
+      stats.missing++;
+      if (stats.missingExamples.length < 3) stats.missingExamples.push(src);
     }
   }
-  return copied;
+  return stats;
+}
+
+/** One line per outcome, so a low copy count explains itself. */
+export function describeArt(stats, artDir) {
+  const parts = [`  copied ${stats.copied} token image(s) to ${artDir}`];
+  if (stats.placeholder) {
+    parts.push(`  ${stats.placeholder} creature(s) ship no art (Foundry placeholder icon)`);
+  }
+  if (stats.missing) {
+    parts.push(
+      `  ${stats.missing} reference art that is not installed, e.g. ${stats.missingExamples.join(', ')}`,
+    );
+  }
+  return parts.join('\n');
 }
 
 /**
@@ -240,8 +263,7 @@ export async function main(argv = process.argv.slice(2)) {
       // like a cache problem — the cache was written, then reported as failed.
       if (opts.art) {
         try {
-          const n = await copyArt(creatures, opts.data, opts.art);
-          console.log(`  copied ${n} token images to ${opts.art}`);
+          console.log(describeArt(await copyArt(creatures, opts.data, opts.art), opts.art));
         } catch (err) {
           artError = err;
         }
