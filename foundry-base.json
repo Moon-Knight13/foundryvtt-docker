@@ -18,7 +18,7 @@
   "core": [
     {
       "id": "foundry-mcp-bridge",
-      "manifest": "TODO",
+      "manifest": "https://raw.githubusercontent.com/adambdooley/foundry-vtt-mcp/master/packages/foundry-module/module.json",
       "note": "Pin must stay in step with MCP_VERSION in scripts/setup-mcp.sh.",
       "title": "Foundry MCP Bridge",
       "version": "0.8.2"

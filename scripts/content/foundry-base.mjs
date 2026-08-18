@@ -350,7 +350,7 @@ async function cmdProvision(opts) {
     if (!isInstallable(entry)) {
       unresolved.push(entry.id);
       console.log(
-        `SKIP     ${entry.id}: no manifest URL pinned yet — run \`capture <world>\` to fill it in`,
+        `SKIP     ${entry.id}: no manifest URL pinned yet — \`capture\` a world that has it, then \`promote\``,
       );
       continue;
     }
@@ -374,8 +374,10 @@ async function cmdProvision(opts) {
   if (unresolved.length) {
     console.log(
       `\n${unresolved.length} pin(s) still unresolved: ${unresolved.join(', ')}.` +
-        '\nA rebuild will NOT reinstall these. Run `capture <world>` against a world' +
-        '\nthat has them enabled, then promote the real ids into foundry-base.json.',
+        '\nA rebuild will NOT reinstall these. Capture a world that has them enabled,' +
+        '\nthen fill the pins from it:' +
+        '\n  node scripts/content/foundry-base.mjs capture <world>' +
+        '\n  node scripts/content/foundry-base.mjs promote foundry-capture-<world>.json',
     );
   }
 }
