@@ -301,15 +301,22 @@ The compiler resolves art through a chain, and stops deliberately short:
    genuinely that creature's art, where the pack ships any (see the measured
    table below: it mostly does not).
 3. **The curated icon map** (`content/reference/art-map.json`): a hand-checked
-   `byName` match first, then — **for `source:`-inherited mooks only** — one
-   silhouette per SRD creature type. The map is curated, never fuzzy-matched:
-   fuzzy matching measured 61% apparent coverage while pairing *Adult Gold
-   Dragon* with `gold-bar.svg`.
-4. **Nothing.** A bespoke named NPC (no `source:`) that misses the `byName`
-   map resolves to the placeholder and its warning — a generic outline on
-   someone you authored would hide exactly the gap the coverage gate exists to
-   catch. `art_required: true` makes a mook as strict as a named NPC;
-   `art_required: false` lets a bespoke NPC accept the silhouette.
+   `byName` match first, then — **for mooks only** — one silhouette per SRD
+   creature type. The map is curated, never fuzzy-matched: fuzzy matching
+   measured 61% apparent coverage while pairing *Adult Gold Dragon* with
+   `gold-bar.svg`.
+4. **Nothing.** A named NPC that misses the `byName` map resolves to the
+   placeholder and its warning — a generic outline on someone you authored
+   would hide exactly the gap the coverage gate exists to catch.
+
+**What makes a mook is the note's title matching its base creature** —
+`Bandit.md` built on Bandit is a bandit; `Amira Granger.md` built on Spy is a
+character. `source:` presence alone is NOT the test: measured on a real
+module, every named NPC there is built on an SRD base, and a `source:` rule
+dressed two different named characters in the same spy icon with a green gate.
+`art_required: true` refuses the silhouette even for an exact-title mook;
+`art_required: false` lets a named NPC accept its base creature's icon or the
+silhouette.
 
 The map's icons come from [game-icons.net](https://game-icons.net) (CC-BY 3.0,
 pinned to a commit) and are fetched into the vault, not committed here:
@@ -338,6 +345,32 @@ one (CI), those paths are counted `unchecked`, so a green CI report is a schema
 statement, **not** a coverage guarantee — run it on the host for the proof.
 `--strict` turns failures into a non-zero exit, the same warn-to-fail doctrine
 as `exact: true`. Definition of done for a game: `--strict` passes.
+
+### One command per game
+
+```bash
+scripts/content/ship-game.sh "$DND_VAULT_PATH/03 Oneshots/<Game>" [--force] [--no-restart]
+```
+
+Host-side chain: **compile → art gate (strict) → build → sync → restart
+Foundry**. `compile-game.mjs` (usable on its own, also inside the devcontainer)
+compiles every `NPCs/*.md` statblock fence and every `Handouts/*.md` image
+embed in one pass — only notes newer than their output recompile, one broken
+note reports without abandoning the rest. The gate sits *between* compile and
+build, so a game with a blank named NPC stops before anything reaches Foundry.
+`foundry-base.mjs pull-games` runs the same gate between build and sync for
+every game in the manifest.
+
+The raster tier's measurement tool ships ready for the post-rebuild step:
+
+```bash
+node scripts/content/measure-dnd5eapi.mjs --out /tmp/raster.json
+```
+
+counts `image` fields across all SRD monsters on `www.dnd5eapi.co`, probes one
+image for the S3 redirect (a different host, possibly needing its own firewall
+entry), and emits a **disabled** `raster` block to paste into `art-map.json`
+if the numbers justify it.
 
 ## Handout art: showable in Foundry
 

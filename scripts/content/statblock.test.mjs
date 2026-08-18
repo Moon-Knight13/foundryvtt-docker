@@ -370,10 +370,10 @@ async function noteWith(body, filename = 'Note.md') {
   return { note, mapPath };
 }
 
-test('a mook inherits the curated icon for its SRD base creature', async () => {
+test('a mook note titled after its base creature inherits the curated icon', async () => {
   const { note, mapPath } = await noteWith(
-    '```statblock\nname: Gate Goblin\nsource: "SRD 5.1 (CC-BY-4.0) — Goblin"\ntype: humanoid\nac: 15\nhp: 7\ncr: 0.25\nstats: [8, 14, 10, 10, 8, 8]\n```\n',
-    'Gate Goblin.md',
+    '```statblock\nname: Goblin\nsource: "SRD 5.1 (CC-BY-4.0) — Goblin"\ntype: humanoid\nac: 15\nhp: 7\ncr: 0.25\nstats: [8, 14, 10, 10, 8, 8]\n```\n',
+    'Goblin.md',
   );
   const { actor, warnings } = await compileNote(note, { artMap: mapPath });
   assert.equal(actor.img, 'DnD/06 Assets/Tokens/generic/caro-asercion/goblin.svg');
@@ -388,6 +388,22 @@ test('a mook with an unmapped name falls back to its type silhouette', async () 
   );
   const { actor } = await compileNote(note, { artMap: mapPath });
   assert.equal(actor.img, 'DnD/06 Assets/Tokens/generic/delapouite/person.svg');
+});
+
+test('a named NPC built on an SRD base does NOT inherit the base creature icon', async () => {
+  // The Lure of the Lamia case: Amira Granger and Zephyr Silverwind are both
+  // Spy underneath, and the old source:-presence rule dressed both in the same
+  // spy icon with a green gate. A note titled unlike its base is a character.
+  const { note, mapPath } = await noteWith(
+    '```statblock\nname: Amira Granger\nsource: "SRD 5.1 (CC-BY-4.0) — Goblin"\ntype: humanoid\nac: 15\nhp: 7\ncr: 0.25\nstats: [8, 14, 10, 10, 8, 8]\n```\n',
+    'Amira Granger.md',
+  );
+  const { actor, warnings } = await compileNote(note, { artMap: mapPath });
+  assert.equal(actor.img, PLACEHOLDER_IMG);
+  assert.ok(
+    warnings.some(w => w.includes(PLACEHOLDER_IMG)),
+    'the gap stays visible',
+  );
 });
 
 test('a bespoke named NPC never inherits a silhouette from the map', async () => {

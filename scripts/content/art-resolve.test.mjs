@@ -7,6 +7,7 @@ const MAP = {
   byName: {
     Goblin: { icon: 'caro-asercion/goblin.svg', artist: 'Caro Asercion' },
     Wolf: { icon: 'lorc/wolf-head.svg', artist: 'Lorc' },
+    Spy: { icon: 'delapouite/spy.svg', artist: 'Delapouite' },
   },
   byType: {
     humanoid: { icon: 'delapouite/person.svg', artist: 'Delapouite' },
@@ -18,9 +19,9 @@ test('an explicit image: always wins, verbatim', () => {
   const r = resolveArt(
     {
       name: 'Goblin',
+      base: 'Goblin',
       type: 'humanoid',
       image: 'DnD/My Game/Assets/Tokens/boss.webp',
-      source: 'SRD 5.1',
     },
     MAP,
   );
@@ -28,64 +29,91 @@ test('an explicit image: always wins, verbatim', () => {
   assert.equal(r.src, 'DnD/My Game/Assets/Tokens/boss.webp');
 });
 
-test('a curated name match resolves to the fetched icon, Data-relative', () => {
-  const r = resolveArt({ name: 'Goblin', type: 'humanoid', source: 'SRD 5.1' }, MAP);
+test('a mook — a note titled after its base creature — gets the curated icon', () => {
+  const r = resolveArt({ name: 'Goblin', base: 'Goblin', type: 'humanoid' }, MAP);
   assert.equal(r.tier, 'exact');
   assert.equal(r.src, `${GENERIC_ART_DIR}/caro-asercion/goblin.svg`);
   assert.equal(r.artist, 'Caro Asercion', 'CC-BY needs the artist carried through');
 });
 
-test('a mook falls back to its creature-type silhouette', () => {
-  // source: means the fence inherits a published SRD creature — a mook. A
-  // generic outline is acceptable there; the table needs SOME token.
-  const r = resolveArt({ name: 'Cult Fanatic', type: 'humanoid', source: 'SRD 5.1' }, MAP);
+test('an unmapped mook falls back to its creature-type silhouette', () => {
+  const r = resolveArt({ name: 'Cult Fanatic', base: 'Cult Fanatic', type: 'humanoid' }, MAP);
   assert.equal(r.tier, 'type');
   assert.equal(r.src, `${GENERIC_ART_DIR}/delapouite/person.svg`);
 });
 
-test('a bespoke named NPC never inherits a silhouette', () => {
-  // No source: means someone authored this character. Dressing them in a
-  // generic outline would hide exactly the gap the gate exists to catch.
-  const r = resolveArt({ name: 'Zanna the Blade', type: 'humanoid' }, MAP);
+test("a named NPC built on an SRD base never inherits that base's icon", () => {
+  // Measured on the real Lure of the Lamia module: Amira Granger and Zephyr
+  // Silverwind are both built on the Spy, and source:-presence alone dressed
+  // BOTH in the same spy icon — two named characters, identical tokens, and a
+  // green gate. Someone authored these; the gap must be visible.
+  const r = resolveArt({ name: 'Amira Granger', base: 'Spy', type: 'humanoid' }, MAP);
   assert.equal(r.tier, 'none');
   assert.equal(r.src, null);
 });
 
-test('a bespoke NPC still gets a curated match when the name IS a mapped creature', () => {
+test('a bespoke NPC with no base resolves to none, not a silhouette', () => {
+  const r = resolveArt({ name: 'Zanna the Blade', type: 'humanoid' }, MAP);
+  assert.equal(r.tier, 'none');
+});
+
+test('a named NPC whose own name is a mapped creature still matches it', () => {
   const r = resolveArt({ name: 'Wolf', type: 'beast' }, MAP);
   assert.equal(r.tier, 'exact');
 });
 
-test('art_required: true makes a mook as strict as a named NPC', () => {
+test('art_required: true makes even an exact-title mook strict', () => {
   const r = resolveArt(
-    { name: 'The Lamia', type: 'monstrosity', source: 'SRD 5.1', art_required: true },
+    { name: 'Goblin', base: 'Goblin', type: 'humanoid', art_required: true },
     MAP,
   );
-  assert.equal(r.tier, 'none', 'a silhouette must not satisfy an explicit demand for art');
+  // The curated match still wins — art_required demands art, and this IS its
+  // creature's icon. Only the silhouette tier is refused.
+  assert.equal(r.tier, 'exact');
+  const typed = resolveArt(
+    { name: 'Cult Fanatic', base: 'Cult Fanatic', type: 'humanoid', art_required: true },
+    MAP,
+  );
+  assert.equal(typed.tier, 'none', 'a silhouette must not satisfy an explicit demand for art');
 });
 
-test('art_required: false lets a bespoke NPC accept the silhouette', () => {
-  const r = resolveArt({ name: 'Nameless Guard 3', type: 'humanoid', art_required: false }, MAP);
-  assert.equal(r.tier, 'type');
+test('art_required: false lets a named NPC accept its base icon, then the silhouette', () => {
+  const viaBase = resolveArt(
+    { name: 'Amira Granger', base: 'Spy', type: 'humanoid', art_required: false },
+    MAP,
+  );
+  assert.equal(viaBase.tier, 'exact', 'explicit opt-out unlocks the base creature icon');
+  assert.equal(viaBase.src, `${GENERIC_ART_DIR}/delapouite/spy.svg`);
+
+  const viaType = resolveArt(
+    { name: 'Nameless Guard 3', base: 'Thug', type: 'humanoid', art_required: false },
+    MAP,
+  );
+  assert.equal(viaType.tier, 'type', 'unmapped base still lands on the type silhouette');
+});
+
+test('title matching is forgiving about case and punctuation, not about words', () => {
+  const r = resolveArt({ name: 'giant  spider', base: 'Giant Spider', type: 'beast' }, MAP);
+  assert.equal(r.tier, 'type', 'same words = same creature = mook');
+  const named = resolveArt({ name: 'Spider Queen', base: 'Giant Spider', type: 'beast' }, MAP);
+  assert.equal(named.tier, 'none', 'different words = a character someone authored');
 });
 
 test('an unmapped type resolves to none, not to a wrong icon', () => {
-  const r = resolveArt({ name: 'Weird Thing', type: 'custom', source: 'SRD 5.2' }, MAP);
+  const r = resolveArt({ name: 'Weird Thing', base: 'Weird Thing', type: 'custom' }, MAP);
   assert.equal(r.tier, 'none');
 });
 
 test('the disabled raster tier stays disabled until measured', () => {
-  // A raster block is honoured only when explicitly enabled — the source is
-  // firewall-blocked until the operator rebuilds with the new allowlist.
   const withRaster = {
     ...MAP,
     raster: { enabled: false, byName: { Goblin: { src: 'https://example.test/goblin.png' } } },
   };
-  const off = resolveArt({ name: 'Goblin', type: 'humanoid', source: 'SRD 5.1' }, withRaster);
+  const off = resolveArt({ name: 'Goblin', base: 'Goblin', type: 'humanoid' }, withRaster);
   assert.equal(off.tier, 'exact', 'disabled raster must not shadow the curated map');
 
   const on = resolveArt(
-    { name: 'Goblin', type: 'humanoid', source: 'SRD 5.1' },
+    { name: 'Goblin', base: 'Goblin', type: 'humanoid' },
     { ...withRaster, raster: { ...withRaster.raster, enabled: true } },
   );
   assert.equal(on.tier, 'raster');

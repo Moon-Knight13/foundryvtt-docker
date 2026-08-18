@@ -362,8 +362,9 @@ export function toActor(fence, { name, disposition = -1, biographyIntro = '', im
   // fallback stays (an actor must have SOME img), but it is never silent.
   if (!img) {
     warnings.push(
-      `no art — falling back to ${PLACEHOLDER_IMG}. Give the fence a \`source:\` ` +
-        'so it inherits the SRD token, or an `image:` pointing at your own file.',
+      `no art — falling back to ${PLACEHOLDER_IMG}. Named NPCs need an \`image:\` ` +
+        "pointing at your own file in the game's Assets/Tokens/ " +
+        '(or `art_required: false` to accept a generic stand-in).',
     );
   }
 
@@ -524,11 +525,13 @@ export async function compileNote(notePath, opts = {}) {
     }
     img = resolveArt(
       {
-        // The map is keyed by SRD creature names, so a mook looks up its base
-        // creature; a bespoke NPC can only match by its own name.
-        name: base ?? name,
+        // The note title is the actor's identity; the base is what it was
+        // built on. The resolver treats them as a mook only when they agree —
+        // "Bandit.md" on Bandit is a bandit, "Amira Granger.md" on Spy is a
+        // character whose art gap must stay visible.
+        name,
+        base,
         type: fence.type,
-        source: fence.source,
         art_required: fence.art_required,
       },
       artMap,
