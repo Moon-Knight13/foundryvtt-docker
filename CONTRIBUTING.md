@@ -17,9 +17,37 @@ unsure about anything, open an issue and ask.
 
 ## Development environment
 
-The repo ships a devcontainer (VS Code → "Reopen in Container") with all
-tooling preinstalled, including the Claude Code workflow described in
-[CLAUDE.md](CLAUDE.md) and [docs/TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md).
+This is for **hacking on this repository**, not for running your game — the
+game stack is just `docker compose up` from the README quickstart. Development
+happens inside the devcontainer supplied by the
+[claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo)
+foundation: a deny-by-default egress firewall, the Claude Code workflow, and
+all CI gate tooling come preinstalled.
+
+Prerequisites: Docker, VS Code with the Dev Containers extension, and a Claude
+Code (CLI) account for the AI workflow.
+
+1. Clone the repo, open it in VS Code, and accept **"Reopen in Container"**.
+   Tooling installs on container start, including the day-0 auto-setup
+   (`scripts/setup-day0.sh`).
+2. Inside the container, finish the auth-gated bootstraps:
+
+   ```bash
+   gh auth login --hostname github.com --git-protocol https --web -s project && gh auth setup-git
+   claude   # authenticate Claude Code on first launch
+   bash scripts/setup-day0.sh   # re-run so the GitHub ruleset + board bootstraps apply
+   ```
+
+3. Verify with `bash scripts/check-day0.sh` — or `/day0-check` from inside
+   Claude Code. Expect all green.
+
+Notes:
+
+- The firewall blocks unknown egress hosts by default; use the
+  `/firewall-allow` skill to allowlist a new host. Full detail on the
+  foundation lives in [docs/TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md).
+- The devcontainer has **no docker socket** by design — run the Foundry stack
+  (`docker compose up -d`) from a host terminal, not from inside the container.
 
 Working outside the devcontainer: install
 [pre-commit](https://pre-commit.com) and run `pre-commit install` so the
@@ -33,9 +61,23 @@ bash scripts/tests/test-day0.sh       # day-0 bootstrap checks
 cd scripts/content && npm ci && npm test   # content-pipeline build + roundtrip
 ```
 
-Changes to the Foundry stack itself should be exercised against a disposable
-clone, never the live data: `./scripts/test-instance.sh up` (see
-docs/PROJECT.md, "Safe A/B testing").
+Changes to the Foundry stack itself are exercised against the live stack, with
+a data-dir snapshot taken first as the undo path — see
+[docs/FOUNDRY_REBUILD.md](docs/FOUNDRY_REBUILD.md). Take the snapshot between
+sessions, not on game night.
+
+## Branch model
+
+`main` is the single default branch — all PRs land there, and it carries a
+protection ruleset (PR + review + required checks).
+
+This repo used to run felddy's two-branch release model (`develop` for
+integration, `main` for production, promoted by fast-forward). That model earns
+its keep when a branch *is* the released artifact; here nothing is deployed from
+a branch — the stack runs `docker compose up` against the published felddy
+image. In practice the promotion was performed once, then `main` sat 24 commits
+behind for five weeks and collected a template-sync PR aimed at the stale
+branch. The old history is preserved at tag `archive/main-2026-08-09`.
 
 ## Licence
 

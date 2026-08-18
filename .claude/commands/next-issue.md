@@ -24,10 +24,9 @@ implement it, and open a PR. This is how an agent session "picks up an issue."
    the board **Route**:
    - `Route=Human` should not reach you via `next`; if the user forced such an
      issue, confirm they want an agent to proceed.
-   - `Route=Local` — route generation through `scripts/delegate-local.sh`
-     (exit 3 = escalate: do the work in this session and note the reason)
-     per the model-routing protocol in CLAUDE.md.
-   - `Route=Claude` — proceed in this session.
+   - `Route=Claude` — proceed in this session. This repo sets
+     `SUBSYSTEM_ROUTING=false`, so every issue is Claude-routed; a card still
+     marked `Route=Local` is stale metadata, not an instruction to delegate.
 
 4. Create an isolated branch: `git checkout -b issue-<n>-<short-slug>`.
 

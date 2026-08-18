@@ -2,9 +2,8 @@
 # Sync the built content module into a Foundry data directory.
 # Run this on the HOST, not inside the devcontainer.
 #
-# Usage: scripts/content/sync-content.sh [--config <path>] [--test] [--dry-run] [--data <path>]
+# Usage: scripts/content/sync-content.sh [--config <path>] [--dry-run] [--data <path>]
 #   --config   module config to sync (default content/content.config.json)
-#   --test     sync to $FOUNDRY_TEST_DATA_PATH instead of $FOUNDRY_DATA_PATH
 #   --data     explicit data directory (overrides env vars)
 #   --dry-run  show what rsync would do
 set -euo pipefail
@@ -19,9 +18,6 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --config)
       CONFIG="${2:?--config requires a path}"; shift 2 ;;
-    --test)
-      DATA_PATH="${FOUNDRY_TEST_DATA_PATH:?--test requires FOUNDRY_TEST_DATA_PATH to be set}"
-      shift ;;
     --data)
       DATA_PATH="${2:?--data requires a path}"; shift 2 ;;
     --dry-run)

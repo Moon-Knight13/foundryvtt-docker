@@ -99,3 +99,23 @@ docs/BMAD_WORKFLOW.md
 # creates the /workspace/DnD vault symlink. Listed only now that the file exists
 # locally — ignoring a path sync has not yet delivered means it never arrives.
 scripts/project-setup.sh
+
+# ── Board commands patched for routing-off ────────────────────────────────────
+# SUBSYSTEM_BOARD=true keeps these, but the template still writes them assuming
+# SUBSYSTEM_ROUTING=true: both told agents to delegate `Route=Local` work through
+# scripts/delegate-local.sh and the local-worker agent, which this repo deleted
+# (see the routing block above). docs/PROJECT.md used to just say "ignore those
+# instructions", but a slash command is read directly and without that framing,
+# so the dead references were removed here instead.
+#
+# TRADE-OFF: these two no longer receive upstream board updates. Re-diff them
+# against the template when the board workflow changes. The proper upstream fix
+# is for the board subsystem to degrade gracefully when routing is off; drop
+# these entries once that lands.
+.claude/commands/next-issue.md
+.claude/commands/run-epic.md
+# Same leak in prose: its Route table and bullet list named scripts/ask-local.sh,
+# another deleted routing file. The Route dropdown on the board itself still
+# offers `Local`; that is left as-is, since a stale form value is inert next to a
+# document that tells an agent to run a script that does not exist.
+docs/KANBAN_WORKFLOW.md

@@ -66,9 +66,11 @@ tar -czf ~/foundry-assets-backup-$(date +%F).tar.gz \
   -C ~/.local/share/FoundryVTT/Data assets
 ```
 
-Migrating data from another machine, and restoring Foundry-native backups,
-is covered in **[BACKUP_RESTORE.md](./BACKUP_RESTORE.md)** (SSH key setup,
-rsync pull, step-by-step restore, troubleshooting).
+Foundry's own backups (Setup → Manage Backups) restore worlds through the UI.
+Machine-to-machine migration is no longer documented here: prep is synced by
+Obsidian and content is rebuilt from the repo, so a Foundry data dir is
+reproducible rather than something to carry between laptops — see
+[docs/FOUNDRY_REBUILD.md](docs/FOUNDRY_REBUILD.md).
 
 ## Remote access via Cloudflare Tunnel
 
@@ -218,7 +220,7 @@ services:
 
   # Automatic image updates. Watch the release notes — Foundry world data is
   # migrated on version bumps and downgrades are not supported, so take a
-  # backup first (see BACKUP_RESTORE.md).
+  # backup first (see "Data location" above).
   watchtower:
     image: containrrr/watchtower
     restart: unless-stopped
