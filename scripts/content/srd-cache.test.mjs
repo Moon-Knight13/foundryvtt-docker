@@ -3,7 +3,15 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { distill, srdIndex, parseArgs, copyArt, assertDataDir, PACKS } from './srd-cache.mjs';
+import {
+  distill,
+  srdIndex,
+  parseArgs,
+  copyArt,
+  assertDataDir,
+  explainArtError,
+  PACKS,
+} from './srd-cache.mjs';
 
 // Trimmed from the real dnd5e.actors24 "Bandit" document as extractPack yields
 // it — i.e. STORED, not derived. Note ac.flat is null and movement.walk is the
@@ -164,5 +172,42 @@ test('assertDataDir names the real cause when the packs are missing', async () =
       assert.match(err.message, /FOUNDRY_DATA_PATH/);
       return true;
     },
+  );
+});
+
+test('an art-copy failure is reported as such, not as a cache failure', () => {
+  // Observed for real: --art "$DND_VAULT_PATH/..." with the variable unset
+  // expanded to "/06 Assets/...", mkdir failed with EACCES, and because the
+  // copy sat inside the pack's try/catch the run reported "Nothing was
+  // written" — immediately after writing both caches.
+  const err = new Error("EACCES: permission denied, mkdir '/06 Assets'");
+  const msg = explainArtError(err, '/06 Assets/Tokens/srd');
+  assert.match(msg, /caches were written successfully/);
+  assert.match(msg, /only the token-art copy failed/);
+  assert.match(msg, /EACCES/);
+});
+
+test('explainArtError recognises the unset-variable path shape', () => {
+  // A first path segment containing a space is the tell-tale of
+  // "$DND_VAULT_PATH/06 Assets/..." with nothing on the left of the slash.
+  assert.match(explainArtError(new Error('x'), '/06 Assets/Tokens/srd'), /DND_VAULT_PATH is unset/);
+  // A legitimate absolute path gets no such speculation.
+  assert.doesNotMatch(
+    explainArtError(new Error('x'), '/home/me/DnD/06 Assets/Tokens/srd'),
+    /DND_VAULT_PATH is unset/,
+  );
+});
+
+test('copyArt surfaces an unwritable target rather than copying nothing quietly', async () => {
+  // Per-file copies are intentionally forgiving (missing art is normal), but
+  // being unable to create the directory at all is a real error.
+  await assert.rejects(
+    () =>
+      copyArt(
+        { X: { name: 'X', tokenSrc: 'systems/dnd5e/tokens/a.webp' } },
+        '/data',
+        '/06 Assets/x',
+      ),
+    /EACCES|EROFS|permission denied|read-only/i,
   );
 });

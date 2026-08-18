@@ -187,11 +187,35 @@ export async function assertDataDir(data) {
   return systemPacks;
 }
 
+/**
+ * Explain an art-copy failure, which is almost always one specific mistake.
+ *
+ * `--art "$DND_VAULT_PATH/06 Assets/Tokens/srd"` with DND_VAULT_PATH unset
+ * expands to "/06 Assets/Tokens/srd" — a path at the filesystem root, where
+ * mkdir fails with a bare EACCES that says nothing about the real cause.
+ */
+export function explainArtError(err, artDir) {
+  const rootish = typeof artDir === 'string' && /^\/[^/]*\s/.test(artDir);
+  return (
+    `The reference caches were written successfully; only the token-art copy failed.\n` +
+    `\n  ${err?.message ?? err}\n` +
+    (rootish
+      ? `\nThat target is at the filesystem root: ${artDir}\n` +
+        'This is what `--art "$DND_VAULT_PATH/06 Assets/Tokens/srd"` produces when\n' +
+        'DND_VAULT_PATH is unset. Check `echo $DND_VAULT_PATH`, or pass the vault\n' +
+        'path literally.\n'
+      : '') +
+    '\nRe-run with a valid --art path to copy the art; the caches do not need rebuilding.'
+  );
+}
+
 export async function main(argv = process.argv.slice(2)) {
   const opts = parseArgs(argv);
   const systemPacks = await assertDataDir(opts.data);
   await mkdir(opts.out, { recursive: true });
   const failed = [];
+  const written = [];
+  let artError = null;
 
   for (const { pack, edition, out } of PACKS) {
     const packDir = path.join(systemPacks, pack);
@@ -209,10 +233,18 @@ export async function main(argv = process.argv.slice(2)) {
         `${JSON.stringify({ edition, source: `dnd5e/${pack}`, creatures }, null, 2)}\n`,
       );
       console.log(`${dest}: ${Object.keys(creatures).length} creatures (SRD ${edition})`);
+      written.push(dest);
+      // Art copying is deliberately OUTSIDE this try. It is a secondary,
+      // optional step against a different filesystem (the vault), and folding
+      // its failure into the pack's error handling made a copy problem look
+      // like a cache problem — the cache was written, then reported as failed.
       if (opts.art) {
-        console.log(
-          `  copied ${await copyArt(creatures, opts.data, opts.art)} token images to ${opts.art}`,
-        );
+        try {
+          const n = await copyArt(creatures, opts.data, opts.art);
+          console.log(`  copied ${n} token images to ${opts.art}`);
+        } catch (err) {
+          artError = err;
+        }
       }
     } catch (err) {
       // A locked database is not a pack to skip past — it means Foundry is
@@ -228,8 +260,14 @@ export async function main(argv = process.argv.slice(2)) {
     }
   }
 
-  if (failed.length === PACKS.length) {
+  if (!written.length) {
     throw new Error(`No pack could be read (${failed.join(', ')}). Nothing was written.`);
+  }
+
+  // Report the art failure LAST and separately, so it cannot be mistaken for a
+  // cache failure — the caches above are on disk and usable either way.
+  if (artError) {
+    throw new Error(explainArtError(artError, opts.art));
   }
 }
 

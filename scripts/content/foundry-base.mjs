@@ -10,6 +10,7 @@
 // build.mjs — not because it is content tooling.
 //
 //   node scripts/content/foundry-base.mjs capture <world> [--data <path>]
+//   node scripts/content/foundry-base.mjs promote <capture.json>
 //   node scripts/content/foundry-base.mjs provision [--dry-run]
 //   node scripts/content/foundry-base.mjs update [id...]
 //   node scripts/content/foundry-base.mjs snapshot [--to <path>]
@@ -194,11 +195,14 @@ export function mergeCapture(manifest, captured) {
   const coreIds = new Set((manifest.core ?? []).map(m => m.id));
   const core = (manifest.core ?? []).map(pin => {
     const fresh = captured.modules.find(m => m.id === pin.id);
+    // A placeholder manifest ("TODO") must be overwritten, not preserved:
+    // `pin.manifest || fresh.manifest` kept the placeholder, because "TODO" is
+    // truthy. Only a real URL counts as something worth keeping.
     return fresh
       ? {
           ...pin,
           version: fresh.version,
-          manifest: pin.manifest || fresh.manifest,
+          manifest: isInstallable(pin) ? pin.manifest : fresh.manifest || pin.manifest,
         }
       : pin;
   });
@@ -275,6 +279,7 @@ export function parseArgs(argv) {
 const USAGE = `Usage:
   foundry-base.mjs capture <world> [--data <path>]   read a world's enabled modules into a pinned manifest
   foundry-base.mjs provision [--dry-run]             install the pinned system + modules
+  foundry-base.mjs promote <capture.json>            fill core pins from a capture
   foundry-base.mjs update [id...]                    move pins to the latest published version
   foundry-base.mjs snapshot [--to <path>]            copy the data dir as a restore point
   foundry-base.mjs restore --yes [--from <path>]     recreate the data dir from a snapshot
@@ -448,6 +453,72 @@ async function cmdUpdate(opts) {
     console.log(
       'NOTE: foundry-mcp-bridge moved — update MCP_VERSION in scripts/setup-mcp.sh to match.',
     );
+  }
+}
+
+/**
+ * Fill core pins from a capture file.
+ *
+ * `capture` reads a world and writes what it found; this promotes those real
+ * versions and manifest URLs into foundry-base.json. Kept as a separate step
+ * because deciding what belongs in core is a human judgement, while copying a
+ * version string is not — and hand-copying manifest URLs is exactly the kind of
+ * transcription this pipeline exists to remove.
+ */
+async function cmdPromote(opts) {
+  const capturePath = opts.positional[0];
+  if (!capturePath) throw new Error('promote needs a capture file (from `capture <world>`)');
+  const manifestPath = opts.manifest || DEFAULT_MANIFEST;
+  const manifest = await loadManifest(manifestPath);
+  const captured = JSON.parse(await readFile(capturePath, 'utf8'));
+
+  const { core, notInCore, inCoreNotEnabled } = mergeCapture(manifest, captured);
+
+  const filled = [];
+  const stillUnresolved = [];
+  for (const entry of core) {
+    const before = manifest.core.find(m => m.id === entry.id);
+    if (!isInstallable(before) && isInstallable(entry)) filled.push(entry.id);
+    if (!isInstallable(entry)) stillUnresolved.push(entry.id);
+  }
+
+  manifest.core = core;
+  if (captured.system && manifest.system?.id === captured.system.id) {
+    manifest.system = {
+      ...manifest.system,
+      version: captured.system.version,
+      manifest: isInstallable(manifest.system)
+        ? manifest.system.manifest
+        : captured.system.manifest,
+    };
+  }
+
+  if (opts.dryRun) {
+    console.log(`would fill ${filled.length} pin(s) from ${capturePath}`);
+  } else {
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    console.log(`Filled ${filled.length} pin(s) in ${manifestPath} from ${capturePath}`);
+  }
+  for (const id of filled) console.log(`  ${id}`);
+
+  if (stillUnresolved.length) {
+    console.log(
+      `\n${stillUnresolved.length} pin(s) still have no manifest URL: ${stillUnresolved.join(', ')}.` +
+        '\nThey are not in this world, or were installed without one. Capture another' +
+        '\nworld that has them, or add the URL by hand.',
+    );
+  }
+  if (inCoreNotEnabled.length) {
+    console.log(
+      `\nIn core but not enabled in this world: ${inCoreNotEnabled.map(m => m.id).join(', ')}`,
+    );
+  }
+  if (notInCore.length) {
+    console.log(
+      `\nActive in this world but not in core (${notInCore.length}) — promote by hand if wanted:`,
+    );
+    for (const m of notInCore)
+      console.log(`  ${m.id.padEnd(26)} ${m.version.padEnd(10)} ${m.title}`);
   }
 }
 

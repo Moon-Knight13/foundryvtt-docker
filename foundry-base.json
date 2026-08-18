@@ -1,20 +1,24 @@
 {
   "$comment": [
     "Golden base: the pinned system and modules a rebuilt Foundry install needs.",
-    "Nothing here floats. 'Always latest' is the documented hazard, not the goal",
+    "Nothing here floats. \"Always latest\" is the documented hazard, not the goal",
     "(see docs/PROJECT.md on foundry-mcp module/server drift). Move a pin with",
     "`node scripts/content/foundry-base.mjs update`, review the diff, commit it.",
     "",
-    "Versions and manifest URLs are marked TODO where they must come from a real",
-    "install rather than a guess: a wrong module id fails at rebuild time, which",
-    "is the worst time. Fill them with:",
-    "  node scripts/content/foundry-base.mjs capture <world>",
-    "and promote what belongs into 'core' below."
+    "Ids and versions came from `foundry-base.mjs capture` against a live world,",
+    "never from guesswork: six of the eight original placeholders were wrong in",
+    "ways no amount of care would have caught \u2014 Chat Commander is \"_chatcommands\",",
+    "Prime Performance is \"fvtt-perf-optim\", Dice Tray is \"dice-calculator\", and",
+    "Argon is two modules rather than one.",
+    "",
+    "manifest URLs still read TODO. Fill them from a capture file with:",
+    "  node scripts/content/foundry-base.mjs promote foundry-capture-<world>.json",
+    "A pin without a manifest URL is reported by `provision`, never guessed at."
   ],
   "core": [
     {
       "id": "foundry-mcp-bridge",
-      "manifest": "https://raw.githubusercontent.com/adambdooley/foundry-vtt-mcp/master/packages/foundry-module/module.json",
+      "manifest": "TODO",
       "note": "Pin must stay in step with MCP_VERSION in scripts/setup-mcp.sh.",
       "title": "Foundry MCP Bridge",
       "version": "0.8.2"
@@ -23,82 +27,89 @@
       "id": "dd-import",
       "manifest": "TODO",
       "title": "Universal Battlemap Importer",
-      "version": "TODO"
+      "version": "6.1.1"
     },
     {
       "id": "ddb-importer",
       "manifest": "TODO",
       "title": "D&D Beyond Importer",
-      "version": "TODO"
+      "version": "7.3.8"
     },
     {
-      "id": "TODO-obsidian-bridge",
+      "id": "obsidian-bridge",
       "manifest": "TODO",
-      "title": "SoSly Obsidian Bridge",
-      "version": "TODO"
+      "title": "Obsidian Bridge",
+      "version": "1.3.0"
     },
     {
       "id": "lib-wrapper",
       "manifest": "TODO",
       "note": "Dependency of several below; pinned so it cannot float.",
       "title": "libWrapper",
-      "version": "TODO"
+      "version": "1.13.5.1"
     },
     {
       "id": "socketlib",
       "manifest": "TODO",
       "note": "Dependency of several below; pinned so it cannot float.",
       "title": "socketlib",
-      "version": "TODO"
+      "version": "v1.1.4"
     },
     {
       "id": "dice-so-nice",
       "manifest": "TODO",
       "note": "Renders 3D dice in WebGL on every client \u2014 a lag lever if the canvas-off test points at client rendering.",
       "title": "Dice So Nice!",
-      "version": "TODO"
+      "version": "6.2.8"
     },
     {
-      "id": "TODO-chat-commander",
+      "id": "_chatcommands",
       "manifest": "TODO",
       "title": "Chat Commander",
-      "version": "TODO"
+      "version": "2.0.6"
     },
     {
-      "id": "TODO-chat-log-prune",
+      "id": "chatlog-prune",
       "manifest": "TODO",
       "title": "Chat Log Prune",
-      "version": "TODO"
+      "version": "1.1.9"
     },
     {
-      "id": "TODO-dice-tray",
+      "id": "dice-calculator",
       "manifest": "TODO",
       "title": "Dice Tray",
-      "version": "TODO"
+      "version": "3.6.7"
     },
     {
-      "id": "TODO-less-chat",
+      "id": "less-chat",
       "manifest": "TODO",
       "title": "Less Chat",
-      "version": "TODO"
+      "version": "2.0.2"
     },
     {
-      "id": "TODO-prime-performance",
+      "id": "fvtt-perf-optim",
       "manifest": "TODO",
       "title": "Prime Performance",
-      "version": "TODO"
+      "version": "0.12.7"
     },
     {
-      "id": "TODO-enhancedcombathud",
+      "id": "enhancedcombathud",
       "manifest": "TODO",
-      "title": "Argon / Enhanced Combat HUD",
-      "version": "TODO"
+      "title": "Argon - Combat HUD (CORE)",
+      "version": "5.0.1"
     },
     {
-      "id": "TODO-combat-tracker-dock",
+      "id": "combat-tracker-dock",
       "manifest": "TODO",
       "title": "Carousel Combat Tracker",
-      "version": "TODO"
+      "version": "5.0.0"
+    },
+    {
+      "id": "enhancedcombathud-dnd5e",
+      "manifest": "TODO",
+      "note": "System half of Argon; enhancedcombathud alone does nothing for dnd5e.",
+      "title": "Argon - Combat HUD (DND5E)",
+      "version": "5.2.1"
     }
   ],
   "deliberatelyExcluded": {
