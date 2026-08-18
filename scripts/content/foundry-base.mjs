@@ -29,6 +29,7 @@ import { readFile, writeFile, mkdir, access, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { explainLevelError } from './leveldb.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
@@ -85,6 +86,10 @@ async function readModuleConfiguration(worldDir) {
       }
     }
     return null;
+  } catch (err) {
+    // A running Foundry holds this database open, and LevelDB is single-process.
+    // The raw error is just "Database is not open", which says nothing useful.
+    throw new Error(explainLevelError(err, `the settings for this world`));
   } finally {
     await db.close().catch(() => {});
   }

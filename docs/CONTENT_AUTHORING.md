@@ -258,9 +258,18 @@ stat blocks against the base creature they were written from. Run it on the
 — and re-run it after a system upgrade:
 
 ```bash
+docker compose stop foundry          # LevelDB is single-process; see below
 node scripts/content/srd-cache.mjs \
   --art "$DND_VAULT_PATH/06 Assets/Tokens/srd"
+docker compose up -d
 ```
+
+**Foundry must be stopped.** Compendium packs are LevelDB directories, and
+LevelDB takes an exclusive lock: a running Foundry holds every pack open, so
+reading them from outside fails. The raw errors name nothing useful — the CLI
+reports `Iterator is not open: cannot call next() after close()` and
+classic-level reports `Database is not open`, both of which look like corruption
+rather than a lock. The scripts now detect this and say so.
 
 That writes `content/reference/srd-51.json` (SRD 5.1, `dnd5e.monsters`) and
 `srd-52.json` (SRD 5.2 / 2024 rules, `dnd5e.actors24`). Both editions are

@@ -32,6 +32,7 @@ import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { extractPack } from '@foundryvtt/foundryvtt-cli';
+import { isLockError, explainLevelError } from './leveldb.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
@@ -190,6 +191,7 @@ export async function main(argv = process.argv.slice(2)) {
   const opts = parseArgs(argv);
   const systemPacks = await assertDataDir(opts.data);
   await mkdir(opts.out, { recursive: true });
+  const failed = [];
 
   for (const { pack, edition, out } of PACKS) {
     const tmp = await mkdtemp(path.join(tmpdir(), `srd-${pack}-`));
@@ -208,10 +210,19 @@ export async function main(argv = process.argv.slice(2)) {
         );
       }
     } catch (err) {
+      // A locked database is not a pack to skip past — it means Foundry is
+      // running, and every pack will fail the same way. Say so once and stop,
+      // rather than printing two shrugs and exiting 0 with no cache written.
+      if (isLockError(err)) throw new Error(explainLevelError(err, `the ${pack} pack`));
       console.error(`Skipping ${pack}: ${err.message}`);
+      failed.push(pack);
     } finally {
       await rm(tmp, { recursive: true, force: true });
     }
+  }
+
+  if (failed.length === PACKS.length) {
+    throw new Error(`No pack could be read (${failed.join(', ')}). Nothing was written.`);
   }
 }
 

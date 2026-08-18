@@ -45,6 +45,19 @@ node scripts/content/foundry-base.mjs restore --yes     # put the snapshot back
 node scripts/content/foundry-base.mjs pull-games        # build + sync every game in the manifest
 ```
 
+**Stop Foundry first.** `capture` reads a world's LevelDB settings store, and
+LevelDB takes an exclusive lock — a running Foundry holds it, and the raw error
+(`Database is not open`) looks like corruption rather than contention:
+
+```bash
+docker compose stop foundry
+node scripts/content/foundry-base.mjs capture <world>
+docker compose up -d
+```
+
+The same applies to `srd-cache.mjs`, and to `snapshot`/`restore`, which must not
+copy a data directory a live server is writing to.
+
 **Start with `capture`.** Do not hand-write module ids — a wrong one fails at
 rebuild time, which is the worst time. `capture` reads the world's
 `core.moduleConfiguration`, which is the only complete source: listing
