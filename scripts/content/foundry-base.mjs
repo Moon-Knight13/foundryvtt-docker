@@ -25,7 +25,8 @@
 // wholesale with cp -a, which necessarily includes them — so the snapshot path
 // must live outside the repo tree and is refused if it does not.
 import path from 'node:path';
-import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access, readdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -89,11 +90,41 @@ async function readModuleConfiguration(worldDir) {
   }
 }
 
+/**
+ * Say why the data directory is missing rather than just that it is. Run inside
+ * the devcontainer, every command here fails for one reason — the Foundry data
+ * directory is deliberately not mounted — and a bare "not found" sends people
+ * looking for a misspelled world instead.
+ */
+export async function assertDataDir(data) {
+  const worldsDir = path.join(data, 'Data', 'worlds');
+  try {
+    await access(worldsDir);
+  } catch {
+    throw new Error(
+      `No Foundry worlds at ${worldsDir}.\n` +
+        (existsSync('/.dockerenv')
+          ? '\nThis looks like a container. The Foundry data directory is not mounted\n' +
+            'into the devcontainer by design — run this on the HOST instead.\n'
+          : '') +
+        `\nChecked FOUNDRY_DATA_PATH${process.env.FOUNDRY_DATA_PATH ? '' : ' (unset)'}` +
+        `, resolved data dir: ${data}\n` +
+        'Pass an explicit one with --data <path> if it lives elsewhere.',
+    );
+  }
+  return worldsDir;
+}
+
 export async function capture(world, opts = {}) {
   const data = dataDir(opts.data);
-  const worldDir = path.join(data, 'Data', 'worlds', world);
-  await access(worldDir).catch(() => {
-    throw new Error(`World not found: ${worldDir}`);
+  const worldsDir = await assertDataDir(data);
+  const worldDir = path.join(worldsDir, world);
+  await access(worldDir).catch(async () => {
+    const available = await readdir(worldsDir).catch(() => []);
+    throw new Error(
+      `World "${world}" not found in ${worldsDir}.` +
+        (available.length ? `\nAvailable: ${available.join(', ')}` : ''),
+    );
   });
 
   const config = await readModuleConfiguration(worldDir);

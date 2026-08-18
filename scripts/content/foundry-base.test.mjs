@@ -10,6 +10,7 @@ import {
   parseArgs,
   dataDir,
   isInstallable,
+  assertDataDir,
   REPO_ROOT,
 } from './foundry-base.mjs';
 
@@ -155,4 +156,18 @@ test('isInstallable treats placeholder pins as unresolved, not as URLs', () => {
   assert.equal(isInstallable({ manifest: '' }), false);
   assert.equal(isInstallable({}), false);
   assert.equal(isInstallable(null), false);
+});
+
+test('assertDataDir explains a missing data dir instead of just reporting it', async () => {
+  // Running these commands in the devcontainer fails for exactly one reason:
+  // the Foundry data directory is not mounted there. A bare "not found" sends
+  // people hunting for a misspelled world instead.
+  await assert.rejects(
+    () => assertDataDir('/nonexistent-foundry-data'),
+    err => {
+      assert.match(err.message, /No Foundry worlds at/);
+      assert.match(err.message, /--data <path>/);
+      return true;
+    },
+  );
 });

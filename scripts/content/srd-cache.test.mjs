@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { distill, srdIndex, parseArgs, copyArt, PACKS } from './srd-cache.mjs';
+import { distill, srdIndex, parseArgs, copyArt, assertDataDir, PACKS } from './srd-cache.mjs';
 
 // Trimmed from the real dnd5e.actors24 "Bandit" document as extractPack yields
 // it — i.e. STORED, not derived. Note ac.flat is null and movement.walk is the
@@ -150,5 +150,19 @@ test('both SRD editions are indexed so a note can cite either', () => {
   assert.deepEqual(
     PACKS.map(p => p.out),
     ['srd-51.json', 'srd-52.json'],
+  );
+});
+
+test('assertDataDir names the real cause when the packs are missing', async () => {
+  // In the devcontainer this used to surface only as "Skipping monsters:"
+  // twice, which reads like a missing dnd5e system rather than an unmounted
+  // Foundry data directory.
+  await assert.rejects(
+    () => assertDataDir('/nonexistent-foundry-data'),
+    err => {
+      assert.match(err.message, /No dnd5e packs at/);
+      assert.match(err.message, /FOUNDRY_DATA_PATH/);
+      return true;
+    },
   );
 });
