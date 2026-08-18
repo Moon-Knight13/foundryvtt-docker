@@ -48,7 +48,9 @@ content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Dat
 
 4. **Import** (you, in the Foundry UI): enable the "Troubled Waters Content"
    module in the world (Game Settings → Manage Modules — packs are invisible
-   until the module is on), open Compendium Packs, import documents.
+   until the module is on), open Compendium Packs, import documents — with
+   **"Keep Document IDs" ticked**, or scene map pins will render but open
+   nothing (see *Rules that bite*).
    Pack-content changes need a world reload; `module.json` changes need a
    world relaunch. **If Foundry runs in a container, restart it after syncing**
    (`docker compose restart`) — Foundry opens compendium (LevelDB) packs at
@@ -195,6 +197,43 @@ you've already hand-tuned (re-import replaces the compendium copy; a scene
 already dragged into a world is a separate copy). Map **keys → clickable note
 pins** is a planned follow-on.
 
+## SRD reference cache
+
+`scripts/content/srd-cache.mjs` distils the dnd5e system's SRD monster packs
+into a small committed index used to inherit token art and to check authored
+stat blocks against the base creature they were written from. Run it on the
+**host** — it reads the Foundry data dir, which the devcontainer does not mount
+— and re-run it after a system upgrade:
+
+```bash
+node scripts/content/srd-cache.mjs \
+  --art "$DND_VAULT_PATH/06 Assets/Tokens/srd"
+```
+
+That writes `content/reference/srd-51.json` (SRD 5.1, `dnd5e.monsters`) and
+`srd-52.json` (SRD 5.2 / 2024 rules, `dnd5e.actors24`). Both editions are
+indexed because a statblock note cites which one it was written from
+(`source: SRD 5.1 (CC-BY-4.0) — Lamia`), and the 2014 and 2024 stat lines
+genuinely differ. No network access and no running Foundry server: it opens the
+compendium LevelDB directly.
+
+`--art` also copies each creature's token image into the vault. This is not
+optional decoration — a `systems/dnd5e/tokens/...` path resolves inside Foundry
+only, so without a real file in the vault the printed Fantasy Statblocks card
+has no portrait. One copy in `06 Assets/Tokens/srd/` serves both surfaces:
+Obsidian by vault path, Foundry Data-relative through the existing mount.
+
+Two things to know about the cached data:
+
+- **It is the document as stored, not as Foundry derives it.** Armour-wearing
+  monsters therefore have no numeric AC — Bandit stores
+  `{calc: "default", flat: null}` and its 12 is computed at runtime from
+  equipped Leather Armor plus a Dex modifier. The cache records the calc mode
+  and leaves `ac` absent; a missing `ac` means *not checkable*, never *AC 0*.
+- **It is CC-BY-4.0 content.** Attribution and the exact scope of what is
+  cached live in [`content/reference/LICENSE.md`](../content/reference/LICENSE.md).
+  Regenerate the files rather than editing them.
+
 ## Rules that bite
 
 - **IDs derive from the source path** (sha256 of e.g.
@@ -210,6 +249,17 @@ pins** is a planned follow-on.
   `"description"`); GM-only journal pages get `"ownership": { "default": 0 }`.
 - **Scenes don't ship images** — `background.src` must point at an image
   already under the Foundry data dir.
+- **Tick "Keep Document IDs" on every import.** Without it, scene map pins
+  render but open nothing. `Note.entryId` stores a plain *world* document id,
+  which this pipeline derives deterministically via `docId()`; on a normal
+  import Foundry assigns the JournalEntry a fresh random id, so the pin points
+  at a document that does not exist. Embedded ids (journal *pages*) survive
+  either way — which is exactly why the pin's `pageId` resolves while its
+  `entryId` dangles, and why the symptom looks like a broken journal rather
+  than a broken import. Verified on Foundry 14.364: entry `e86544d245c8371b`
+  came back as `tuFvVouFTWaqtiuG`, while page `b76074d6ad82a046` was preserved.
+  Re-importing *without* the box ticked adds duplicates alongside the correct
+  copies rather than replacing them; delete the randomly-id'd ones.
 - **Re-import overwrites the compendium copy only.** Documents already
   dragged into a world are separate copies; update those in the UI or via
   foundry-mcp.
@@ -254,3 +304,7 @@ cd scripts/content && node --test
 
 Unit tests plus a LevelDB round-trip (`compilePack` → `extractPack`). Run
 after any change to `build.mjs`.
+
+`srd-cache.mjs` is covered by unit tests over fixtures taken from real stored
+SRD documents, so its distillation logic is checked here even though generating
+an actual cache needs a host Foundry install.
