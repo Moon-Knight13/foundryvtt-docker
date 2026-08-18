@@ -3,7 +3,7 @@
 # upstream template so template-sync PRs stay clean — lint/format changes to
 # them would surface as spurious reverts in every future sync. They are linted
 # in the template repo itself. Project-owned files under scripts/ (ci/,
-# setup-mcp.sh, mcp-health.sh) remain fully linted.
+# setup-mcp.sh, mcp-health.sh, content/, maps/) remain fully linted.
 exclude: >
   (?x)^(
     \.claude/|
@@ -12,7 +12,7 @@ exclude: >
     \.github/ISSUE_TEMPLATE/(bug_report|epic|feature_request|security_vulnerability|user-story)\.yml$|
     \.github/pull_request_template\.md$|
     docs/(TEMPLATE_GUIDE|KANBAN_WORKFLOW)\.md$|
-    scripts/(?!ci/|setup-mcp\.sh|mcp-health\.sh).*|
+    scripts/(?!ci/|content/|maps/|setup-mcp\.sh|mcp-health\.sh).*|
     \.gitleaks\.toml$|
     \.templatesyncignore$|
     CLAUDE\.md$
@@ -57,7 +57,11 @@ repos:
         args:
           - --fix=lf
       - id: pretty-format-json
-        exclude: ^(package-lock\.json|\.vscode/settings\.json|.*/Pipfile\.lock)$
+        # content/reference/ holds generated caches (srd-cache.mjs,
+        # open5e-cache.mjs). --autofix key-sorts them, so the hook and the
+        # generator would fight: every refresh would produce a diff the hook
+        # then rewrites. Same reason package-lock.json is excluded.
+        exclude: ^(package-lock\.json|\.vscode/settings\.json|content/reference/.*\.json|.*/Pipfile\.lock)$
         args:
           - --autofix
       - id: trailing-whitespace

@@ -3,12 +3,17 @@
 
 Emit TWO variants from one JSON layout spec plus a Foundry Universal VTT file:
 
-  <name> - Player.png   clean map (floor, walls, feature glyphs, grid, baked light)
-  <name> - DM.png       player base + numbered keys, feature labels, legend panel
+  <name> - Player.webp  clean map (floor, walls, feature glyphs, grid, baked light)
+  <name> - DM.webp      player base + numbered keys, feature labels, legend panel
   <name>.dd2vtt         Universal VTT 0.3 (walls, portals, lights, base64 Player PNG)
 
+Images are LOSSLESS WebP, which on these flat-colour schematics runs 60-70%
+smaller than PNG with no artifacts (measured: Player -63%, DM -71%). Pass --png
+for a consumer that cannot read WebP. The .dd2vtt always embeds a PNG whatever
+the output format — that is fixed by the Universal VTT spec.
+
 Usage:
-    python3 scripts/maps/render_map.py <spec.json> <outdir>
+    python3 scripts/maps/render_map.py <spec.json> <outdir> [--png]
 
 Dependency: Pillow  ->  pip install --break-system-packages --user Pillow
 
@@ -22,6 +27,7 @@ import json
 import math
 import os
 import sys
+from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 
 # --------------------------------------------------------------------------- #
@@ -453,11 +459,16 @@ def _hex_rgba(color: str) -> str:
     return c
 
 
-def build_dd2vtt(spec: dict, poly, los_extra, player_png_path: str) -> dict:
+def build_dd2vtt(spec: dict, poly, los_extra, player_img: "Image.Image") -> dict:
     grid = spec["grid"]
     ppg = spec.get("ppg", 72)
-    with open(player_png_path, "rb") as fh:
-        b64 = base64.b64encode(fh.read()).decode()
+    # The Universal VTT format carries a base64 PNG. That is fixed by the format
+    # and independent of what we write to disk, so encode from the image in
+    # memory rather than re-reading the output file — otherwise emitting WebP
+    # would silently put WebP bytes in a field consumers parse as PNG.
+    buf = BytesIO()
+    player_img.convert("RGB").save(buf, "PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode()
 
     los = [_pts(poly + [poly[0]])]
     for w in spec.get("walls", []):
@@ -513,27 +524,44 @@ def build_dd2vtt(spec: dict, poly, los_extra, player_png_path: str) -> dict:
 # Main
 # --------------------------------------------------------------------------- #
 def main(argv):
-    if len(argv) != 3:
-        print("usage: render_map.py <spec.json> <outdir>", file=sys.stderr)
+    args = [a for a in argv[1:] if not a.startswith("--")]
+    flags = {a for a in argv[1:] if a.startswith("--")}
+    unknown = flags - {"--png"}
+    if unknown:
+        print(f"unknown argument: {sorted(unknown)[0]}", file=sys.stderr)
         return 2
-    spec_path, outdir = argv[1], argv[2]
+    if len(args) != 2:
+        print("usage: render_map.py <spec.json> <outdir> [--png]", file=sys.stderr)
+        return 2
+    spec_path, outdir = args
     with open(spec_path) as fh:
         spec = json.load(fh)
 
     os.makedirs(outdir, exist_ok=True)
     name = spec.get("name", "Map")
 
+    # LOSSLESS WebP by default. Measured on Bandit Hideout: Player 31,683 ->
+    # 11,690 bytes (-63%), DM 128,075 -> 36,812 (-71%). Lossy WebP is the wrong
+    # tool here and was measurably worse — at quality 90 the Player map grew to
+    # 40,330 bytes (+27% over PNG), because these maps are flat colour with thin
+    # walls and text labels, which is both what PNG compresses best and what
+    # lossy codecs smear. Every byte crosses the GM's upload link to each
+    # player. --png restores the old output for a consumer that cannot read WebP.
+    webp = "--png" not in flags
+    fmt, ext = ("WEBP", "webp") if webp else ("PNG", "png")
+    save_opts = {"lossless": True, "method": 6} if webp else {}
+
     cv, poly, los_extra, ppg = build_base(spec)
     player = cv.img
 
-    player_path = os.path.join(outdir, f"{name} - Player.png")
-    player.convert("RGB").save(player_path, "PNG")
+    player_path = os.path.join(outdir, f"{name} - Player.{ext}")
+    player.convert("RGB").save(player_path, fmt, **save_opts)
 
     dm_img = render_dm(player, spec, ppg)
-    dm_path = os.path.join(outdir, f"{name} - DM.png")
-    dm_img.convert("RGB").save(dm_path, "PNG")
+    dm_path = os.path.join(outdir, f"{name} - DM.{ext}")
+    dm_img.convert("RGB").save(dm_path, fmt, **save_opts)
 
-    dd = build_dd2vtt(spec, poly, los_extra, player_path)
+    dd = build_dd2vtt(spec, poly, los_extra, player)
     dd_path = os.path.join(outdir, f"{name}.dd2vtt")
     with open(dd_path, "w") as fh:
         json.dump(dd, fh)

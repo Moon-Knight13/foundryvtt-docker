@@ -146,7 +146,7 @@ then convert its `.dd2vtt` into a Scene document:
 ```bash
 python3 scripts/maps/render_map.py <spec>.json <outdir>
 node scripts/content/dd2vtt-to-scene.mjs "<outdir>/<name>.dd2vtt" \
-  --background "DnD/<game>/Assets/Maps/<name> - Player.png" \
+  --background "DnD/<game>/Assets/Maps/<name> - Player.webp" \
   --out content/src-<slug>/scenes/<name>.json
 # or both steps at once:
 scripts/maps/map-to-scene.sh <spec>.json <slug> --outdir <dir> --background <src>
@@ -197,6 +197,143 @@ you've already hand-tuned (re-import replaces the compendium copy; a scene
 already dragged into a world is a separate copy). Map **keys → clickable note
 pins** is a planned follow-on.
 
+## Stat blocks: compile, don't transcribe
+
+A vault NPC note carries a ```statblock fence — the in-person artifact, rendered
+as a printable card by Fantasy Statblocks. It already holds every field the
+Foundry actor needs, so the actor is **compiled** from it rather than retyped:
+
+```bash
+node scripts/content/statblock.mjs "<vault>/03 Oneshots/<Game>/NPCs/<NPC>.md" \
+  --srd content/reference/srd-51.json \
+  --out "<vault>/03 Oneshots/<Game>/Foundry/src/actors/<npc>.json"
+```
+
+One note in, one actor out. The actor's **name comes from the filename**, not
+the fence's `name:` — a card headed "Vashti (Lamia)" becomes an actor called
+"Vashti". Token disposition comes from the note's frontmatter (`hostile` by
+default, or `neutral` / `friendly`), because "starts the session as an ally" is
+a fact about this NPC, not about the shared SRD stat line.
+
+This replaces the NPC template's old instruction that *Claude* compiles the
+actor JSON by hand. That was the most repeated step in the pipeline and the only
+one nothing checked.
+
+### Proficiency vs expertise
+
+Bonuses are written the way the stat block prints them (`deception: 7`), but
+dnd5e does not store bonuses — it stores a proficiency multiplier and derives
+the number. The compiler works out which multiplier produces the stated bonus
+from the ability score and the CR-derived proficiency bonus.
+
+This matters more than it sounds. An NPC built on the SRD **Lamia** is CHA 16
+(+3) at CR 4 (PB +2), and its card says Deception **+7** — that is expertise
+(3 + 2×2). Storing `value: 1` gives +5 at the table while the printed card says
++7, and nothing catches the drift. Compiling one real game's six actors found
+exactly that bug in three of them.
+
+Where a bonus is not reachable from any multiplier, the remainder is stored as a
+flat `bonuses.check` **and warned about**, since that case is usually a typo.
+
+### Checking against the published creature
+
+`source: SRD 5.1 (CC-BY-4.0) — Lamia` names the base creature and the edition.
+The compiler checks the fence against **two** references, which answer different
+questions:
+
+| Reference | Built by | Answers |
+| --- | --- | --- |
+| `open5e-{2014,2024}.json` | `open5e-cache.mjs` | *is this faithful to the published creature?* |
+| `srd-5{1,2}.json` | `srd-cache.mjs` | *will this render correctly in my Foundry?* |
+
+A disagreement between them is information, not an error.
+
+Open5e supplies two things the dnd5e compendium cannot:
+
+- **A numeric AC.** The compendium stores `{calc: "default", flat: null}` for
+  armour-wearing creatures and derives AC at runtime, so a Bandit's AC of 12 was
+  simply not checkable. Open5e states it.
+- **Stated skill bonuses**, in the same form the fence writes them. That catches
+  the same class of error as the expertise derivation above, from the other
+  side: there the question is *what multiplier yields this bonus?*, here it is
+  *is this the bonus the creature actually has?*
+
+**The edition matters, and is not cosmetic.** The 2024 rules restat creatures:
+the SRD Lamia is a *monstrosity* with Stealth **+3** in 5.1 and a *fiend* with
+Stealth **+5** in 5.2; the SRD Spy is Medium in 5.1 and Small in 5.2. The
+compiler picks the index from the `source:` line, so a note written from one
+edition is never checked against the other.
+
+Refresh the Open5e caches — network, but nothing else needs it:
+
+```bash
+node scripts/content/open5e-cache.mjs
+```
+
+That reads the [open5e-api](https://github.com/open5e/open5e-api) fixtures from
+GitHub (already reachable; no firewall change) and writes
+`content/reference/open5e-{2014,2024}.json`, which are **committed** so builds
+and CI stay offline.
+
+### How divergence is reported
+
+Divergence is *expected* — a named NPC built on a Spy is meant to differ — so a
+difference is reported as a **delta for a human to read, never an error**. Mark
+the intentional ones with `deviations: [hp, ac]` in the fence, which keeps them
+visible in review rather than invisible; `exact: true` promotes any remaining
+delta to an error.
+
+Fields a reference cannot supply are skipped, not failed: a missing value means
+*not checkable*, never *zero*. The dnd5e compendium carries no stated skill
+bonuses at all, so those are only compared when Open5e is available.
+
+### Art coverage
+
+An actor with no art still compiles — Foundry requires *some* `img` — but it is
+never silent. The compiler warns when it falls back to `icons/svg/mystery-man.svg`,
+because a blank silhouette is the most visible way this pipeline can ship
+something wrong: fine in the JSON, obviously broken on the map. Give the fence a
+`source:` so it inherits the SRD token, or an `image:` pointing at your own file.
+
+## Handout art: showable in Foundry
+
+Until now every journal page this pipeline produced was `type: "text"`, so art
+could not be shared in-world at all. `handout.mjs` fixes that:
+
+```bash
+node scripts/content/handout.mjs "<vault>/03 Oneshots/<Game>/Handouts/<Note>.md"
+```
+
+It reads the note's image embeds — Obsidian `![[art.webp|caption]]` wikilinks or
+standard `![caption](art.webp)` — resolves each filename against the game's
+`Assets/` and then the wider vault, and emits a journal of **image pages** into
+`Foundry/src/journals/`. In Foundry the GM right-clicks a page → **Show to
+Players**; `player_visible: true` in the frontmatter makes it Observer-level so
+players can reopen it later. `player_visible: false` keeps it GM-only.
+
+**Images only, on purpose.** *Notes to the table* states the rule: a journal is
+owned by one pipe — the SoSly Obsidian Bridge (prose) or the compendium build
+(structured) — never both. The bridge already carries handout text, so emitting
+prose here would create exactly the duplication that rule forbids. For the same
+reason the journal is named `<Note> — Art`, which cannot collide with the
+bridge's copy.
+
+`src` is Data-relative (`DnD/03 Oneshots/…/Assets/Art/x.webp`), resolved at
+runtime through the vault mount — the same convention scene backgrounds use, so
+**one file serves the printed handout and the Foundry page**. Commented-out
+embeds are ignored, and an embed whose file cannot be found is an error rather
+than a silently blank frame at the table.
+
+### Where art lives
+
+`new-game.sh` scaffolds three asset folders, and the distinction matters:
+
+| Folder | For | Source |
+| --- | --- | --- |
+| `Assets/Maps/` | battlemaps | `render_map.py` |
+| `Assets/Tokens/` | per-NPC token art | SRD (`srd-cache.mjs --art`) or your own, pointed at by `image:` in a fence |
+| `Assets/Art/` | full illustrations to show players | yours — the SRD ships token art only, which does not enlarge well |
+
 ## SRD reference cache
 
 `scripts/content/srd-cache.mjs` distils the dnd5e system's SRD monster packs
@@ -206,9 +343,18 @@ stat blocks against the base creature they were written from. Run it on the
 — and re-run it after a system upgrade:
 
 ```bash
+docker compose stop foundry          # LevelDB is single-process; see below
 node scripts/content/srd-cache.mjs \
   --art "$DND_VAULT_PATH/06 Assets/Tokens/srd"
+docker compose up -d
 ```
+
+**Foundry must be stopped.** Compendium packs are LevelDB directories, and
+LevelDB takes an exclusive lock: a running Foundry holds every pack open, so
+reading them from outside fails. The raw errors name nothing useful — the CLI
+reports `Iterator is not open: cannot call next() after close()` and
+classic-level reports `Database is not open`, both of which look like corruption
+rather than a lock. The scripts now detect this and say so.
 
 That writes `content/reference/srd-51.json` (SRD 5.1, `dnd5e.monsters`) and
 `srd-52.json` (SRD 5.2 / 2024 rules, `dnd5e.actors24`). Both editions are

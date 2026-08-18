@@ -146,9 +146,32 @@ unauthenticated and mount the docker socket).
    is), the bottleneck is your upload bandwidth. FoundryVTT recommends at
    least 12 Mbps upload for self-hosting.
 
+4. **Is the browser actually GPU-accelerated?** The Foundry canvas is
+   PixiJS/WebGL rendered client-side, and browsers fall back to software
+   rendering more often than people expect (driver blocklists, an update, a VM).
+   Software-rendering a lit scene with token vision produces exactly the
+   intermittent lag described above. On the GM machine *and* any laggy player's:
+   open `chrome://gpu` (or `about:support` on Firefox) and confirm **Canvas** and
+   **WebGL** read *Hardware accelerated*, and that "Use graphics acceleration
+   when available" is on in settings.
+5. **Client-side module cost.** Dice So Nice renders 3D dice in WebGL on every
+   client; if the canvas-off test points at client rendering, its quality and
+   dice-count settings are a real lever.
+
 Note: the FoundryVTT **server** is headless Node.js and does not use a GPU —
 rendering happens in each player's browser. There is nothing to accelerate
-server-side.
+server-side, and passing a GPU into the container buys nothing while coupling
+the image to host driver versions (the commented-out `deploy:` block in
+`compose.yml` says the same). The GPU that matters is the one in each browser,
+which is what step 4 checks.
+
+### Asset weight
+
+Every image a player loads crosses your upload link. `scripts/maps/audit-assets.sh`
+reports (read-only) which vault images are worth converting to WebP and by how
+much — on this vault, 53 files totalling 115 MB would drop to 57 MB. Generated
+battlemaps are already lossless WebP (`render_map.py`), 60-70% smaller than the
+PNGs they replaced.
 
 ### Performance settings
 

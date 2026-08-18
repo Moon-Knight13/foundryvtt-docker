@@ -6,7 +6,7 @@
 #
 # Usage:
 #   scripts/maps/map-to-scene.sh <spec.json> <slug> --outdir <dir> --background <src> \
-#     [--grid-distance 5] [--global-light] [--name "<Scene>"]
+#     [--grid-distance 5] [--global-light] [--name "<Scene>"] [--png]
 #
 #   <spec.json>   map spec for render_map.py
 #   <slug>        game slug; scene lands in content/src-<slug>/scenes/ unless
@@ -14,8 +14,10 @@
 #   --scenes-dir  write the Scene JSON here instead of content/src-<slug>/scenes/
 #   --outdir      where render_map writes the PNGs + .dd2vtt. Point this at the
 #                 map dir under the vault mount so Foundry can serve the image.
-#   --background  Foundry Data-relative path to the Player PNG (compendium ships
-#                 no image), e.g. "DnD/<game>/Assets/Maps/<name> - Player.png".
+#   --background  Foundry Data-relative path to the Player image (compendium
+#                 ships no image), e.g.
+#                 "DnD/<game>/Assets/Maps/<name> - Player.webp".
+#                 render_map.py emits lossless WebP by default; use --png for PNG.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -27,6 +29,7 @@ BACKGROUND=""
 NAME=""
 SCENES_DIR_OVERRIDE=""
 EXTRA=()
+RENDER_EXTRA=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -58,6 +61,11 @@ while [[ $# -gt 0 ]]; do
       EXTRA+=(--no-lights)
       shift
       ;;
+    --png)
+      # Render PNG instead of the default lossless WebP.
+      RENDER_EXTRA+=(--png)
+      shift
+      ;;
     -*)
       echo "Unknown argument: $1" >&2
       exit 1
@@ -77,7 +85,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$SPEC" || -z "$SLUG" ]]; then
-  echo "Usage: map-to-scene.sh <spec.json> <slug> --outdir <dir> --background <src> [--scenes-dir <path>] [--grid-distance N] [--global-light]" >&2
+  echo "Usage: map-to-scene.sh <spec.json> <slug> --outdir <dir> --background <src> [--scenes-dir <path>] [--grid-distance N] [--global-light] [--png]" >&2
   exit 1
 fi
 if [[ ! -f "$SPEC" ]]; then
@@ -118,9 +126,9 @@ mkdir -p "$SCENES_DIR"
 # compendium _id from the path, so "Bandit Hideout.json" and a later renamed
 # "bandit-hideout.json" import as two different documents. The scene's display
 # name keeps the spec's spelling; only the filename is slugified.
-SLUG_NAME="$(printf '%s' "$NAME" |
-  tr '[:upper:]' '[:lower:]' |
-  sed -e "s/['\`]//g" -e 's/[^a-z0-9]\+/-/g' -e 's/^-\+//' -e 's/-\+$//')"
+SLUG_NAME="$(printf '%s' "$NAME" \
+  | tr '[:upper:]' '[:lower:]' \
+  | sed -e "s/['\`]//g" -e 's/[^a-z0-9]\+/-/g' -e 's/^-\+//' -e 's/-\+$//')"
 
 # The spec's numbered keys become GM journal pins on the scene, matching the
 # numbered circles render_map.py draws on the DM PNG. The journal is a sibling
@@ -128,7 +136,21 @@ SLUG_NAME="$(printf '%s' "$NAME" |
 JOURNALS_DIR="$(dirname "$SCENES_DIR")/journals"
 mkdir -p "$JOURNALS_DIR"
 
-python3 "$REPO_ROOT/scripts/maps/render_map.py" "$SPEC" "$OUTDIR"
+python3 "$REPO_ROOT/scripts/maps/render_map.py" "$SPEC" "$OUTDIR" "${RENDER_EXTRA[@]}"
+
+# The compendium ships no images: background.src is a Data-relative path Foundry
+# resolves at runtime, so a wrong extension fails silently at the table rather
+# than here. render_map.py now emits .webp by default, so a --background left
+# saying .png from an earlier run would point at a file that no longer exists.
+BG_BASE="$(basename "$BACKGROUND")"
+if [[ ! -f "$OUTDIR/$BG_BASE" ]]; then
+  echo "Error: --background names '$BG_BASE', which render_map.py did not write to $OUTDIR." >&2
+  echo "       It produced:" >&2
+  # find, not ls: rendered names contain spaces ("Bandit Hideout - Player.webp").
+  find "$OUTDIR" -maxdepth 1 -type f -printf '         %f\n' >&2
+  echo "       Images are lossless WebP by default; pass --png to render_map for PNG." >&2
+  exit 1
+fi
 
 node "$REPO_ROOT/scripts/content/dd2vtt-to-scene.mjs" "$OUTDIR/$SPEC_NAME.dd2vtt" \
   --background "$BACKGROUND" \
@@ -140,7 +162,7 @@ node "$REPO_ROOT/scripts/content/dd2vtt-to-scene.mjs" "$OUTDIR/$SPEC_NAME.dd2vtt
 
 echo
 echo "Scene written to $SCENES_DIR/$SLUG_NAME.json"
-echo "Make sure the Player PNG lives under the Foundry data dir at: $BACKGROUND"
+echo "Make sure the Player image lives under the Foundry data dir at: $BACKGROUND"
 echo "Then build + sync + import:"
 if [[ -n "$SCENES_DIR_OVERRIDE" ]]; then
   echo "  node scripts/content/build.mjs --config <path>/$SLUG.config.json --src $(dirname "$SCENES_DIR")"

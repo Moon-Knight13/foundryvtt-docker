@@ -18,10 +18,21 @@
 //
 // The SRD content this reads is CC-BY-4.0; see content/reference/LICENSE.
 import path from 'node:path';
-import { mkdtemp, mkdir, readdir, readFile, writeFile, copyFile, rm } from 'node:fs/promises';
+import {
+  mkdtemp,
+  mkdir,
+  readdir,
+  readFile,
+  writeFile,
+  copyFile,
+  rm,
+  access,
+} from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { extractPack } from '@foundryvtt/foundryvtt-cli';
+import { isLockError, explainLevelError } from './leveldb.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
@@ -113,8 +124,9 @@ export function parseArgs(argv) {
     else if (a === '--art') opts.art = argv[++i];
     else throw new Error(`Unknown argument: ${a}`);
   }
-  opts.data ??= process.env.FOUNDRY_DATA_PATH
-    || path.join(process.env.HOME ?? '', '.local', 'share', 'FoundryVTT');
+  opts.data ??=
+    process.env.FOUNDRY_DATA_PATH ||
+    path.join(process.env.HOME ?? '', '.local', 'share', 'FoundryVTT');
   opts.out ??= path.join(REPO_ROOT, 'content', 'reference');
   return opts;
 }
@@ -137,7 +149,10 @@ export async function copyArt(index, dataDir, artDir) {
     const src = rec.tokenSrc;
     if (!src || src.startsWith('icons/')) continue; // core placeholder, not real art
     try {
-      await copyFile(path.join(dataDir, 'Data', src), path.join(artDir, `${rec.name}${path.extname(src)}`));
+      await copyFile(
+        path.join(dataDir, 'Data', src),
+        path.join(artDir, `${rec.name}${path.extname(src)}`),
+      );
       copied++;
     } catch {
       // no shipped art for this creature — expected for some entries
@@ -146,27 +161,75 @@ export async function copyArt(index, dataDir, artDir) {
   return copied;
 }
 
+/**
+ * Fail early and say why. Run inside the devcontainer this finds nothing, and
+ * without this check the only symptom is "Skipping monsters:" twice — which
+ * reads like a missing dnd5e system rather than the real cause: the Foundry
+ * data directory is deliberately not mounted there.
+ */
+export async function assertDataDir(data) {
+  const systemPacks = path.join(data, 'Data', 'systems', 'dnd5e', 'packs');
+  try {
+    await access(systemPacks);
+  } catch {
+    const inContainer = existsSync('/.dockerenv');
+    throw new Error(
+      `No dnd5e packs at ${systemPacks}.\n` +
+        (inContainer
+          ? '\nThis looks like a container. The Foundry data directory is not mounted\n' +
+            'into the devcontainer by design — run this on the HOST instead.\n'
+          : '') +
+        `\nChecked FOUNDRY_DATA_PATH${process.env.FOUNDRY_DATA_PATH ? '' : ' (unset)'}` +
+        `, resolved data dir: ${data}\n` +
+        'Pass an explicit one with --data <path> if it lives elsewhere.',
+    );
+  }
+  return systemPacks;
+}
+
 export async function main(argv = process.argv.slice(2)) {
   const opts = parseArgs(argv);
-  const systemPacks = path.join(opts.data, 'Data', 'systems', 'dnd5e', 'packs');
+  const systemPacks = await assertDataDir(opts.data);
   await mkdir(opts.out, { recursive: true });
+  const failed = [];
 
   for (const { pack, edition, out } of PACKS) {
+    const packDir = path.join(systemPacks, pack);
+    // extractPack on a missing path creates an empty database and dies with a
+    // misleading "Iterator is not open", so check before blaming a lock.
+    const packExists = existsSync(packDir);
     const tmp = await mkdtemp(path.join(tmpdir(), `srd-${pack}-`));
     try {
-      await extractPack(path.join(systemPacks, pack), tmp, { log: false });
+      if (!packExists) throw new Error(`no such pack directory: ${packDir}`);
+      await extractPack(packDir, tmp, { log: false });
       const creatures = srdIndex(await readDocs(tmp));
       const dest = path.join(opts.out, out);
-      await writeFile(dest, `${JSON.stringify({ edition, source: `dnd5e/${pack}`, creatures }, null, 2)}\n`);
+      await writeFile(
+        dest,
+        `${JSON.stringify({ edition, source: `dnd5e/${pack}`, creatures }, null, 2)}\n`,
+      );
       console.log(`${dest}: ${Object.keys(creatures).length} creatures (SRD ${edition})`);
       if (opts.art) {
-        console.log(`  copied ${await copyArt(creatures, opts.data, opts.art)} token images to ${opts.art}`);
+        console.log(
+          `  copied ${await copyArt(creatures, opts.data, opts.art)} token images to ${opts.art}`,
+        );
       }
     } catch (err) {
+      // A locked database is not a pack to skip past — it means Foundry is
+      // running, and every pack will fail the same way. Say so once and stop,
+      // rather than printing two shrugs and exiting 0 with no cache written.
+      if (isLockError(err, { pathExists: packExists })) {
+        throw new Error(explainLevelError(err, `the ${pack} pack`, { pathExists: packExists }));
+      }
       console.error(`Skipping ${pack}: ${err.message}`);
+      failed.push(pack);
     } finally {
       await rm(tmp, { recursive: true, force: true });
     }
+  }
+
+  if (failed.length === PACKS.length) {
+    throw new Error(`No pack could be read (${failed.join(', ')}). Nothing was written.`);
   }
 }
 

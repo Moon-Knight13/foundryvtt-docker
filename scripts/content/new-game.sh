@@ -105,7 +105,7 @@ if [[ "$IN_REPO" -eq 1 ]]; then
     exit 1
   fi
 
-  cat >"$CONFIG_FILE" <<EOF
+  cat > "$CONFIG_FILE" << EOF
 {
   "id": "$ID",
   "title": "$TITLE",
@@ -162,7 +162,10 @@ if [[ -e "$GAME_DIR" ]]; then
 fi
 
 mkdir -p "$GAME_DIR"/{Handouts,Maps,NPCs,Scenes,Tables}
-mkdir -p "$GAME_DIR/Assets/Maps"
+# Maps: render_map.py output. Tokens: custom token art for named NPCs, pointed
+# at by `image:` in a statblock fence. Art: full illustrations you show players
+# (SRD ships token art only, and it does not enlarge well).
+mkdir -p "$GAME_DIR/Assets"/{Maps,Tokens,Art}
 mkdir -p "$GAME_DIR/Foundry/maps"
 for type in actors items journals scenes tables; do
   mkdir -p "$GAME_DIR/Foundry/src/$type"
@@ -170,7 +173,7 @@ done
 
 # The module config. No "srcDir": that key resolves under content/ in this repo
 # and would silently point at the wrong tree — build with --src instead.
-cat >"$GAME_DIR/Foundry/$SLUG.config.json" <<EOF
+cat > "$GAME_DIR/Foundry/$SLUG.config.json" << EOF
 {
   "id": "$ID",
   "title": "$TITLE",
@@ -184,7 +187,7 @@ EOF
 
 TAG="$SLUG"
 
-cat >"$GAME_DIR/$TITLE.md" <<EOF
+cat > "$GAME_DIR/$TITLE.md" << EOF
 ---
 title: $TITLE
 type: $TYPE
@@ -241,7 +244,7 @@ docker compose restart
 REPLACE
 EOF
 
-cat >"$GAME_DIR/GM Prep.md" <<EOF
+cat > "$GAME_DIR/GM Prep.md" << EOF
 ---
 type: session
 system: $SYSTEM_FM
@@ -285,7 +288,7 @@ REPLACE
 EOF
 
 if [[ "$TYPE" == "oneshot" ]]; then
-  cat >"$GAME_DIR/Advert.md" <<EOF
+  cat > "$GAME_DIR/Advert.md" << EOF
 ---
 type: handout
 system: $SYSTEM_FM
@@ -334,14 +337,14 @@ EOF
 fi
 
 for dir in Handouts Maps NPCs Scenes Tables; do
-  cat >"$GAME_DIR/$dir/.gitkeep" <<EOF
+  cat > "$GAME_DIR/$dir/.gitkeep" << EOF
 EOF
 done
 
 echo "Scaffolded $TYPE \"$TITLE\" ($ID)"
 echo "  game:    $GAME_DIR"
 echo "  notes:   $TITLE.md, GM Prep.md$([[ "$TYPE" == "oneshot" ]] && echo ", Advert.md")"
-echo "  folders: Handouts/ Maps/ NPCs/ Scenes/ Tables/ Assets/Maps/"
+echo "  folders: Handouts/ Maps/ NPCs/ Scenes/ Tables/ Assets/{Maps,Tokens,Art}/"
 echo "  foundry: Foundry/$SLUG.config.json + Foundry/src/{actors,items,journals,scenes,tables}/"
 echo
 echo "Definition of done — a finished game has ALL of these:"

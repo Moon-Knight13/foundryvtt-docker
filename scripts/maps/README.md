@@ -15,9 +15,9 @@ Writes into `<outdir>` (using the spec's `name`):
 
 | File | Contents |
 |---|---|
-| `<name> - Player.png` | Floor, walls, feature glyphs, grid, baked light wedges. **No key numbers, no legend, no secret labels** — safe to show players. |
-| `<name> - DM.png` | The Player base **plus** a numbered red circle at each key, small feature labels, and a right-hand **legend panel** listing `n → label — note`. Secret/hazard notes live here only. |
-| `<name>.dd2vtt` | Universal VTT 0.3: `resolution`, base64 of the **Player** PNG, `line_of_sight` walls, `portals` (doors), `lights`, `environment`. |
+| `<name> - Player.webp` | Floor, walls, feature glyphs, grid, baked light wedges. **No key numbers, no legend, no secret labels** — safe to show players. |
+| `<name> - DM.webp` | The Player base **plus** a numbered red circle at each key, small feature labels, and a right-hand **legend panel** listing `n → label — note`. Secret/hazard notes live here only. |
+| `<name>.dd2vtt` | Universal VTT 0.3: `resolution`, base64 of the **Player** map as PNG (fixed by the format, whatever the image files use), `line_of_sight` walls, `portals` (doors), `lights`, `environment`. |
 
 Via `map-to-scene.sh` you also get a compendium **Scene** (walls, lights, doors)
 and a GM-only **`<Scene> — GM Keys`** journal with a map pin per numbered key —
@@ -45,7 +45,7 @@ pip install --break-system-packages --user Pillow
 Install the **Universal Battlemap Importer** module in Foundry, then import the
 `.dd2vtt`. It creates a scene from the embedded Player image and reconstructs
 walls (from `line_of_sight`), doors (`portals`), and light sources (`lights`)
-at the correct grid scale (`pixels_per_grid`). The DM PNG is a GM reference
+at the correct grid scale (`pixels_per_grid`). The DM image is a GM reference
 handout, not imported as a play surface.
 
 ### Or ship it in the compendium
@@ -56,15 +56,29 @@ and no manual importer step:
 
 ```bash
 node scripts/content/dd2vtt-to-scene.mjs "<outdir>/<name>.dd2vtt" \
-  --background "DnD/<game>/Assets/Maps/<name> - Player.png" \
+  --background "DnD/<game>/Assets/Maps/<name> - Player.webp" \
   --out content/src-<slug>/scenes/<name>.json
 # or render + convert in one go:
 scripts/maps/map-to-scene.sh <spec>.json <slug> --outdir <dir> --background <src>
 ```
 
-The compendium ships no image, so the Player PNG must already live under the
+The compendium ships no image, so the Player image must already live under the
 Foundry data dir (the vault mount). See `docs/CONTENT_AUTHORING.md` →
 "Scenes as code".
+
+### Image format
+
+Output is **lossless WebP**. On these flat-colour schematics that is 60-70%
+smaller than PNG with no artifacts — measured on Bandit Hideout, the Player map
+went 31,683 -> 11,690 bytes and the DM map 128,075 -> 36,812.
+
+Lossy WebP is the wrong tool here and was measurably worse: at quality 90 the
+Player map *grew* to 40,330 bytes, because thin walls, flat fills and text
+labels are exactly what PNG compresses well and what lossy codecs smear.
+
+Pass `--png` to either script for a consumer that cannot read WebP. The
+`.dd2vtt` always embeds a PNG regardless — that is fixed by the Universal VTT
+spec, and the file is byte-identical either way.
 
 ## Spec format
 
@@ -144,7 +158,7 @@ Keys are also the source of the scene's **GM journal pins**. `map-to-scene.sh`
 passes them to `dd2vtt-to-scene.mjs --keys`, which emits a GM-only
 `<Scene> — GM Keys` journal (one page per key) beside the scene, plus a Note
 pinned at each key's coordinates linking to its page. Pin 4 on the map opens
-page 4 in Foundry, with the same numbering as the DM PNG legend — so the GM
+page 4 in Foundry, with the same numbering as the DM image legend — so the GM
 clicks instead of cross-referencing the image. Write a key once; the DM map and
 the VTT pin stay in sync because they read the same array.
 
@@ -153,7 +167,7 @@ the VTT pin stay in sync because they read the same array.
 `{"at": [x,y], "range": <grid>, "color": "rrggbb", "intensity": 0.5, "shadows": true}`
 — written into the `.dd2vtt` `lights` array. `color` may be `rrggbb` or
 `rrggbbaa` (6-digit is padded with `ff`). `intensity` and `shadows` are
-optional. Arch features additionally bake a static moonlight wedge into the PNG
+optional. Arch features additionally bake a static moonlight wedge into the image
 itself.
 
 ## Where specs live
@@ -167,11 +181,11 @@ sources:
 ```bash
 scripts/maps/map-to-scene.sh "<vault>/<Game>/Foundry/maps/<map>.json" <slug> \
   --outdir "<vault>/<Game>/Assets/Maps" \
-  --background "DnD/<Game>/Assets/Maps/<Name> - Player.png" \
+  --background "DnD/<Game>/Assets/Maps/<Name> - Player.webp" \
   --scenes-dir "<vault>/<Game>/Foundry/src/scenes"
 ```
 
-Rendered PNGs and `.dd2vtt` go to the game's `Assets/Maps/` under the vault
+Rendered images and `.dd2vtt` go to the game's `Assets/Maps/` under the vault
 mount, where Foundry can serve them.
 
 Two things bite when authoring a spec:
