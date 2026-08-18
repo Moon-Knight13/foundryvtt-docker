@@ -197,6 +197,58 @@ you've already hand-tuned (re-import replaces the compendium copy; a scene
 already dragged into a world is a separate copy). Map **keys → clickable note
 pins** is a planned follow-on.
 
+## Stat blocks: compile, don't transcribe
+
+A vault NPC note carries a ```statblock fence — the in-person artifact, rendered
+as a printable card by Fantasy Statblocks. It already holds every field the
+Foundry actor needs, so the actor is **compiled** from it rather than retyped:
+
+```bash
+node scripts/content/statblock.mjs "<vault>/03 Oneshots/<Game>/NPCs/Selyse.md" \
+  --srd content/reference/srd-51.json \
+  --out "<vault>/03 Oneshots/<Game>/Foundry/src/actors/selyse.json"
+```
+
+One note in, one actor out. The actor's **name comes from the filename**, not
+the fence's `name:` — a card headed "Selyse (Lamia)" becomes an actor called
+"Selyse". Token disposition comes from the note's frontmatter (`hostile` by
+default, or `neutral` / `friendly`), because "starts the session as an ally" is
+a fact about this NPC, not about the shared SRD stat line.
+
+This replaces the NPC template's old instruction that *Claude* compiles the
+actor JSON by hand. That was the most repeated step in the pipeline and the only
+one nothing checked.
+
+### Proficiency vs expertise
+
+Bonuses are written the way the stat block prints them (`deception: 7`), but
+dnd5e does not store bonuses — it stores a proficiency multiplier and derives
+the number. The compiler works out which multiplier produces the stated bonus
+from the ability score and the CR-derived proficiency bonus.
+
+This matters more than it sounds. Selyse is CHA 16 (+3) at CR 4 (PB +2), and her
+card says Deception **+7** — that is expertise (3 + 2×2). Storing `value: 1`
+gives +5 at the table while the printed card says +7, and nothing catches the
+drift. Compiling this found exactly that bug in three shipped actors.
+
+Where a bonus is not reachable from any multiplier, the remainder is stored as a
+flat `bonuses.check` **and warned about**, since that case is usually a typo.
+
+### Checking against the SRD base
+
+`source: SRD 5.1 (CC-BY-4.0) — Lamia` names the base creature. With `--srd`
+pointing at a cache index, the compiler diffs the fence against it.
+
+Divergence is *expected* — a named NPC built on a Spy is meant to differ — so a
+difference is reported as a **delta for a human to read, never an error**. Mark
+the intentional ones with `deviations: [hp, ac]` in the fence, which keeps them
+visible in review rather than invisible; `exact: true` promotes any remaining
+delta to an error.
+
+Fields the cache cannot supply are skipped, not failed. Armour-wearing monsters
+have no stored AC (see below), and treating that as a mismatch would flag every
+one of them.
+
 ## SRD reference cache
 
 `scripts/content/srd-cache.mjs` distils the dnd5e system's SRD monster packs

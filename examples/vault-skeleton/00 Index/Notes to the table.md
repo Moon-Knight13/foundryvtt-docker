@@ -21,7 +21,7 @@ Run straight from the vault (laptop/tablet = your GM screen):
 | Need | Served by |
 |---|---|
 | GM screen / navigation | the vault — Dataview indexes + `[[wikilinks]]` |
-| Statblocks | **Fantasy Statblocks** cards (render/print in Obsidian) |
+| Statblocks | **Fantasy Statblocks** cards (render/print in Obsidian) — the same fence the Foundry actor is compiled from |
 | Handouts | `type: handout` notes — print or show on a device |
 | Maps | DungeonMapBuilder **print PNG/PDF**, printable map/token PDFs, or display on a TV |
 | Combat | dice + optional **Initiative Tracker** on a tablet |
@@ -35,7 +35,7 @@ Route by content type — no single tool does it all:
 | Content | Pipe | Direction |
 |---|---|---|
 | Notes / journals / handouts | **SoSly Obsidian Bridge** (Foundry module) | **bidirectional** |
-| NPCs / items / roll tables / scenes | **content-as-code → compendium module** | one-way (git = truth) |
+| NPCs / items / roll tables / scenes | **content-as-code → compendium module** | one-way (the vault note is truth) |
 | Images / art / map files | **shared vault mount** | shared files (no copy) |
 | Maps as walled/lit Scenes | **DungeonMapBuilder `.dd2vtt` → Universal Battlemap Importer** (`dd-import`) | source `.dd2vtt` lives in the vault |
 | Player characters | **D&D Beyond → ddb-importer** | DDB = truth |
