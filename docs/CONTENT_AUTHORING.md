@@ -292,8 +292,52 @@ bonuses at all, so those are only compared when Open5e is available.
 An actor with no art still compiles — Foundry requires *some* `img` — but it is
 never silent. The compiler warns when it falls back to `icons/svg/mystery-man.svg`,
 because a blank silhouette is the most visible way this pipeline can ship
-something wrong: fine in the JSON, obviously broken on the map. Give the fence a
-`source:` so it inherits the SRD token, or an `image:` pointing at your own file.
+something wrong: fine in the JSON, obviously broken on the map.
+
+The compiler resolves art through a chain, and stops deliberately short:
+
+1. **`image:` in the fence** — used verbatim, always wins.
+2. **The SRD base creature's real token** (`source:` + the reference cache) —
+   genuinely that creature's art, where the pack ships any (see the measured
+   table below: it mostly does not).
+3. **The curated icon map** (`content/reference/art-map.json`): a hand-checked
+   `byName` match first, then — **for `source:`-inherited mooks only** — one
+   silhouette per SRD creature type. The map is curated, never fuzzy-matched:
+   fuzzy matching measured 61% apparent coverage while pairing *Adult Gold
+   Dragon* with `gold-bar.svg`.
+4. **Nothing.** A bespoke named NPC (no `source:`) that misses the `byName`
+   map resolves to the placeholder and its warning — a generic outline on
+   someone you authored would hide exactly the gap the coverage gate exists to
+   catch. `art_required: true` makes a mook as strict as a named NPC;
+   `art_required: false` lets a bespoke NPC accept the silhouette.
+
+The map's icons come from [game-icons.net](https://game-icons.net) (CC-BY 3.0,
+pinned to a commit) and are fetched into the vault, not committed here:
+
+```bash
+node scripts/content/art-fetch.mjs   # → <vault>/06 Assets/Tokens/generic/<artist>/
+```
+
+Idempotent; writes `_attribution.md` beside the icons (CC-BY requires it). A
+disabled `raster` tier also exists in the map schema for `www.dnd5eapi.co`'s
+SRD monster PNGs — the host is on the firewall allowlist, but the running
+container needs a **devcontainer rebuild** before its hit rate can be measured,
+and dnd5eapi redirects image bodies to S3 (a different host), so keep it
+disabled until measured.
+
+### The gate: prove it, not promise it
+
+```bash
+node scripts/content/art-coverage.mjs --config <module config> [--src <src>] [--strict]
+```
+
+Walks the module source and classifies every art slot — actor portrait *and*
+token, scene backgrounds, journal image pages. With a vault
+(`$DND_VAULT_PATH`), every `DnD/…` path must resolve to a real file. Without
+one (CI), those paths are counted `unchecked`, so a green CI report is a schema
+statement, **not** a coverage guarantee — run it on the host for the proof.
+`--strict` turns failures into a non-zero exit, the same warn-to-fail doctrine
+as `exact: true`. Definition of done for a game: `--strict` passes.
 
 ## Handout art: showable in Foundry
 
@@ -334,6 +378,12 @@ than a silently blank frame at the table.
 | `Assets/Tokens/` | per-NPC token art | SRD (`srd-cache.mjs --art`) or your own, pointed at by `image:` in a fence |
 | `Assets/Art/` | full illustrations to show players | yours — the SRD ships token art only, which does not enlarge well |
 
+Plus one vault-wide folder, shared by every game:
+
+| Folder | For | Source |
+| --- | --- | --- |
+| `06 Assets/Tokens/generic/` | curated icons and type silhouettes for mooks | `art-fetch.mjs`, from the committed `art-map.json` |
+
 ## SRD reference cache
 
 `scripts/content/srd-cache.mjs` distils the dnd5e system's SRD monster packs
@@ -368,10 +418,16 @@ compendium LevelDB directly.
 Measured against a real dnd5e install (system 5.3.3), and it is far less than
 the phrase "inherit the SRD token art" suggests:
 
-| Pack | Creatures | Copied | Ship no art | Randomised art not installed |
-| --- | --- | --- | --- | --- |
-| `dnd5e.monsters` (SRD 5.1) | 346 | **0** | 346 | 0 |
-| `dnd5e.actors24` (SRD 5.2) | 431 | **14** | 383 | 34 |
+| Pack | Creatures | Real art | Generic stand-in | Ship no art | Randomised art not installed |
+| --- | --- | --- | --- | --- | --- |
+| `dnd5e.monsters` (SRD 5.1) | 346 | **0** | 0 | 346 | 0 |
+| `dnd5e.actors24` (SRD 5.2) | 431 | **2** | 12 | 383 | 34 |
+
+An earlier version of this table said the 2024 pack copied 14 usable images. It
+does copy 14 files — but twelve of them are **byte-identical**: one 8 KB
+humanoid SVG shipped under twelve different NPC names (Akra, Aoth, Beiro, …).
+`copyArt` now hashes what it copies and counts a file whose bytes serve three
+or more creatures as `generic`, not as art. Real coverage is **2 of 431**.
 
 The legacy SRD pack ships **no token art at all**. The 2024 pack ships a little,
 and points at rather more inside `modules/dnd-monster-manual/` — the paid
