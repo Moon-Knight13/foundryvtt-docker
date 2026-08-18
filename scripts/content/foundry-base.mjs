@@ -259,6 +259,61 @@ export function isInstallable(entry) {
 // CLI
 // ---------------------------------------------------------------------------
 
+/**
+ * Add a module to the core set, or update it if already there.
+ *
+ * The golden base is meant to be *tested and adjusted*: run a rebuild, find that
+ * something is missing or broken, add it, run again. Hand-editing JSON between
+ * every iteration is where mistakes creep in, so promotion is a command.
+ *
+ * `pin` comes from a capture or an installed module.json — never typed, because
+ * module ids are routinely nothing like their titles (Chat Commander is
+ * `_chatcommands`, Prime Performance is `fvtt-perf-optim`).
+ */
+/** Length of the common leading substring, used only for "did you mean". */
+export function sharedPrefix(a, b) {
+  let n = 0;
+  while (n < a.length && n < b.length && a[n].toLowerCase() === b[n].toLowerCase()) n++;
+  return n;
+}
+
+export function addToCore(manifest, pin, { note } = {}) {
+  const core = [...(manifest.core ?? [])];
+  const at = core.findIndex(m => m.id === pin.id);
+  const entry = { ...pin, ...(note ? { note } : {}) };
+  if (at === -1) {
+    core.push(entry);
+    return { core, action: 'added' };
+  }
+  // Preserve a deliberately pinned manifest URL and any existing note.
+  core[at] = {
+    ...core[at],
+    ...entry,
+    manifest: isInstallable(core[at]) ? core[at].manifest : entry.manifest || core[at].manifest,
+    ...(core[at].note && !note ? { note: core[at].note } : {}),
+  };
+  return { core, action: 'updated' };
+}
+
+/** Drop a module from core. Reports plainly when it was not there. */
+export function removeFromCore(manifest, id) {
+  const core = (manifest.core ?? []).filter(m => m.id !== id);
+  return { core, removed: core.length !== (manifest.core ?? []).length };
+}
+
+/**
+ * Find a module's real pin without needing a capture file: read the installed
+ * module.json straight from the data directory.
+ */
+export async function pinFromInstalled(id, data) {
+  const manifestPath = path.join(data, 'Data', 'modules', id, 'module.json');
+  try {
+    return pinFromManifest(JSON.parse(await readFile(manifestPath, 'utf8')), id);
+  } catch {
+    return null;
+  }
+}
+
 export function parseArgs(argv) {
   const opts = { positional: [] };
   for (let i = 0; i < argv.length; i++) {
@@ -267,6 +322,7 @@ export function parseArgs(argv) {
     else if (a === '--manifest') opts.manifest = argv[++i];
     else if (a === '--to') opts.to = argv[++i];
     else if (a === '--from') opts.from = argv[++i];
+    else if (a === '--note') opts.note = argv[++i];
     else if (a === '--dry-run') opts.dryRun = true;
     else if (a === '--yes') opts.yes = true;
     else if (a.startsWith('--')) throw new Error(`Unknown argument: ${a}`);
@@ -280,6 +336,8 @@ export const USAGE = `Usage:
   foundry-base.mjs capture <world> [--data <path>]   read a world's enabled modules into a pinned manifest
   foundry-base.mjs provision [--dry-run]             install the pinned system + modules
   foundry-base.mjs promote <capture.json>            fill core pins from a capture
+  foundry-base.mjs add <id> [--from <capture>]       promote a module into core
+  foundry-base.mjs remove <id>                       drop a module from core
   foundry-base.mjs update [id...]                    move pins to the latest published version
   foundry-base.mjs snapshot [--to <path>]            copy the data dir as a restore point
   foundry-base.mjs restore --yes [--from <path>]     recreate the data dir from a snapshot
@@ -524,6 +582,78 @@ async function cmdPromote(opts) {
   }
 }
 
+/**
+ * `add <id>` — promote a module into core.
+ *
+ * Resolution order is deliberate: a capture file if one is given, otherwise the
+ * installed module.json. Both are the module telling us about itself; neither is
+ * a guess.
+ */
+async function cmdAdd(opts) {
+  const id = opts.positional[0];
+  if (!id) throw new Error('add needs a module id, e.g. `add tokenmagic`');
+  const manifestPath = opts.manifest || DEFAULT_MANIFEST;
+  const manifest = await loadManifest(manifestPath);
+
+  let pin = null;
+  if (opts.from) {
+    const captured = JSON.parse(await readFile(opts.from, 'utf8'));
+    pin = (captured.modules ?? []).find(m => m.id === id) ?? null;
+    if (!pin) {
+      // A typo shares a prefix with the real id far more often than it contains
+      // it, so `includes` alone almost never fires when it is most wanted.
+      const near = (captured.modules ?? [])
+        .map(m => m.id)
+        .filter(m => m.includes(id) || id.includes(m) || sharedPrefix(m, id) >= 4);
+      throw new Error(
+        `"${id}" is not in ${opts.from}.` +
+          (near.length ? `\nDid you mean: ${near.join(', ')}` : ''),
+      );
+    }
+  } else {
+    pin = await pinFromInstalled(id, dataDir(opts.data));
+    if (!pin) {
+      throw new Error(
+        `"${id}" is not installed, so there is nothing to read a version from.\n` +
+          'Pass --from <capture.json> to take it from a captured world instead.',
+      );
+    }
+  }
+
+  const { core, action } = addToCore(manifest, pin, { note: opts.note });
+  manifest.core = core;
+  if (opts.dryRun) {
+    console.log(`would have ${action} ${pin.id} ${pin.version}`);
+    return;
+  }
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(`${action} ${pin.id} ${pin.version}${pin.title ? `  (${pin.title})` : ''}`);
+  if (!isInstallable({ ...pin })) {
+    console.log('  no manifest URL — a rebuild will not reinstall it until one is filled in');
+  }
+  console.log(`core is now ${core.length} module(s)`);
+}
+
+/** `remove <id>` — drop a module from core. */
+async function cmdRemove(opts) {
+  const id = opts.positional[0];
+  if (!id) throw new Error('remove needs a module id');
+  const manifestPath = opts.manifest || DEFAULT_MANIFEST;
+  const manifest = await loadManifest(manifestPath);
+  const { core, removed } = removeFromCore(manifest, id);
+  if (!removed) {
+    console.log(`"${id}" is not in core; nothing to remove.`);
+    return;
+  }
+  manifest.core = core;
+  if (opts.dryRun) {
+    console.log(`would remove ${id}`);
+    return;
+  }
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(`removed ${id}; core is now ${core.length} module(s)`);
+}
+
 async function cmdPullGames(opts) {
   const manifest = await loadManifest(opts.manifest);
   const games = manifest.games ?? [];
@@ -548,6 +678,8 @@ export const COMMANDS = [
   'capture',
   'provision',
   'promote',
+  'add',
+  'remove',
   'update',
   'snapshot',
   'restore',
@@ -563,6 +695,10 @@ export async function main(argv = process.argv.slice(2)) {
       return cmdProvision(opts);
     case 'promote':
       return cmdPromote(opts);
+    case 'add':
+      return cmdAdd(opts);
+    case 'remove':
+      return cmdRemove(opts);
     case 'update':
       return cmdUpdate(opts);
     case 'snapshot':

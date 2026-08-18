@@ -13,6 +13,9 @@ import {
   assertDataDir,
   USAGE,
   COMMANDS,
+  addToCore,
+  removeFromCore,
+  sharedPrefix,
   REPO_ROOT,
 } from './foundry-base.mjs';
 
@@ -233,4 +236,81 @@ test('an unknown command is rejected, not silently ignored', async () => {
   const { main } = await import('./foundry-base.mjs');
   await assert.rejects(() => main(['definitely-not-a-command']), /Unknown command/);
   await assert.rejects(() => main([]), /No command given/);
+});
+
+const BASE = {
+  core: [{ id: 'dd-import', version: '6.1.1', manifest: 'https://example.invalid/dd.json' }],
+};
+
+test('addToCore appends a module the rebuild turned out to need', () => {
+  const { core, action } = addToCore(BASE, {
+    id: 'tokenmagic',
+    version: '0.8.3',
+    manifest: 'https://example.invalid/tm.json',
+    title: 'Token Magic FX',
+  });
+  assert.equal(action, 'added');
+  assert.equal(core.length, 2);
+  assert.equal(core[1].id, 'tokenmagic');
+});
+
+test('adding the same module twice updates rather than duplicating', () => {
+  // The adjust loop is iterative — re-running `add` after another rebuild must
+  // not leave two entries that then fight during provision.
+  const once = addToCore(BASE, {
+    id: 'tokenmagic',
+    version: '0.8.3',
+    manifest: 'https://a.invalid/x.json',
+  });
+  const twice = addToCore(
+    { core: once.core },
+    {
+      id: 'tokenmagic',
+      version: '0.9.0',
+      manifest: 'https://a.invalid/x.json',
+    },
+  );
+  assert.equal(twice.action, 'updated');
+  assert.equal(twice.core.filter(m => m.id === 'tokenmagic').length, 1);
+  assert.equal(twice.core.find(m => m.id === 'tokenmagic').version, '0.9.0');
+});
+
+test('addToCore keeps a note and a deliberately pinned URL', () => {
+  const withNote = addToCore(
+    BASE,
+    { id: 'tokenmagic', version: '0.8.3', manifest: 'https://a.invalid/x.json' },
+    {
+      note: 'Dependency of several QoL modules.',
+    },
+  );
+  // Re-adding without a note must not erase the reason someone wrote down.
+  const again = addToCore(
+    { core: withNote.core },
+    {
+      id: 'tokenmagic',
+      version: '0.8.4',
+      manifest: 'https://b.invalid/other.json',
+    },
+  );
+  const entry = again.core.find(m => m.id === 'tokenmagic');
+  assert.equal(entry.note, 'Dependency of several QoL modules.');
+  assert.equal(entry.manifest, 'https://a.invalid/x.json', 'the pinned URL wins');
+});
+
+test('removeFromCore drops a module and reports a no-op honestly', () => {
+  const gone = removeFromCore(BASE, 'dd-import');
+  assert.equal(gone.removed, true);
+  assert.equal(gone.core.length, 0);
+
+  const nothing = removeFromCore(BASE, 'never-there');
+  assert.equal(nothing.removed, false);
+  assert.equal(nothing.core.length, 1);
+});
+
+test('sharedPrefix powers a "did you mean" that actually fires on typos', () => {
+  // A typo shares a PREFIX with the real id far more often than it contains it,
+  // so substring matching alone stayed silent exactly when it was most wanted.
+  assert.ok(sharedPrefix('tokenmagic', 'tokenmagik') >= 4);
+  assert.ok(sharedPrefix('dd-import', 'tokenmagic') < 4);
+  assert.equal(sharedPrefix('', 'x'), 0);
 });
