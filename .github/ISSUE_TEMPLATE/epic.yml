@@ -29,37 +29,20 @@ body:
     id: stories
     attributes:
       label: Child stories
-      description: Task-list of child story issues. Add or link stories as they are created (e.g. via /bmad-to-board).
+      description: Task-list of child story issues. Add or link stories as they are created.
       value: |
         - [ ] #
     validations:
       required: false
 
   - type: dropdown
-    id: bmad_stage
-    attributes:
-      label: BMAD Stage
-      description: Which BMAD stage does this epic currently sit in?
-      options:
-        - Discovery
-        - Requirements
-        - Architecture
-        - Task Decomposition
-        - Implementation
-        - Security & Release
-      default: 0
-    validations:
-      required: true
-
-  - type: dropdown
     id: route
     attributes:
       label: Suggested Route
-      description: Who is expected to drive most of this work? (Board Route field; see scripts/route-model.sh.)
+      description: Who is expected to drive most of this work? (Board Route field.)
       options:
         - Human
         - Claude
-        - Local
       default: 0
     validations:
       required: true

@@ -54,11 +54,6 @@ __pycache__
 .claude/worktrees/
 .ai/
 
-## BMAD generated output (installed at container start; never commit) ##
-_bmad/
-_bmad-output/
-.claude/skills/bmad-*
-
 ## Devcontainer / tooling runtime artifacts ##
 .gitconfig
 .cache/

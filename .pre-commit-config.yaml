@@ -1,20 +1,19 @@
 ---
-# Template-owned files (claude_template_repo) are kept byte-identical to the
-# upstream template so template-sync PRs stay clean — lint/format changes to
-# them would surface as spurious reverts in every future sync. They are linted
-# in the template repo itself. Project-owned files under scripts/ (ci/,
-# setup-mcp.sh, mcp-health.sh, content/, maps/) remain fully linted.
+# These files were inherited from claude_template_repo (the repo is now
+# detached from template sync) and were never lint-formatted; excluding them
+# keeps diffs quiet. Expanding lint coverage over them is a follow-up — remove
+# entries here as they get cleaned up. Project-owned files under scripts/
+# (ci/, setup-mcp.sh, mcp-health.sh, content/, maps/) remain fully linted.
 exclude: >
   (?x)^(
     \.claude/|
     \.devcontainer/|
-    \.github/workflows/(ci|secret-scan|semgrep|container-scan|repository-audit|template-sync)\.yml$|
+    \.github/workflows/(ci|secret-scan|semgrep|container-scan|repository-audit)\.yml$|
     \.github/ISSUE_TEMPLATE/(bug_report|epic|feature_request|security_vulnerability|user-story)\.yml$|
     \.github/pull_request_template\.md$|
-    docs/(TEMPLATE_GUIDE|KANBAN_WORKFLOW)\.md$|
+    docs/KANBAN_WORKFLOW\.md$|
     scripts/(?!ci/|content/|maps/|setup-mcp\.sh|mcp-health\.sh).*|
     \.gitleaks\.toml$|
-    \.templatesyncignore$|
     CLAUDE\.md$
   )
 

@@ -14,7 +14,7 @@ python3 scripts/maps/render_map.py <spec.json> <outdir>
 Writes into `<outdir>` (using the spec's `name`):
 
 | File | Contents |
-|---|---|
+| --- | --- |
 | `<name> - Player.webp` | Floor, walls, feature glyphs, grid, baked light wedges. **No key numbers, no legend, no secret labels** — safe to show players. |
 | `<name> - DM.webp` | The Player base **plus** a numbered red circle at each key, small feature labels, and a right-hand **legend panel** listing `n → label — note`. Secret/hazard notes live here only. |
 | `<name>.dd2vtt` | Universal VTT 0.3: `resolution`, base64 of the **Player** map as PNG (fixed by the format, whatever the image files use), `line_of_sight` walls, `portals` (doors), `lights`, `environment`. |
@@ -28,10 +28,10 @@ see [`keys`](#keys).
 Pillow (PIL). **Installed in the devcontainer at container start** by
 `scripts/project-setup.sh`, which runs as the last step of `postStartCommand`.
 
-It used to be the `python3-pil` apt package in `.devcontainer/Dockerfile`, but
-that file is template-owned and template-sync deleted the line (issue #69).
-Installing at start keeps the Dockerfile byte-identical to the template so
-devcontainer security fixes keep reaching this repo.
+It used to be the `python3-pil` apt package in `.devcontainer/Dockerfile`;
+the install moved to container start while the repo still tracked the
+upstream template (issue #69) and stays there because it works without an
+image rebuild.
 
 If the map script reports `No module named 'PIL'`, the start-time install
 failed — the container-start log says so. Rerun it by hand:
@@ -108,7 +108,7 @@ All coordinates are in **grid units** (pixels = grid × `ppg`).
 ### Top-level keys
 
 | Key | Required | Meaning |
-|---|---|---|
+| --- | --- | --- |
 | `name` | yes | Basename for output files and the legend title. |
 | `grid` | yes | `{"w": cols, "h": rows}` in grid squares. |
 | `ppg` | no (72) | Pixels per grid square. |
@@ -121,7 +121,7 @@ All coordinates are in **grid units** (pixels = grid × `ppg`).
 ### `floor.shape`
 
 | Shape | Fields | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `rect` | `bounds: [x0,y0,x1,y1]` | Rectangular floor. |
 | `octagon` | `bounds: [x0,y0,x1,y1]`, `chamfer` | Rectangle with corners cut back `chamfer` units. |
 | `polygon` | `points: [[x,y], ...]` | Arbitrary outline. |
@@ -136,7 +136,7 @@ Each feature has a `type`, an `at: [x,y]` centre, and optional `size`, `dir`
 Glyphs are schematic (this is a "simple battlemap", not fine art).
 
 | `type` | Draws | Uses | LOS / portal |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `bell` | Stone platform + shaft-gap ring + bronze bell + hanging rope | `size` | platform → LOS obstacle |
 | `arch` | Louvered wall opening + baked moonlight wedge pointing inward | `dir` | — |
 | `door` | Wooden door leaf across a wall | `dir` | → `.dd2vtt` **portal** |
@@ -164,11 +164,11 @@ the VTT pin stay in sync because they read the same array.
 
 ### `lights`
 
-`{"at": [x,y], "range": <grid>, "color": "rrggbb", "intensity": 0.5, "shadows": true}`
-— written into the `.dd2vtt` `lights` array. `color` may be `rrggbb` or
-`rrggbbaa` (6-digit is padded with `ff`). `intensity` and `shadows` are
-optional. Arch features additionally bake a static moonlight wedge into the image
-itself.
+`{"at": [x,y], "range": <grid>, "color": "rrggbb", "intensity": 0.5,
+"shadows": true}` — written into the `.dd2vtt` `lights` array. `color`
+may be `rrggbb` or `rrggbbaa` (6-digit is padded with `ff`). `intensity`
+and `shadows` are optional. Arch features additionally bake a static
+moonlight wedge into the image itself.
 
 ## Where specs live
 

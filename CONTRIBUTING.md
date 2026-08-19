@@ -44,8 +44,10 @@ Code (CLI) account for the AI workflow.
 Notes:
 
 - The firewall blocks unknown egress hosts by default; use the
-  `/firewall-allow` skill to allowlist a new host. Full detail on the
-  foundation lives in [docs/TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md).
+  `/firewall-allow` skill to allowlist a new host. The devcontainer/firewall
+  foundation came from
+  [claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo)
+  (this repo is detached from template sync; every file here is repo-owned).
 - The devcontainer has **no docker socket** by design — run the Foundry stack
   (`docker compose up -d`) from a host terminal, not from inside the container.
 
@@ -76,8 +78,8 @@ integration, `main` for production, promoted by fast-forward). That model earns
 its keep when a branch *is* the released artifact; here nothing is deployed from
 a branch — the stack runs `docker compose up` against the published felddy
 image. In practice the promotion was performed once, then `main` sat 24 commits
-behind for five weeks and collected a template-sync PR aimed at the stale
-branch. The old history is preserved at tag `archive/main-2026-08-09`.
+behind for five weeks and collected automation PRs aimed at the stale branch.
+The old history is preserved at tag `archive/main-2026-08-09`.
 
 ## Licence
 

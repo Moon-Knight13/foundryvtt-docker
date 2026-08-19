@@ -77,9 +77,8 @@ if gh auth status >/dev/null 2>&1; then
         && [[ ! -f .ai/bootstrap-completed ]]; then
         echo "  >>  gh authenticated — applying GitHub repo settings (bootstrap-github-settings.sh)…"
         # ADMIN_BYPASS=true: give repo admins a break-glass bypass so the owner of a
-        # freshly auto-configured repo is never locked out of their own default branch
-        # (e.g. merging the first template-sync PR). Manual callers keep the script's
-        # stricter default of no bypass.
+        # freshly auto-configured repo is never locked out of their own default
+        # branch. Manual callers keep the script's stricter default of no bypass.
         APPLY=true ADMIN_BYPASS=true bash scripts/bootstrap-github-settings.sh \
             || echo "  !!  bootstrap-github-settings.sh failed (continuing)"
     fi
@@ -110,8 +109,6 @@ Next steps (the only manual, auth-gated part — two browser logins):
        claude auth login
   3. Re-run this script to finish the GitHub + Kanban board bootstraps:
        bash scripts/setup-day0.sh
-  (Optional local model: install Ollama on the host, then
-   `ollama pull qwen2.5-coder:7b`, or set LOCAL_MODEL_ENABLED=false in .env.)
 EOF
 fi
 

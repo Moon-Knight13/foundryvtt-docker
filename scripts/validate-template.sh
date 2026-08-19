@@ -1,17 +1,12 @@
 #!/usr/bin/env bash
-# Self-contained template integrity validator.
-# Run locally or in CI to verify the template is complete and consistent.
+# Self-contained repo integrity validator.
+# Run locally or in CI to verify the repo's baseline is complete and consistent.
 #
-# Checks are tiered. The always-required tier is the security baseline that
-# justifies the template existing at all — devcontainer, secret scanning,
-# semgrep, container scanning, CODEOWNERS, and the sync machinery itself. The
-# optional tiers cover subsystems a derived repository may legitimately not
-# want; each is skipped when it is switched off in template.conf.
-#
-# Before this was tiered, the required-file list was flat, so a derivative that
-# deleted a subsystem it never used went red in CI and could not fix it locally
-# (this validator is template-owned, so the next sync reverted the edit). See
-# docs/TEMPLATE_GUIDE.md, "Optional subsystems".
+# Checks are tiered. The always-required tier is the security baseline —
+# devcontainer, secret scanning, semgrep, container scanning, CODEOWNERS. The
+# optional tiers cover subsystems this repo may switch off in template.conf.
+# (This repo started from claude_template_repo but is detached from template
+# sync; the validator and template.conf are repo-owned now.)
 set -euo pipefail
 
 # shellcheck source=scripts/lib/subsystems.sh disable=SC1090,SC1091
@@ -72,8 +67,6 @@ require_files core \
     .github/workflows/semgrep.yml \
     .github/workflows/container-scan.yml \
     .github/workflows/repository-audit.yml \
-    .github/workflows/template-sync.yml \
-    .templatesyncignore \
     template.conf \
     .github/dependabot.yml \
     .github/pull_request_template.md \
@@ -82,7 +75,6 @@ require_files core \
     .devcontainer/init-firewall.sh \
     .claude/settings.json.example \
     .claude/commands/security-audit.md \
-    docs/TEMPLATE_GUIDE.md \
     scripts/check-codeowners.sh \
     scripts/validate-template.sh \
     scripts/bootstrap-precommit.sh \
@@ -92,15 +84,7 @@ require_files core \
     scripts/ci/README.md
 
 echo ""
-echo "[1a] Required files (local-model routing):"
-require_files routing \
-    docs/AI_ROUTING_POLICY.md \
-    .claude/commands/route-task.md \
-    scripts/route-model.sh \
-    scripts/ask-local.sh
-
-echo ""
-echo "[1b] Required files (project board):"
+echo "[1a] Required files (project board):"
 require_files board \
     docs/KANBAN_WORKFLOW.md \
     .claude/commands/next-issue.md \
@@ -108,25 +92,15 @@ require_files board \
     .github/ISSUE_TEMPLATE/epic.yml \
     .github/ISSUE_TEMPLATE/user-story.yml \
     scripts/board.sh \
-    scripts/suggest-route.sh \
     scripts/bootstrap-project.sh
 
 echo ""
-echo "[1c] Required files (BMAD):"
-require_files bmad \
-    docs/BMAD_WORKFLOW.md \
-    .claude/commands/bmad.md \
-    .claude/commands/bmad-to-board.md \
-    scripts/install-bmad.sh \
-    scripts/bootstrap-bmad.sh
-
-echo ""
-echo "[1d] Required files (caveman):"
+echo "[1b] Required files (caveman):"
 require_files caveman \
     scripts/install-caveman.sh
 
 echo ""
-echo "[1e] Required files (day-0 provisioning):"
+echo "[1c] Required files (day-0 provisioning):"
 require_files day0 \
     .claude/commands/day0-check.md \
     scripts/check-day0.sh \
@@ -150,10 +124,8 @@ echo "[3] Git-track check (.claude/ template files):"
 # settings.local.json is intentionally NOT listed here — it is machine-local and
 # gitignored so per-developer permissions don't propagate to derived repos.
 _track_targets=(.claude/commands/security-audit.md .claude/settings.json.example)
-subsystem_enabled bmad && _track_targets+=(.claude/commands/bmad.md .claude/commands/bmad-to-board.md)
 subsystem_enabled board && _track_targets+=(.claude/commands/next-issue.md .claude/commands/run-epic.md)
 subsystem_enabled day0 && _track_targets+=(.claude/commands/day0-check.md)
-subsystem_enabled routing && _track_targets+=(.claude/commands/route-task.md)
 
 for f in "${_track_targets[@]}"; do
     if [[ ! -f "$f" ]]; then
@@ -199,7 +171,7 @@ while IFS= read -r -d '' f; do
 done < <(find . -type f \( -name "*.md" -o -name "*.json" \) \
     ! -path "./.git/*" ! -path "./node_modules/*" \
     ! -path "./scripts/*" ! -path "./.github/workflows/*" ! -path "./.claude/commands/*" \
-    ! -path "./_bmad/*" ! -path "./_bmad-output/*" ! -path "./.claude/skills/*" -print0)
+    ! -path "./.claude/skills/*" -print0)
 if [[ "$_placeholder_clean" == "true" ]]; then
     check "No unexpected placeholders in tracked files" "pass"
 fi
@@ -211,7 +183,6 @@ echo "[6] devcontainer.json postStartCommand scripts:"
 # the scripts it always runs must be present.
 _poststart=(scripts/bootstrap-precommit.sh scripts/install-claude-plugins.sh)
 subsystem_enabled caveman && _poststart+=(scripts/install-caveman.sh)
-subsystem_enabled bmad && _poststart+=(scripts/install-bmad.sh scripts/bootstrap-bmad.sh)
 subsystem_enabled day0 && _poststart+=(scripts/setup-day0.sh)
 
 for script in "${_poststart[@]}"; do

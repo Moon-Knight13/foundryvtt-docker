@@ -190,23 +190,7 @@ fi
 echo ""
 echo "Optional"
 
-# 11. Ollama (host-side and optional — a WARN, never a FAIL: it cannot be
-# installed from inside the container, and day-0 must be able to go green with
-# just the two logins).
-LOCAL_MODEL_ENABLED="${LOCAL_MODEL_ENABLED:-true}"
-if [[ "$LOCAL_MODEL_ENABLED" == "true" ]]; then
-    LOCAL_MODEL_ENDPOINT="${LOCAL_MODEL_ENDPOINT:-http://host.docker.internal:11434}"
-    if curl --silent --fail --connect-timeout 2 "$LOCAL_MODEL_ENDPOINT" >/dev/null 2>&1; then
-        check "Ollama reachable at $LOCAL_MODEL_ENDPOINT" "pass" ""
-    else
-        check "Ollama reachable at $LOCAL_MODEL_ENDPOINT" "warn" \
-            "Optional local routing. Install + pull (https://ollama.com; ollama pull qwen2.5-coder:7b), then bind to 0.0.0.0 so the container can reach it (default 127.0.0.1 is loopback-only). See docs/TEMPLATE_GUIDE.md 'Bind Ollama so the container can reach it' — read the security disclaimer first. Or set LOCAL_MODEL_ENABLED=false in .env."
-    fi
-else
-    echo "  --  Ollama check skipped (LOCAL_MODEL_ENABLED=false)"
-fi
-
-# 12. Visual explainer via GitHub Pages (optional — a WARN, never a FAIL). Only
+# 11. Visual explainer via GitHub Pages (optional — a WARN, never a FAIL). Only
 # meaningful when the explainer is present; publishing is opt-in because Pages
 # serves the page publicly.
 if [[ -f docs/explainer/index.html ]]; then

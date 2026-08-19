@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Create (or reuse) the per-repo GitHub Project v2 board for this repository.
 #
-# Idempotent: safe to re-run. Creates the board, the BMAD Stage and Route
-# single-select fields, aligns the Status field to the kanban flow, creates the
-# coordination labels, links the board to the repo, and writes .ai/project.env
-# (sourced by scripts/board.sh).
+# Idempotent: safe to re-run. Creates the board, the Route single-select
+# field, aligns the Status field to the kanban flow, creates the coordination
+# labels, links the board to the repo, and writes .ai/project.env (sourced by
+# scripts/board.sh).
 #
 # gh-CLI only — no secrets, no PATs. Requires the 'project' gh scope:
 #   gh auth refresh -s project
@@ -22,8 +22,7 @@ PROJECT_ENV="${PROJECT_ENV:-.ai/project.env}"
 MARKER="${PROJECT_MARKER:-.ai/project-bootstrap-completed}"
 
 STATUS_OPTIONS=("Backlog" "Todo" "Ready" "In Progress" "In Review" "Done")
-BMAD_OPTIONS=("Discovery" "Requirements" "Architecture" "Task Decomposition" "Implementation" "Security & Release")
-ROUTE_OPTIONS=("Human" "Claude" "Local")
+ROUTE_OPTIONS=("Human" "Claude")
 
 for cmd in gh jq; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -165,7 +164,6 @@ ensure_single_select() {
 
 # Status is the built-in board field; align it to the kanban flow.
 ensure_single_select "Status" "${STATUS_OPTIONS[@]}"
-ensure_single_select "BMAD Stage" "${BMAD_OPTIONS[@]}"
 ensure_single_select "Route" "${ROUTE_OPTIONS[@]}"
 
 # --- Link board to repo ---------------------------------------------------------
@@ -221,4 +219,4 @@ touch "$MARKER"
 echo
 echo "Board ready: $PROJECT_URL"
 echo "Coordinates written to $PROJECT_ENV"
-echo "Next: create issues from the Epic/User Story templates, then use /bmad-to-board or scripts/board.sh."
+echo "Next: create issues from the Epic/User Story templates, then use scripts/board.sh."

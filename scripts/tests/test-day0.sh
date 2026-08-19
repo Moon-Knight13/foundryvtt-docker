@@ -19,8 +19,7 @@ ok()  { echo "PASS $1"; pass=$((pass + 1)); }
 bad() { echo "FAIL $1: $2"; fail=$((fail + 1)); }
 
 # ── PATH shims ────────────────────────────────────────────────────────────────
-# Fake gh/claude driven by MOCK_* env vars; fake curl so the Ollama probe never
-# leaves the sandbox.
+# Fake gh/claude driven by MOCK_* env vars.
 SHIMS="$TMP/shims"
 mkdir -p "$SHIMS"
 
@@ -67,13 +66,7 @@ esac
 exit 0
 EOF
 
-cat > "$SHIMS/curl" <<'EOF'
-#!/usr/bin/env bash
-[[ "${MOCK_OLLAMA_UP:-false}" == "true" ]] && exit 0
-exit 7
-EOF
-
-chmod +x "$SHIMS/gh" "$SHIMS/claude" "$SHIMS/curl"
+chmod +x "$SHIMS/gh" "$SHIMS/claude"
 
 # ── Sandbox repo ──────────────────────────────────────────────────────────────
 make_sandbox() { # writes a derived-repo sandbox into $1
@@ -85,7 +78,7 @@ make_sandbox() { # writes a derived-repo sandbox into $1
     git -C "$sb" remote add origin https://github.com/mockuser/derived_repo.git
     # Fixture: fully configured unless a test removes something.
     echo "* @mockuser" > "$sb/.github/CODEOWNERS"
-    echo "LOCAL_MODEL_ENABLED=true" > "$sb/.env"
+    echo "# fixture" > "$sb/.env"
     echo "{}" > "$sb/.claude/settings.json"
     touch "$sb/.ai/bootstrap-completed" "$sb/.ai/project-bootstrap-completed"
 }
@@ -94,8 +87,7 @@ run_check() { # sandbox [K=V ...] — runs check-day0 with shims, captures outpu
     local sb="$1"; shift
     (
         cd "$sb" || exit 99
-        env PATH="$SHIMS:$PATH" GITHUB_TOKEN="" GH_TOKEN="" \
-            LOCAL_MODEL_ENABLED="${LOCAL_MODEL_ENABLED:-true}" "$@" \
+        env PATH="$SHIMS:$PATH" GITHUB_TOKEN="" GH_TOKEN="" "$@" \
             bash scripts/check-day0.sh
     ) > "$TMP/out" 2>&1
     echo $?
@@ -103,7 +95,7 @@ run_check() { # sandbox [K=V ...] — runs check-day0 with shims, captures outpu
 
 # ── Case 1: fully green ───────────────────────────────────────────────────────
 SB="$TMP/green"; make_sandbox "$SB"
-rc=$(run_check "$SB" MOCK_GH_AUTHED=true MOCK_GH_SCOPE=true MOCK_CLAUDE_LOGGEDIN=true MOCK_OLLAMA_UP=true)
+rc=$(run_check "$SB" MOCK_GH_AUTHED=true MOCK_GH_SCOPE=true MOCK_CLAUDE_LOGGEDIN=true)
 if [[ "$rc" == "0" ]] && grep -q "All day-0 steps complete." "$TMP/out" \
     && ! grep -qE '^ (FAIL|SKIP|WARN)' "$TMP/out"; then
     ok "all green -> exit 0, no FAIL/SKIP/WARN"
@@ -114,7 +106,7 @@ fi
 # ── Case 2: gh unauthed — first FAIL is the login command, gh items SKIP ─────
 SB="$TMP/unauthed"; make_sandbox "$SB"
 rm -f "$SB/.ai/bootstrap-completed" "$SB/.ai/project-bootstrap-completed"
-rc=$(run_check "$SB" MOCK_GH_AUTHED=false MOCK_CLAUDE_LOGGEDIN=true MOCK_OLLAMA_UP=true)
+rc=$(run_check "$SB" MOCK_GH_AUTHED=false MOCK_CLAUDE_LOGGEDIN=true)
 first_fail=$(grep -m1 '^ FAIL' "$TMP/out")
 if [[ "$rc" == "1" ]] && [[ "$first_fail" == *"gh CLI authenticated"* ]] \
     && grep -A1 "gh CLI authenticated" "$TMP/out" | grep -q -- "--web -s project" \
@@ -128,7 +120,7 @@ fi
 
 # ── Case 3: token in env — reported first, fails the run ─────────────────────
 SB="$TMP/token"; make_sandbox "$SB"
-rc=$(run_check "$SB" GH_TOKEN=dummy MOCK_GH_AUTHED=true MOCK_GH_SCOPE=true MOCK_CLAUDE_LOGGEDIN=true MOCK_OLLAMA_UP=true)
+rc=$(run_check "$SB" GH_TOKEN=dummy MOCK_GH_AUTHED=true MOCK_GH_SCOPE=true MOCK_CLAUDE_LOGGEDIN=true)
 first_fail=$(grep -m1 '^ FAIL' "$TMP/out")
 if [[ "$rc" == "1" ]] && [[ "$first_fail" == *"No GitHub token in environment"* ]]; then
     ok "env token -> first FAIL is the token check, exit 1"
@@ -138,7 +130,7 @@ fi
 
 # ── Case 4: claude unauthed — its own FAIL, gates nothing ────────────────────
 SB="$TMP/claude"; make_sandbox "$SB"
-rc=$(run_check "$SB" MOCK_GH_AUTHED=true MOCK_GH_SCOPE=true MOCK_CLAUDE_LOGGEDIN=false MOCK_OLLAMA_UP=true)
+rc=$(run_check "$SB" MOCK_GH_AUTHED=true MOCK_GH_SCOPE=true MOCK_CLAUDE_LOGGEDIN=false)
 if [[ "$rc" == "1" ]] && grep -q "^ FAIL Claude CLI authenticated" "$TMP/out" \
     && grep -A1 "Claude CLI authenticated" "$TMP/out" | grep -q "claude auth login" \
     && grep -q "^  OK  All Claude plugins installed" "$TMP/out"; then
@@ -150,7 +142,7 @@ fi
 # ── Case 5: missing project scope — scope FAIL, board SKIP ───────────────────
 SB="$TMP/scope"; make_sandbox "$SB"
 rm -f "$SB/.ai/project-bootstrap-completed"
-rc=$(run_check "$SB" MOCK_GH_AUTHED=true MOCK_GH_SCOPE=false MOCK_CLAUDE_LOGGEDIN=true MOCK_OLLAMA_UP=true)
+rc=$(run_check "$SB" MOCK_GH_AUTHED=true MOCK_GH_SCOPE=false MOCK_CLAUDE_LOGGEDIN=true)
 if [[ "$rc" == "1" ]] && grep -q "^ FAIL gh has Projects scope" "$TMP/out" \
     && grep -A1 "gh has Projects scope" "$TMP/out" | grep -q "gh auth refresh -s project" \
     && grep -q "^ SKIP Kanban board bootstrapped" "$TMP/out"; then
@@ -159,17 +151,7 @@ else
     bad "no project scope" "exit=$rc"
 fi
 
-# ── Case 6: Ollama down — WARN only, run still green ─────────────────────────
-SB="$TMP/ollama"; make_sandbox "$SB"
-rc=$(run_check "$SB" MOCK_GH_AUTHED=true MOCK_GH_SCOPE=true MOCK_CLAUDE_LOGGEDIN=true MOCK_OLLAMA_UP=false)
-if [[ "$rc" == "0" ]] && grep -q "^ WARN Ollama reachable" "$TMP/out" \
-    && grep -q "All day-0 steps complete." "$TMP/out"; then
-    ok "Ollama down -> WARN, exit stays 0"
-else
-    bad "Ollama down" "exit=$rc; $(grep -E 'Ollama|Results' "$TMP/out")"
-fi
-
-# ── Case 7: template repo self-detection still short-circuits ────────────────
+# ── Case 6: template repo self-detection still short-circuits ────────────────
 SB="$TMP/template"; make_sandbox "$SB"
 git -C "$SB" remote set-url origin https://github.com/Moon-Knight13/claude_template_repo.git
 sed -i 's/@mockuser/@your-org\/your-team/' "$SB/.github/CODEOWNERS"

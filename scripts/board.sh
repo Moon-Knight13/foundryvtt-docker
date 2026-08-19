@@ -8,7 +8,7 @@
 #
 # Subcommands:
 #   add <issue#>                     Add an issue to the board (Status=Backlog).
-#   set-field <issue#> <field> <val> Set Status | "BMAD Stage" | Route to <val>.
+#   set-field <issue#> <field> <val> Set Status | Route to <val>.
 #   move <issue#> <status-slug>      Move card: backlog|ready|in-progress|in-review|done.
 #   next                             Print the top Ready + agent-ready + unassigned card.
 #   claim <issue#>                   Atomic claim: assign + wip + In Progress + re-check.

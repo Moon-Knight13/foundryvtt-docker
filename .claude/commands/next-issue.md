@@ -36,7 +36,6 @@ implement it, and open a PR. This is how an agent session "picks up an issue."
 
 6. Open a PR that closes the issue:
    `gh pr create --fill --body "Closes #<n>\n\n<what changed + which AC are met>"`
-   Fill in the BMAD Stage checkbox in the PR template.
 
 7. Move the card: `bash scripts/board.sh move <n> in-review`.
 
