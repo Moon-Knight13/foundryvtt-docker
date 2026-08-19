@@ -1,7 +1,9 @@
 #!/bin/bash
 # Run an isolated FoundryVTT test instance against a CLONE of the live data,
-# so MCP/module experiments can't touch production worlds (see CLAUDE.md,
-# "Safe A/B testing").
+# so MCP/module experiments can't touch production worlds. No longer the
+# recommended path — see docs/PROJECT.md, "Testing changes against the live
+# stack" (snapshot + real stack); kept for when a throwaway copy is useful.
+# Note: one Foundry licence allows one active server — don't run both at once.
 #
 # The test stack is a separate docker compose project (foundry-test) on its
 # own port with its own data bind-mount. Production on :30000 is never

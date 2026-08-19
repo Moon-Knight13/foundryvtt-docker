@@ -69,13 +69,17 @@ only in that game's world.
 Don't hand-write the config. Run:
 
 ```bash
-scripts/content/new-game.sh <slug> [--type oneshot|campaign] [--system <sys>] [--title "<Title>"]
+scripts/content/new-game.sh <slug> [--type oneshot|campaign] [--system <sys>] \
+  [--title "<Title>"] [--vault <path>] [--in-repo]
 # e.g. scripts/content/new-game.sh harborwatch --type campaign --system dnd5e
 ```
 
-It writes `content/<slug>.config.json` and creates the empty
-`content/src-<slug>/{actors,items,journals,scenes,tables}/` tree (with
-`.gitkeep`s), then prints the build + sync commands. It refuses to overwrite an
+By default the game lives **in the vault**: the script scaffolds the note
+folders plus a `Foundry/` tree (`<slug>.config.json` + empty
+`src/{actors,items,journals,scenes,tables}/`) under `--vault` (default
+`$DND_VAULT_PATH`, else `$HOME/DnD`), then prints the build + sync commands.
+`--in-repo` is the legacy mode: it writes `content/<slug>.config.json` and
+`content/src-<slug>/` inside the repo instead. It refuses to overwrite an
 existing config. Omit `--system` for a system-agnostic module.
 
 ### Naming convention (locked)
@@ -133,8 +137,9 @@ would silently point at the wrong tree. Output still lands in
 `map-to-scene.sh --scenes-dir <vault>/.../Foundry/src/scenes` writes the Scene
 next to the other sources.
 
-Both models work. In-repo (`new-game.sh`) keeps a game versioned with the
-tooling; vault-hosted keeps the repo purely about process.
+Both models work. Vault-hosted (the `new-game.sh` default) keeps the repo
+purely about process; in-repo (`new-game.sh --in-repo`) keeps a game
+versioned with the tooling.
 
 ## Scenes as code
 
@@ -194,8 +199,7 @@ lights, and doors auto-placed. Tune lighting/darkness, add ambient sounds or
 note pins in the VTT afterwards. Hand-refinements are **per-world and do not
 round-trip back**: re-import only when the map itself changes, not over a scene
 you've already hand-tuned (re-import replaces the compendium copy; a scene
-already dragged into a world is a separate copy). Map **keys → clickable note
-pins** is a planned follow-on.
+already dragged into a world is a separate copy).
 
 ## Stat blocks: compile, don't transcribe
 
@@ -305,8 +309,9 @@ The compiler resolves art through a chain, and stops deliberately short:
    genuinely that creature's art, where the pack ships any (see the measured
    table below: it mostly does not).
 3. **The curated icon map** (`content/reference/art-map.json`): a hand-checked
-   `byName` match first, then — **for mooks only** — one silhouette per SRD
-   creature type. The map is curated, never fuzzy-matched: fuzzy matching
+   `byName` match first, then — **for mooks only** — one silhouette per
+   creature type in the map's `byType` (most SRD types; extend it by hand as
+   gaps appear). The map is curated, never fuzzy-matched: fuzzy matching
    measured 61% apparent coverage while pairing *Adult Gold Dragon* with
    `gold-bar.svg`.
 4. **Nothing.** A named NPC that misses the `byName` map resolves to the
@@ -345,14 +350,15 @@ existing `image:` line is never rewritten, real SRD art (`systems/…`, which
 Obsidian cannot display) is left alone, and a named NPC's gap stays visible.
 Idempotent; re-running stamps nothing.
 
-A
-disabled `raster` tier also exists in the map schema for `www.dnd5eapi.co`'s
-SRD monster PNGs. **Measured 2026-08-19** (post-rebuild, in-container): 334 of
-334 SRD monsters carry an image (100%), and the image bodies are served
-directly with HTTP 200 — the feared S3 redirect to a second host did not
-materialise. The tier stays disabled until someone decides mooks should wear
-real creature art instead of the curated icons; flipping `enabled: true` on a
-generated raster block in `art-map.json` is the whole switch.
+The resolver also supports an optional `raster` tier for `www.dnd5eapi.co`'s
+SRD monster PNGs (`art-resolve.mjs` honours a top-level `raster` block in
+`art-map.json` when one is present; the committed map has none yet —
+`measure-dnd5eapi.mjs` generates it). **Measured 2026-08-19** (post-rebuild,
+in-container): 334 of 334 SRD monsters carry an image (100%), and the image
+bodies are served directly with HTTP 200 — the feared S3 redirect to a second
+host did not materialise. The tier stays off until someone decides mooks
+should wear real creature art instead of the curated icons; pasting the
+generated block into `art-map.json` with `enabled: true` is the whole switch.
 
 Image-*generation* APIs were also evaluated for the named-NPC gap
 (perchance.org, 2026-08-19 verdict): **no official API exists** — the site
@@ -396,7 +402,8 @@ per-character; swapping later is a one-line change.
 ### The gate: prove it, not promise it
 
 ```bash
-node scripts/content/art-coverage.mjs --config <module config> [--src <src>] [--strict]
+node scripts/content/art-coverage.mjs --config <module config> [--src <src>] \
+  [--vault <path>] [--strict]
 ```
 
 Walks the module source and classifies every art slot — actor portrait *and*
@@ -560,7 +567,9 @@ Two things to know about the cached data:
   updating. Name files well the first time.
 - **Cross-links**: get the full
   `@UUID[Compendium.<module-id>.<pack>.<Type>.<id16>]{Name}` string with
-  `node scripts/content/uuid.mjs actors/FILE.json ["Display Name"]`.
+  `node scripts/content/uuid.mjs actors/FILE.json ["Display Name"]` — pass
+  `--config <game config>` for a per-game module, or the link names the
+  default module.
   The build fails on links to this module whose id matches no source file;
   links into other compendia (dnd5e SRD etc.) are left alone.
 - **Roll tables** use the Foundry v13 result shape (`"type": "text"`,
@@ -581,15 +590,15 @@ Two things to know about the cached data:
 - **Re-import overwrites the compendium copy only.** Documents already
   dragged into a world are separate copies; update those in the UI or via
   foundry-mcp.
-- Content tooling deps live in `scripts/content/package.json` — never in the
-  repo root `package.json` (it belongs to the container launcher).
+- Content tooling deps live in `scripts/content/package.json` — keep them
+  there; the repo root deliberately has no `package.json`.
 
 ## Routing: skill vs foundry-mcp
 
 The MCP bridge stays for what genuinely needs a live world: dice requests,
 token movement, conditions, scene activation, reading world state, and
 editing documents already imported into a world. Full routing table in
-[`CLAUDE.md`](../CLAUDE.md), "Content routing".
+[`docs/PROJECT.md`](PROJECT.md), "Content routing".
 
 A PreToolUse hook enforces this: `dnd5e-create-npc` and `create-quest-journal`
 are denied with a pointer to the skill. The **foundry-gm plugin** ships this

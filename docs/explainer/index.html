@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Claude Secure Template — what it is &amp; how it works</title>
+    <title>FoundryVTT Docker — Obsidian-backed prep, AI game master</title>
     <style>
       :root {
         --ground: #eef1f4;
@@ -145,7 +145,7 @@
         border-bottom: 2px solid var(--accent);
       }
 
-      /* --- Switchboard diagram (the thesis) --- */
+      /* --- Two-surfaces diagram (the thesis) --- */
       .board {
         margin: 44px 0 8px;
         background: var(--surface);
@@ -189,6 +189,9 @@
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 12px;
+      }
+      .lanes.two {
+        grid-template-columns: repeat(2, 1fr);
       }
       .lane {
         text-align: center;
@@ -320,7 +323,7 @@
       }
       .comp > div {
         display: grid;
-        grid-template-columns: minmax(0, 10ch) 1fr;
+        grid-template-columns: minmax(0, 12ch) 1fr;
         gap: 20px;
         padding: 18px 0;
         border-bottom: 1px solid var(--line);
@@ -451,6 +454,88 @@
         color: var(--ink-soft);
       }
 
+      /* pipeline rail (compile → gate → ship) */
+      .prail {
+        display: grid;
+        gap: 8px;
+      }
+      .pstep {
+        display: grid;
+        grid-template-columns: minmax(0, 16ch) 1fr;
+        gap: 14px;
+        align-items: baseline;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--ground);
+        padding: 11px 14px;
+      }
+      .pstep .pn {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .pstep .pd {
+        font-size: 14px;
+        color: var(--ink-soft);
+        line-height: 1.45;
+      }
+      .pstep.gate-step {
+        border-color: var(--gate);
+        border-style: dashed;
+      }
+      .pstep.gate-step .pn {
+        color: var(--gate);
+      }
+      .prail .parrow {
+        text-align: center;
+        color: var(--steel-soft);
+        font-family: var(--mono);
+        font-size: 14px;
+        line-height: 1;
+      }
+
+      /* art resolver chain */
+      .chain {
+        display: grid;
+        gap: 8px;
+        counter-reset: rung;
+      }
+      .rung {
+        display: grid;
+        grid-template-columns: 3ch 1fr;
+        gap: 12px;
+        align-items: baseline;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 11px 14px;
+        background: var(--ground);
+      }
+      .rung::before {
+        counter-increment: rung;
+        content: counter(rung);
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--accent);
+        text-align: center;
+      }
+      .rung .rt {
+        font-family: var(--sans);
+        font-weight: 640;
+        font-size: 14.5px;
+      }
+      .rung .rd {
+        display: block;
+        font-size: 13.5px;
+        color: var(--ink-soft);
+        line-height: 1.45;
+        margin-top: 2px;
+      }
+      .rung.stop {
+        border-color: var(--accent);
+        border-style: dashed;
+      }
+
       /* devcontainer anatomy */
       .fw {
         border: 2px dashed var(--gate);
@@ -526,7 +611,7 @@
         padding-top: 12px;
       }
 
-      /* two engines */
+      /* map artifacts */
       .engines {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -588,56 +673,6 @@
         color: var(--gate);
       }
 
-      /* caveman */
-      .cv-bars {
-        display: grid;
-        gap: 8px;
-      }
-      .cv-row {
-        display: grid;
-        grid-template-columns: 8ch 1fr;
-        align-items: center;
-        gap: 12px;
-      }
-      .cv-row .cv-k {
-        font-family: var(--mono);
-        font-size: 11px;
-        color: var(--steel-soft);
-      }
-      .cv-bar {
-        height: 22px;
-        border-radius: 5px;
-      }
-      .cv-bar.full {
-        width: 100%;
-        background: var(--steel-soft);
-      }
-      .cv-bar.comp {
-        width: 65%;
-        background: var(--accent);
-      }
-      .cv-save {
-        font-family: var(--mono);
-        font-size: 12.5px;
-        color: var(--accent-ink);
-        margin-top: 10px;
-      }
-      .statusline {
-        margin-top: 14px;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        font-family: var(--mono);
-        font-size: 12.5px;
-        background: var(--ink);
-        color: var(--ground);
-        padding: 7px 13px;
-        border-radius: 7px;
-      }
-      .statusline .dot {
-        color: var(--gate);
-      }
-
       /* CI pipe */
       .pipe {
         display: grid;
@@ -674,7 +709,8 @@
         body {
           font-size: 17px;
         }
-        .lanes {
+        .lanes,
+        .lanes.two {
           grid-template-columns: 1fr;
         }
         .comp > div {
@@ -684,8 +720,9 @@
         .engines {
           grid-template-columns: 1fr;
         }
-        .cv-row {
-          grid-template-columns: 6ch 1fr;
+        .pstep {
+          grid-template-columns: 1fr;
+          gap: 4px;
         }
       }
     </style>
@@ -694,43 +731,46 @@
     <div class="wrap">
       <header>
         <span class="badge"
-          >secure&nbsp;<b>by&nbsp;default</b>&nbsp;·&nbsp;human&nbsp;in&nbsp;the&nbsp;loop</span
+          >self-hosted&nbsp;<b>zero&nbsp;inbound&nbsp;ports</b>&nbsp;·&nbsp;vault&nbsp;is&nbsp;the&nbsp;source&nbsp;of&nbsp;truth</span
         >
-        <p class="eyebrow">Claude Secure Template</p>
-        <h1>A guarded workshop where AI does the work and nothing ships unchecked.</h1>
+        <p class="eyebrow">foundryvtt-docker</p>
+        <h1>
+          A game table you own — Foundry in Docker, notes in Obsidian, an AI at the prep desk.
+        </h1>
         <p class="lede">
-          A production-ready starting point for building software with Claude. Work comes in, gets
-          <span class="hl">routed</span> to whoever should do it — a person, Claude, or a cheaper
-          local model — and every change passes the same security gates before it merges.
+          A self-hosted <span class="hl">Foundry Virtual Tabletop</span> server in Docker, reachable
+          through a Cloudflare Tunnel with no port forwarding. Game prep lives in an Obsidian vault
+          — the DM's durable source of truth — and Claude Code turns those notes into playable
+          content, then drives the live world over an MCP bridge.
         </p>
       </header>
 
-      <div class="board" aria-label="How work flows through the template">
-        <p class="board-cap">The routing switchboard</p>
+      <div class="board" aria-label="How prep flows from the vault to two tables">
+        <p class="board-cap">One set of notes, two tables</p>
         <div class="flow">
           <div class="node in">
-            <span class="k">Work arrives</span>An issue on the board — a bug, a feature, a chore.
+            <span class="k">Prep happens once</span>The Obsidian vault — NPCs, quests, maps,
+            handouts. Durable, synced, yours.
           </div>
-          <div class="rail" aria-hidden="true">▼ routed by risk &amp; type ▼</div>
-          <div class="lanes">
+          <div class="rail" aria-hidden="true">▼ the same notes serve both surfaces ▼</div>
+          <div class="lanes two">
             <div class="lane human">
-              <div class="who">Human</div>
-              <span class="what">Judgment calls, approvals, anything sensitive.</span>
+              <div class="who">In-person table</div>
+              <span class="what">The vault runs the session directly — no export, no build.</span>
             </div>
             <div class="lane claude">
-              <div class="who">Claude</div>
-              <span class="what">Architecture, security, cross-cutting or unclear work.</span>
-            </div>
-            <div class="lane local">
-              <div class="who">Local model</div>
-              <span class="what">Formatting, docs, small low-risk edits — near-free.</span>
+              <div class="who">Online / hybrid play</div>
+              <span class="what"
+                >The notes compile into a per-game Foundry module — statblocks, scenes, art.</span
+              >
             </div>
           </div>
-          <div class="rail" aria-hidden="true">▼ one branch, one PR ▼</div>
-          <div class="gate">✓ security gates — secrets · SAST · container scan — must pass</div>
+          <div class="rail" aria-hidden="true">▼ compile → gate → build → sync ▼</div>
+          <div class="gate">✓ art-coverage gate — proves no blank tokens before anything ships</div>
           <div class="rail" aria-hidden="true">▼</div>
           <div class="node out">
-            <span class="k">Merged</span>Reviewed, scanned, and tracked back to the issue.
+            <span class="k">Game night</span>FoundryVTT in Docker, players arrive over a Cloudflare
+            Tunnel — zero inbound ports.
           </div>
         </div>
       </div>
@@ -743,24 +783,25 @@
         </p>
         <div class="cards">
           <div class="card">
-            <h3>Safe by default</h3>
+            <h3>Foundry is disposable, the vault isn't</h3>
             <p>
-              The environment is locked down — the network can only reach an approved list, and
-              secrets never touch the repo. Guardrails are on before the first line is written.
+              The Foundry world is a projection you can wipe and rebuild from the vault, the git
+              content module, and D&amp;D Beyond. The notes you'd actually mourn live in Obsidian,
+              under your own sync.
             </p>
           </div>
           <div class="card">
-            <h3>Cheap work goes local</h3>
+            <h3>No doors left open</h3>
             <p>
-              Low-risk tasks are handed to a free model running on your own machine. Claude is spent
-              only where its judgment is worth the cost.
+              The server runs on your machine and <em>dials out</em> to Cloudflare's edge. Players
+              get a stable HTTPS URL; your router forwards nothing and exposes nothing.
             </p>
           </div>
           <div class="card">
-            <h3>Humans stay in control</h3>
+            <h3>An AI game master, optionally</h3>
             <p>
-              Every task is a tracked card and every change is a reviewed pull request. Nothing
-              merges until the automated checks agree.
+              Claude Code authors NPCs, quests and scenes as code compiled into a compendium module,
+              and can run the live session — dice, tokens, scenes — over the foundry-mcp bridge.
             </p>
           </div>
         </div>
@@ -768,45 +809,66 @@
 
       <section>
         <p class="eyebrow">For engineers</p>
-        <h2>The five moving parts</h2>
+        <h2>The moving parts</h2>
         <p class="section-note">
-          Each is a self-contained piece of the template. Together they turn a blank repo into a
-          governed, AI-assisted delivery pipeline.
+          Each is a self-contained piece. Together they turn a folder of markdown notes into a
+          running virtual tabletop.
         </p>
         <dl class="comp">
           <div>
-            <dt>Devcontainer<span class="tag">.devcontainer/</span></dt>
+            <dt>Foundry container<span class="tag">compose.yml</span></dt>
             <dd>
-              A reproducible dev environment with a <b>deny-by-default firewall</b> — egress is
-              allowlisted, tooling is pre-installed, Claude auth is a mounted volume.
+              The published <b>felddy/foundryvtt-docker</b> image — this fork builds no image of its
+              own. Worlds and modules bind-mount from <b>FOUNDRY_DATA_PATH</b>; locally it answers
+              on :30000.
             </dd>
           </div>
           <div>
-            <dt>AI routing<span class="tag">scripts/route-model.sh</span></dt>
+            <dt>Cloudflare Tunnel<span class="tag">compose.cloudflare.yml</span></dt>
             <dd>
-              Classifies each task and sends it <b>local vs Claude</b> by risk. Hard triggers —
-              auth, networking, broad refactors — always escalate to Claude.
+              An optional overlay: <b>cloudflared</b> dials out to Cloudflare's edge, so remote
+              players get HTTPS with <b>zero inbound ports</b> and no port forwarding.
             </dd>
           </div>
           <div>
-            <dt>BMAD workflow<span class="tag">/bmad</span></dt>
+            <dt>Obsidian vault<span class="tag">DND_VAULT_PATH</span></dt>
             <dd>
-              Structured planning in six stages, Discovery through <b>Security &amp; Release</b>, so
-              features are scoped before they're built.
+              The DM's <b>system-agnostic source of truth</b>, bind-mounted into Foundry (file
+              picker sees its art and handouts) and into the devcontainer. A content-free starter
+              ships at <span class="mono">examples/vault-skeleton/</span>.
             </dd>
           </div>
           <div>
-            <dt>Kanban board<span class="tag">/next-issue · /run-epic</span></dt>
+            <dt>Content pipeline<span class="tag">scripts/content/</span></dt>
             <dd>
-              A per-repo GitHub Project. Agents <b>claim cards collision-free</b>; a Route field
-              makes the human/Claude/local decision visible on every card.
+              Vault notes compile into a <b>per-game compendium module</b>: statblocks from SRD
+              fences, token art through a curated resolver, an art-coverage gate, then build → sync
+              → restart. One command: <span class="mono">ship-game.sh</span>.
             </dd>
           </div>
           <div>
-            <dt>CI security gates<span class="tag">.github/workflows/</span></dt>
+            <dt>Battlemap generator<span class="tag">scripts/maps/</span></dt>
             <dd>
-              <b>gitleaks</b> secret scanning, <b>semgrep</b> SAST (incl. MITRE ATLAS AI/ML rules),
-              and <b>Trivy</b> container scanning — all enforced, not advisory.
+              One JSON spec renders a
+              <b>Player map, a keyed DM map, and a Foundry-ready .dd2vtt</b> with walls, lights and
+              doors baked in; <span class="mono">map-to-scene.sh</span> lands it as a compendium
+              scene.
+            </dd>
+          </div>
+          <div>
+            <dt>foundry-mcp bridge<span class="tag">.mcp.json · scripts/setup-mcp.sh</span></dt>
+            <dd>
+              The <b>adambdooley/foundry-vtt-mcp</b> two-part bridge: a Foundry module in the GM's
+              browser plus a local MCP server, letting Claude read and drive the <b>live world</b> —
+              dice requests, tokens, conditions, scenes.
+            </dd>
+          </div>
+          <div>
+            <dt>Dev foundation<span class="tag">.devcontainer/ · .github/</span></dt>
+            <dd>
+              Devcontainer with a deny-by-default firewall, pre-commit, CI gates and a Kanban board
+              — inherited from <b>claude_template_repo</b> and now
+              <b>detached from template sync</b>: every file here is repo-owned.
             </dd>
           </div>
         </dl>
@@ -816,133 +878,222 @@
         <p class="eyebrow">Under the hood</p>
         <h2>How the pieces actually work</h2>
         <p class="section-note">
-          Four close-ups: the sealed environment, the two engines behind the routing, the token
-          compressor, and the gates every change runs.
+          Four close-ups: the content pipeline, the art resolver behind its gate, the map generator,
+          and the sealed environment the repo is developed in.
         </p>
 
         <div class="dgram">
           <div class="dgram-h">
-            <h3>The devcontainer</h3>
-            <span class="path">.devcontainer/</span>
+            <h3>The content pipeline</h3>
+            <span class="path">scripts/content/ · ship-game.sh</span>
+          </div>
+          <div class="prail">
+            <div class="pstep">
+              <span class="pn">vault notes</span>
+              <span class="pd"
+                >NPCs as markdown with SRD statblock fences; handouts as image embeds. The note is
+                the master copy — Foundry JSON is a projection of it.</span
+              >
+            </div>
+            <div class="parrow" aria-hidden="true">▼</div>
+            <div class="pstep">
+              <span class="pn">compile-game.mjs</span>
+              <span class="pd"
+                >Compiles every statblock fence against the cached SRD base creature — proficiency
+                math, divergence reports — and every handout embed, incrementally.</span
+              >
+            </div>
+            <div class="parrow" aria-hidden="true">▼</div>
+            <div class="pstep gate-step">
+              <span class="pn">art-coverage.mjs --strict</span>
+              <span class="pd"
+                >Classifies every art slot — actor portrait and token, scene backgrounds, journal
+                image pages — and fails the ship if any named NPC would wear a blank
+                silhouette.</span
+              >
+            </div>
+            <div class="parrow" aria-hidden="true">▼</div>
+            <div class="pstep">
+              <span class="pn">build.mjs</span>
+              <span class="pd"
+                >Validates each source file and every @UUID cross-link, assigns deterministic IDs,
+                and packs LevelDB compendia plus module.json into
+                <span class="mono">content/dist/</span>.</span
+              >
+            </div>
+            <div class="parrow" aria-hidden="true">▼</div>
+            <div class="pstep">
+              <span class="pn">sync → restart</span>
+              <span class="pd"
+                >Copies the module into Foundry's data dir and restarts the container — Foundry
+                opens LevelDB packs at start, so a restart is not optional. Import with
+                <b>Keep Document IDs</b> ticked.</span
+              >
+            </div>
+          </div>
+          <p class="d-note">
+            <span class="mono">ship-game.sh &lt;game-dir&gt;</span> runs the whole chain in one
+            command. Games are <b>one module each</b>, scaffolded by
+            <span class="mono">new-game.sh</span>, with sources living beside the game's vault notes
+            — this repo is the pipeline, never the content.
+          </p>
+        </div>
+
+        <div class="dgram">
+          <div class="dgram-h">
+            <h3>Token art — the resolver chain</h3>
+            <span class="path">art-resolve.mjs · content/reference/art-map.json</span>
+          </div>
+          <div class="chain">
+            <div class="rung">
+              <div>
+                <span class="rt">image: line in the note</span>
+                <span class="rd"
+                  >Always wins. Vault-relative, so Obsidian's statblock plugin and Foundry render
+                  the same file.</span
+                >
+              </div>
+            </div>
+            <div class="rung">
+              <div>
+                <span class="rt">The SRD base creature's real token</span>
+                <span class="rd"
+                  >Genuinely that creature's art, where the system pack ships any — measured, it
+                  mostly does not.</span
+                >
+              </div>
+            </div>
+            <div class="rung">
+              <div>
+                <span class="rt">The curated icon map</span>
+                <span class="rd"
+                  >Hand-checked <span class="mono">byName</span> matches first, then — for mooks
+                  only — one <span class="mono">byType</span> silhouette per creature type. Curated,
+                  never fuzzy: fuzzy matching once paired <em>Adult Gold Dragon</em> with a gold
+                  bar.</span
+                >
+              </div>
+            </div>
+            <div class="rung stop">
+              <div>
+                <span class="rt">Nothing — deliberately</span>
+                <span class="rd"
+                  >A named NPC with no art resolves to the placeholder and a warning, and the strict
+                  gate stops the ship. The gap stays visible instead of hiding behind a generic
+                  outline.</span
+                >
+              </div>
+            </div>
+          </div>
+          <p class="d-note">
+            The standard fix for a stopped ship: <b>Claude draws the token</b> — a hand-written
+            flat-vector SVG from the note's Appearance section, saved under the game's
+            <span class="mono">Assets/Tokens/</span> and stamped back into the note (<span
+              class="mono"
+              >art-stamp.mjs</span
+            >) so Obsidian shows it too. An optional raster tier for
+            <span class="mono">www.dnd5eapi.co</span>'s SRD monster PNGs is measured (334 of 334
+            carry images) but ships <b>disabled</b> until someone wants mooks in photoreal art
+            instead of the curated icons.
+          </p>
+        </div>
+
+        <div class="dgram">
+          <div class="dgram-h">
+            <h3>Battlemaps from a spec</h3>
+            <span class="path">scripts/maps/render_map.py · map-to-scene.sh</span>
+          </div>
+          <div class="engines">
+            <div class="engine cloud">
+              <div class="en-h">One JSON spec in</div>
+              <div class="en-s">rooms · walls · doors · lights · keys</div>
+              <ul>
+                <li>Floor plan, features and grid declared once</li>
+                <li>Numbered keys with secret/hazard notes</li>
+                <li>Light sources with baked wedges</li>
+              </ul>
+              <div class="en-f">versioned beside the game's notes</div>
+            </div>
+            <div class="engine edge">
+              <div class="en-h">Three artifacts out</div>
+              <div class="en-s">player · dm · foundry</div>
+              <ul>
+                <li><b>Player map</b> — no keys, no secrets, safe to show</li>
+                <li><b>DM map</b> — numbered keys plus a legend panel</li>
+                <li><b>.dd2vtt</b> — walls, doors and lights import into Foundry</li>
+              </ul>
+              <div class="en-f">same spec, all three stay in sync</div>
+            </div>
+          </div>
+          <p class="d-note">
+            <span class="mono">map-to-scene.sh</span> goes one further: the
+            <span class="mono">.dd2vtt</span> becomes a compendium <b>Scene</b> with walls, doors
+            and lights, plus a GM-only <b>“— GM Keys” journal</b> whose map pins sit exactly on the
+            numbered keys.
+          </p>
+        </div>
+
+        <div class="dgram">
+          <div class="dgram-h">
+            <h3>The devcontainer this repo is built in</h3>
+            <span class="path">.devcontainer/ · init-firewall.sh</span>
           </div>
           <div class="fw">
             <span class="fw-lbl">deny-by-default firewall</span>
             <div class="cbox">
-              <div class="ct">container · node:24 (digest-pinned)</div>
+              <div class="ct">devcontainer · Claude Code works here</div>
               <div class="chiprow">
                 <span class="chip">Claude CLI</span>
-                <span class="chip">VS Code extension</span>
+                <span class="chip">pre-commit</span>
                 <span class="chip">gitleaks</span>
                 <span class="chip">semgrep</span>
-                <span class="chip">pre-commit</span>
-                <span class="chip">python3 · node</span>
+                <span class="chip">markdownlint</span>
+                <span class="chip">shellcheck · shfmt</span>
+                <span class="chip">prettier</span>
+                <span class="chip">node · python3</span>
               </div>
               <div class="mounts">
                 <span class="chip">mount · ~/.claude auth</span>
                 <span class="chip">mount · gh auth</span>
+                <span class="chip">mount · Obsidian vault (rw)</span>
+                <span class="chip">forward · :31415 → MCP bridge</span>
               </div>
             </div>
             <div class="egress">
               <div class="allow">
                 <span class="k">egress allowed →</span>
-                <span class="chip">GitHub</span><span class="chip">npm</span
-                ><span class="chip">PyPI</span> <span class="chip">api.anthropic.com</span
-                ><span class="chip">VS Marketplace</span>
-                <span class="chip">dnd5eapi.co (SRD art)</span>
+                <span class="chip">api.anthropic.com</span>
+                <span class="chip">GitHub (api · codeload · raw/objects)</span>
+                <span class="chip">registry.npmjs.org</span>
+                <span class="chip">PyPI + pythonhosted</span>
+                <span class="chip">VS Marketplace</span>
+                <span class="chip">www.dnd5eapi.co (SRD art)</span>
               </div>
-              <div class="deny">everything else → <b>REJECT</b></div>
+              <div class="deny">everything else → <b>DROP</b></div>
             </div>
             <div class="host-ext">
-              host machine · Ollama reachable only on :11434 → local model, never leaves your box
+              host machine · the Foundry stack runs here (docker compose) — the devcontainer has no
+              docker socket by design
             </div>
           </div>
           <p class="d-note">
-            Auth lives in mounted volumes, never in the repo. The firewall opens the network to a
-            short allowlist and blocks the rest — set once at container start.
+            The foundation came from <b>claude_template_repo</b> and the repo is now detached from
+            template sync — the firewall, gates and board stay; the template's local-model routing
+            is gone. Work flows over a GitHub Project board (<span class="mono">/next-issue</span>,
+            <span class="mono">/run-epic</span>, all writes via <span class="mono">board.sh</span>).
           </p>
         </div>
 
         <div class="dgram">
           <div class="dgram-h">
-            <h3>Two engines behind the routing</h3>
-            <span class="path">scripts/route-model.sh</span>
-          </div>
-          <div class="engines">
-            <div class="engine cloud">
-              <div class="en-h">Claude</div>
-              <div class="en-s">cloud · paid · escalate here</div>
-              <ul>
-                <li>Architecture &amp; cross-cutting design</li>
-                <li>Security, auth, secrets</li>
-                <li>Firewall / networking changes</li>
-                <li>Broad refactors, unclear debugging</li>
-              </ul>
-              <div class="en-f">judgment worth the tokens</div>
-            </div>
-            <div class="engine edge">
-              <div class="en-h">Local model · Ollama</div>
-              <div class="en-s">on-host · free · default for low risk</div>
-              <ul>
-                <li>Formatting &amp; boilerplate</li>
-                <li>Docs updates</li>
-                <li>Tiny single-purpose refactors</li>
-                <li>Simple renames &amp; tests</li>
-              </ul>
-              <div class="en-f">private · fast · near-zero cost</div>
-            </div>
-          </div>
-          <p class="d-note">
-            A task is classified by type and risk; any hard trigger — auth, networking, 8+ files —
-            always escalates to Claude. The same decision shows up as the <b>Route</b> field on the
-            board card.
-          </p>
-        </div>
-
-        <div class="dgram">
-          <div class="dgram-h">
-            <h3>Caveman — token compression</h3>
-            <span class="path">scripts/install-caveman.sh</span>
-          </div>
-          <div class="cv-bars">
-            <div class="cv-row">
-              <span class="cv-k">raw</span>
-              <div class="cv-bar full"></div>
-            </div>
-            <div class="cv-row">
-              <span class="cv-k">caveman</span>
-              <div class="cv-bar comp"></div>
-            </div>
-          </div>
-          <div class="cv-save">
-            ≈ one-third fewer output tokens — same technical content, less prose
-          </div>
-          <div class="statusline">
-            <span class="dot">●</span> caveman · session 12.4k tok · ~$0.08 saved
-          </div>
-          <p class="d-note">
-            Caveman trims Claude's wording down to the essentials, then a statusline reads the real
-            per-session token counts from the transcript and prices them — so spend is visible while
-            you work.
-          </p>
-        </div>
-
-        <div class="dgram">
-          <div class="dgram-h">
-            <h3>The security gates</h3>
+            <h3>The CI gates</h3>
             <span class="path">.github/workflows/</span>
           </div>
           <div class="pipe">
             <div class="check">
-              <div class="cn">pre-commit</div>
-              <div class="cw">
-                Formatting &amp; hygiene, before the code ever leaves your machine.
-              </div>
-              <div class="cs">local</div>
-            </div>
-            <div class="check">
-              <div class="cn">gitleaks</div>
-              <div class="cw">Blocks committed secrets, tokens, and keys.</div>
-              <div class="cs">secret-scan.yml</div>
+              <div class="cn">validate-template</div>
+              <div class="cw">Template integrity plus the repo's own gate scripts.</div>
+              <div class="cs">ci.yml</div>
             </div>
             <div class="check">
               <div class="cn">semgrep</div>
@@ -950,53 +1101,82 @@
               <div class="cs">semgrep.yml</div>
             </div>
             <div class="check">
-              <div class="cn">Trivy</div>
-              <div class="cw">Scans the container image for known CVEs.</div>
+              <div class="cn">secret-scan</div>
+              <div class="cw">gitleaks blocks committed secrets, tokens and keys.</div>
+              <div class="cs">secret-scan.yml</div>
+            </div>
+            <div class="check">
+              <div class="cn">CodeQL</div>
+              <div class="cw">Semantic code analysis on every push and PR.</div>
+              <div class="cs">codeql-analysis.yml</div>
+            </div>
+            <div class="check">
+              <div class="cn">container-scan</div>
+              <div class="cw">Trivy scans the compose images for known CVEs.</div>
               <div class="cs">container-scan.yml</div>
             </div>
             <div class="check">
-              <div class="cn">weekly audit</div>
+              <div class="cn">content-tests</div>
+              <div class="cw">
+                Pipeline unit tests, a full module build, and the coverage:art report.
+              </div>
+              <div class="cs">content-tests.yml</div>
+            </div>
+            <div class="check">
+              <div class="cn">dependency-review</div>
+              <div class="cw">Flags vulnerable or license-shifting dependency changes on PRs.</div>
+              <div class="cs">dependency-review.yml</div>
+            </div>
+            <div class="check">
+              <div class="cn">repository-audit</div>
               <div class="cw">Scheduled repo-wide security sweep.</div>
               <div class="cs">repository-audit.yml</div>
+            </div>
+            <div class="check">
+              <div class="cn">pages</div>
+              <div class="cw">Publishes this very briefing from docs/explainer/.</div>
+              <div class="cs">pages.yml</div>
             </div>
           </div>
           <p class="d-note">
             Every gate is required, not advisory — a red check keeps the pull request from merging.
+            In CI the art gate is a schema statement (no vault mounted); the on-host
+            <span class="mono">--strict</span> run before a ship is the real coverage proof.
           </p>
         </div>
       </section>
 
       <section>
         <p class="eyebrow">The loop</p>
-        <h2>From idea to merge</h2>
+        <h2>From idea to game night</h2>
         <p class="section-note">
-          One story, one branch, one pull request. The order is the point — each step gates the
-          next.
+          One game, one module, one command to ship. The order is the point — the gate sits before
+          anything reaches Foundry.
         </p>
         <div class="life">
           <div class="step">
-            <h3>Issue</h3>
-            <p>Work is filed as a card on the board.</p>
+            <h3>Scaffold</h3>
+            <p><span class="mono">new-game.sh</span> lays out notes + module sources together.</p>
           </div>
           <div class="step">
-            <h3>Route</h3>
-            <p>Tagged Human, Claude, or Local by risk.</p>
+            <h3>Author</h3>
+            <p>Write the notes; statblocks are SRD fences, not transcriptions.</p>
           </div>
           <div class="step">
-            <h3>Claim</h3>
-            <p>An agent picks it up — no collisions.</p>
+            <h3>Compile</h3>
+            <p>Fences become actors; handout embeds become image journals.</p>
           </div>
           <div class="step">
-            <h3>Pull request</h3>
-            <p>Branch + PR that closes the issue.</p>
+            <h3>Gate</h3>
+            <p>Art coverage <span class="mono">--strict</span>: no blank tokens, proven.</p>
           </div>
           <div class="step">
-            <h3>Gates</h3>
-            <p>Secrets, SAST, container scan must pass.</p>
+            <h3>Ship</h3>
+            <p>Build → sync → restart Foundry; import with Keep Document IDs.</p>
           </div>
           <div class="step">
-            <h3>Merge</h3>
-            <p>Reviewed, green, shipped.</p>
+            <h3>Play</h3>
+            <p>Live session over MCP — dice requests, tokens, scenes, conditions.</p>
           </div>
         </div>
       </section>
@@ -1006,15 +1186,16 @@
           Where to go deeper
         </p>
         <div class="docs">
-          <span>README.md</span>
-          <span>docs/TEMPLATE_GUIDE.md</span>
-          <span>docs/AI_ROUTING_POLICY.md</span>
-          <span>docs/BMAD_WORKFLOW.md</span>
-          <span>docs/KANBAN_WORKFLOW.md</span>
+          <a href="../../README.md">README.md</a>
+          <a href="../PROJECT.md">docs/PROJECT.md</a>
+          <a href="../CONTENT_AUTHORING.md">docs/CONTENT_AUTHORING.md</a>
+          <a href="../FOUNDRY_REBUILD.md">docs/FOUNDRY_REBUILD.md</a>
+          <a href="../../DEPLOYMENT.md">DEPLOYMENT.md</a>
         </div>
         <p class="fine">
-          The repository README is the source of truth; this overview is a briefing companion.
-          Apache-2.0.
+          The repository README is the source of truth; this overview is a briefing companion. MIT.
+          Foundry Virtual Tabletop is a trademark of Foundry Gaming, LLC — this project is
+          unaffiliated, and a valid FoundryVTT license is required.
         </p>
       </footer>
     </div>

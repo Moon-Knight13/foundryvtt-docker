@@ -4,6 +4,7 @@
 [![semgrep](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/semgrep.yml)
 [![secret-scan](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/secret-scan.yml)
 [![CodeQL](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/codeql-analysis.yml)
+[![content-tests](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/content-tests.yml/badge.svg?branch=main)](https://github.com/Moon-Knight13/foundryvtt-docker/actions/workflows/content-tests.yml)
 
 A self-hosted **[Foundry Virtual Tabletop](https://foundryvtt.com)** server that
 runs in **Docker** and is reachable remotely through a **Cloudflare Tunnel** —
@@ -35,6 +36,12 @@ This page is a landing pad. Anything past "how do I start it" lives in
   scenes as code compiled into a compendium module, and drives the running world
   over the [foundry-vtt-mcp](https://github.com/adambdooley/foundry-vtt-mcp)
   bridge.
+- **Content pipeline** (`scripts/content/`) — vault notes compile into a
+  per-game Foundry module: `compile-game.mjs` builds statblocks from SRD
+  fences, token art resolves through a curated map with an **art-coverage
+  gate** that proves no blank tokens, `build.mjs` packages the module, and
+  `ship-game.sh` runs compile → gate → build → sync → Foundry restart in one
+  command. Gated in CI by the `content-tests` workflow.
 
 The repository itself is developed AI-first — devcontainer, deny-by-default
 firewall, CI gates, Kanban flow — from
@@ -82,7 +89,7 @@ docker compose -f compose.yml -f compose.cloudflare.yml up -d   # remote access 
 | --- | --- |
 | [`DEPLOYMENT.md`](DEPLOYMENT.md) | Deployment guide: env setup, profiles, monitoring, performance, troubleshooting |
 | [`docs/PROJECT.md`](docs/PROJECT.md) | FoundryVTT specifics for agents: MCP integration, content routing, container operations, security hard rules |
-| [`docs/CONTENT_AUTHORING.md`](docs/CONTENT_AUTHORING.md) | Content-as-code pipeline: author JSON → build compendium module → sync → import; skill-vs-MCP routing |
+| [`docs/CONTENT_AUTHORING.md`](docs/CONTENT_AUTHORING.md) | Content-as-code pipeline: compile statblocks, curated art map + coverage gate, build → sync → import; skill-vs-MCP routing |
 | [`docs/FOUNDRY_REBUILD.md`](docs/FOUNDRY_REBUILD.md) | Rebuild a wiped Foundry world from the durable sources (vault, git content module, D&D Beyond) |
 | [`examples/vault-skeleton/`](examples/vault-skeleton/) | Copy-to-start Obsidian vault: taxonomy, blank Templater templates, and the in-person/Foundry "two surfaces" guide |
 | [`scripts/maps/README.md`](scripts/maps/README.md) | Spec-driven battlemap generator: Player PNG + keyed DM PNG + Foundry `.dd2vtt` |
@@ -91,6 +98,7 @@ docker compose -f compose.yml -f compose.cloudflare.yml up -d   # remote access 
 | [`SECURITY.md`](SECURITY.md) | Credential handling and the files agents must never read |
 | [upstream template](https://github.com/Moon-Knight13/claude_template_repo) | Where the devcontainer/firewall/CI foundation came from (this repo is detached from template sync) |
 | [`docs/KANBAN_WORKFLOW.md`](docs/KANBAN_WORKFLOW.md) | Board-driven agent workflow (`/next-issue`, `/run-epic`) |
+| [`docs/explainer/index.html`](docs/explainer/index.html) | Self-contained visual briefing of the whole system (also published via GitHub Pages) |
 
 ## Contributing
 

@@ -146,7 +146,17 @@ it runs.
 
 1. `foundry-base.mjs snapshot` — and confirm it exists before wiping anything.
 2. Wipe the world (or the data dir), then `foundry-base.mjs provision`.
-3. Launch Foundry, create a world, `foundry-base.mjs pull-games`.
+3. Launch Foundry, create a world, then restore the game content:
+   - `foundry-base.mjs pull-games` rebuilds every game listed in
+     `foundry-base.json`'s `games` array — **check that array first**; while
+     it is empty the command prints "No games listed in the manifest —
+     nothing to pull" and restores nothing. Add each game's config path, or
+     run `scripts/content/ship-game.sh <game-dir>` per game instead (it also
+     restarts Foundry, which `pull-games` does not — restart yourself after
+     a pull so the new packs load).
+   - Either path runs the **strict art gate** between build and sync and
+     hard-fails on a blank named-NPC token — fix art before continuing, do
+     not bypass the gate mid-drill.
 4. Enable the modules; import compendium packs with **"Keep Document IDs"**
    ticked (see `CONTENT_AUTHORING.md`, *Rules that bite* — without it, scene map
    pins render but open nothing).

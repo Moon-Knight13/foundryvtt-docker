@@ -44,7 +44,6 @@ Your local `.env` file contains:
 
 - FoundryVTT username/password
 - Cloudflare Tunnel token (`CF_TUNNEL_TOKEN`)
-- SSH key paths for backup restoration
 - Any other credentials
 
 The same protection extends to two files inside the live data directory:
@@ -60,11 +59,15 @@ cookies). Agents must never read or display any of the three — see
 - ✅ Pre-commit hook blocks accidental commits
 - ✅ Cannot be pushed to GitHub
 
-#### 2. Copilot AI Protection
+#### 2. AI Assistant Protection
 
-- ✅ `.copilot-instructions.md` prevents AI from reading `.env`
-- ✅ This repository instructs Copilot to refuse `.env` access
-- ✅ Even if requested, Copilot will refuse to read it
+- ✅ `.copilot-instructions.md` and the CLAUDE.md hard rules instruct AI
+  assistants never to read or display `.env`, `license.json`, or
+  `cookiejar.json`
+- ✅ A PreToolUse guard hook (`scripts/hooks/foundry-mcp-guard.sh`, wired in
+  `.claude/settings.json`) blocks unapproved foundry-mcp write tools
+- ⚠️ Instructions steer the model; they are not a technical barrier — the
+  firewall, gitignore, and gitleaks layers are the enforcement
 
 #### 3. File System Protection
 
@@ -130,7 +133,6 @@ nano .env  # add your credentials
 # - Cloudflare Tunnel: delete + recreate the tunnel in the Zero Trust
 #   dashboard (Networks -> Tunnels); the token cannot be rotated in place
 # - FoundryVTT: Update password at foundry website
-# - SSH keys: Revoke/regenerate if needed
 
 # Update your .env with new values
 nano .env
@@ -169,39 +171,12 @@ ls -la | grep .env
 # Should NOT show .env
 ```
 
-### Test 3: Verify Copilot Protection
-
-Ask the Copilot:
-
-> "Can you read my .env file?"
-
-Expected response:
-
-> "I cannot read `.env` files as they contain sensitive credentials..."
-
 ## 🛡️ Additional Security
 
-### Use Environment-Specific Configs
-
-```bash
-# For production, use separate configs
-.env.production  (local only - never commit)
-.env.staging     (local only - never commit)
-.env.development (local only - never commit)
-```
-
-### Rotate Credentials Regularly
-
-- Every 90 days: Generate new API keys
-- Immediately if exposed: Revoke old, generate new
-
-### Use SSH Keys for Backup Restoration
-
-```bash
-# For secure backup restoration, use SSH keys
-ssh-keygen -t ed25519 -f ~/.ssh/foundry_backup
-# More secure than storing passwords
-```
+- There is one self-hosted stack and one `.env` — no
+  production/staging/development split exists in this repo.
+- Rotate a credential **immediately** if exposed: revoke the old one,
+  generate a new one, update `.env`.
 
 ## 📖 Related Files
 

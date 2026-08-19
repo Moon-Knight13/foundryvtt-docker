@@ -3,10 +3,10 @@
 // before anyone builds on it. The SRD monster detail endpoint carries an
 // optional `image` field; nobody publishes the hit rate, so this counts it.
 //
-// Run AFTER the devcontainer rebuild that activates the firewall allowlist
-// entry — until then every request refuses to connect. Note the API redirects
-// image bodies to S3 (a different host): this script probes one image and
-// reports the final status, so a blocked redirect target is visible too.
+// Needs www.dnd5eapi.co on the firewall allowlist (it is, since the #88
+// rebuild). Measured 2026-08-19: 334/334 monsters carry an image, served
+// directly with HTTP 200 — no S3 redirect. The script still probes one image
+// and reports the final status, so any future redirect stays visible.
 //
 // Usage:
 //   node scripts/content/measure-dnd5eapi.mjs [--out <path>]
