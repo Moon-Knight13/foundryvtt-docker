@@ -347,10 +347,24 @@ Idempotent; re-running stamps nothing.
 
 A
 disabled `raster` tier also exists in the map schema for `www.dnd5eapi.co`'s
-SRD monster PNGs — the host is on the firewall allowlist, but the running
-container needs a **devcontainer rebuild** before its hit rate can be measured,
-and dnd5eapi redirects image bodies to S3 (a different host), so keep it
-disabled until measured.
+SRD monster PNGs. **Measured 2026-08-19** (post-rebuild, in-container): 334 of
+334 SRD monsters carry an image (100%), and the image bodies are served
+directly with HTTP 200 — the feared S3 redirect to a second host did not
+materialise. The tier stays disabled until someone decides mooks should wear
+real creature art instead of the curated icons; flipping `enabled: true` on a
+generated raster block in `art-map.json` is the whole switch.
+
+Image-*generation* APIs were also evaluated for the named-NPC gap
+(perchance.org, 2026-08-19 verdict): **no official API exists** — the site
+serves a Cloudflare JS challenge to every non-browser client, and all client
+libraries self-describe as unofficial reverse-engineering. Measured directly:
+the community-tutorial endpoint (`/api/generateList.php`) 403s behind a
+managed challenge (and returns generator *text*, never images, even when it
+worked), and the real image backend (`image-generation.perchance.org`) sits
+behind the same wall plus an in-browser ad-verification `userKey` a server
+cannot mint. Do not build pipeline steps on it. Generated art remains welcome
+the manual way: make the image in any web UI, save it under the game's
+`Assets/Tokens/`, add the vault-relative `image:` line.
 
 ### The gate: prove it, not promise it
 
@@ -381,16 +395,16 @@ build, so a game with a blank named NPC stops before anything reaches Foundry.
 `foundry-base.mjs pull-games` runs the same gate between build and sync for
 every game in the manifest.
 
-The raster tier's measurement tool ships ready for the post-rebuild step:
+The raster tier's measurement tool (already run once — see the measured verdict
+above — but rerunnable any time the API changes):
 
 ```bash
 node scripts/content/measure-dnd5eapi.mjs --out /tmp/raster.json
 ```
 
 counts `image` fields across all SRD monsters on `www.dnd5eapi.co`, probes one
-image for the S3 redirect (a different host, possibly needing its own firewall
-entry), and emits a **disabled** `raster` block to paste into `art-map.json`
-if the numbers justify it.
+image for redirects, and emits a **disabled** `raster` block to paste into
+`art-map.json` if the numbers justify it.
 
 ## Handout art: showable in Foundry
 
