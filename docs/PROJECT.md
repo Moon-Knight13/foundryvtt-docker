@@ -40,8 +40,12 @@ UI, never an instruction.
 ## Notes vault (Obsidian)
 
 The GM's personal notes live in an **Obsidian vault** bind-mounted into the
-devcontainer at `/home/node/DnD` (host source `${DND_VAULT_PATH:-~/Documents/DnD}`,
-wired in `.devcontainer/devcontainer.json`). Read/write notes there by absolute
+devcontainer at `/home/node/DnD`. The devcontainer mount source is
+**hardcoded** to `${localEnv:HOME}/Documents/DnD` in
+`.devcontainer/devcontainer.json` — only the Foundry container honours
+`DND_VAULT_PATH` (`compose.yml`); a non-default vault path therefore needs the
+devcontainer mount edited too, or the two containers see different trees.
+Read/write notes there by absolute
 path; it is **outside `/workspace`**, so it is never part of this repo's git tree.
 A gitignored symlink `/workspace/DnD` → `/home/node/DnD` (created by
 `postStartCommand`) surfaces the vault in the VS Code sidebar; the symlink
@@ -292,15 +296,21 @@ From a rough idea to playable content:
 
 1. `get-world-info` / `list-scenes` (MCP) — orient in the world.
 2. `search-compendium` / `list-creatures-by-criteria` (MCP) — source material.
-3. **foundry-content skill** — author NPCs, items, journals, scenes as JSON in
-   `content/src/`; build; user syncs and imports (see skill for steps).
-4. Scene/token tools (MCP) — stage encounters in the live world from the
+3. **foundry-content skill** — author notes in the vault; statblocks compile
+   from SRD fences (`compile-game.mjs`), art resolves through the curated map
+   and gate (`art-coverage.mjs --strict` — see `docs/CONTENT_AUTHORING.md`,
+   "Token art").
+4. **Ship**: `scripts/content/ship-game.sh <game-dir>` (host side) runs
+   compile → strict art gate → build → sync → Foundry restart in one command.
+   Import with **Keep Document IDs** ticked.
+5. Scene/token tools (MCP) — stage encounters in the live world from the
    imported compendium content; dice-request tools during play.
 
 ## Testing changes against the live stack
 
-There is no second instance. `scripts/test-instance.sh` used to clone the data
-dir onto a stack on :30001, on the premise that live worlds were irreplaceable.
+There is no second instance. `scripts/test-instance.sh` (still present, no
+longer the recommended path) clones the data dir onto a stack on :30001, on
+the premise that live worlds were irreplaceable.
 That premise no longer holds — a world is rebuildable from the vault, the git
 content module and D&D Beyond (see `docs/FOUNDRY_REBUILD.md`) — and one Foundry
 licence permits only one active server, so the two stacks could never run at

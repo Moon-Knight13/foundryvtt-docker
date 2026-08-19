@@ -169,7 +169,8 @@ which is what step 4 checks.
 
 Every image a player loads crosses your upload link. `scripts/maps/audit-assets.sh`
 reports (read-only) which vault images are worth converting to WebP and by how
-much — on this vault, 53 files totalling 115 MB would drop to 57 MB. Generated
+much — a mid-2026 run on this vault: 53 files totalling 115 MB would drop to
+57 MB; re-run it for current numbers. Generated
 battlemaps are already lossless WebP (`render_map.py`), 60-70% smaller than the
 PNGs they replaced.
 
