@@ -98,6 +98,11 @@ done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | sort -u)
 # monster endpoint serves per-creature PNGs. NOTE it redirects image bodies to
 # S3, so the redirect target is a different host — measure the real hit rate
 # after a rebuild and extend this list if the images themselves 000 out.
+# perchance.org is under evaluation as an art-gen backend for the named-NPC art
+# gap (#88 follow-up): this entry exists to read its API docs in-container and
+# probe whether an official image-generation API exists. Cloudflare-fronted
+# (stable resolution). If the verdict lands on separate API/CDN hosts, add them
+# here with their own note; if the verdict is "no official API", remove this.
 for domain in \
     "registry.npmjs.org" \
     "api.anthropic.com" \
@@ -109,7 +114,8 @@ for domain in \
     "marketplace.visualstudio.com" \
     "vscode.blob.core.windows.net" \
     "update.code.visualstudio.com" \
-    "www.dnd5eapi.co"; do
+    "www.dnd5eapi.co" \
+    "perchance.org"; do
     echo "Resolving $domain..."
     ips=$(dig +noall +answer A "$domain" | awk '$4 == "A" {print $5}')
     if [ -z "$ips" ]; then
