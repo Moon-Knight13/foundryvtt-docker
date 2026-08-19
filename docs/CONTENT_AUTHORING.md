@@ -366,6 +366,33 @@ cannot mint. Do not build pipeline steps on it. Generated art remains welcome
 the manual way: make the image in any web UI, save it under the game's
 `Assets/Tokens/`, add the vault-relative `image:` line.
 
+### Named-NPC art: the standard flow
+
+When the gate stops a game on a named NPC, this is the normal way to close the
+gap (first used for Lure of the Lamia's Amira/Selyse/Zephyr, 2026-08-19):
+
+1. **Ask Claude to draw the token from the note.** The note's `## Appearance`
+   and roleplay sections are the brief — write them well and the token draws
+   itself. Claude hand-writes a flat-vector SVG portrait: 512 viewBox,
+   circular token composition with a coloured rim, bust (or body, for
+   non-humanoids) over a scene-appropriate backdrop, the character's tells
+   made visible (Amira's gold ear cuffs, Zephyr's glowing *geas* eyes).
+   Obsidian and Foundry both render SVG natively, files are a few KB, and
+   revisions are one edit away — "warmer palette", "angrier brows" are cheap
+   asks.
+2. **File goes in the game's own assets**, named after the character:
+   `<Game>/Assets/Tokens/<character-slug>.svg`.
+3. **Stamp the note** with the vault-relative line, right after `name:` in the
+   statblock fence — `image: 03 Oneshots/<Game>/Assets/Tokens/<slug>.svg` —
+   so Obsidian shows it too.
+4. **Recompile and rerun the strict gate** — done when it reports
+   `no blank tokens`.
+
+Prefer painterly art for a particular face? Generate it in any web UI
+(browser use is what the free generators support), save the file in the same
+place, same `image:` line — steps 2–4 are identical. The two sources coexist
+per-character; swapping later is a one-line change.
+
 ### The gate: prove it, not promise it
 
 ```bash
