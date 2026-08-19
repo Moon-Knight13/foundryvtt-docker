@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveArt, GENERIC_ART_DIR } from './art-resolve.mjs';
+import { resolveArt, normalizeArtPath, GENERIC_ART_DIR } from './art-resolve.mjs';
 
 // A trimmed art-map.json shape — the real one lives in content/reference/.
 const MAP = {
@@ -118,4 +118,50 @@ test('the disabled raster tier stays disabled until measured', () => {
   );
   assert.equal(on.tier, 'raster');
   assert.equal(on.src, 'https://example.test/goblin.png');
+});
+
+test('a vault-relative image path gains the DnD/ mount prefix for Foundry', () => {
+  assert.equal(
+    normalizeArtPath('06 Assets/Tokens/generic/lorc/scorpion.svg'),
+    'DnD/06 Assets/Tokens/generic/lorc/scorpion.svg',
+  );
+  assert.equal(
+    normalizeArtPath('03 Oneshots/Lure of the Lamia/Assets/Tokens/amira.webp'),
+    'DnD/03 Oneshots/Lure of the Lamia/Assets/Tokens/amira.webp',
+  );
+});
+
+test('paths Foundry already understands pass through normalizeArtPath verbatim', () => {
+  for (const p of [
+    'DnD/06 Assets/Tokens/generic/lorc/scorpion.svg',
+    'icons/svg/mystery-man.svg',
+    'systems/dnd5e/tokens/beast/Scorpion.webp',
+    'modules/some-module/art/thing.webp',
+    'https://example.test/goblin.png',
+    // Not a fetched URL — proves the prefix regex passes plain-http art links
+    // through untouched instead of mangling them into DnD/http:…
+    'http://example.test/goblin.png', // nosemgrep: insecure-http-url
+  ]) {
+    assert.equal(normalizeArtPath(p), p, `${p} must not be re-prefixed`);
+  }
+});
+
+test('normalizeArtPath leaves empty and missing values alone', () => {
+  assert.equal(normalizeArtPath(''), '');
+  assert.equal(normalizeArtPath(undefined), undefined);
+  assert.equal(normalizeArtPath(null), null);
+});
+
+test('resolveArt normalizes the explicit tier the same way', () => {
+  const r = resolveArt(
+    {
+      name: 'Goblin',
+      base: 'Goblin',
+      type: 'humanoid',
+      image: '06 Assets/Tokens/custom/boss.webp',
+    },
+    MAP,
+  );
+  assert.equal(r.tier, 'explicit');
+  assert.equal(r.src, 'DnD/06 Assets/Tokens/custom/boss.webp');
 });

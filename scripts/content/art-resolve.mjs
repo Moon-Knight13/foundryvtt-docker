@@ -29,6 +29,17 @@
 // mount (compose.yml maps $DND_VAULT_PATH to /data/Data/DnD).
 export const GENERIC_ART_DIR = 'DnD/06 Assets/Tokens/generic';
 
+// Prefixes Foundry resolves on its own: its Data-root trees and plain URLs.
+// Anything else in an image: is a vault-relative path the author wrote so the
+// note ALSO renders in Obsidian, and gains the DnD/ mount prefix here.
+const FOUNDRY_NATIVE = /^(DnD\/|icons\/|systems\/|modules\/|https?:\/\/)/;
+
+/** Vault-relative image path to Foundry Data path; Foundry-native paths pass. */
+export function normalizeArtPath(src) {
+  if (!src) return src;
+  return FOUNDRY_NATIVE.test(src) ? src : `DnD/${src}`;
+}
+
 /** Same words = same creature: forgiving about case and punctuation only. */
 function sameCreature(a, b) {
   const norm = s =>
@@ -51,7 +62,7 @@ function iconEntry(entry, tier) {
  * @returns {{ src: string|null, tier: string, artist?: string }}
  */
 export function resolveArt(fence, map) {
-  if (fence.image) return { src: fence.image, tier: 'explicit' };
+  if (fence.image) return { src: normalizeArtPath(fence.image), tier: 'explicit' };
 
   if (map.raster?.enabled) {
     const hit = map.raster.byName?.[fence.base ?? fence.name];

@@ -20,7 +20,7 @@ import path from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
-import { resolveArt } from './art-resolve.mjs';
+import { resolveArt, normalizeArtPath } from './art-resolve.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
@@ -515,15 +515,26 @@ export async function compileNote(notePath, opts = {}) {
   // then the curated icon map (art-resolve.mjs) — whose silhouette tier only a
   // source:-inherited mook may use. A bespoke named NPC that reaches the map
   // and misses resolves to nothing, and the placeholder warning fires.
-  let img = fence.image ?? art?.tokenSrc;
-  if (!img) {
+  // The tier travels with the src so art-stamp.mjs can tell an author's line
+  // ('explicit') and real SRD art ('srd') from map picks it may write back.
+  let img;
+  let artTier;
+  if (fence.image) {
+    // Authors may write the path vault-relative so the same line renders in
+    // Obsidian; the compiler owns the DnD/ mount prefix.
+    img = normalizeArtPath(fence.image);
+    artTier = 'explicit';
+  } else if (art?.tokenSrc) {
+    img = art.tokenSrc;
+    artTier = 'srd';
+  } else {
     let artMap = {};
     try {
       artMap = JSON.parse(await readFile(opts.artMap ?? DEFAULT_ART_MAP, 'utf8'));
     } catch {
       // No map is a resolvable state: the chain simply ends at `none`.
     }
-    img = resolveArt(
+    const resolved = resolveArt(
       {
         // The note title is the actor's identity; the base is what it was
         // built on. The resolver treats them as a mook only when they agree —
@@ -535,7 +546,9 @@ export async function compileNote(notePath, opts = {}) {
         art_required: fence.art_required,
       },
       artMap,
-    ).src;
+    );
+    img = resolved.src;
+    artTier = resolved.tier;
   }
 
   const { actor, warnings } = toActor(fence, {
@@ -551,6 +564,7 @@ export async function compileNote(notePath, opts = {}) {
     base,
     edition,
     exact: fence.exact === true,
+    art: { src: img ?? null, tier: artTier },
   };
 }
 

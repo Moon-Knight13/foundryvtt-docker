@@ -9,6 +9,7 @@
   "scripts": {
     "build": "node build.mjs",
     "coverage:art": "node art-coverage.mjs",
+    "stamp:art": "node art-stamp.mjs",
     "test": "node --test"
   },
   "type": "module"
