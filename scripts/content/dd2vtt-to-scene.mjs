@@ -13,17 +13,23 @@
  * Usage:
  *   node scripts/content/dd2vtt-to-scene.mjs <file.dd2vtt> --background <src> \
  *     [--out <path>] [--name "<Scene>"] [--grid-distance 5] [--global-light] \
- *     [--keys <spec.json> --keys-journal <path>]
+ *     [--keys <spec.json> --keys-journal <path>] \
+ *     [--config <game config> [--src <src dir>]]
  *
  * --keys reads the map spec's numbered `keys` — the ones render_map.py draws on
  * the DM PNG — and emits a GM-only "<Scene> — GM Keys" journal (one page per
  * key) plus a scene Note pinned at each key. The GM clicks pin 4 instead of
  * reading the legend off the DM image.
+ *
+ * A key may carry `links: ["actors/selyse.json", ...]` — curated module source
+ * paths rendered on its page as a "Related:" row of @UUID references (actor
+ * sheets, handouts, other journals). Links need --config (module id) and, for
+ * vault-hosted games, --src (where to read each document's display name).
  */
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { docId } from './build.mjs';
+import { docId, COLLECTIONS, loadConfig, resolveSrcRoot } from './build.mjs';
 
 const DEFAULT_PPG = 72;
 const DEFAULT_GRID_DISTANCE = 5;
@@ -101,18 +107,45 @@ export function lightFromDd2vtt(light, ppg, distance) {
 //
 // The journal is addressed by the path build.mjs will stage it under, so the
 // ids here match the ones the compiled pack will carry.
-export function keysJournal(keys, sceneName, journalRelPath) {
-  const pages = keys.map((k, i) => ({
-    _id: docId(`${journalRelPath}#pages[${i}]`),
-    name: `${k.n}. ${k.label ?? 'Key'}`,
-    type: 'text',
-    title: { show: true, level: 1 },
-    // Keys routinely hold the scene's secrets — GM-only, like the rest of the
-    // GM shelf. Foundry hides a Note whose journal the player cannot see.
-    ownership: { default: 0 },
-    text: { content: `<p>${k.note ?? ''}</p>`, format: 1 },
-    sort: (i + 1) * 100,
-  }));
+export function keysJournal(keys, sceneName, journalRelPath, { moduleId, names = {} } = {}) {
+  const pages = keys.map((k, i) => {
+    // A key's optional `links` are module source paths ("actors/selyse.json"),
+    // rendered as @UUID references so the pin's page opens the actor sheet /
+    // handout / journal directly. Curated in the spec, never inferred from the
+    // note text — same philosophy as the art map.
+    let related = '';
+    if (k.links?.length) {
+      if (!moduleId) {
+        throw new Error(
+          `key ${k.n} ("${k.label ?? ''}") has links — pass --config <game config> so @UUID can name the module`,
+        );
+      }
+      const items = k.links.map(link => {
+        const type = link.split('/')[0];
+        const collection = COLLECTIONS[type];
+        if (!collection || !link.endsWith('.json')) {
+          throw new Error(
+            `key ${k.n}: link "${link}" must look like <type>/<file>.json with type one of: ` +
+              Object.keys(COLLECTIONS).join(', '),
+          );
+        }
+        const display = names[link] ?? link;
+        return `@UUID[Compendium.${moduleId}.${type}.${collection.type}.${docId(link)}]{${display}}`;
+      });
+      related = `<p><strong>Related:</strong> ${items.join(' · ')}</p>`;
+    }
+    return {
+      _id: docId(`${journalRelPath}#pages[${i}]`),
+      name: `${k.n}. ${k.label ?? 'Key'}`,
+      type: 'text',
+      title: { show: true, level: 1 },
+      // Keys routinely hold the scene's secrets — GM-only, like the rest of the
+      // GM shelf. Foundry hides a Note whose journal the player cannot see.
+      ownership: { default: 0 },
+      text: { content: `<p>${k.note ?? ''}</p>${related}`, format: 1 },
+      sort: (i + 1) * 100,
+    };
+  });
   return {
     _id: docId(journalRelPath),
     name: `${sceneName} — GM Keys`,
@@ -240,6 +273,12 @@ export function parseArgs(argv) {
       case '--keys':
         opts.keys = argv[++i];
         break;
+      case '--config':
+        opts.config = argv[++i];
+        break;
+      case '--src':
+        opts.src = argv[++i];
+        break;
       case '--keys-journal':
         opts.keysJournal = argv[++i];
         break;
@@ -284,6 +323,37 @@ export async function convertFile(input, opts) {
     journalRelPath = `journals/${path.basename(opts.keysJournal)}`;
   }
 
+  // Keys may carry curated `links` to module documents; resolving them needs
+  // the module id (from the game config) and the source tree (to read each
+  // linked document's display name). Fail fast on a typo'd path — build.mjs
+  // would reject the dangling @UUID later anyway, but this names the key.
+  let linkCtx;
+  const linked = keys.filter(k => k.links?.length);
+  if (linked.length) {
+    if (!opts.config) {
+      throw new Error(
+        'spec keys carry links — pass --config <game config> (and --src <src dir> for vault-hosted games)',
+      );
+    }
+    const config = await loadConfig(opts.config);
+    const srcDir = opts.src ?? resolveSrcRoot(config);
+    const names = {};
+    for (const k of linked) {
+      for (const link of k.links) {
+        if (names[link]) continue;
+        const file = path.join(srcDir, link);
+        let doc;
+        try {
+          doc = JSON.parse(await readFile(file, 'utf8'));
+        } catch (err) {
+          throw new Error(`key ${k.n}: link "${link}" not readable at ${file}: ${err.message}`);
+        }
+        names[link] = doc.name ?? path.basename(link, '.json');
+      }
+    }
+    linkCtx = { moduleId: config.id, names };
+  }
+
   const scene = sceneFromDd2vtt(dd, { ...opts, name, keys, journalRelPath });
   const out = opts.out ?? path.join(process.cwd(), `${name}.json`);
   await mkdir(path.dirname(out), { recursive: true });
@@ -294,7 +364,7 @@ export async function convertFile(input, opts) {
 
   let journalOut;
   if (keys.length && opts.keysJournal) {
-    const journal = keysJournal(keys, name, journalRelPath);
+    const journal = keysJournal(keys, name, journalRelPath, linkCtx);
     journalOut = opts.keysJournal;
     await mkdir(path.dirname(journalOut), { recursive: true });
     await writeFile(journalOut, `${JSON.stringify(journal, sortKeys, 2)}\n`);
