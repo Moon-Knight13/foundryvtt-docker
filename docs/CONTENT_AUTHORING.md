@@ -296,7 +296,11 @@ something wrong: fine in the JSON, obviously broken on the map.
 
 The compiler resolves art through a chain, and stops deliberately short:
 
-1. **`image:` in the fence** — used verbatim, always wins.
+1. **`image:` in the fence** — always wins. Write it **vault-relative**
+   (`03 Oneshots/<Game>/Assets/Tokens/amira.webp`) so the same line renders in
+   Obsidian's statblock plugin; the compiler adds the `DnD/` mount prefix for
+   Foundry. Paths Foundry already understands (`DnD/…`, `icons/…`, `systems/…`,
+   `modules/…`, URLs) pass through verbatim.
 2. **The SRD base creature's real token** (`source:` + the reference cache) —
    genuinely that creature's art, where the pack ships any (see the measured
    table below: it mostly does not).
@@ -325,7 +329,23 @@ pinned to a commit) and are fetched into the vault, not committed here:
 node scripts/content/art-fetch.mjs   # → <vault>/06 Assets/Tokens/generic/<artist>/
 ```
 
-Idempotent; writes `_attribution.md` beside the icons (CC-BY requires it). A
+Idempotent; writes `_attribution.md` beside the icons (CC-BY requires it).
+
+The resolver's picks live only in the compiled JSON — the note itself stays
+blank in Obsidian. To make them visible where you read:
+
+```bash
+node scripts/content/art-stamp.mjs "<vault>/03 Oneshots/<Game>"
+```
+
+writes each **map pick** back into its note as a vault-relative `image:` line
+(inserted after `name:`), so Obsidian and Foundry now show the same icon.
+Deliberately narrow: only `exact`/`type` map picks are stamped — an author's
+existing `image:` line is never rewritten, real SRD art (`systems/…`, which
+Obsidian cannot display) is left alone, and a named NPC's gap stays visible.
+Idempotent; re-running stamps nothing.
+
+A
 disabled `raster` tier also exists in the map schema for `www.dnd5eapi.co`'s
 SRD monster PNGs — the host is on the firewall allowlist, but the running
 container needs a **devcontainer rebuild** before its hit rate can be measured,

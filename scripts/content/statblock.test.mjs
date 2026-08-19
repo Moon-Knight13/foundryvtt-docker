@@ -452,3 +452,61 @@ test('an explicit image: still beats every map tier', async () => {
   const { actor } = await compileNote(note, { artMap: mapPath });
   assert.equal(actor.img, 'DnD/My Game/Assets/Tokens/gate-goblin.webp');
 });
+
+test('a vault-relative image: compiles to the DnD/ mount path Foundry needs', async () => {
+  // Authors write vault-relative paths so the SAME line renders in Obsidian's
+  // statblock plugin; the compiler owns the DnD/ mount prefix.
+  const { note, mapPath } = await noteWith(
+    '```statblock\nname: Amira Granger\ntype: humanoid\nimage: "03 Oneshots/Lure of the Lamia/Assets/Tokens/amira.webp"\nac: 12\nhp: 27\ncr: 1\nstats: [10, 12, 10, 12, 14, 16]\n```\n',
+    'Amira Granger.md',
+  );
+  const { actor } = await compileNote(note, { artMap: mapPath });
+  assert.equal(actor.img, 'DnD/03 Oneshots/Lure of the Lamia/Assets/Tokens/amira.webp');
+  assert.equal(actor.prototypeToken.texture.src, actor.img);
+});
+
+test('compileNote reports which tier the art came from', async () => {
+  // art-stamp.mjs needs to know: only map picks (exact/type) may be written
+  // back into a note, never real SRD art and never an author's explicit line.
+  const mook = await noteWith(
+    '```statblock\nname: Goblin\nsource: "SRD 5.1 (CC-BY-4.0) — Goblin"\ntype: humanoid\nac: 15\nhp: 7\ncr: 0.25\nstats: [8, 14, 10, 10, 8, 8]\n```\n',
+    'Goblin.md',
+  );
+  const fromMap = await compileNote(mook.note, { artMap: mook.mapPath });
+  assert.equal(fromMap.art.tier, 'exact');
+  assert.equal(fromMap.art.src, 'DnD/06 Assets/Tokens/generic/caro-asercion/goblin.svg');
+
+  const explicit = await noteWith(
+    '```statblock\nname: Goblin\ntype: humanoid\nimage: "DnD/x/goblin.webp"\nac: 15\nhp: 7\ncr: 0.25\nstats: [8, 14, 10, 10, 8, 8]\n```\n',
+    'Goblin.md',
+  );
+  const fromFence = await compileNote(explicit.note, { artMap: explicit.mapPath });
+  assert.equal(fromFence.art.tier, 'explicit');
+
+  const bespoke = await noteWith(
+    '```statblock\nname: Zanna the Blade\ntype: humanoid\nac: 15\nhp: 65\ncr: 3\nstats: [12, 18, 12, 13, 12, 14]\n```\n',
+    'Zanna the Blade.md',
+  );
+  const none = await compileNote(bespoke.note, { artMap: bespoke.mapPath });
+  assert.equal(none.art.tier, 'none');
+  assert.equal(none.art.src, null);
+});
+
+test('real SRD token art reports the srd tier, not a map tier', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'statblock-srdtier-'));
+  await writeFile(
+    path.join(dir, 'srd-51.json'),
+    JSON.stringify({
+      edition: '5.1',
+      creatures: { Goblin: { name: 'Goblin', tokenSrc: 'DnD/06 Assets/Tokens/srd/Goblin.webp' } },
+    }),
+  );
+  const note = path.join(dir, 'Goblin.md');
+  await writeFile(
+    note,
+    '```statblock\nname: Goblin\nsource: "SRD 5.1 (CC-BY-4.0) — Goblin"\ntype: humanoid\nac: 15\nhp: 7\ncr: 0.25\nstats: [8, 14, 10, 10, 8, 8]\n```\n',
+  );
+  const { art } = await compileNote(note, { reference: dir });
+  assert.equal(art.tier, 'srd');
+  assert.equal(art.src, 'DnD/06 Assets/Tokens/srd/Goblin.webp');
+});
