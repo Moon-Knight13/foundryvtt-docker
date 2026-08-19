@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # Project-specific container setup for foundryvtt-docker.
 #
-# This is the template's derivative extension point (docs/TEMPLATE_GUIDE.md,
-# "Project-specific container setup"). The template ships it as a no-op; this
-# copy is ours and is listed in .templatesyncignore so sync stops proposing the
-# no-op back.
+# Project-specific container setup steps that run after the security baseline
+# (firewall, pre-commit, plugins) is in place.
 #
 # Runs last in devcontainer.json's postStartCommand `&&` chain, so a non-zero
 # exit marks the whole postStartCommand failed. Everything here therefore warns
@@ -18,11 +16,10 @@ set -euo pipefail
 
 # 1. Pillow, for scripts/maps/render_map.py.
 #
-# This used to be `python3-pil` in .devcontainer/Dockerfile, but that file is
-# template-owned and not ignore-listed, so template-sync deleted the line (it
-# did exactly that in sync PR #70 — see issue #69). Installing here keeps the
-# Dockerfile byte-identical to the template, which is what lets devcontainer
-# security fixes keep flowing down.
+# Installed here rather than in .devcontainer/Dockerfile for historical
+# reasons (template sync used to revert Dockerfile edits — sync PR #70 /
+# issue #69; the repo is detached from sync now). Installing at start keeps
+# working and avoids an image rebuild, so it stays.
 if python3 -c "import PIL" 2>/dev/null; then
   echo "project-setup: Pillow already present."
 elif pip install --quiet --break-system-packages --user Pillow; then

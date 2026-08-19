@@ -1,18 +1,8 @@
 ## What does this PR do?
 
-<!-- One or two sentences. Link to the relevant issue or BMAD stage if applicable. -->
+<!-- One or two sentences. Link to the relevant issue if applicable. -->
 
 Closes #<!-- issue number — links the PR to its board card so the story can move to Done -->
-
-## BMAD Stage
-
-<!-- Which BMAD stage does this complete or advance? -->
-- [ ] Discovery
-- [ ] Requirements
-- [ ] Architecture
-- [ ] Task Decomposition
-- [ ] Implementation
-- [ ] Security & Release Readiness
 
 ## Pre-merge checklist
 

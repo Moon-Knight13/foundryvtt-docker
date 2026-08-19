@@ -58,11 +58,10 @@ body:
     id: route
     attributes:
       label: Suggested Route
-      description: Who should pick this up? (Board Route field; see scripts/route-model.sh.)
+      description: Who should pick this up? (Board Route field.)
       options:
         - Human
         - Claude
-        - Local
       default: 1
     validations:
       required: true

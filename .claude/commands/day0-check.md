@@ -21,7 +21,7 @@ through the remaining auth-gated steps only.
    - `FAIL` — needs action; show the hint verbatim
    - `SKIP` — blocked on an auth gate above; it fixes itself once the user logs in and
      re-runs `bash scripts/setup-day0.sh`. Do NOT treat SKIPs as separate problems.
-   - `WARN` — optional feature (Ollama); never blocks a green run
+   - `WARN` — optional feature; never blocks a green run
 
 4. Guided remediation — by construction, FAILs are only things Claude cannot do:
 
@@ -51,10 +51,6 @@ through the remaining auth-gated steps only.
    **Any setup-file FAIL (CODEOWNERS, .env, .claude/settings.json, plugins):**
    - Run `bash scripts/setup-day0.sh` — it copies configs, fills CODEOWNERS from the
      git remote, and installs plugins. Only debug further if it fails after that.
-
-   **Ollama WARN:**
-   - Optional. Install on the host (https://ollama.com, `ollama pull qwen2.5-coder:7b`,
-     bind to 0.0.0.0 per docs/TEMPLATE_GUIDE.md) — or set `LOCAL_MODEL_ENABLED=false` in `.env`.
 
 5. After the user reports completing a login, run `bash scripts/setup-day0.sh` (it finishes
    the bootstraps and prints the status), then confirm with `bash scripts/check-day0.sh`.

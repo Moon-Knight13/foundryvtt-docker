@@ -10,7 +10,7 @@
 #
 # Usage:
 #   source "$(dirname "${BASH_SOURCE[0]}")/subsystems.sh"
-#   subsystem_enabled BMAD || exit 0
+#   subsystem_enabled CAVEMAN || exit 0
 
 # Resolve the repository root from this file's location so callers can be run
 # from anywhere.
@@ -22,8 +22,8 @@ _subsystems_repo_root() {
 }
 
 # subsystem_enabled <NAME>
-# NAME is the suffix after SUBSYSTEM_, case-insensitive: ROUTING, BOARD, BMAD,
-# CAVEMAN, DAY0. Returns 0 when enabled, 1 when explicitly disabled.
+# NAME is the suffix after SUBSYSTEM_, case-insensitive: BOARD, CAVEMAN, DAY0.
+# Returns 0 when enabled, 1 when explicitly disabled.
 subsystem_enabled() {
   local name=${1:?subsystem_enabled requires a subsystem name}
   local key value conf

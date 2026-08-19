@@ -87,9 +87,9 @@ docker compose -f compose.yml -f compose.cloudflare.yml up -d   # remote access 
 | [`examples/vault-skeleton/`](examples/vault-skeleton/) | Copy-to-start Obsidian vault: taxonomy, blank Templater templates, and the in-person/Foundry "two surfaces" guide |
 | [`scripts/maps/README.md`](scripts/maps/README.md) | Spec-driven battlemap generator: Player PNG + keyed DM PNG + Foundry `.dd2vtt` |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Working on this repo: devcontainer setup, tests, branch model, upstream contributions |
-| [`CLAUDE.md`](CLAUDE.md) | Template-wide Claude workflow contract (kept byte-identical to the template so sync stays clean) |
+| [`CLAUDE.md`](CLAUDE.md) | Claude workflow contract: priorities, board rules, guardrails |
 | [`SECURITY.md`](SECURITY.md) | Credential handling and the files agents must never read |
-| [`docs/TEMPLATE_GUIDE.md`](docs/TEMPLATE_GUIDE.md) | The template foundation: devcontainer, firewall, CI gates, template-sync |
+| [upstream template](https://github.com/Moon-Knight13/claude_template_repo) | Where the devcontainer/firewall/CI foundation came from (this repo is detached from template sync) |
 | [`docs/KANBAN_WORKFLOW.md`](docs/KANBAN_WORKFLOW.md) | Board-driven agent workflow (`/next-issue`, `/run-epic`) |
 
 ## Contributing

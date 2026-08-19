@@ -1,15 +1,8 @@
 # FoundryVTT Docker — Project Instructions
 
 Project-specific instructions for this repository. Read this alongside
-`CLAUDE.md`, which carries the template-wide workflow contract.
-
-This content used to live at the bottom of `CLAUDE.md` as an appendix, on the
-assumption that appending kept template-sync merges clean. It did not:
-template-sync merges with `-X theirs`, so the first sync that ever completed
-proposed replacing `CLAUDE.md` wholesale and deleting all 259 lines of it,
-security rules included. Keeping it in its own file — which exists only
-downstream, and which sync therefore never touches — makes that impossible,
-and lets `CLAUDE.md` keep receiving template contract updates.
+`CLAUDE.md`, which carries the workflow contract (priorities, board rules,
+guardrails).
 
 ## What this repo is
 
@@ -18,42 +11,31 @@ A fork of felddy/foundryvtt-docker running FoundryVTT (D&D 5e, world
 act as an AI game master: create NPCs, quests, journals, and scenes directly
 in the live world.
 
-## Template subsystems this repo does not use
+## Template heritage (detached)
 
-`template.conf` records which optional template subsystems are active here.
-Two are off:
+This repo started from
+[claude_template_repo](https://github.com/Moon-Knight13/claude_template_repo),
+which supplied the devcontainer, firewall, CI gates, and board tooling. It is
+now **detached from template sync**: the sync workflow and
+`.templatesyncignore` are deleted and every file here is repo-owned — edit
+freely, nothing gets reverted by an upstream merge.
 
-- **`SUBSYSTEM_ROUTING=false`** — there is no local Ollama endpoint. Every
-  routing attempt this repo ever logged fell back to Claude
-  (`.ai/route-log.jsonl`: 12 `local_unreachable_fallback`, 1 `local_disabled`,
-  zero successes). `ask-local.sh`, `local-health.sh` and `delegate-local.sh`
-  are deleted. **Treat every task as Claude-routed** and do not attempt local
-  delegation.
-- **`SUBSYSTEM_BMAD=false`** — never produced anything, and its ~46 skill
-  descriptions cost context in every session.
+Two upstream subsystems were removed outright rather than merely switched off:
 
-Three files are deliberately kept despite their subsystem being off:
+- **Local-model routing** — no Ollama endpoint was ever reachable here; every
+  logged routing attempt fell back to Claude. `route-model.sh`,
+  `suggest-route.sh` and the rest of the delegation scripts are deleted, along
+  with the firewall's port-11434 egress and the `local-ollama` MCP server
+  entry. **Treat every task as Claude-routed.**
+- **BMAD** — never produced anything, and its ~46 skill descriptions cost
+  context in every session. Its installers are gone from the devcontainer
+  `postStartCommand` chain.
 
-- `scripts/route-model.sh` and `scripts/suggest-route.sh` — the board's
-  **Route** field is derived from them; with routing off they classify Human vs
-  Claude only.
-- `scripts/install-bmad.sh` and `scripts/bootstrap-bmad.sh` — the
-  devcontainer's `postStartCommand` chains every installer with `&&`, so a
-  missing script exits 127 and silently prevents the rest of the chain
-  (pre-commit hooks, Claude plugins, day-0 setup) from running. Both scripts
-  detect `SUBSYSTEM_BMAD=false`, print a skip notice and exit 0, which is
-  exactly what that chain needs. Do not delete them while `devcontainer.json`
-  still references them — it is template-owned, so it cannot be fixed here.
-
-`/next-issue`, `/run-epic` and `docs/KANBAN_WORKFLOW.md` used to tell agents to
-delegate `Route=Local` work through `delegate-local.sh` — a script this repo
-deleted. Documenting "ignore that" was not enough, because a slash command is
-read directly and without this file's framing, so those three had the dead
-references removed and were added to `.templatesyncignore` to keep the fix. The
-trade-off is recorded there: they no longer receive upstream board updates, and
-the entries should be dropped once the board subsystem degrades gracefully with
-routing off. The board's Route dropdown still offers `Local`; a card carrying it
-is stale metadata, not an instruction to delegate.
+`template.conf` remains as the switch panel for the subsystems this repo does
+use (board, caveman, day-0); `scripts/validate-template.sh` enforces it in CI.
+The live GitHub board may still carry a `Local` Route option and a "BMAD
+Stage" field from before the removal — stale metadata, deletable in the board
+UI, never an instruction.
 
 ## Notes vault (Obsidian)
 
@@ -65,12 +47,9 @@ A gitignored symlink `/workspace/DnD` → `/home/node/DnD` (created by
 `postStartCommand`) surfaces the vault in the VS Code sidebar; the symlink
 carries no note content and stays out of git.
 
-> The devcontainer mount + symlink are template-owned lines that template-sync
-> reverts by default (it did in PR #63), so `.devcontainer/devcontainer.json` is
-> listed in `.templatesyncignore` to preserve them — at the cost of no longer
-> receiving upstream template updates to that file. A public, content-free
-> starter vault (this taxonomy + the blank templates) ships at
-> `examples/vault-skeleton/` for others to copy into their own `DND_VAULT_PATH`.
+> A public, content-free starter vault (this taxonomy + the blank templates)
+> ships at `examples/vault-skeleton/` for others to copy into their own vault
+> location.
 
 - **Obsidian is the source of truth.** Sync (Obsidian Sync / other devices) is
   **host-side** — the container only shares the files. Do not run sync in the
