@@ -150,10 +150,12 @@ it runs.
    - `foundry-base.mjs pull-games` rebuilds every game listed in
      `foundry-base.json`'s `games` array — **check that array first**; while
      it is empty the command prints "No games listed in the manifest —
-     nothing to pull" and restores nothing. Add each game's config path, or
-     run `scripts/content/ship-game.sh <game-dir>` per game instead (it also
-     restarts Foundry, which `pull-games` does not — restart yourself after
-     a pull so the new packs load).
+     nothing to pull" and restores nothing. Entries may address the vault as
+     `$DND_VAULT_PATH/…` (expanded from the environment, compose default
+     `~/Documents/DnD`). Alternatively run
+     `scripts/content/ship-game.sh <game-dir>` per game (it also restarts
+     Foundry, which `pull-games` does not — restart yourself after a pull so
+     the new packs load).
    - Either path runs the **strict art gate** between build and sync and
      hard-fails on a blank named-NPC token — fix art before continuing, do
      not bypass the gate mid-drill.

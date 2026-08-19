@@ -26,6 +26,7 @@
 // wholesale with cp -a, which necessarily includes them — so the snapshot path
 // must live outside the repo tree and is refused if it does not.
 import path from 'node:path';
+import os from 'node:os';
 import { readFile, writeFile, mkdir, access, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
@@ -659,9 +660,20 @@ async function cmdRemove(opts) {
  * coverage gate in strict mode, then sync. The gate sits BETWEEN build and
  * sync on purpose — an unproven module must not be able to reach Foundry.
  */
+// Game entries may address the vault as "$DND_VAULT_PATH/…" so the manifest
+// stays layout-independent: the env var wins (same one compose.yml uses),
+// falling back to its compose default of ~/Documents/DnD. JSON cannot expand
+// variables and node does not expand ~, so this is done here.
+const VAULT_TOKEN = '$DND_VAULT_PATH';
+function expandVaultPath(p) {
+  if (!p || !p.startsWith(VAULT_TOKEN)) return p;
+  const vault = process.env.DND_VAULT_PATH || path.join(os.homedir(), 'Documents', 'DnD');
+  return vault + p.slice(VAULT_TOKEN.length);
+}
+
 export function pullPlan(game) {
-  const config = typeof game === 'string' ? game : game.config;
-  const src = typeof game === 'string' ? undefined : game.src;
+  const config = expandVaultPath(typeof game === 'string' ? game : game.config);
+  const src = expandVaultPath(typeof game === 'string' ? undefined : game.src);
   const srcArgs = src ? ['--src', src] : [];
   return [
     ['node', [path.join(SCRIPT_DIR, 'build.mjs'), '--config', config, ...srcArgs]],

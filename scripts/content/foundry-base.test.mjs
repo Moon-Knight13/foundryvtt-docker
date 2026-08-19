@@ -327,6 +327,30 @@ test('pull-games gates every game on art coverage between build and sync', () =>
   assert.ok(!plain[1][1].includes('--src'));
 });
 
+test('pullPlan expands a leading $DND_VAULT_PATH from the environment', () => {
+  const saved = process.env.DND_VAULT_PATH;
+  try {
+    process.env.DND_VAULT_PATH = '/vault';
+    const plan = pullPlan({
+      config: '$DND_VAULT_PATH/03 Oneshots/Lamia/Foundry/lamia.config.json',
+      src: '$DND_VAULT_PATH/03 Oneshots/Lamia/Foundry/src',
+    });
+    assert.ok(plan[0][1].includes('/vault/03 Oneshots/Lamia/Foundry/lamia.config.json'));
+    assert.ok(plan[1][1].includes('/vault/03 Oneshots/Lamia/Foundry/src'));
+
+    // Unset: falls back to the compose default, ~/Documents/DnD.
+    delete process.env.DND_VAULT_PATH;
+    const fallback = pullPlan('$DND_VAULT_PATH/g/lamia.config.json');
+    assert.ok(
+      fallback[0][1].some(a => a.endsWith('/Documents/DnD/g/lamia.config.json')),
+      `expected ~/Documents/DnD fallback, got ${fallback[0][1]}`,
+    );
+  } finally {
+    if (saved === undefined) delete process.env.DND_VAULT_PATH;
+    else process.env.DND_VAULT_PATH = saved;
+  }
+});
+
 test('sharedPrefix powers a "did you mean" that actually fires on typos', () => {
   // A typo shares a PREFIX with the real id far more often than it contains it,
   // so substring matching alone stayed silent exactly when it was most wanted.

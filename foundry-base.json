@@ -11,7 +11,7 @@
     "Prime Performance is \"fvtt-perf-optim\", Dice Tray is \"dice-calculator\", and",
     "Argon is two modules rather than one.",
     "",
-    "manifest URLs still read TODO. Fill them from a capture file with:",
+    "manifest URLs were filled from the capture files via:",
     "  node scripts/content/foundry-base.mjs promote foundry-capture-<world>.json",
     "A pin without a manifest URL is reported by `provision`, never guessed at."
   ],
@@ -25,88 +25,88 @@
     },
     {
       "id": "dd-import",
-      "manifest": "TODO",
+      "manifest": "https://raw.githubusercontent.com/moo-man/FVTT-DD-Import/master/module.json",
       "title": "Universal Battlemap Importer",
       "version": "6.1.1"
     },
     {
       "id": "ddb-importer",
-      "manifest": "TODO",
+      "manifest": "https://github.com/mrprimate/ddb-importer/releases/download/latest/module.json",
       "title": "D&D Beyond Importer",
       "version": "7.3.8"
     },
     {
       "id": "obsidian-bridge",
-      "manifest": "TODO",
+      "manifest": "https://github.com/SoSly/foundryvtt-obsidian-bridge/releases/latest/download/module.json",
       "title": "Obsidian Bridge",
       "version": "1.3.0"
     },
     {
       "id": "lib-wrapper",
-      "manifest": "TODO",
+      "manifest": "https://github.com/ruipin/fvtt-lib-wrapper/releases/latest/download/module.json",
       "note": "Dependency of several below; pinned so it cannot float.",
       "title": "libWrapper",
       "version": "1.13.5.1"
     },
     {
       "id": "socketlib",
-      "manifest": "TODO",
+      "manifest": "https://github.com/farling42/foundryvtt-socketlib/releases/latest/download/module.json",
       "note": "Dependency of several below; pinned so it cannot float.",
       "title": "socketlib",
       "version": "v1.1.4"
     },
     {
       "id": "dice-so-nice",
-      "manifest": "TODO",
+      "manifest": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/-/raw/master/module/module.json",
       "note": "Renders 3D dice in WebGL on every client \u2014 a lag lever if the canvas-off test points at client rendering.",
       "title": "Dice So Nice!",
       "version": "6.2.8"
     },
     {
       "id": "_chatcommands",
-      "manifest": "TODO",
+      "manifest": "https://gitlab.com/woodentavern/foundryvtt-chat-command-lib/-/raw/master/src/module.json",
       "title": "Chat Commander",
       "version": "2.0.6"
     },
     {
       "id": "chatlog-prune",
-      "manifest": "TODO",
+      "manifest": "https://gitlab.com/tposney/chatlog-prune/-/raw/main/package/module.json",
       "title": "Chat Log Prune",
       "version": "1.1.9"
     },
     {
       "id": "dice-calculator",
-      "manifest": "TODO",
+      "manifest": "https://github.com/mclemente/fvtt-dice-tray/releases/latest/download/module.json",
       "title": "Dice Tray",
       "version": "3.6.7"
     },
     {
       "id": "less-chat",
-      "manifest": "TODO",
+      "manifest": "https://github.com/xyzzy42/less-chat/releases/latest/download/module.json",
       "title": "Less Chat",
       "version": "2.0.2"
     },
     {
       "id": "fvtt-perf-optim",
-      "manifest": "TODO",
+      "manifest": "https://github.com/Codas/foundryvtt-performance-hacks/releases/latest/download/module.json",
       "title": "Prime Performance",
       "version": "0.12.7"
     },
     {
       "id": "enhancedcombathud",
-      "manifest": "TODO",
+      "manifest": "https://github.com/theripper93/enhancedcombathud/releases/latest/download/module.json",
       "title": "Argon - Combat HUD (CORE)",
       "version": "5.0.1"
     },
     {
       "id": "combat-tracker-dock",
-      "manifest": "TODO",
+      "manifest": "https://github.com/theripper93/combat-tracker-dock/releases/latest/download/module.json",
       "title": "Carousel Combat Tracker",
       "version": "5.0.0"
     },
     {
       "id": "enhancedcombathud-dnd5e",
-      "manifest": "TODO",
+      "manifest": "https://github.com/theripper93/enhancedcombathud-dnd5e/releases/latest/download/module.json",
       "note": "System half of Argon; enhancedcombathud alone does nothing for dnd5e.",
       "title": "Argon - Combat HUD (DND5E)",
       "version": "5.2.1"
@@ -118,7 +118,13 @@
     "multi-token-edit": "Bulk placeable editor. Its main use is fixing up hand-built scenes; this pipeline generates walls, lights and notes from the map spec instead. Its presets are world-scoped and would not survive a rebuild anyway.",
     "scene-packer": "Packages scenes with their dependencies \u2014 overlaps what the compendium pipeline already does."
   },
-  "games": [],
+  "games": [
+    {
+      "config": "$DND_VAULT_PATH/03 Oneshots/Lure of the Lamia/Foundry/lure-of-the-lamia.config.json",
+      "note": "$DND_VAULT_PATH expands from the environment (compose default ~/Documents/DnD) \u2014 see pullPlan in scripts/content/foundry-base.mjs.",
+      "src": "$DND_VAULT_PATH/03 Oneshots/Lure of the Lamia/Foundry/src"
+    }
+  ],
   "system": {
     "id": "dnd5e",
     "manifest": "https://github.com/foundryvtt/dnd5e/releases/latest/download/system.json",
