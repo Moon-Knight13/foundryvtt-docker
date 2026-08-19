@@ -347,10 +347,51 @@ Idempotent; re-running stamps nothing.
 
 A
 disabled `raster` tier also exists in the map schema for `www.dnd5eapi.co`'s
-SRD monster PNGs — the host is on the firewall allowlist, but the running
-container needs a **devcontainer rebuild** before its hit rate can be measured,
-and dnd5eapi redirects image bodies to S3 (a different host), so keep it
-disabled until measured.
+SRD monster PNGs. **Measured 2026-08-19** (post-rebuild, in-container): 334 of
+334 SRD monsters carry an image (100%), and the image bodies are served
+directly with HTTP 200 — the feared S3 redirect to a second host did not
+materialise. The tier stays disabled until someone decides mooks should wear
+real creature art instead of the curated icons; flipping `enabled: true` on a
+generated raster block in `art-map.json` is the whole switch.
+
+Image-*generation* APIs were also evaluated for the named-NPC gap
+(perchance.org, 2026-08-19 verdict): **no official API exists** — the site
+serves a Cloudflare JS challenge to every non-browser client, and all client
+libraries self-describe as unofficial reverse-engineering. Measured directly:
+the community-tutorial endpoint (`/api/generateList.php`) 403s behind a
+managed challenge (and returns generator *text*, never images, even when it
+worked), and the real image backend (`image-generation.perchance.org`) sits
+behind the same wall plus an in-browser ad-verification `userKey` a server
+cannot mint. Do not build pipeline steps on it. Generated art remains welcome
+the manual way: make the image in any web UI, save it under the game's
+`Assets/Tokens/`, add the vault-relative `image:` line.
+
+### Named-NPC art: the standard flow
+
+When the gate stops a game on a named NPC, this is the normal way to close the
+gap (first used for Lure of the Lamia's Amira/Selyse/Zephyr, 2026-08-19):
+
+1. **Ask Claude to draw the token from the note.** The note's `## Appearance`
+   and roleplay sections are the brief — write them well and the token draws
+   itself. Claude hand-writes a flat-vector SVG portrait: 512 viewBox,
+   circular token composition with a coloured rim, bust (or body, for
+   non-humanoids) over a scene-appropriate backdrop, the character's tells
+   made visible (Amira's gold ear cuffs, Zephyr's glowing *geas* eyes).
+   Obsidian and Foundry both render SVG natively, files are a few KB, and
+   revisions are one edit away — "warmer palette", "angrier brows" are cheap
+   asks.
+2. **File goes in the game's own assets**, named after the character:
+   `<Game>/Assets/Tokens/<character-slug>.svg`.
+3. **Stamp the note** with the vault-relative line, right after `name:` in the
+   statblock fence — `image: 03 Oneshots/<Game>/Assets/Tokens/<slug>.svg` —
+   so Obsidian shows it too.
+4. **Recompile and rerun the strict gate** — done when it reports
+   `no blank tokens`.
+
+Prefer painterly art for a particular face? Generate it in any web UI
+(browser use is what the free generators support), save the file in the same
+place, same `image:` line — steps 2–4 are identical. The two sources coexist
+per-character; swapping later is a one-line change.
 
 ### The gate: prove it, not promise it
 
@@ -381,16 +422,16 @@ build, so a game with a blank named NPC stops before anything reaches Foundry.
 `foundry-base.mjs pull-games` runs the same gate between build and sync for
 every game in the manifest.
 
-The raster tier's measurement tool ships ready for the post-rebuild step:
+The raster tier's measurement tool (already run once — see the measured verdict
+above — but rerunnable any time the API changes):
 
 ```bash
 node scripts/content/measure-dnd5eapi.mjs --out /tmp/raster.json
 ```
 
 counts `image` fields across all SRD monsters on `www.dnd5eapi.co`, probes one
-image for the S3 redirect (a different host, possibly needing its own firewall
-entry), and emits a **disabled** `raster` block to paste into `art-map.json`
-if the numbers justify it.
+image for redirects, and emits a **disabled** `raster` block to paste into
+`art-map.json` if the numbers justify it.
 
 ## Handout art: showable in Foundry
 
