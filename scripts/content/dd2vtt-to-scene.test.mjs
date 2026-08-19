@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile, readFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
@@ -241,4 +241,107 @@ test('convertFile writes a scene JSON, name defaults from the dd2vtt filename', 
   const written = JSON.parse(await readFile(out, 'utf8'));
   assert.equal(written.width, 200);
   assert.equal(written.walls.length, 2);
+});
+
+test('keysJournal renders Related links as @UUID references', () => {
+  const rel = 'journals/belfry-keys.json';
+  const keys = [
+    { n: 4, at: [1, 1], label: "Selyse's dais", note: 'SECRET', links: ['actors/selyse.json'] },
+    { n: 5, at: [1, 2], label: 'The hoard', note: 'gold' },
+  ];
+  const j = keysJournal(keys, 'The Belfry', rel, {
+    moduleId: 'lure-of-the-lamia-oneshot',
+    names: { 'actors/selyse.json': 'Selyse (Lamia)' },
+  });
+  const html = j.pages[0].text.content;
+  const uuid = `@UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.${docId('actors/selyse.json')}]{Selyse (Lamia)}`;
+  assert.ok(html.includes(uuid), `expected ${uuid} in ${html}`);
+  assert.ok(html.includes('Related'), 'linked page carries a Related section');
+  assert.ok(html.includes('SECRET'), 'note text is still there');
+  assert.ok(!j.pages[1].text.content.includes('Related'), 'linkless key page is unchanged');
+});
+
+test('keysJournal throws when links are present without a module id', () => {
+  const keys = [{ n: 1, at: [0, 0], label: 'x', links: ['actors/a.json'] }];
+  assert.throws(() => keysJournal(keys, 'S', 'journals/k.json'), /--config/);
+});
+
+test('keysJournal rejects a link with an unknown type directory', () => {
+  const keys = [{ n: 1, at: [0, 0], label: 'x', links: ['monsters/a.json'] }];
+  assert.throws(
+    () => keysJournal(keys, 'S', 'journals/k.json', { moduleId: 'm', names: {} }),
+    /monsters/,
+  );
+});
+
+test('parseArgs accepts --config and --src for key links', () => {
+  const { opts } = parseArgs([
+    'm.dd2vtt',
+    '--background',
+    'a.png',
+    '--config',
+    'game.config.json',
+    '--src',
+    'srcdir',
+  ]);
+  assert.equal(opts.config, 'game.config.json');
+  assert.equal(opts.src, 'srcdir');
+});
+
+test('convertFile resolves link names from the module source tree', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'dd2vtt-links-'));
+  const ddPath = path.join(dir, 'The Belfry.dd2vtt');
+  await writeFile(ddPath, JSON.stringify(DD));
+  const src = path.join(dir, 'src');
+  await mkdir(path.join(src, 'actors'), { recursive: true });
+  await writeFile(
+    path.join(src, 'actors', 'selyse.json'),
+    JSON.stringify({ name: 'Selyse (Lamia)' }),
+  );
+  const cfgPath = path.join(dir, 'game.config.json');
+  await writeFile(cfgPath, JSON.stringify({ id: 'test-mod', title: 'T' }));
+  const specPath = path.join(dir, 'belfry.json');
+  await writeFile(
+    specPath,
+    JSON.stringify({
+      keys: [{ n: 1, at: [1, 1], label: 'Dais', note: 's', links: ['actors/selyse.json'] }],
+    }),
+  );
+  const out = path.join(dir, 'scene.json');
+  const kj = path.join(dir, 'belfry-keys.json');
+  const { journalOut } = await convertFile(ddPath, {
+    background: 'DnD/x.png',
+    out,
+    keys: specPath,
+    keysJournal: kj,
+    config: cfgPath,
+    src,
+  });
+  const journal = JSON.parse(await readFile(journalOut, 'utf8'));
+  const uuid = `@UUID[Compendium.test-mod.actors.Actor.${docId('actors/selyse.json')}]{Selyse (Lamia)}`;
+  assert.ok(journal.pages[0].text.content.includes(uuid));
+});
+
+test('convertFile fails fast on links without --config or with a missing source file', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'dd2vtt-badlinks-'));
+  const ddPath = path.join(dir, 'm.dd2vtt');
+  await writeFile(ddPath, JSON.stringify(DD));
+  const specPath = path.join(dir, 's.json');
+  await writeFile(
+    specPath,
+    JSON.stringify({ keys: [{ n: 1, at: [1, 1], label: 'x', links: ['actors/ghost.json'] }] }),
+  );
+  const base = {
+    background: 'DnD/x.png',
+    out: path.join(dir, 'scene.json'),
+    keys: specPath,
+    keysJournal: path.join(dir, 'k.json'),
+  };
+  await assert.rejects(() => convertFile(ddPath, base), /--config/);
+  const cfgPath = path.join(dir, 'game.config.json');
+  await writeFile(cfgPath, JSON.stringify({ id: 'test-mod', title: 'T' }));
+  await assert.rejects(
+    () => convertFile(ddPath, { ...base, config: cfgPath, src: dir }),
+    /ghost\.json/,
+  );
 });

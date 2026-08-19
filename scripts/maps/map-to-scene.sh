@@ -53,6 +53,12 @@ while [[ $# -gt 0 ]]; do
       EXTRA+=(--grid-distance "${2:?--grid-distance requires a value}")
       shift 2
       ;;
+    --config)
+      # Needed when spec keys carry `links`; the src dir for display names is
+      # derived from --scenes-dir (its parent is the module src root).
+      EXTRA+=(--config "${2:?--config requires a path}")
+      shift 2
+      ;;
     --global-light)
       EXTRA+=(--global-light)
       shift
@@ -134,6 +140,12 @@ SLUG_NAME="$(printf '%s' "$NAME" \
 # numbered circles render_map.py draws on the DM PNG. The journal is a sibling
 # of the scenes dir so build.mjs picks it up as an ordinary source document.
 JOURNALS_DIR="$(dirname "$SCENES_DIR")/journals"
+
+# When keys carry `links`, dd2vtt-to-scene needs the module src root to read
+# each linked document's display name — that root is the scenes dir's parent.
+if [[ " ${EXTRA[*]-} " == *" --config "* ]]; then
+  EXTRA+=(--src "$(dirname "$SCENES_DIR")")
+fi
 mkdir -p "$JOURNALS_DIR"
 
 python3 "$REPO_ROOT/scripts/maps/render_map.py" "$SPEC" "$OUTDIR" "${RENDER_EXTRA[@]}"

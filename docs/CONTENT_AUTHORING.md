@@ -173,6 +173,25 @@ cross-referencing a PNG mid-session. The pages carry `ownership.default: 0`
 because keys routinely hold the scene's secrets, and Foundry hides a pin whose
 journal the player cannot see.
 
+**Key links.** A spec key may carry `links` — curated module source paths,
+never inferred from the note text (same philosophy as the art map):
+
+```json
+{ "n": 4, "label": "Selyse's dais", "note": "SECRET: …",
+  "links": ["actors/selyse.json", "actors/bandit.json"] }
+```
+
+Each renders on the key's page as a **Related:** row of `@UUID` references,
+so pin 4 opens straight onto Selyse's actor sheet, the relevant handout, or
+another journal. Links need the module id, so pass `--config` (and the
+converter reads each linked file's `name` for the display text — pass
+`map-to-scene.sh --config <game config>`, which also derives `--src` from the
+scenes dir). A typo'd path fails the conversion immediately, and `build.mjs`'s
+link validation would catch it again at build. Regenerating after editing only
+`links` changes just the journals — scenes are byte-identical, so in Foundry
+you re-import the GM Keys journals alone (Keep Document IDs) and existing pins
+keep resolving.
+
 > Foundry v13 removed the automatic migration of the legacy `Note#icon` string
 > to `Note#texture.src`, so the pins are emitted with `texture.src`. Don't
 > "simplify" that back to `icon` — the pin would import without its marker.
