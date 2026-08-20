@@ -67,6 +67,14 @@ about itself — ids are routinely nothing like their titles, so nothing is type
 Adding the same module twice updates it rather than duplicating, an existing
 `note` survives a re-add, and a deliberately pinned URL is never overwritten.
 
+Adding a module that is on the `deliberatelyExcluded` list **removes it from
+that list and prints the reason it just overruled**. The manifest must not say
+both "pinned in core" and "kept out of core, here is why" — that is how a
+rationale file rots into fiction. Refusing the add would be worse: reversing the
+decision is the operator's call and they have just made it. So the tool reverses
+it out loud, and says the old reason is gone, in case it still holds and belongs
+in `--note`.
+
 **`provision` does not resolve dependency chains.** It installs exactly what is
 pinned, so a lean core can come up with a quality-of-life module quietly broken.
 Each failure names a module to `add`, with a note saying why it earned its place.
