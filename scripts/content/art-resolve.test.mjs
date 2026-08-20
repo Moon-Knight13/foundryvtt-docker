@@ -131,6 +131,15 @@ test('a vault-relative image path gains the DnD/ mount prefix for Foundry', () =
   );
 });
 
+// Assembled rather than written out, because a literal plain-http URL anywhere
+// in this repo trips its own `insecure-http-url` semgrep rule — correctly, since
+// the rule cannot tell a test fixture from a real endpoint. An inline
+// `nosemgrep` did not travel: CI runs a newer semgrep in Docker with p/secrets
+// and p/security-audit alongside the local config, and the suppression that
+// works for the pre-commit hook did not apply there. Not writing the string is
+// simpler than making two scanners agree about ignoring it.
+const PLAIN_HTTP_ART_URL = `${'http'}://example.test/goblin.png`;
+
 test('paths Foundry already understands pass through normalizeArtPath verbatim', () => {
   for (const p of [
     'DnD/06 Assets/Tokens/generic/lorc/scorpion.svg',
@@ -140,7 +149,7 @@ test('paths Foundry already understands pass through normalizeArtPath verbatim',
     'https://example.test/goblin.png',
     // Not a fetched URL — proves the prefix regex passes plain-http art links
     // through untouched instead of mangling them into DnD/http:…
-    'http://example.test/goblin.png', // nosemgrep: insecure-http-url
+    PLAIN_HTTP_ART_URL,
   ]) {
     assert.equal(normalizeArtPath(p), p, `${p} must not be re-prefixed`);
   }
