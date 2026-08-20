@@ -47,6 +47,7 @@ node scripts/content/foundry-base.mjs restore --yes     # put that full copy bac
 node scripts/content/foundry-base.mjs snapshot --golden # the clean slate: no worlds
 node scripts/content/foundry-base.mjs restore --golden --yes  # reset the instance, keep the worlds
 node scripts/content/foundry-base.mjs pull-games        # build + sync every game in the manifest
+node scripts/content/foundry-base.mjs verify [world]   # check the install against the pins
 ```
 
 ### Adjusting core
@@ -218,6 +219,50 @@ you want to keep.
 > before this change, it is a **full backup** despite the name. Pass it
 > explicitly with `--from`, or rename it to `<data>.backup`.
 
+### Checking a rebuild instead of eyeballing one
+
+A rebuild you cannot check is one you will not trust on game night, and the
+things worth checking are all things you would otherwise squint at a screen for.
+
+```bash
+node scripts/content/foundry-base.mjs verify              # the install
+node scripts/content/foundry-base.mjs verify <world>      # the install and one world
+```
+
+It **exits non-zero on failure**, so it is a gate rather than a report — put it
+straight after `provision` in the drill and again once the world is up.
+
+What it checks:
+
+- **Every pin is installed at its pinned version.** Version comparison is exact,
+  deliberately: socketlib's pin is the literal `v1.1.4`, because that is what
+  its own `module.json` says. A `verify` that quietly equated `v1.1.4` with
+  `1.1.4` would report ok on an install that `provision` reinstalls on every
+  single run. The two commands have to mean the same thing by "installed".
+- **The pinned set is closed under its own requirements.** `provision` resolves
+  no dependency chains, so an unpinned requirement is a module that comes up
+  quietly broken. This reads the installed `module.json` files rather than
+  fetching manifests, so it needs no network — which matters, because three pins
+  are on gitlab.com and the devcontainer's egress allowlist does not cover it.
+- **With a world**: that the pinned modules are actually enabled in it, and that
+  it runs the pinned system.
+
+Two results are warnings rather than failures, on purpose:
+
+- **A module enabled in the world but not in core.** Routine — a game's own
+  content module belongs in its world and has no business in the golden base.
+  It is still worth saying out loud, because it is exactly how you find out that
+  something you rely on will not come back after a rebuild.
+- **A world whose `systemVersion` lags the pin.** `world.json` records the
+  version the world last *launched* under, so it trails a fresh `provision`
+  until you open the world once. Failing on something that fixes itself on
+  launch is how a gate gets ignored.
+
+What it does **not** check, so the pass is not read as more than it is: whether
+your game content imported, whether art resolved, or whether a map pin opens its
+journal. `pull-games` already hard-fails on blank named-NPC tokens via the
+strict art gate, and the rest is step 9 of the drill — two surfaces, by eye.
+
 ## Foundry-side modules
 
 | Module | Role |
@@ -271,7 +316,9 @@ it runs.
    the container has never come up in. If you keep a golden snapshot,
    `restore --golden --yes` reaches the same place with no downloads at all —
    and is the faster path when what you are fixing is a sick instance rather
-   than a version bump.
+   than a version bump. Then `foundry-base.mjs verify` — it
+   exits non-zero if a pin is missing, drifted, or has an unpinned requirement,
+   which is much cheaper to learn now than at step 9.
 5. Launch Foundry and create a world. Its settings start empty — see
    *Configure one world, capture it, stop reconfiguring* above. `world-capture`
    records what that configuration should be; reproducing it in a new world is
@@ -294,8 +341,8 @@ it runs.
    pins render but open nothing).
 7. Re-run **ddb-importer**: its packs are world-scoped and did not survive.
 8. Run the SoSly bridge import to bring vault notes back as journals.
-9. **Check both surfaces**, because a game that imports is not the same as a
-   game that is ready to run:
+9. `foundry-base.mjs verify <world>`, then **check both surfaces** — the
+   command covers the pins and the enabled module set, and nothing below it:
    - *Foundry* — scenes carry walls and lights, actors carry real art rather
      than `mystery-man.svg`, and a GM map pin opens its journal page.
    - *In person* — every NPC note still renders a Fantasy Statblocks card with a

@@ -17,6 +17,7 @@
 //   node scripts/content/foundry-base.mjs snapshot [--golden] [--to <path>]
 //   node scripts/content/foundry-base.mjs restore --yes [--golden] [--from <path>]
 //   node scripts/content/foundry-base.mjs pull-games
+//   node scripts/content/foundry-base.mjs verify [world]
 //
 // Why pinned: "always latest" is the documented hazard, not the goal — see
 // docs/PROJECT.md on foundry-mcp module/server version drift. `update` is how
@@ -530,7 +531,8 @@ export const USAGE = `Usage:
   foundry-base.mjs snapshot --golden [--to <path>]   copy it without worlds, as a clean slate
   foundry-base.mjs restore --yes [--from <path>]     recreate the data dir from a snapshot
   foundry-base.mjs restore --golden --yes            reset the instance, leaving worlds alone
-  foundry-base.mjs pull-games                        rebuild + sync every game in the manifest`;
+  foundry-base.mjs pull-games                        rebuild + sync every game in the manifest
+  foundry-base.mjs verify [world]                     check the install against the pins; exits 1 on failure`;
 
 async function cmdCapture(opts) {
   const world = opts.positional[0];
@@ -970,6 +972,237 @@ async function cmdPullGames(opts) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// verify — turn "did the rebuild work" into a command with an exit code
+// ---------------------------------------------------------------------------
+
+/**
+ * The ids a module declares it needs.
+ *
+ * Foundry v10 renamed `dependencies` to `relationships.requires`, and both
+ * shapes are still in the wild — a module last released years before its
+ * neighbours may use either. `relationships.systems` is deliberately ignored:
+ * that is a compatibility statement, not something to install.
+ */
+export function requiredIds(json) {
+  const ids = new Set();
+  for (const r of json?.relationships?.requires ?? []) {
+    const id = r?.id ?? r?.name;
+    if (id) ids.add(id);
+  }
+  for (const d of json?.dependencies ?? []) {
+    const id = d?.id ?? d?.name;
+    // The legacy array carried systems alongside modules; only modules install.
+    if (id && (d?.type ?? 'module') === 'module') ids.add(id);
+  }
+  return [...ids].sort();
+}
+
+/**
+ * Compare the pins against what is on disk, using EXACTLY `provision`'s
+ * definition of "already installed": string equality on the version.
+ *
+ * Deliberately not normalised. socketlib's pin is the literal `v1.1.4`, because
+ * that is what its own module.json says. A verify that quietly equated `v1.1.4`
+ * with `1.1.4` would report ok on an install that `provision` then reinstalls
+ * on every single run. The two commands have to agree on the word "installed",
+ * or neither of them can be trusted — and a disagreement here is far more
+ * likely to be a real pin problem than a cosmetic one.
+ */
+export function verifyPins(manifest, installed) {
+  const entries = [
+    ...(manifest.system ? [{ ...manifest.system, kind: 'systems' }] : []),
+    ...(manifest.core ?? []).map(m => ({ ...m, kind: 'modules' })),
+  ];
+  return entries.map(entry => {
+    const found = installed.get(entry.id);
+    if (!found) {
+      return { level: 'fail', id: entry.id, text: `not installed (pinned ${entry.version})` };
+    }
+    if (found.version !== entry.version) {
+      return {
+        level: 'fail',
+        id: entry.id,
+        text: `installed ${found.version}, pinned ${entry.version}`,
+      };
+    }
+    return { level: 'ok', id: entry.id, text: entry.version };
+  });
+}
+
+/**
+ * Is the pinned set closed under its own declared requirements?
+ *
+ * `provision` installs exactly what is pinned and resolves no chains, so an
+ * unpinned requirement is a module that comes up quietly broken after a
+ * rebuild — the failure this whole manifest exists to prevent. Reading it from
+ * the installed module.json files means the check needs no network, which
+ * matters: three pins are hosted on gitlab.com, which the devcontainer's egress
+ * allowlist does not cover.
+ */
+export function verifyDependencies(installedManifests, pinnedIds) {
+  const pinned = new Set(pinnedIds);
+  const rows = [];
+  for (const [id, json] of installedManifests) {
+    if (!pinned.has(id)) continue; // only the golden set has to be closed
+    for (const req of requiredIds(json)) {
+      if (pinned.has(req)) continue;
+      rows.push({ level: 'fail', id, text: `requires ${req}, which is not pinned in core` });
+    }
+  }
+  return rows.sort((a, b) => a.id.localeCompare(b.id) || a.text.localeCompare(b.text));
+}
+
+/**
+ * What a world actually has switched on, against the pins.
+ *
+ * The second half is the most useful line this command prints: a module enabled
+ * here but absent from core will NOT come back after a rebuild. It is a warning
+ * rather than a failure because that is routinely correct — a game's own
+ * content module is enabled in its world and has no business in the golden base.
+ */
+export function verifyWorldModules(moduleConfiguration, pinnedIds) {
+  const enabled = new Set(enabledModules(moduleConfiguration));
+  const pinned = new Set(pinnedIds);
+  const rows = [];
+  for (const id of pinnedIds) {
+    if (!enabled.has(id)) {
+      rows.push({ level: 'fail', id, text: 'pinned in core but not enabled in this world' });
+    }
+  }
+  for (const id of [...enabled].sort()) {
+    if (!pinned.has(id)) {
+      rows.push({
+        level: 'warn',
+        id,
+        text: 'enabled here but not in core — a rebuild will not bring it back',
+      });
+    }
+  }
+  return rows;
+}
+
+/**
+ * The world's system against the pinned one.
+ *
+ * A version mismatch is a warning, not a failure: `world.json` records the
+ * version the world was last launched under, so it lags a fresh `provision`
+ * until the world is opened once. Saying FAIL for something that fixes itself
+ * on launch is how a gate gets ignored.
+ */
+export function verifyWorldSystem(worldJson, system) {
+  if (!system) return [];
+  const rows = [];
+  if (worldJson?.system !== system.id) {
+    rows.push({
+      level: 'fail',
+      id: 'system',
+      text: `world runs ${worldJson?.system ?? 'nothing'}, pinned ${system.id}`,
+    });
+    return rows;
+  }
+  if (worldJson?.systemVersion !== system.version) {
+    rows.push({
+      level: 'warn',
+      id: 'system',
+      text:
+        `world last launched under ${worldJson?.systemVersion ?? 'unknown'}, ` +
+        `pinned ${system.version} — launch it once to migrate`,
+    });
+  }
+  return rows;
+}
+
+/** Read an installed system.json / module.json, or null when it is not there. */
+async function readInstalled(data, kind, id) {
+  const file = path.join(
+    data,
+    'Data',
+    kind,
+    id,
+    kind === 'systems' ? 'system.json' : 'module.json',
+  );
+  try {
+    return JSON.parse(await readFile(file, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function printRows(title, rows) {
+  if (!rows.length) return;
+  console.log(`\n${title}`);
+  for (const row of rows) {
+    const tag = row.level === 'ok' ? 'ok  ' : row.level === 'warn' ? 'warn' : 'FAIL';
+    console.log(`  ${tag} ${row.id.padEnd(28)} ${row.text}`);
+  }
+}
+
+async function cmdVerify(opts) {
+  const manifest = await loadManifest(opts.manifest);
+  const data = dataDir(opts.data);
+  const world = opts.positional[0];
+
+  const installed = new Map();
+  const manifests = new Map();
+  const wanted = [
+    ...(manifest.system ? [{ id: manifest.system.id, kind: 'systems' }] : []),
+    ...(manifest.core ?? []).map(m => ({ id: m.id, kind: 'modules' })),
+  ];
+  for (const { id, kind } of wanted) {
+    const json = await readInstalled(data, kind, id);
+    if (!json) continue;
+    installed.set(id, { version: json.version ?? 'unknown', kind });
+    manifests.set(id, json);
+  }
+
+  const pinnedModuleIds = (manifest.core ?? []).map(m => m.id);
+  const pinRows = verifyPins(manifest, installed);
+  const depRows = verifyDependencies(manifests, pinnedModuleIds);
+
+  console.log(`Verifying ${data} against ${opts.manifest || DEFAULT_MANIFEST}`);
+  printRows('Pinned system and modules:', pinRows);
+  printRows('Dependency closure:', depRows);
+  if (!depRows.length) console.log('\nDependency closure: closed — every requirement is pinned.');
+
+  let worldRows = [];
+  if (world) {
+    const worldsDir = await assertDataDir(data);
+    const worldDir = path.join(worldsDir, world);
+    await access(worldDir).catch(async () => {
+      const available = await readdir(worldsDir).catch(() => []);
+      throw new Error(
+        `World "${world}" not found in ${worldsDir}.` +
+          (available.length ? `\nAvailable: ${available.join(', ')}` : ''),
+      );
+    });
+    const worldJson = JSON.parse(await readFile(path.join(worldDir, 'world.json'), 'utf8'));
+    const config = await readModuleConfiguration(worldDir);
+    if (!config) {
+      throw new Error(
+        `No core.moduleConfiguration in ${world}. Launch the world once so Foundry writes it.`,
+      );
+    }
+    worldRows = [
+      ...verifyWorldSystem(worldJson, manifest.system),
+      ...verifyWorldModules(config, pinnedModuleIds),
+    ];
+    console.log(`\nWorld ${world} (core ${worldJson.coreVersion ?? 'unknown'}):`);
+    printRows(`Modules and system:`, worldRows);
+  } else {
+    console.log('\nNo world given — pass one to check its enabled modules too.');
+  }
+
+  const failures = [...pinRows, ...depRows, ...worldRows].filter(r => r.level === 'fail');
+  if (failures.length) {
+    throw new Error(
+      `${failures.length} check(s) failed. ` +
+        'Run `provision` for missing or drifted pins; `add <id>` for an unpinned requirement.',
+    );
+  }
+  console.log('\nAll checks passed.');
+}
+
 // Kept beside the switch below so a new command has to appear in both, and the
 // test that compares this with USAGE fails if either is forgotten.
 export const COMMANDS = [
@@ -983,6 +1216,7 @@ export const COMMANDS = [
   'snapshot',
   'restore',
   'pull-games',
+  'verify',
 ];
 
 export async function main(argv = process.argv.slice(2)) {
@@ -1008,6 +1242,8 @@ export async function main(argv = process.argv.slice(2)) {
       return cmdRestore(opts);
     case 'pull-games':
       return cmdPullGames(opts);
+    case 'verify':
+      return cmdVerify(opts);
     default:
       console.error(USAGE);
       throw new Error(opts.command ? `Unknown command: ${opts.command}` : 'No command given');

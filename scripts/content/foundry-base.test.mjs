@@ -11,6 +11,11 @@ import {
   worldShape,
   captureWorld,
   installEntry,
+  requiredIds,
+  verifyPins,
+  verifyDependencies,
+  verifyWorldModules,
+  verifyWorldSystem,
   IDENTITY_SETTINGS,
   syncExcludes,
   rsyncArgs,
@@ -712,4 +717,128 @@ test('installEntry refuses a manifest with no download URL before touching disk'
   } finally {
     await rm(data, { recursive: true, force: true });
   }
+});
+
+// ---------------------------------------------------------------------------
+// verify — the drill's success check, as an exit code
+// ---------------------------------------------------------------------------
+
+const PINS = {
+  system: { id: 'dnd5e', version: '5.3.3' },
+  core: [
+    { id: 'lib-wrapper', version: '1.13.5.1' },
+    { id: 'socketlib', version: 'v1.1.4' },
+    { id: 'enhancedcombathud', version: '0.5.0' },
+  ],
+};
+
+const levels = rows => rows.map(r => `${r.level} ${r.id}`);
+
+test('verifyPins reports each pin as installed, drifted, or missing', () => {
+  const rows = verifyPins(
+    PINS,
+    new Map([
+      ['dnd5e', { version: '5.3.3' }],
+      ['lib-wrapper', { version: '1.13.4' }],
+      ['socketlib', { version: 'v1.1.4' }],
+    ]),
+  );
+  assert.deepEqual(levels(rows), [
+    'ok dnd5e',
+    'fail lib-wrapper',
+    'ok socketlib',
+    'fail enhancedcombathud',
+  ]);
+  assert.match(rows[1].text, /installed 1\.13\.4, pinned 1\.13\.5\.1/);
+  assert.match(rows[3].text, /not installed \(pinned 0\.5\.0\)/);
+});
+
+test('verifyPins compares versions exactly, the way provision does', () => {
+  // socketlib's pin is the literal "v1.1.4" because that is what its own
+  // module.json says. Normalising the "v" away here would report ok on an
+  // install that provision reinstalls on every run — the two commands have to
+  // mean the same thing by "installed".
+  const rows = verifyPins(PINS, new Map([['socketlib', { version: '1.1.4' }]]));
+  const socketlib = rows.find(r => r.id === 'socketlib');
+  assert.equal(socketlib.level, 'fail');
+});
+
+test('requiredIds reads both the modern and the legacy dependency shape', () => {
+  assert.deepEqual(
+    requiredIds({ relationships: { requires: [{ id: 'lib-wrapper' }, { id: 'socketlib' }] } }),
+    ['lib-wrapper', 'socketlib'],
+  );
+  // Pre-v10 modules, still in the wild among long-unreleased pins.
+  assert.deepEqual(requiredIds({ dependencies: [{ name: 'lib-wrapper' }] }), ['lib-wrapper']);
+  assert.deepEqual(requiredIds({}), []);
+});
+
+test('requiredIds ignores compatibility statements about the system', () => {
+  // relationships.systems says "I work with dnd5e", not "install dnd5e".
+  assert.deepEqual(
+    requiredIds({
+      relationships: { systems: [{ id: 'dnd5e' }], requires: [{ id: 'lib-wrapper' }] },
+    }),
+    ['lib-wrapper'],
+  );
+  assert.deepEqual(requiredIds({ dependencies: [{ name: 'dnd5e', type: 'system' }] }), []);
+});
+
+test('verifyDependencies fails on a requirement that is not pinned', () => {
+  const rows = verifyDependencies(
+    new Map([
+      ['enhancedcombathud', { relationships: { requires: [{ id: 'socketlib' }] } }],
+      ['socketlib', {}],
+    ]),
+    ['enhancedcombathud', 'socketlib'],
+  );
+  assert.deepEqual(rows, []);
+
+  const open = verifyDependencies(
+    new Map([['enhancedcombathud', { relationships: { requires: [{ id: 'colorsettings' }] } }]]),
+    ['enhancedcombathud'],
+  );
+  assert.deepEqual(levels(open), ['fail enhancedcombathud']);
+  assert.match(open[0].text, /requires colorsettings, which is not pinned/);
+});
+
+test('verifyDependencies ignores what an unpinned module wants', () => {
+  // provision only installs the pinned set, so only the pinned set has to be
+  // closed. A module someone installed by hand can want anything.
+  const rows = verifyDependencies(
+    new Map([['some-hand-install', { relationships: { requires: [{ id: 'nothing-pinned' }] } }]]),
+    ['lib-wrapper'],
+  );
+  assert.deepEqual(rows, []);
+});
+
+test('verifyWorldModules fails a pinned module the world has switched off', () => {
+  const rows = verifyWorldModules({ 'lib-wrapper': false, socketlib: true }, [
+    'lib-wrapper',
+    'socketlib',
+  ]);
+  assert.deepEqual(levels(rows), ['fail lib-wrapper']);
+});
+
+test('verifyWorldModules warns rather than fails on a module outside core', () => {
+  // A game's own content module is enabled in its world and has no business in
+  // the golden base — routine, so it must not fail the gate. It still gets said
+  // out loud, because it is how you learn a module will not survive a rebuild.
+  const rows = verifyWorldModules({ socketlib: true, 'lure-of-the-lamia': true }, ['socketlib']);
+  assert.deepEqual(levels(rows), ['warn lure-of-the-lamia']);
+  assert.match(rows[0].text, /a rebuild will not bring it back/);
+});
+
+test('verifyWorldSystem fails on the wrong system, warns on a lagging version', () => {
+  const wrong = verifyWorldSystem({ system: 'pf2e' }, PINS.system);
+  assert.deepEqual(levels(wrong), ['fail system']);
+
+  // world.json records the version the world last LAUNCHED under, so it lags a
+  // fresh provision until the world is opened once. Failing on something that
+  // fixes itself on launch is how a gate gets ignored.
+  const lagging = verifyWorldSystem({ system: 'dnd5e', systemVersion: '5.3.2' }, PINS.system);
+  assert.deepEqual(levels(lagging), ['warn system']);
+  assert.match(lagging[0].text, /launch it once to migrate/);
+
+  assert.deepEqual(verifyWorldSystem({ system: 'dnd5e', systemVersion: '5.3.3' }, PINS.system), []);
 });
