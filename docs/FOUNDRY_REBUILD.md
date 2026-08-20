@@ -48,6 +48,7 @@ node scripts/content/foundry-base.mjs snapshot --golden # the clean slate: no wo
 node scripts/content/foundry-base.mjs restore --golden --yes  # reset the instance, keep the worlds
 node scripts/content/foundry-base.mjs pull-games        # build + sync every game in the manifest
 node scripts/content/foundry-base.mjs verify [world]   # check the install against the pins
+node scripts/content/foundry-base.mjs new-world <id> --title "<Title>"  # a world that starts configured
 ```
 
 ### Adjusting core
@@ -184,7 +185,7 @@ is **captured, never authored**: Foundry's `world.json` gains and loses fields
 between versions, and this repo already paid for guessing at Foundry's own
 vocabulary once — six of eight hand-written module ids were wrong.
 
-Four things it deliberately does not carry:
+Five things it deliberately does not carry:
 
 - **Identity settings** — `core.activeScene`, `core.compendiumConfiguration`,
   `core.combatTrackerConfig`, `core.time`. These name documents a new world does
@@ -193,7 +194,14 @@ Four things it deliberately does not carry:
 - **`core.moduleConfiguration`** — held aside rather than dropped. The enabled
   module set should follow the pins in `foundry-base.json`, not one world's
   history.
-- **The world's own id, title and description.**
+- **The world's own id, title, description — and `packs`.** That last one lists
+  the world's *own* compendium packs, which here means ddb-importer's twelve
+  world-scoped `world.ddb-*` packs. They die with the world that made them, so
+  copying the list into a new world declares packs that do not exist.
+- **Rows belonging to one specific user.** A settings row with a `user` is one
+  player's own preference, filed under a user id. A new world has no such
+  account, so the row would arrive as a dead reference. The count is reported;
+  the keys are not, because which player set what is nobody else's business.
 - **Credentials.** Some modules keep secrets in world settings — ddb-importer
   stores a live D&D Beyond session cookie there. Those rows are dropped and
   their **keys** printed, so you know which logins a new world will ask for
@@ -235,6 +243,54 @@ failure mode is believing you are configured when you are not.
 Re-capture whenever you change how you like Foundry set up. It is read-only with
 respect to the world — but **stop Foundry first**, like every other command that
 opens a world's LevelDB.
+
+### Creating a world that starts configured
+
+```bash
+node scripts/content/foundry-base.mjs new-world winters-teeth --title "Winter's Teeth"
+node scripts/content/foundry-base.mjs new-world winters-teeth --title "Winter's Teeth" --dry-run
+```
+
+Foundry stopped, like everything else that opens a world's LevelDB. `--dry-run`
+prints the whole `world.json` and every settings key it would write, and touches
+nothing — worth doing the first time, and free.
+
+**It never touches an existing world.** A world is somebody's campaign; there is
+no `--force`.
+
+The `world.json` is the captured shape with identity put back — `id`, `title`
+and, if given, `--description`. Every other field travels unread, including ones
+this tool has never heard of, because Foundry's manifest gains and loses fields
+between versions and this repo has already paid once for guessing at Foundry's
+vocabulary.
+
+Three things are rewritten on the way in rather than copied, and each is the
+same idea: **a template must not carry a reference only the old world could
+resolve.**
+
+- **`core.moduleConfiguration`** comes from the pins in `foundry-base.json`, not
+  from the source world's history. A world's enabled set drifts — it accumulates
+  whatever was being tried that month. The manifest is the deliberate list.
+- **Document ids** are reissued. Two worlds sharing a document id is a collision
+  waiting for the first tool that assumes ids are unique.
+- **`_stats.lastModifiedBy`** is cleared. It names a user account the new world
+  does not have.
+
+The world id is checked before anything is written: lowercase letters, digits and
+hyphens. It becomes a directory name and is baked into every `@UUID` pointing at
+the world's own documents, so renaming it later breaks all of them.
+
+**On the Foundry version.** The template records the core version it was captured
+under, and `new-world` prints it rather than refusing on a mismatch — the Foundry
+application lives outside the data directory in the container image, so this tool
+cannot read the installed version to compare against. If Foundry has moved since
+the capture, re-capture; `--core-version` writes a different one deliberately.
+
+Afterwards, check it without opening a single settings screen:
+
+```bash
+node scripts/content/foundry-base.mjs verify <the new world>
+```
 
 ### Backup or golden image — pick the right one
 
@@ -376,11 +432,10 @@ it runs.
    than a version bump. Then `foundry-base.mjs verify` — it
    exits non-zero if a pin is missing, drifted, or has an unpinned requirement,
    which is much cheaper to learn now than at step 9.
-5. Launch Foundry and create a world. Its settings start empty — see
-   *Configure one world, capture it, stop reconfiguring* above. `world-capture`
-   records what that configuration should be; reproducing it in a new world is
-   still a manual pass through the UI until `new-world` lands. Then restore the
-   game content:
+5. Create the world with `foundry-base.mjs new-world <id> --title "<Title>"`,
+   which applies the captured settings template so it starts configured rather
+   than blank (see *Creating a world that starts configured* above). Then launch
+   Foundry and restore the game content:
    - `foundry-base.mjs pull-games` rebuilds every game listed in the
      **vault's** `foundry-games.json` (`<vault root>/foundry-games.json`,
      entries `{config, src}` with `$DND_VAULT_PATH/…` expanded from the

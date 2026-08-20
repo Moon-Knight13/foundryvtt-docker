@@ -18,6 +18,7 @@
 //   node scripts/content/foundry-base.mjs restore --yes [--golden] [--from <path>]
 //   node scripts/content/foundry-base.mjs pull-games
 //   node scripts/content/foundry-base.mjs verify [world]
+//   node scripts/content/foundry-base.mjs new-world <id> --title "<Title>"
 //
 // Why pinned: "always latest" is the documented hazard, not the goal — see
 // docs/PROJECT.md on foundry-mcp module/server version drift. `update` is how
@@ -32,6 +33,7 @@ import os from 'node:os';
 import { readFile, writeFile, mkdir, access, readdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { explainLevelError } from './leveldb.mjs';
 
@@ -214,6 +216,11 @@ export const WORLD_IDENTITY_FIELDS = [
   'lastPlayed',
   'nextSession',
   'playtime',
+  // `packs` lists the world's OWN compendium packs — for this table that means
+  // ddb-importer's twelve world-scoped `world.ddb-*` packs, which die with the
+  // world that made them. Copying the list into a new world declares packs that
+  // do not exist. Same reasoning as core.compendiumConfiguration.
+  'packs',
 ];
 
 /**
@@ -224,11 +231,17 @@ export function partitionSettings(rows) {
   const kept = [];
   const regenerated = [];
   const dropped = [];
+  const userScoped = [];
   for (const row of rows ?? []) {
     const key = row?.key;
     if (typeof key !== 'string') continue;
     if (REGENERATED_SETTINGS.includes(key)) regenerated.push(row);
     else if (IDENTITY_SETTINGS.includes(key)) dropped.push(row);
+    // A settings row with a `user` is one player's own preference, filed under
+    // a user id. A new world has none of those accounts, so the row would be a
+    // dead reference on arrival — identity by another route. Null and absent
+    // both mean world-scoped, which is the overwhelming majority.
+    else if (typeof row.user === 'string' && row.user) userScoped.push(row);
     else kept.push(row);
   }
   const byKey = (a, b) => a.key.localeCompare(b.key);
@@ -236,6 +249,7 @@ export function partitionSettings(rows) {
     kept: kept.sort(byKey),
     regenerated: regenerated.sort(byKey),
     dropped: dropped.sort(byKey),
+    userScoped: userScoped.sort(byKey),
   };
 }
 
@@ -351,7 +365,7 @@ export async function captureWorld(world, opts = {}) {
       `No settings in ${world}. Launch the world once and configure it before capturing.`,
     );
   }
-  const { kept, regenerated, dropped } = partitionSettings(rows);
+  const { kept, regenerated, dropped, userScoped } = partitionSettings(rows);
   const { kept: safe, redacted } = redactSecrets(kept);
 
   return {
@@ -366,6 +380,9 @@ export async function captureWorld(world, opts = {}) {
     settings: safe,
     regeneratedAtCapture: regenerated,
     droppedAsIdentity: dropped.map(r => r.key),
+    // Counted, not named: which player set what is nobody else's business, and
+    // the count is what tells you whether anything was left behind.
+    droppedAsUserScoped: userScoped.length,
     // Named, never valued: knowing which credentials a new world will ask for
     // is useful; carrying them is not.
     redactedAsSecret: redacted,
@@ -586,6 +603,10 @@ export function parseArgs(argv) {
     else if (a === '--dry-run') opts.dryRun = true;
     else if (a === '--yes') opts.yes = true;
     else if (a === '--golden') opts.golden = true;
+    else if (a === '--title') opts.title = argv[++i];
+    else if (a === '--description') opts.description = argv[++i];
+    else if (a === '--system') opts.system = argv[++i];
+    else if (a === '--core-version') opts.coreVersion = argv[++i];
     else if (a.startsWith('--')) throw new Error(`Unknown argument: ${a}`);
     else opts.positional.push(a);
   }
@@ -606,7 +627,8 @@ export const USAGE = `Usage:
   foundry-base.mjs restore --yes [--from <path>]     recreate the data dir from a snapshot
   foundry-base.mjs restore --golden --yes            reset the instance, leaving worlds alone
   foundry-base.mjs pull-games                        rebuild + sync every game in the manifest
-  foundry-base.mjs verify [world]                     check the install against the pins; exits 1 on failure`;
+  foundry-base.mjs verify [world]                     check the install against the pins; exits 1 on failure
+  foundry-base.mjs new-world <id> --title "<T>"       create a world from the captured template`;
 
 async function cmdCapture(opts) {
   const world = opts.positional[0];
@@ -658,6 +680,12 @@ async function cmdWorldCapture(opts) {
   }
   if (template.regeneratedAtCapture.length) {
     console.log('  core.moduleConfiguration held aside — new-world regenerates it from the pins');
+  }
+  if (template.droppedAsUserScoped) {
+    console.log(
+      `  dropped ${template.droppedAsUserScoped} row(s) belonging to a specific user — ` +
+        'a new world has no such accounts',
+    );
   }
   for (const key of template.redactedAsSecret) {
     console.log(`  redacted (credential, not preference): ${key}`);
@@ -1296,6 +1324,215 @@ async function cmdVerify(opts) {
   console.log('\nAll checks passed.');
 }
 
+// ---------------------------------------------------------------------------
+// new-world — apply the captured template so a new world starts configured
+// ---------------------------------------------------------------------------
+
+/**
+ * Foundry world ids become directory names and appear inside every `@UUID` that
+ * points at the world's own documents, so they are effectively permanent. This
+ * refuses anything that would be awkward as either.
+ */
+export function assertValidWorldId(id) {
+  if (!id) throw new Error('new-world needs a world id, e.g. `new-world winters-teeth`');
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) {
+    throw new Error(
+      `"${id}" is not usable as a world id.\n` +
+        'Use lowercase letters, digits and hyphens, starting with a letter or digit.\n' +
+        'The id becomes a directory name and is baked into every @UUID pointing at\n' +
+        "this world's documents — renaming it later breaks them all.",
+    );
+  }
+  return id;
+}
+
+/**
+ * The LevelDB key a settings row lives under.
+ *
+ * Foundry prefixes it: `!settings!<document id>`. Confirmed by reading a live
+ * world rather than assumed — a bare id writes rows the server never looks at,
+ * which fails as an empty settings screen rather than as an error.
+ */
+export function settingsDbKey(id) {
+  return `!settings!${id}`;
+}
+
+/** A Foundry document id: 16 characters of base62. */
+export function documentId(bytes = randomBytes(16)) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let out = '';
+  for (const b of bytes) out += alphabet[b % alphabet.length];
+  return out.slice(0, 16);
+}
+
+/**
+ * The world manifest for a new world: the captured shape, with identity put
+ * back.
+ *
+ * The shape is copied rather than composed. Foundry's world.json gains and
+ * loses fields between versions and this repo has already paid once for
+ * guessing at Foundry's vocabulary, so every field the source world had — known
+ * to this tool or not — travels unread.
+ */
+export function newWorldJson(template, { id, title, description, system, coreVersion } = {}) {
+  assertValidWorldId(id);
+  if (!title) throw new Error('new-world needs --title "<Title>" — it is what Foundry displays');
+  if (!template?.worldShape) {
+    throw new Error(
+      `Template has no worldShape. Recapture it:\n` +
+        '  node scripts/content/foundry-base.mjs world-capture <a configured world>',
+    );
+  }
+  const world = { ...template.worldShape, id, title };
+  if (description !== undefined) world.description = description;
+  if (system) world.system = system;
+  if (coreVersion) world.coreVersion = coreVersion;
+  return world;
+}
+
+/**
+ * The module set a new world switches on: the pins, not the source world's
+ * history.
+ *
+ * `world-capture` holds `core.moduleConfiguration` aside rather than carrying
+ * it, because a world's enabled set drifts — it accumulates whatever was being
+ * tried that month. The manifest is the deliberate list, so it wins.
+ */
+export function moduleConfigurationFor(manifest) {
+  const config = {};
+  for (const entry of manifest?.core ?? []) config[entry.id] = true;
+  return config;
+}
+
+/**
+ * Every settings row the new world starts with: the inherited preferences, plus
+ * a regenerated module configuration.
+ *
+ * Each row keeps whatever fields it was captured with. Where a row carries its
+ * own `_id`, it is reissued: two worlds sharing a document id is a collision
+ * waiting for the first tool that assumes ids are unique.
+ */
+export function settingsToWrite(template, manifest, { newId = documentId } = {}) {
+  const rows = [];
+  for (const row of template?.settings ?? []) rows.push(freshRow(row, newId));
+  const config = moduleConfigurationFor(manifest);
+  if (Object.keys(config).length) {
+    // Take the captured row's shape so any field Foundry expects travels, then
+    // overwrite the part that must not: the enabled set comes from the pins.
+    const shape = template?.regeneratedAtCapture?.[0] ?? {};
+    rows.push(
+      freshRow({ ...shape, key: 'core.moduleConfiguration', value: JSON.stringify(config) }, newId),
+    );
+  }
+  return rows;
+}
+
+/**
+ * One settings row, re-identified for a world that has never existed.
+ *
+ * Two fields point at the world it came from and are reissued or cleared:
+ * `_id`, because two worlds sharing a document id is a collision waiting for
+ * the first tool that assumes ids are unique; and `_stats.lastModifiedBy`,
+ * which names a user account the new world does not have.
+ *
+ * Everything else travels untouched, including fields this tool has never heard
+ * of — the same rule the capture side follows.
+ */
+export function freshRow(row, newId = documentId) {
+  const copy = { ...row, _id: newId() };
+  if (copy._stats && typeof copy._stats === 'object') {
+    copy._stats = { ...copy._stats, lastModifiedBy: null };
+  }
+  return copy;
+}
+
+async function loadWorldTemplate(explicit) {
+  const file = explicit ? path.resolve(explicit) : path.join(REPO_ROOT, WORLD_TEMPLATE_FILE);
+  try {
+    return { template: JSON.parse(await readFile(file, 'utf8')), file };
+  } catch {
+    throw new Error(
+      `No world template at ${file}.\n` +
+        'Configure one world the way you want every new world to start, then:\n' +
+        '  node scripts/content/foundry-base.mjs world-capture <that world>',
+    );
+  }
+}
+
+async function cmdNewWorld(opts) {
+  const id = assertValidWorldId(opts.positional[0]);
+  const manifest = await loadManifest(opts.manifest);
+  const { template, file } = await loadWorldTemplate(opts.from);
+  const data = dataDir(opts.data);
+  const worldsDir = await assertDataDir(data);
+  const worldDir = path.join(worldsDir, id);
+
+  // Never overwrite a world. A world is somebody's campaign.
+  const exists = await access(worldDir).then(
+    () => true,
+    () => false,
+  );
+  if (exists) throw new Error(`${worldDir} already exists. Refusing to touch an existing world.`);
+
+  const worldJson = newWorldJson(template, {
+    id,
+    title: opts.title,
+    description: opts.description,
+    system: opts.system,
+    coreVersion: opts.coreVersion,
+  });
+  const rows = settingsToWrite(template, manifest);
+  const keyed = rows.map(row => [settingsDbKey(row._id), row]);
+
+  console.log(`${opts.dryRun ? 'would create' : 'creating'} ${worldDir}`);
+  console.log(
+    `  from ${path.relative(REPO_ROOT, file) || file}, captured from ${template.capturedFrom ?? 'unknown'}`,
+  );
+  console.log(`  system ${worldJson.system ?? 'none'}, core ${worldJson.coreVersion ?? 'unknown'}`);
+  console.log(
+    `  ${rows.length} settings row(s), of which 1 is a regenerated core.moduleConfiguration`,
+  );
+  console.log(
+    `  ${Object.keys(moduleConfigurationFor(manifest)).length} module(s) enabled from the pins`,
+  );
+
+  // The template records the Foundry version it was taken under. This tool
+  // cannot read the installed version — the Foundry application lives outside
+  // the data directory in the container image — so it reports rather than
+  // refuses. Upgrading Foundry and then applying an older template is the case
+  // to watch for.
+  console.log(
+    `\nTemplate was captured under core ${template.coreVersion ?? 'unknown'}. If Foundry has` +
+      '\nmoved since, re-capture first, or pass --core-version to write a different one.',
+  );
+
+  if (opts.dryRun) {
+    console.log('\nwould write world.json:');
+    console.log(JSON.stringify(worldJson, null, 2));
+    console.log('\nwould write settings (document id -> setting key):');
+    for (const [dbKey, row] of keyed) console.log(`  ${dbKey}  ${row.key}`);
+    return;
+  }
+
+  await mkdir(path.join(worldDir, 'data'), { recursive: true });
+  await writeFile(path.join(worldDir, 'world.json'), `${JSON.stringify(worldJson, null, 2)}\n`);
+
+  const { ClassicLevel } = await import('classic-level');
+  const db = new ClassicLevel(path.join(worldDir, 'data', 'settings'), { valueEncoding: 'json' });
+  try {
+    await db.open();
+    await db.batch(keyed.map(([dbKey, row]) => ({ type: 'put', key: dbKey, value: row })));
+  } catch (err) {
+    throw new Error(explainLevelError(err, `the settings for ${id}`));
+  } finally {
+    await db.close().catch(() => {});
+  }
+
+  console.log(`\nWrote ${worldDir}. Start Foundry and it should appear configured.`);
+  console.log(`Check it without opening a settings screen:`);
+  console.log(`  node scripts/content/foundry-base.mjs verify ${id}`);
+}
+
 // Kept beside the switch below so a new command has to appear in both, and the
 // test that compares this with USAGE fails if either is forgotten.
 export const COMMANDS = [
@@ -1310,6 +1547,7 @@ export const COMMANDS = [
   'restore',
   'pull-games',
   'verify',
+  'new-world',
 ];
 
 export async function main(argv = process.argv.slice(2)) {
@@ -1337,6 +1575,8 @@ export async function main(argv = process.argv.slice(2)) {
       return cmdPullGames(opts);
     case 'verify':
       return cmdVerify(opts);
+    case 'new-world':
+      return cmdNewWorld(opts);
     default:
       console.error(USAGE);
       throw new Error(opts.command ? `Unknown command: ${opts.command}` : 'No command given');
