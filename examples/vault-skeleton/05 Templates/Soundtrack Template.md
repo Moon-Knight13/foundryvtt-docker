@@ -26,7 +26,7 @@ TABLE WITHOUT ID
   audio_ref AS Play,
   audio_cue AS "Bring it in when"
 FROM "03 Oneshots/REPLACE/Scenes"
-SORT scene
+SORT scene, act, file.name
 ```
 
 ## Adding a cue

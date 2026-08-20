@@ -224,7 +224,7 @@ REPLACE — one paragraph: the pitch, the cast, the choice at the end.
 TABLE role, cr FROM "$SECTION/$TITLE/NPCs" WHERE type = "npc" SORT file.name
 \`\`\`
 \`\`\`dataview
-TABLE scene FROM "$SECTION/$TITLE/Scenes" SORT scene
+TABLE scene FROM "$SECTION/$TITLE/Scenes" SORT scene, act, file.name
 \`\`\`
 
 ## Foundry
@@ -311,7 +311,7 @@ TABLE WITHOUT ID
   audio_ref AS Play,
   audio_cue AS "Bring it in when"
 FROM "$SECTION/$TITLE/Scenes"
-SORT scene
+SORT scene, act, file.name
 \`\`\`
 
 ## Adding a cue
