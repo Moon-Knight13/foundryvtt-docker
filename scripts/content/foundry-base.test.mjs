@@ -560,7 +560,10 @@ test('captureWorld reads a real world directory end to end', async () => {
     await db.put('a', { key: 'core.diceConfiguration', value: '{"d20":"foundry"}' });
     await db.put('b', { key: 'core.moduleConfiguration', value: '{"dd-import":true}' });
     await db.put('c', { key: 'core.activeScene', value: 'sceneid' });
-    await db.put('d', { key: 'ddb-importer.cobalt-cookie', value: 'SECRET-COBALT-VALUE' });
+    await db.put('d', {
+      key: 'ddb-importer.cobalt-cookie',
+      value: 'FIXTURE-NOT-A-REAL-COOKIE-E2E',
+    });
     await db.close();
 
     const template = await captureWorld('zzz-source', { data });
@@ -585,7 +588,7 @@ test('captureWorld reads a real world directory end to end', async () => {
     // be read, diffed and handed around, and this one is a live session cookie.
     assert.deepEqual(template.redactedAsSecret, ['ddb-importer.cobalt-cookie']);
     assert.ok(
-      !JSON.stringify(template).includes('SECRET-COBALT-VALUE'),
+      !JSON.stringify(template).includes('FIXTURE-NOT-A-REAL-COOKIE-E2E'),
       'no part of the template may carry the credential value',
     );
   } finally {
@@ -860,11 +863,15 @@ test('verifyWorldSystem fails on the wrong system, warns on a lagging version', 
 const keysOf = rows => rows.map(r => r.key);
 
 test('redactSecrets drops credential rows and names them', () => {
+  // Fixture values are deliberately shaped like nothing real: no JWT prefix, no
+  // `sk-live-` stub, nothing a scanner or a reader should have to think twice
+  // about. Only the KEYS matter to this code, and a repo whose subject is not
+  // leaking credentials should not carry decorative look-alikes of them.
   const { kept, redacted } = redactSecrets([
-    { key: 'ddb-importer.cobalt-cookie', value: 'eyJhbGciOi...' },
+    { key: 'ddb-importer.cobalt-cookie', value: 'FIXTURE-NOT-A-REAL-COOKIE' },
     { key: 'core.diceConfiguration', value: '{}' },
-    { key: 'some-module.apiKey', value: 'sk-live-abc' },
-    { key: 'other.password', value: 'hunter2' },
+    { key: 'some-module.apiKey', value: 'FIXTURE-NOT-A-REAL-KEY' },
+    { key: 'other.password', value: 'FIXTURE-NOT-A-REAL-PASSWORD' },
   ]);
   assert.deepEqual(keysOf(kept), ['core.diceConfiguration']);
   assert.deepEqual(redacted, [
@@ -874,7 +881,7 @@ test('redactSecrets drops credential rows and names them', () => {
   ]);
   // Dropped, never blanked: an empty credential in a new world is
   // indistinguishable from a broken one, while an absent one prompts for itself.
-  assert.ok(!JSON.stringify(kept).includes('hunter2'));
+  assert.ok(!JSON.stringify(kept).includes('FIXTURE-NOT-A-REAL-PASSWORD'));
 });
 
 test('redactSecrets never matches "token" on its own — this is a VTT', () => {
