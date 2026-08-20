@@ -17,8 +17,11 @@ import {
   removeFromCore,
   sharedPrefix,
   pullPlan,
+  loadGames,
   REPO_ROOT,
 } from './foundry-base.mjs';
+import { mkdtemp, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 
 test('enabledModules keeps only the enabled ids, sorted', () => {
   assert.deepEqual(
@@ -311,20 +314,78 @@ test('removeFromCore drops a module and reports a no-op honestly', () => {
 test('pull-games gates every game on art coverage between build and sync', () => {
   // The gate BETWEEN build and sync is the point: an unproven module must not
   // be able to reach Foundry through the batch path.
-  const plan = pullPlan({ config: '/v/g/lamia.config.json', src: '/v/g/src' });
+  const plan = pullPlan({ config: '/v/g/ashwake-hollow.config.json', src: '/v/g/src' });
   assert.equal(plan.length, 3);
   const scripts = plan.map(([cmd, args]) => path.basename(cmd === 'node' ? args[0] : cmd));
   assert.deepEqual(scripts, ['build.mjs', 'art-coverage.mjs', 'sync-content.sh']);
 
   const gateArgs = plan[1][1];
   assert.ok(gateArgs.includes('--strict'), 'the batch path is the enforcing one');
-  assert.ok(gateArgs.includes('/v/g/lamia.config.json'));
+  assert.ok(gateArgs.includes('/v/g/ashwake-hollow.config.json'));
   assert.ok(gateArgs.includes('/v/g/src'), 'vault-hosted games pass their src through');
 
   // A plain-string manifest entry (config only) still gets all three steps.
-  const plain = pullPlan('/v/g/lamia.config.json');
+  const plain = pullPlan('/v/g/ashwake-hollow.config.json');
   assert.equal(plain.length, 3);
   assert.ok(!plain[1][1].includes('--src'));
+});
+
+test('loadGames merges the vault-side registry so the repo stays game-agnostic', async () => {
+  const saved = process.env.DND_VAULT_PATH;
+  const vault = await mkdtemp(path.join(tmpdir(), 'vault-'));
+  try {
+    process.env.DND_VAULT_PATH = vault;
+    // No registry file: repo manifest games only (normally []).
+    assert.deepEqual(await loadGames({ games: [] }), []);
+    // Registry present: its entries are picked up without touching the repo.
+    await writeFile(
+      path.join(vault, 'foundry-games.json'),
+      JSON.stringify({
+        games: [
+          { config: '$DND_VAULT_PATH/g/ashwake-hollow.config.json', src: '$DND_VAULT_PATH/g/src' },
+        ],
+      }),
+    );
+    const games = await loadGames({ games: [] });
+    assert.equal(games.length, 1);
+    assert.equal(games[0].config, '$DND_VAULT_PATH/g/ashwake-hollow.config.json');
+    // Repo entries (if any ever exist) come first; vault entries append.
+    const merged = await loadGames({ games: ['/repo/one.config.json'] });
+    assert.deepEqual(merged[0], '/repo/one.config.json');
+    assert.equal(merged.length, 2);
+    // Malformed registry fails loud, not silently empty.
+    await writeFile(path.join(vault, 'foundry-games.json'), '{nope');
+    await assert.rejects(() => loadGames({ games: [] }), /foundry-games\.json/);
+  } finally {
+    if (saved === undefined) delete process.env.DND_VAULT_PATH;
+    else process.env.DND_VAULT_PATH = saved;
+  }
+});
+
+test('pullPlan expands a leading $DND_VAULT_PATH from the environment', () => {
+  const saved = process.env.DND_VAULT_PATH;
+  try {
+    process.env.DND_VAULT_PATH = '/vault';
+    const plan = pullPlan({
+      config: '$DND_VAULT_PATH/03 Oneshots/Ashwake Hollow/Foundry/ashwake-hollow.config.json',
+      src: '$DND_VAULT_PATH/03 Oneshots/Ashwake Hollow/Foundry/src',
+    });
+    assert.ok(
+      plan[0][1].includes('/vault/03 Oneshots/Ashwake Hollow/Foundry/ashwake-hollow.config.json'),
+    );
+    assert.ok(plan[1][1].includes('/vault/03 Oneshots/Ashwake Hollow/Foundry/src'));
+
+    // Unset: falls back to the compose default, ~/Documents/DnD.
+    delete process.env.DND_VAULT_PATH;
+    const fallback = pullPlan('$DND_VAULT_PATH/g/ashwake-hollow.config.json');
+    assert.ok(
+      fallback[0][1].some(a => a.endsWith('/Documents/DnD/g/ashwake-hollow.config.json')),
+      `expected ~/Documents/DnD fallback, got ${fallback[0][1]}`,
+    );
+  } finally {
+    if (saved === undefined) delete process.env.DND_VAULT_PATH;
+    else process.env.DND_VAULT_PATH = saved;
+  }
 });
 
 test('sharedPrefix powers a "did you mean" that actually fires on typos', () => {

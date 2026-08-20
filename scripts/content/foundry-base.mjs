@@ -26,6 +26,7 @@
 // wholesale with cp -a, which necessarily includes them — so the snapshot path
 // must live outside the repo tree and is refused if it does not.
 import path from 'node:path';
+import os from 'node:os';
 import { readFile, writeFile, mkdir, access, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
@@ -659,9 +660,46 @@ async function cmdRemove(opts) {
  * coverage gate in strict mode, then sync. The gate sits BETWEEN build and
  * sync on purpose — an unproven module must not be able to reach Foundry.
  */
+// Game entries may address the vault as "$DND_VAULT_PATH/…" so the manifest
+// stays layout-independent: the env var wins (same one compose.yml uses),
+// falling back to its compose default of ~/Documents/DnD. JSON cannot expand
+// variables and node does not expand ~, so this is done here.
+const VAULT_TOKEN = '$DND_VAULT_PATH';
+function vaultRoot() {
+  return process.env.DND_VAULT_PATH || path.join(os.homedir(), 'Documents', 'DnD');
+}
+function expandVaultPath(p) {
+  if (!p || !p.startsWith(VAULT_TOKEN)) return p;
+  return vaultRoot() + p.slice(VAULT_TOKEN.length);
+}
+
+// The game registry lives in the VAULT (<vault>/foundry-games.json), not in
+// this repo — the repo is the pipeline, never a game's content, and a game's
+// existence is content too. The repo manifest's `games` array stays empty and
+// game-agnostic; anything a user does put there still works and runs first.
+// Missing registry file: fine (no games). Malformed: fail loud.
+export async function loadGames(manifest) {
+  const games = [...(manifest.games ?? [])];
+  const registry = path.join(vaultRoot(), 'foundry-games.json');
+  let raw;
+  try {
+    raw = await readFile(registry, 'utf8');
+  } catch {
+    return games; // No vault registry — repo manifest entries only.
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`Cannot parse ${registry} (foundry-games.json): ${err.message}`);
+  }
+  const vaultGames = Array.isArray(parsed) ? parsed : parsed.games ?? [];
+  return games.concat(vaultGames);
+}
+
 export function pullPlan(game) {
-  const config = typeof game === 'string' ? game : game.config;
-  const src = typeof game === 'string' ? undefined : game.src;
+  const config = expandVaultPath(typeof game === 'string' ? game : game.config);
+  const src = expandVaultPath(typeof game === 'string' ? undefined : game.src);
   const srcArgs = src ? ['--src', src] : [];
   return [
     ['node', [path.join(SCRIPT_DIR, 'build.mjs'), '--config', config, ...srcArgs]],
@@ -675,9 +713,11 @@ export function pullPlan(game) {
 
 async function cmdPullGames(opts) {
   const manifest = await loadManifest(opts.manifest);
-  const games = manifest.games ?? [];
+  const games = await loadGames(manifest);
   if (!games.length) {
-    console.log('No games listed in the manifest — nothing to pull.');
+    console.log(
+      'No games listed — add entries to <vault>/foundry-games.json (see docs/FOUNDRY_REBUILD.md).',
+    );
     return;
   }
   for (const game of games) {
