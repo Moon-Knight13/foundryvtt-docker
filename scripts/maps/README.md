@@ -146,6 +146,15 @@ Glyphs are schematic (this is a "simple battlemap", not fine art).
 | `pillar` | Stone column | `size` | small LOS obstacle |
 | `water` | Translucent pool | `size` | — |
 | `pit` | Ragged black chasm, jittered edge | `w`, `h` (or `size`) | — (you can see across a hole) |
+| `flame` | Flame on a low stone spur, with a glow pool | `size`, `color` | — |
+| `altar` | Stone slab on end plinths; `shroud: true` lays a body on it | `size`, `shroud` | — |
+| `circle` | Ritual circle: concentric rings with rune ticks | `size`, `color` | — |
+| `statue` | Figure on a plinth; `lantern: "left"/"right"` adds a lit lantern | `size`, `lantern` | small LOS obstacle |
+| `crate` | Stack of cross-braced crates | `size`, `count` | — (cover, not a wall) |
+| `barricade` | Lashed planks with a diagonal brace | `size`, `dir` | — (blocks movement, not sight) |
+| `grave` | Turned-soil plot with a headstone at its head | `size` | — |
+| `stain` | Irregular dried pool, blood by default | `size`, `color`, `edge` | — |
+| `wreath` | Ring of leaves; `dead: true` wilts it | `size`, `dead` | — |
 | `rubble` | Scattered debris | `size` | — |
 | `marker` | Subtle disc (e.g. a ghost's spot); `label` shown on DM only | `size` | — |
 | *anything else* | Labelled fallback disc (never crashes) | `size` | — |
@@ -168,7 +177,9 @@ the VTT pin stay in sync because they read the same array.
 
 `{"at": [x,y], "range": <grid>, "color": "rrggbb", "intensity": 0.5,
 "shadows": true}` — written into the `.dd2vtt` `lights` array. `color`
-may be `rrggbb` or `rrggbbaa` (6-digit is padded with `ff`). `intensity`
+may be `rrggbb` or `rrggbbaa` (6-digit is padded with `ff`) — the same form the
+`color` field takes on `flame`, `circle` and `stain`, which tint their glyph
+(cold blue ward-flame against candle amber, say). `intensity`
 and `shadows` are optional. Arch features additionally bake a static
 moonlight wedge into the image itself.
 

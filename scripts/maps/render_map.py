@@ -53,6 +53,22 @@ MOONLIGHT   = (225, 230, 255, 34)
 WATER       = (54, 96, 138, 150)
 WATER_EDGE  = (70, 120, 170, 180)
 RUBBLE      = (120, 110, 92, 220)
+FLAME_CORE  = (236, 244, 255, 235)   # flame body; recoloured per-feature
+FLAME_GLOW  = (110, 168, 255, 70)
+SPUR        = (86, 82, 78, 255)
+ALTAR_TOP   = (176, 170, 158, 255)
+ALTAR_EDGE  = (96, 92, 84, 255)
+SHROUD      = (206, 202, 194, 235)
+RUNE_INK    = (150, 128, 210, 190)
+CRATE_WOOD  = (128, 98, 60, 255)
+CRATE_EDGE  = (74, 54, 30, 255)
+SOIL        = (99, 86, 66, 255)
+BLOOD       = (104, 26, 26, 235)
+BLOOD_EDGE  = (72, 16, 16, 255)
+WREATH_LEAF = (86, 104, 62, 235)
+WREATH_DEAD = (120, 106, 66, 235)
+GRAVE_STONE = (128, 124, 118, 255)
+GRAVE_EDGE  = (78, 75, 70, 255)
 PIT_DARK    = (22, 20, 24, 255)
 PIT_EDGE    = (58, 52, 48, 255)
 PILLAR      = (110, 106, 100, 255)
@@ -324,6 +340,234 @@ def feat_pit(cv: Canvas, f):
     return None
 
 
+def _rgba(hexish, default):
+    """`color` as rrggbb / rrggbbaa, else the default tuple."""
+    if not hexish:
+        return default
+    c = str(hexish).lstrip("#")
+    if len(c) == 6:
+        c += "ff"
+    if len(c) != 8:
+        return default
+    return tuple(int(c[i:i + 2], 16) for i in (0, 2, 4, 6))
+
+
+def feat_flame(cv: Canvas, f):
+    """A flame on a low stone spur. `color` tints it — cold blue, candle amber."""
+    x, y = f["at"]
+    s = f.get("size", 1.0)
+    core = _rgba(f.get("color"), FLAME_CORE)
+    glow = (core[0], core[1], core[2], 60)
+    # glow pool first, on its own layer so the alpha reads
+    ov = cv.overlay()
+    od = ImageDraw.Draw(ov)
+    gr = s * 1.6
+    od.ellipse([cv.g(x - gr), cv.g(y - gr), cv.g(x + gr), cv.g(y + gr)], fill=glow)
+    cv.composite(ov)
+    # stone spur
+    sr = s * 0.55
+    cv.d.ellipse([cv.g(x - sr), cv.g(y - sr * 0.5), cv.g(x + sr), cv.g(y + sr * 0.65)],
+                 fill=SPUR, outline=STONE_EDGE, width=3)
+    # teardrop flame: a rising tongue over a round base
+    h = s * 1.15
+    w = s * 0.42
+    cv.d.polygon([cv.gp((x, y - h)),
+                  cv.gp((x + w, y - h * 0.30)),
+                  cv.gp((x + w * 0.75, y + h * 0.18)),
+                  cv.gp((x - w * 0.75, y + h * 0.18)),
+                  cv.gp((x - w, y - h * 0.30))], fill=core)
+    inner = (min(255, core[0] + 20), min(255, core[1] + 20), min(255, core[2] + 20), 255)
+    cv.d.polygon([cv.gp((x, y - h * 0.62)),
+                  cv.gp((x + w * 0.42, y - h * 0.10)),
+                  cv.gp((x, y + h * 0.10)),
+                  cv.gp((x - w * 0.42, y - h * 0.10))], fill=inner)
+    return None
+
+
+def feat_altar(cv: Canvas, f):
+    """A stone slab, optionally shrouded (`shroud: true` for a body on it)."""
+    x, y = f["at"]
+    s = f.get("size", 2.0)
+    hw, hh = s / 2.0, s / 3.2
+    cv.d.rectangle([cv.g(x - hw), cv.g(y - hh), cv.g(x + hw), cv.g(y + hh)],
+                   fill=ALTAR_TOP, outline=ALTAR_EDGE, width=5)
+    # end plinths, so it reads as a table not a floor tile
+    cv.d.rectangle([cv.g(x - hw), cv.g(y - hh), cv.g(x - hw + s * 0.16), cv.g(y + hh)],
+                   fill=ALTAR_EDGE)
+    cv.d.rectangle([cv.g(x + hw - s * 0.16), cv.g(y - hh), cv.g(x + hw), cv.g(y + hh)],
+                   fill=ALTAR_EDGE)
+    if f.get("shroud"):
+        ov = cv.overlay()
+        ImageDraw.Draw(ov).ellipse(
+            [cv.g(x - hw * 0.62), cv.g(y - hh * 0.66), cv.g(x + hw * 0.62), cv.g(y + hh * 0.66)],
+            fill=SHROUD)
+        cv.composite(ov)
+    return None
+
+
+def feat_circle(cv: Canvas, f):
+    """A ritual circle: concentric rings with rune ticks. Purely decorative."""
+    x, y = f["at"]
+    r = f.get("size", 3.0)
+    col = _rgba(f.get("color"), RUNE_INK)
+    ov = cv.overlay()
+    od = ImageDraw.Draw(ov)
+    faint = (col[0], col[1], col[2], 40)
+    od.ellipse([cv.g(x - r), cv.g(y - r), cv.g(x + r), cv.g(y + r)], fill=faint)
+    for k in (1.0, 0.78, 0.46):
+        rr = r * k
+        od.ellipse([cv.g(x - rr), cv.g(y - rr), cv.g(x + rr), cv.g(y + rr)],
+                   outline=col, width=4)
+    for i in range(12):
+        t = i / 12.0 * math.tau
+        r0, r1 = r * 0.80, r * 0.98
+        od.line([cv.gp((x + math.cos(t) * r0, y + math.sin(t) * r0)),
+                 cv.gp((x + math.cos(t) * r1, y + math.sin(t) * r1))], fill=col, width=4)
+    cv.composite(ov)
+    return None
+
+
+def feat_statue(cv: Canvas, f):
+    """A figure on a plinth — square base, hooded body, optional lantern dot."""
+    x, y = f["at"]
+    s = f.get("size", 1.2)
+    h = s / 2.0
+    cv.d.rectangle([cv.g(x - h), cv.g(y - h), cv.g(x + h), cv.g(y + h)],
+                   fill=STONE, outline=STONE_EDGE, width=4)
+    br = s * 0.30
+    cv.d.ellipse([cv.g(x - br), cv.g(y - br), cv.g(x + br), cv.g(y + br)],
+                 fill=PILLAR, outline=PILLAR_EDGE, width=3)
+    # a hood: small wedge over the head
+    cv.d.polygon([cv.gp((x, y - br * 1.5)),
+                  cv.gp((x + br * 0.9, y - br * 0.1)),
+                  cv.gp((x - br * 0.9, y - br * 0.1))], fill=PILLAR_EDGE)
+    lantern = f.get("lantern")
+    if lantern:
+        lr = s * 0.16
+        lx = x + (h * 0.62 if lantern != "left" else -h * 0.62)
+        ov = cv.overlay()
+        ImageDraw.Draw(ov).ellipse(
+            [cv.g(lx - lr * 3), cv.g(y - lr * 3), cv.g(lx + lr * 3), cv.g(y + lr * 3)],
+            fill=(255, 233, 176, 55))
+        cv.composite(ov)
+        cv.d.ellipse([cv.g(lx - lr), cv.g(y - lr), cv.g(lx + lr), cv.g(y + lr)],
+                     fill=(255, 233, 176, 255), outline=BRONZE_EDGE, width=2)
+    hs = h * 0.75
+    return [(x - hs, y - hs), (x + hs, y - hs), (x + hs, y + hs), (x - hs, y + hs), (x - hs, y - hs)]
+
+
+def feat_crate(cv: Canvas, f):
+    """A stack of crates: squares with cross-bracing. Cover, not a wall."""
+    x, y = f["at"]
+    s = f.get("size", 1.0)
+    import random
+    rnd = random.Random(int((x * 419 + y * 787) * 1000))
+    for k in range(f.get("count", 3)):
+        bs = s * rnd.uniform(0.5, 0.78)
+        bx = x + rnd.uniform(-s * 0.42, s * 0.42)
+        by = y + rnd.uniform(-s * 0.42, s * 0.42)
+        box = [cv.g(bx - bs / 2), cv.g(by - bs / 2), cv.g(bx + bs / 2), cv.g(by + bs / 2)]
+        cv.d.rectangle(box, fill=CRATE_WOOD, outline=CRATE_EDGE, width=3)
+        cv.d.line([(box[0], box[1]), (box[2], box[3])], fill=CRATE_EDGE, width=2)
+        cv.d.line([(box[0], box[3]), (box[2], box[1])], fill=CRATE_EDGE, width=2)
+    return None
+
+
+def feat_barricade(cv: Canvas, f):
+    """Lashed planks across the way. Blocks movement, not sight — no LOS."""
+    x, y = f["at"]
+    s = f.get("size", 3.0)
+    d = f.get("dir", "n")
+    horiz = d in ("n", "s")
+    long_h = s / 2.0
+    plank = s * 0.13
+    for off in (-plank * 1.7, plank * 1.7):
+        if horiz:
+            box = [cv.g(x - long_h), cv.g(y + off - plank / 2),
+                   cv.g(x + long_h), cv.g(y + off + plank / 2)]
+        else:
+            box = [cv.g(x + off - plank / 2), cv.g(y - long_h),
+                   cv.g(x + off + plank / 2), cv.g(y + long_h)]
+        cv.d.rectangle(box, fill=CRATE_WOOD, outline=CRATE_EDGE, width=3)
+    # a diagonal brace across both
+    if horiz:
+        cv.d.line([cv.gp((x - long_h * 0.7, y - plank * 2.4)),
+                   cv.gp((x + long_h * 0.7, y + plank * 2.4))], fill=CRATE_EDGE, width=6)
+    else:
+        cv.d.line([cv.gp((x - plank * 2.4, y - long_h * 0.7)),
+                   cv.gp((x + plank * 2.4, y + long_h * 0.7))], fill=CRATE_EDGE, width=6)
+    return None
+
+
+def feat_grave(cv: Canvas, f):
+    """A grave plot: turned soil with a round-topped headstone at its head."""
+    x, y = f["at"]
+    s = f.get("size", 1.0)
+    plot_w, plot_h = s * 1.05, s * 1.30
+    # the plot: turned soil, so it reads as ground and not as an object
+    cv.d.rounded_rectangle([cv.g(x - plot_w / 2), cv.g(y - plot_h / 2),
+                            cv.g(x + plot_w / 2), cv.g(y + plot_h / 2)],
+                           radius=int(0.18 * cv.ppg), fill=SOIL, outline=GRAVE_EDGE, width=3)
+    # headstone: wider than it is tall, set across the head of the plot
+    # The stone stands AT the head of the plot, not on top of it — overlapping
+    # them made the pair read as one dark cylinder rather than a grave.
+    hw, hh = s * 0.62, s * 0.34
+    top = y - plot_h / 2
+    box = [cv.g(x - hw / 2), cv.g(top - hh * 1.15), cv.g(x + hw / 2), cv.g(top - hh * 0.05)]
+    cv.d.rounded_rectangle(box, radius=int(hw * cv.ppg * 0.32),
+                           fill=GRAVE_STONE, outline=GRAVE_EDGE, width=3)
+    # two inscription strokes
+    for k in (-0.82, -0.48):
+        yy = cv.g(top + hh * k)
+        cv.d.line([(cv.g(x - hw * 0.24), yy), (cv.g(x + hw * 0.24), yy)],
+                  fill=GRAVE_EDGE, width=max(2, cv.ppg // 28))
+    return None
+
+
+def feat_stain(cv: Canvas, f):
+    """A dried pool — blood by default. Irregular, deterministic per position."""
+    x, y = f["at"]
+    s = f.get("size", 1.0)
+    col = _rgba(f.get("color"), BLOOD)
+    edge = _rgba(f.get("edge"), BLOOD_EDGE)
+    import random
+    rnd = random.Random(int((x * 271 + y * 613) * 1000))
+    ring = []
+    steps = 30
+    for i in range(steps):
+        t = i / steps * math.tau
+        j = 1.0 + rnd.uniform(-0.22, 0.22)
+        ring.append(cv.gp((x + math.cos(t) * (s / 2.0) * j,
+                           y + math.sin(t) * (s / 2.0) * j * 0.82)))
+    ov = cv.overlay()
+    od = ImageDraw.Draw(ov)
+    od.polygon(ring, fill=col, outline=edge)
+    # a few spots around it
+    for _ in range(int(6 * s)):
+        rr = rnd.uniform(0.04, 0.11) * s
+        sx = x + rnd.uniform(-s * 0.95, s * 0.95)
+        sy = y + rnd.uniform(-s * 0.75, s * 0.75)
+        od.ellipse([cv.g(sx - rr), cv.g(sy - rr), cv.g(sx + rr), cv.g(sy + rr)], fill=col)
+    cv.composite(ov)
+    return None
+
+
+def feat_wreath(cv: Canvas, f):
+    """A funeral wreath — a ring of leaves. `dead: true` for a wilted one."""
+    x, y = f["at"]
+    s = f.get("size", 0.8)
+    col = WREATH_DEAD if f.get("dead") else WREATH_LEAF
+    r = s / 2.0
+    cv.d.ellipse([cv.g(x - r), cv.g(y - r), cv.g(x + r), cv.g(y + r)],
+                 outline=col, width=max(3, int(0.10 * cv.ppg)))
+    for i in range(8):
+        t = i / 8.0 * math.tau
+        lr = r * 0.30
+        lx, ly = x + math.cos(t) * r, y + math.sin(t) * r
+        cv.d.ellipse([cv.g(lx - lr), cv.g(ly - lr), cv.g(lx + lr), cv.g(ly + lr)], fill=col)
+    return None
+
+
 def feat_rubble(cv: Canvas, f):
     x, y = f["at"]
     s = f.get("size", 1.5)
@@ -366,6 +610,15 @@ FEATURES = {
     "pillar": feat_pillar,
     "water": feat_water,
     "pit": feat_pit,
+    "flame": feat_flame,
+    "altar": feat_altar,
+    "circle": feat_circle,
+    "statue": feat_statue,
+    "crate": feat_crate,
+    "barricade": feat_barricade,
+    "grave": feat_grave,
+    "stain": feat_stain,
+    "wreath": feat_wreath,
     "rubble": feat_rubble,
     "marker": feat_marker,
 }
