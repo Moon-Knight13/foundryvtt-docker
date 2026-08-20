@@ -204,6 +204,16 @@ root; on the host it is an empty mount point, but run either command anywhere
 the vault is actually mounted and it would otherwise copy the entire vault into
 the snapshot.
 
+`Data/assets` — anything uploaded through Foundry's file picker rather than
+resolved from the vault mount — **is** carried by the golden image, on purpose.
+It is shared across worlds and small next to the vault, so the cost of keeping
+it is a few files belonging to worlds you have deleted, while the cost of
+dropping it is missing art in a scene you rebuilt. Orphans are cheaper than
+holes. Note the asymmetry: `restore --golden` will *delete* an uploaded file
+that the golden snapshot predates, because assets are not on the exclude list
+that protects `worlds/`. Re-take the golden snapshot after you upload anything
+you want to keep.
+
 > The full-snapshot default used to be `<data>.golden` — if you have one from
 > before this change, it is a **full backup** despite the name. Pass it
 > explicitly with `--from`, or rename it to `<data>.backup`.
@@ -218,6 +228,33 @@ the snapshot.
 | **foundry-mcp-bridge** | live-world tooling for Claude Code |
 | your **content compendium module(s)** | built from the vault |
 
+## Step zero: the install source expires
+
+`FOUNDRY_RELEASE_URL` in `.env` is a **timed** URL from
+[foundryvtt.com/me/licenses](https://foundryvtt.com/me/licenses). It is the
+single most likely thing to break a rebuild six months from now, and it fails in
+the least helpful way: nothing about a *running* instance touches it, so it can
+sit expired for months and only bite at the moment you have already wiped the
+data directory. Wiping the data directory is exactly what forces the container
+to install Foundry again.
+
+So make refreshing it the first step of the drill rather than a surprise in the
+middle of it. Two ways, and they are a real choice:
+
+- **Refresh the timed URL.** Set Operating System to **Node.js** on the licence
+  page, click **Timed URL**, paste it into `.env`. Nothing long-lived is stored.
+- **Fall back to credentials.** Leave `FOUNDRY_RELEASE_URL` blank and set
+  `FOUNDRY_USERNAME` / `FOUNDRY_PASSWORD`; the felddy image logs in and fetches
+  the build itself. It does not expire, which is what makes it the better choice
+  for a rebuild you might have to run in a hurry — at the price of keeping your
+  Foundry account password in `.env`.
+
+Either way, keep `FOUNDRY_VERSION` **pinned** (`.env.example` ships `14.363`).
+The image tag `:release` floating is fine — that is the container's own tooling,
+not Foundry. Foundry's version is not: a bump migrates world data on first
+launch and downgrades are unsupported (see `DEPLOYMENT.md`), so it moves when
+you decide it moves, not when a rebuild happens to run.
+
 ## Rebuild drill
 
 Run this against the real stack — there is no second instance (see
@@ -225,9 +262,21 @@ Run this against the real stack — there is no second instance (see
 the undo. Do it **between sessions, not on game night**: Foundry is down while
 it runs.
 
-1. `foundry-base.mjs snapshot` — and confirm it exists before wiping anything.
-2. Wipe the world (or the data dir), then `foundry-base.mjs provision`.
-3. Launch Foundry, create a world, then restore the game content:
+1. Refresh the install source, above. Do this before anything is destroyed.
+2. `foundry-base.mjs snapshot` — the full one, worlds included. Confirm it
+   exists before wiping anything.
+3. Wipe the world, or the data directory.
+4. `foundry-base.mjs provision`. It does **not** need Foundry to have started
+   first: it creates what it needs under `Data/`, so it runs against a directory
+   the container has never come up in. If you keep a golden snapshot,
+   `restore --golden --yes` reaches the same place with no downloads at all —
+   and is the faster path when what you are fixing is a sick instance rather
+   than a version bump.
+5. Launch Foundry and create a world. Its settings start empty — see
+   *Configure one world, capture it, stop reconfiguring* above. `world-capture`
+   records what that configuration should be; reproducing it in a new world is
+   still a manual pass through the UI until `new-world` lands. Then restore the
+   game content:
    - `foundry-base.mjs pull-games` rebuilds every game listed in the
      **vault's** `foundry-games.json` (`<vault root>/foundry-games.json`,
      entries `{config, src}` with `$DND_VAULT_PATH/…` expanded from the
@@ -240,19 +289,19 @@ it runs.
    - Either path runs the **strict art gate** between build and sync and
      hard-fails on a blank named-NPC token — fix art before continuing, do
      not bypass the gate mid-drill.
-4. Enable the modules; import compendium packs with **"Keep Document IDs"**
+6. Enable the modules; import compendium packs with **"Keep Document IDs"**
    ticked (see `CONTENT_AUTHORING.md`, *Rules that bite* — without it, scene map
    pins render but open nothing).
-5. Re-run **ddb-importer**: its packs are world-scoped and did not survive.
-6. Run the SoSly bridge import to bring vault notes back as journals.
-7. **Check both surfaces**, because a game that imports is not the same as a
+7. Re-run **ddb-importer**: its packs are world-scoped and did not survive.
+8. Run the SoSly bridge import to bring vault notes back as journals.
+9. **Check both surfaces**, because a game that imports is not the same as a
    game that is ready to run:
    - *Foundry* — scenes carry walls and lights, actors carry real art rather
      than `mystery-man.svg`, and a GM map pin opens its journal page.
    - *In person* — every NPC note still renders a Fantasy Statblocks card with a
      portrait, handouts show their art full-size, and the Player map prints.
-8. On success the rebuild **is** the new state. On failure,
-   `foundry-base.mjs restore --yes`.
+10. On success the rebuild **is** the new state. On failure,
+    `foundry-base.mjs restore --yes`.
 
 Assets resolve through the `/data/Data/DnD` mount — nothing is copied into the
 world.

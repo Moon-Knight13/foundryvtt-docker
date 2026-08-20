@@ -10,6 +10,7 @@ import {
   partitionSettings,
   worldShape,
   captureWorld,
+  installEntry,
   IDENTITY_SETTINGS,
   syncExcludes,
   rsyncArgs,
@@ -26,7 +27,7 @@ import {
   loadGames,
   REPO_ROOT,
 } from './foundry-base.mjs';
-import { mkdtemp, writeFile, mkdir, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, mkdir, rm, readFile, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 
 test('enabledModules keeps only the enabled ids, sorted', () => {
@@ -593,5 +594,122 @@ test('every identity setting is a core key, so a module can never be dropped', (
   // silently on every new world.
   for (const key of IDENTITY_SETTINGS) {
     assert.ok(key.startsWith('core.'), `${key} must be a core setting`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// installEntry — provision has to work on a data dir Foundry never started in
+// ---------------------------------------------------------------------------
+
+const ENTRY = {
+  id: 'dice-so-nice',
+  kind: 'modules',
+  version: '5.1.4',
+  manifest: 'https://example.invalid/module.json',
+};
+
+/** Minimal stand-in for the two fetches installEntry makes. */
+function fakeFetch({
+  manifest = { download: 'https://example.invalid/module.zip' },
+  bytes = 'ZIPBYTES',
+  downloadOk = true,
+  manifestOk = true,
+} = {}) {
+  const calls = [];
+  const impl = async url => {
+    calls.push(url);
+    if (url === ENTRY.manifest) {
+      return { ok: manifestOk, status: manifestOk ? 200 : 404, json: async () => manifest };
+    }
+    return {
+      ok: downloadOk,
+      status: downloadOk ? 200 : 403,
+      arrayBuffer: async () => new TextEncoder().encode(bytes).buffer,
+    };
+  };
+  impl.calls = calls;
+  return impl;
+}
+
+test('installEntry works against a data dir Foundry has never started in', async () => {
+  // The regression this exists for: a rebuilt volume has no Data/ at all, and
+  // writing the zip before creating the destination died with a bare ENOENT
+  // *after* the download had been paid for.
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-fresh-'));
+  try {
+    const unpacked = [];
+    const dest = await installEntry(ENTRY, data, {
+      fetch: fakeFetch(),
+      unpack: async (zip, target) => {
+        // The zip must exist by the time the unpacker runs.
+        assert.equal(await readFile(zip, 'utf8'), 'ZIPBYTES');
+        unpacked.push([zip, target]);
+      },
+    });
+
+    assert.equal(dest, path.join(data, 'Data', 'modules', 'dice-so-nice'));
+    await access(dest);
+    assert.equal(unpacked.length, 1);
+    assert.equal(unpacked[0][1], dest);
+  } finally {
+    await rm(data, { recursive: true, force: true });
+  }
+});
+
+test('installEntry removes the downloaded zip, even when unpacking fails', async () => {
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-fresh-'));
+  try {
+    let zipPath;
+    await assert.rejects(
+      () =>
+        installEntry(ENTRY, data, {
+          fetch: fakeFetch(),
+          unpack: async zip => {
+            zipPath = zip;
+            throw new Error('unzip exited 9');
+          },
+        }),
+      /unzip exited 9/,
+    );
+    // A half-downloaded archive left in Data/ would be picked up by the next
+    // snapshot and shipped into the golden image.
+    await assert.rejects(() => access(zipPath), { code: 'ENOENT' });
+  } finally {
+    await rm(data, { recursive: true, force: true });
+  }
+});
+
+test('installEntry reports a failed download rather than unzipping an error page', async () => {
+  // An expired or redirected link answers 403 with HTML. Writing that as the
+  // zip fails later as "not a zipfile", which describes the wrong problem.
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-fresh-'));
+  try {
+    await assert.rejects(
+      () =>
+        installEntry(ENTRY, data, {
+          fetch: fakeFetch({ downloadOk: false }),
+          unpack: async () => assert.fail('must not unpack a failed download'),
+        }),
+      /dice-so-nice: download failed \(403\)/,
+    );
+  } finally {
+    await rm(data, { recursive: true, force: true });
+  }
+});
+
+test('installEntry refuses a manifest with no download URL before touching disk', async () => {
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-fresh-'));
+  try {
+    await assert.rejects(
+      () =>
+        installEntry(ENTRY, data, {
+          fetch: fakeFetch({ manifest: { id: 'dice-so-nice' } }),
+          unpack: async () => assert.fail('must not unpack'),
+        }),
+      /manifest has no download URL/,
+    );
+    await assert.rejects(() => access(path.join(data, 'Data')), { code: 'ENOENT' });
+  } finally {
+    await rm(data, { recursive: true, force: true });
   }
 });
