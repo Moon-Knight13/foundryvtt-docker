@@ -77,9 +77,19 @@ Lossy WebP is the wrong tool here and was measurably worse: at quality 90 the
 Player map *grew* to 40,330 bytes, because thin walls, flat fills and text
 labels are exactly what PNG compresses well and what lossy codecs smear.
 
-Pass `--png` to either script for a consumer that cannot read WebP. The
-`.dd2vtt` always embeds a PNG regardless — that is fixed by the Universal VTT
-spec, and the file is byte-identical either way.
+Pass `--png` to either script for a consumer that cannot read WebP.
+
+**A `background` spec flips that choice.** Bought or painted art is photographic,
+where lossless is ruinous — one 3360 px battlemap came out at 8.4 MB lossless and
+under 1.4 MB at quality 88, with nothing visible lost under a token layer. So
+art-backed specs save lossy and generated ones stay lossless: the encoder follows
+the content, not the tool.
+
+Those specs also **skip the `.dd2vtt`** unless they generate geometry. The format
+carries walls, lights and a base64 PNG of the map; with no walls or lights that
+is a 15 MB re-encode of a picture the scene already points at. Otherwise the
+`.dd2vtt` always embeds a PNG — fixed by the Universal VTT spec, and
+byte-identical whatever the image files use.
 
 ## Spec format
 
@@ -145,9 +155,40 @@ Glyphs are schematic (this is a "simple battlemap", not fine art).
 | `stairs` | Stepped block | `size`, `dir` | — |
 | `pillar` | Stone column | `size` | small LOS obstacle |
 | `water` | Translucent pool | `size` | — |
+| `pit` | Ragged black chasm, jittered edge | `w`, `h` (or `size`) | — (you can see across a hole) |
+| `flame` | Flame on a low stone spur, with a glow pool | `size`, `color` | — |
+| `altar` | Stone slab on end plinths; `shroud: true` lays a body on it | `size`, `shroud` | — |
+| `circle` | Ritual circle: concentric rings with rune ticks | `size`, `color` | — |
+| `statue` | Figure on a plinth; `lantern: "left"/"right"` adds a lit lantern | `size`, `lantern` | small LOS obstacle |
+| `crate` | Stack of cross-braced crates | `size`, `count` | — (cover, not a wall) |
+| `barricade` | Lashed planks with a diagonal brace | `size`, `dir` | — (blocks movement, not sight) |
+| `grave` | Turned-soil plot with a headstone at its head | `size` | — |
+| `stain` | Irregular dried pool, blood by default | `size`, `color`, `edge` | — |
+| `wreath` | Ring of leaves; `dead: true` wilts it | `size`, `dead` | — |
 | `rubble` | Scattered debris | `size` | — |
 | `marker` | Subtle disc (e.g. a ghost's spot); `label` shown on DM only | `size` | — |
 | *anything else* | Labelled fallback disc (never crashes) | `size` | — |
+
+### `background` — keying someone else's map
+
+```json
+{"background": {"file": "../../Assets/Art/derelict_docks.jpg"}}
+```
+
+A spec with a `background` skips floor generation entirely and pastes that image
+as the base, so the tool becomes an **overlay** rather than a cartographer: a
+bought or commissioned battlemap gets the same numbered keys, feature labels and
+legend panel as a generated one. `floor` becomes optional; `file` resolves
+relative to the spec.
+
+Choose `grid` and `ppg` to match the art's own grid — `ppg` = the art's pixels
+per square, `grid.w`/`grid.h` = its size in squares — and the image lands
+unscaled. Anything else is resampled to `grid x ppg`, so a small mismatch
+(3360 px of art into 34 x 100) is a ~1% stretch and invisible; a large one is
+not.
+
+Nothing stops you adding `features` on top of a background, but usually the art
+already has them: keep those specs to `background` + `keys`.
 
 ### `keys`
 
@@ -167,7 +208,9 @@ the VTT pin stay in sync because they read the same array.
 
 `{"at": [x,y], "range": <grid>, "color": "rrggbb", "intensity": 0.5,
 "shadows": true}` — written into the `.dd2vtt` `lights` array. `color`
-may be `rrggbb` or `rrggbbaa` (6-digit is padded with `ff`). `intensity`
+may be `rrggbb` or `rrggbbaa` (6-digit is padded with `ff`) — the same form the
+`color` field takes on `flame`, `circle` and `stain`, which tint their glyph
+(cold blue ward-flame against candle amber, say). `intensity`
 and `shadows` are optional. Arch features additionally bake a static
 moonlight wedge into the image itself.
 
@@ -192,7 +235,8 @@ mount, where Foundry can serve them.
 Two things bite when authoring a spec:
 
 - `size` is a **radius** in grid units, not a diameter. `size: 3` is six squares
-  across.
+  across. **`pit` is the exception** — its `w`/`h` (or `size`) are full width and
+  height, because a chasm is usually drawn to span a corridor exactly.
 - An unrecognised `type` silently falls back to a labelled disc. Stick to the
   feature table above; use `marker` for anything decorative.
 
