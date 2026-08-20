@@ -33,7 +33,7 @@ import os from 'node:os';
 import { readFile, writeFile, mkdir, access, readdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { randomInt } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { explainLevelError } from './leveldb.mjs';
 
@@ -1357,12 +1357,23 @@ export function settingsDbKey(id) {
   return `!settings!${id}`;
 }
 
-/** A Foundry document id: 16 characters of base62. */
-export function documentId(bytes = randomBytes(16)) {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const ID_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+/**
+ * A Foundry document id: 16 characters of base62.
+ *
+ * Each character is drawn with `randomInt(62)`, which rejection-samples, rather
+ * than by taking a random byte modulo 62. Modulo would bias the result: 256 is
+ * not a multiple of 62, so the first eight letters of the alphabet would come up
+ * five times in every 256 draws and the rest four. Small, and it costs nothing
+ * to not have.
+ *
+ * `random` is injectable so a test can pin that the value is used unmodified.
+ */
+export function documentId(random = randomInt) {
   let out = '';
-  for (const b of bytes) out += alphabet[b % alphabet.length];
-  return out.slice(0, 16);
+  for (let i = 0; i < 16; i++) out += ID_ALPHABET[random(ID_ALPHABET.length)];
+  return out;
 }
 
 /**

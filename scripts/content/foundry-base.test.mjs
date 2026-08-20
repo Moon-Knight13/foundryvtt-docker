@@ -1062,6 +1062,21 @@ test('documentId looks like a Foundry document id', () => {
   assert.notEqual(documentId(), documentId());
 });
 
+test('documentId draws in range instead of taking a byte modulo 62', () => {
+  // The first version did `randomByte % 62`, which biases: 256 is not a
+  // multiple of 62, so the first eight letters would come up five times per 256
+  // draws and the rest four. randomInt rejection-samples, so the drawn value is
+  // used unmodified — that is what this pins.
+  const asked = [];
+  const id = documentId(max => {
+    asked.push(max);
+    return 61;
+  });
+  assert.equal(id, '9999999999999999', 'index 61 is the last character of the alphabet');
+  assert.deepEqual([...new Set(asked)], [62], 'always asks across the whole alphabet');
+  assert.equal(asked.length, 16);
+});
+
 test('assertValidWorldId refuses ids that would be awkward forever', () => {
   assert.equal(assertValidWorldId('winters-teeth'), 'winters-teeth');
   for (const bad of ['Winters Teeth', 'winters_teeth', '-leading', '../escape', '']) {
