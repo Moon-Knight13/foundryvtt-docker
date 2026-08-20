@@ -85,12 +85,26 @@ closed** — the only declared requirements are `lib-wrapper` (by
 both are already pinned. Re-check after any `add` or `update`; a manifest's
 `relationships.requires` is the authority, not memory.
 
-Three pins are hosted on **gitlab.com**, not GitHub: `dice-so-nice`,
-`_chatcommands` and `chatlog-prune`. `provision` runs on the host and reaches
-them fine — but they cannot be verified from inside the devcontainer, whose
-egress allowlist (`.devcontainer/init-firewall.sh`) covers GitHub, npm, PyPI and
-little else. An agent reporting "fetch failed" for exactly those three is
-describing the firewall, not a broken pin.
+Four pins are hosted on **gitlab.com**, not GitHub: `dice-so-nice`,
+`_chatcommands`, `chatlog-prune` and `settings-extender`. `provision` runs on
+the host and reaches them fine — but they cannot be verified from inside the
+devcontainer, whose egress allowlist (`.devcontainer/init-firewall.sh`) covers
+GitHub, npm, PyPI and little else. An agent reporting "fetch failed" for exactly
+those four is describing the firewall, not a broken pin.
+
+Two pins carry a URL-shaped risk that no version number shows, so both say so in
+their `note`:
+
+- **`settings-extender`** resolves through a **GitLab CI job artifact**, and
+  GitLab expires job artifacts. That pin can rot with nothing here changing —
+  the same class of failure as the timed `FOUNDRY_RELEASE_URL`, and it will
+  surface as a `provision` failure mid-rebuild. Suspect the URL before the
+  module.
+- **`scene-packer`** is pinned to a **version-locked manifest URL**
+  (`.../2.8.12/module.json`) rather than a `/latest/` one. That makes the pin
+  admirably stable and makes `update` useless on it: the URL always answers with
+  the version it names, so it will report `current` forever. Move that one by
+  editing the URL and the version together.
 
 **Stop Foundry first.** `capture` reads a world's LevelDB settings store, and
 LevelDB takes an exclusive lock — a running Foundry holds it, and the raw error

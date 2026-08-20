@@ -110,13 +110,74 @@
       "note": "System half of Argon; enhancedcombathud alone does nothing for dnd5e.",
       "title": "Argon - Combat HUD (DND5E)",
       "version": "5.2.1"
+    },
+    {
+      "id": "monks-combat-details",
+      "manifest": "https://github.com/ironmonk108/monks-combat-details/releases/latest/download/module.json",
+      "note": "Monk's combat quality-of-life; enabled in the reference world.",
+      "title": "Monk's Combat Details",
+      "version": "14.02"
+    },
+    {
+      "id": "monks-combat-marker",
+      "manifest": "https://github.com/ironmonk88/monks-combat-marker/releases/latest/download/module.json",
+      "note": "Monk's combat quality-of-life; enabled in the reference world.",
+      "title": "Monk's Combat Marker",
+      "version": "12.01"
+    },
+    {
+      "id": "monks-scene-navigation",
+      "manifest": "https://github.com/ironmonk108/monks-scene-navigation/releases/latest/download/module.json",
+      "note": "Monk's scene quality-of-life; enabled in the reference world.",
+      "title": "Monk's Scene Navigation",
+      "version": "14.02"
+    },
+    {
+      "id": "monks-wall-enhancement",
+      "manifest": "https://github.com/ironmonk108/monks-wall-enhancement/releases/latest/download/module.json",
+      "note": "Monk's wall/door tooling; enabled in the reference world.",
+      "title": "Monk's Wall Enhancement",
+      "version": "14.01"
+    },
+    {
+      "id": "token-action-hud-core",
+      "manifest": "https://github.com/Larkinabout/fvtt-token-action-hud-core/releases/latest/download/module.json",
+      "note": "Token action HUD; runs alongside Argon in the reference world.",
+      "title": "Token Action HUD Core",
+      "version": "2.1.1"
+    },
+    {
+      "id": "settings-extender",
+      "manifest": "https://gitlab.com/foundry-azzurite/settings-extender/-/jobs/artifacts/2.0.0/raw/dist/settings-extender/module.json?job=build",
+      "note": "Library module; enabled in the reference world. WARNING: its manifest URL is a GitLab CI job artifact, and GitLab expires job artifacts. This pin can rot without anything changing here \u2014 if `provision` fails on it during a rebuild, the URL is the suspect, not the module.",
+      "title": "Settings Extender",
+      "version": "2.0.0"
+    },
+    {
+      "id": "tokenmagic",
+      "manifest": "https://github.com/Feu-Secret/Tokenmagic/releases/latest/download/module.json",
+      "note": "Visual effects; enabled in the reference world.",
+      "title": "Token Magic FX",
+      "version": "0.8.3"
+    },
+    {
+      "id": "multi-token-edit",
+      "manifest": "https://github.com/Aedif/multi-token-edit/releases/latest/download/module.json",
+      "note": "Bulk placeable editor. Was excluded as overlapping the map-spec pipeline; kept because it is in active use.",
+      "title": "Baileywiki Mass Edit",
+      "version": "3.2.2"
+    },
+    {
+      "id": "scene-packer",
+      "manifest": "https://github.com/League-of-Foundry-Developers/scene-packer/releases/download/2.8.12/module.json",
+      "note": "Was excluded as overlapping the compendium pipeline; kept because it is in active use. Its manifest URL is version-locked (.../2.8.12/...) rather than /latest/, so `update` can never move this pin \u2014 it will report \"current\" forever. Bump it by editing the URL and the version together.",
+      "title": "Library: Scene Packer",
+      "version": "2.8.12"
     }
   ],
   "deliberatelyExcluded": {
     "fa-battlemaps": "Large art asset pack; would bloat every snapshot. Install on demand.",
-    "mad-freecontent": "As above.",
-    "multi-token-edit": "Bulk placeable editor. Its main use is fixing up hand-built scenes; this pipeline generates walls, lights and notes from the map spec instead. Its presets are world-scoped and would not survive a rebuild anyway.",
-    "scene-packer": "Packages scenes with their dependencies \u2014 overlaps what the compendium pipeline already does."
+    "mad-freecontent": "As above."
   },
   "games": [],
   "system": {
