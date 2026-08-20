@@ -77,9 +77,19 @@ Lossy WebP is the wrong tool here and was measurably worse: at quality 90 the
 Player map *grew* to 40,330 bytes, because thin walls, flat fills and text
 labels are exactly what PNG compresses well and what lossy codecs smear.
 
-Pass `--png` to either script for a consumer that cannot read WebP. The
-`.dd2vtt` always embeds a PNG regardless — that is fixed by the Universal VTT
-spec, and the file is byte-identical either way.
+Pass `--png` to either script for a consumer that cannot read WebP.
+
+**A `background` spec flips that choice.** Bought or painted art is photographic,
+where lossless is ruinous — one 3360 px battlemap came out at 8.4 MB lossless and
+under 1.4 MB at quality 88, with nothing visible lost under a token layer. So
+art-backed specs save lossy and generated ones stay lossless: the encoder follows
+the content, not the tool.
+
+Those specs also **skip the `.dd2vtt`** unless they generate geometry. The format
+carries walls, lights and a base64 PNG of the map; with no walls or lights that
+is a 15 MB re-encode of a picture the scene already points at. Otherwise the
+`.dd2vtt` always embeds a PNG — fixed by the Universal VTT spec, and
+byte-identical whatever the image files use.
 
 ## Spec format
 

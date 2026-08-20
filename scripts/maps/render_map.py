@@ -951,9 +951,18 @@ def main(argv):
     # walls and text labels, which is both what PNG compresses best and what
     # lossy codecs smear. Every byte crosses the GM's upload link to each
     # player. --png restores the old output for a consumer that cannot read WebP.
+    # ...but that reasoning is about GENERATED art. A spec with a `background`
+    # is photographic or painted, where lossless WebP is enormous: the same
+    # 3360 px bought battlemap is 8.4 MB lossless and well under 1 MB at quality
+    # 88, with no visible difference on a map seen through a token layer. So the
+    # encoder follows the content, not the tool.
+    on_art = bool(spec.get("background"))
     webp = "--png" not in flags
     fmt, ext = ("WEBP", "webp") if webp else ("PNG", "png")
-    save_opts = {"lossless": True, "method": 6} if webp else {}
+    if webp:
+        save_opts = {"quality": 88, "method": 6} if on_art else {"lossless": True, "method": 6}
+    else:
+        save_opts = {}
 
     cv, poly, los_extra, ppg = build_base(spec)
     player = cv.img
@@ -965,13 +974,22 @@ def main(argv):
     dm_path = os.path.join(outdir, f"{name} - DM.{ext}")
     dm_img.convert("RGB").save(dm_path, fmt, **save_opts)
 
-    dd = build_dd2vtt(spec, poly, los_extra, player)
-    dd_path = os.path.join(outdir, f"{name}.dd2vtt")
-    with open(dd_path, "w") as fh:
-        json.dump(dd, fh)
+    # A Universal VTT file carries walls, lights and a base64 PNG of the map. For
+    # an art-backed spec with no geometry that is a 15 MB re-encode of a picture
+    # the scene already points at, so it is written only when there is something
+    # to carry.
+    dd = None
+    if not on_art or poly or spec.get("walls") or spec.get("lights"):
+        dd = build_dd2vtt(spec, poly, los_extra, player)
+        dd_path = os.path.join(outdir, f"{name}.dd2vtt")
+        with open(dd_path, "w") as fh:
+            json.dump(dd, fh)
 
     print(f"Player: {player_path}  {player.size[0]}x{player.size[1]}")
     print(f"DM:     {dm_path}  {dm_img.size[0]}x{dm_img.size[1]}")
+    if dd is None:
+        print("dd2vtt: skipped - background art with no generated geometry")
+        return 0
     print(f"dd2vtt: {dd_path}  walls={len(dd['line_of_sight'])} "
           f"portals={len(dd['portals'])} lights={len(dd['lights'])}")
     return 0
