@@ -59,11 +59,12 @@ Works for any **oneshot** (`03 Oneshots/<Game>/`) or **campaign** (`02 Campaigns
 One-time: install the 3 modules (below) and confirm the shared vault mount. All steps
 run on the **host**.
 
-1. **Content → compendium** (statted NPCs, items, journals, roll tables). In the repo, on the
-   branch holding this game's content:
+1. **Content → compendium** (statted NPCs, items, journals, roll tables). The sources live
+   with the game, in the vault; the repo only builds them:
    ```bash
-   node scripts/content/build.mjs    --config content/<game>.config.json
-   ./scripts/content/sync-content.sh --config content/<game>.config.json
+   G="<vault>/03 Oneshots/<Game>/Foundry"
+   node scripts/content/build.mjs    --config "$G/<slug>.config.json" --src "$G/src"
+   ./scripts/content/sync-content.sh --config "$G/<slug>.config.json"
    ```
    Foundry → **Manage Modules → enable the game's module → Compendium Packs → import**.
 2. **Notes → SoSly bridge.** Point the bridge at your vault's
