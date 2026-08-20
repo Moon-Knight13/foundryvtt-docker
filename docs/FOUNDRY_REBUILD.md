@@ -162,7 +162,7 @@ is **captured, never authored**: Foundry's `world.json` gains and loses fields
 between versions, and this repo already paid for guessing at Foundry's own
 vocabulary once — six of eight hand-written module ids were wrong.
 
-Three things it deliberately does not carry:
+Four things it deliberately does not carry:
 
 - **Identity settings** — `core.activeScene`, `core.compendiumConfiguration`,
   `core.combatTrackerConfig`, `core.time`. These name documents a new world does
@@ -172,6 +172,28 @@ Three things it deliberately does not carry:
   module set should follow the pins in `foundry-base.json`, not one world's
   history.
 - **The world's own id, title and description.**
+- **Credentials.** Some modules keep secrets in world settings — ddb-importer
+  stores a live D&D Beyond session cookie there. Those rows are dropped and
+  their **keys** printed, so you know which logins a new world will ask for
+  without the file carrying the answers. Sign in again in the new world.
+
+  They are dropped rather than blanked: an empty credential is
+  indistinguishable from a broken one, while an absent credential prompts for
+  itself. The match is on the key, by word list rather than by module id, so it
+  catches modules this repo has never heard of — and it never matches `token` or
+  `auth` on their own. This is a VTT: `core.defaultToken`, `token-action-hud`
+  and `tokenmagic` are placeable configuration, and `auth` is a substring of
+  "author". Over-matching would silently drop real settings, which is the exact
+  failure a whitelist would have had.
+
+> **The template file is not safe to paste.** It is gitignored and credentials
+> are stripped, but it still holds every other setting from a live world. Before
+> sharing it — in a terminal, an issue, or a chat with an agent — read the keys
+> rather than the file:
+>
+> ```bash
+> node -e "const t=require('./foundry-world-template.json');console.log(t.settings.map(s=>s.key).join('\n'))"
+> ```
 
 Everything else is kept, including settings from modules this tool has never
 heard of. That is a blacklist rather than a whitelist on purpose: a whitelist

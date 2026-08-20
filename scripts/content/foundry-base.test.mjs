@@ -16,6 +16,8 @@ import {
   verifyDependencies,
   verifyWorldModules,
   verifyWorldSystem,
+  redactSecrets,
+  SECRET_KEY_PATTERN,
   IDENTITY_SETTINGS,
   syncExcludes,
   rsyncArgs,
@@ -558,6 +560,10 @@ test('captureWorld reads a real world directory end to end', async () => {
     await db.put('a', { key: 'core.diceConfiguration', value: '{"d20":"foundry"}' });
     await db.put('b', { key: 'core.moduleConfiguration', value: '{"dd-import":true}' });
     await db.put('c', { key: 'core.activeScene', value: 'sceneid' });
+    await db.put('d', {
+      key: 'ddb-importer.cobalt-cookie',
+      value: 'FIXTURE-NOT-A-REAL-COOKIE-E2E',
+    });
     await db.close();
 
     const template = await captureWorld('zzz-source', { data });
@@ -577,6 +583,13 @@ test('captureWorld reads a real world directory end to end', async () => {
     assert.deepEqual(
       template.regeneratedAtCapture.map(r => r.key),
       ['core.moduleConfiguration'],
+    );
+    // The credential is named but never carried — the template file is meant to
+    // be read, diffed and handed around, and this one is a live session cookie.
+    assert.deepEqual(template.redactedAsSecret, ['ddb-importer.cobalt-cookie']);
+    assert.ok(
+      !JSON.stringify(template).includes('FIXTURE-NOT-A-REAL-COOKIE-E2E'),
+      'no part of the template may carry the credential value',
     );
   } finally {
     await rm(data, { recursive: true, force: true });
@@ -841,4 +854,72 @@ test('verifyWorldSystem fails on the wrong system, warns on a lagging version', 
   assert.match(lagging[0].text, /launch it once to migrate/);
 
   assert.deepEqual(verifyWorldSystem({ system: 'dnd5e', systemVersion: '5.3.3' }, PINS.system), []);
+});
+
+// ---------------------------------------------------------------------------
+// redactSecrets — a template is passed around; a credential in it travels too
+// ---------------------------------------------------------------------------
+
+const keysOf = rows => rows.map(r => r.key);
+
+test('redactSecrets drops credential rows and names them', () => {
+  // Fixture values are deliberately shaped like nothing real: no JWT prefix, no
+  // `sk-live-` stub, nothing a scanner or a reader should have to think twice
+  // about. Only the KEYS matter to this code, and a repo whose subject is not
+  // leaking credentials should not carry decorative look-alikes of them.
+  const { kept, redacted } = redactSecrets([
+    { key: 'ddb-importer.cobalt-cookie', value: 'FIXTURE-NOT-A-REAL-COOKIE' },
+    { key: 'core.diceConfiguration', value: '{}' },
+    { key: 'some-module.apiKey', value: 'FIXTURE-NOT-A-REAL-KEY' },
+    { key: 'other.password', value: 'FIXTURE-NOT-A-REAL-PASSWORD' },
+  ]);
+  assert.deepEqual(keysOf(kept), ['core.diceConfiguration']);
+  assert.deepEqual(redacted, [
+    'ddb-importer.cobalt-cookie',
+    'some-module.apiKey',
+    'other.password',
+  ]);
+  // Dropped, never blanked: an empty credential in a new world is
+  // indistinguishable from a broken one, while an absent one prompts for itself.
+  assert.ok(!JSON.stringify(kept).includes('FIXTURE-NOT-A-REAL-PASSWORD'));
+});
+
+test('redactSecrets never matches "token" on its own — this is a VTT', () => {
+  // Foundry is full of tokens that are creatures on a map. Matching the bare
+  // word would silently drop real configuration, which is the same failure a
+  // settings whitelist would have had: believing you are configured when you
+  // are not.
+  const rows = [
+    { key: 'core.defaultToken' },
+    { key: 'token-action-hud.style' },
+    { key: 'tokenmagic.autoTemplateSettings' },
+    { key: 'combat-tracker-dock.tokenSize' },
+  ];
+  const { kept, redacted } = redactSecrets(rows);
+  assert.deepEqual(redacted, []);
+  assert.equal(kept.length, rows.length);
+
+  // Compounds still do match.
+  assert.deepEqual(redactSecrets([{ key: 'x.accessToken' }, { key: 'y.api_token' }]).redacted, [
+    'x.accessToken',
+    'y.api_token',
+  ]);
+});
+
+test('redactSecrets never matches "auth" on its own — it is inside "author"', () => {
+  assert.deepEqual(redactSecrets([{ key: 'some-module.authorName' }]).redacted, []);
+  assert.deepEqual(redactSecrets([{ key: 'some-module.oauthState' }]).redacted, [
+    'some-module.oauthState',
+  ]);
+});
+
+test('redactSecrets tolerates malformed rows rather than throwing', () => {
+  const { kept, redacted } = redactSecrets([null, { value: 'x' }, { key: 42 }, { key: 'a.b' }]);
+  assert.deepEqual(redacted, []);
+  assert.equal(kept.length, 4);
+});
+
+test('the secret pattern is case-insensitive, since key casing is module choice', () => {
+  assert.ok(SECRET_KEY_PATTERN.test('module.CobaltCookie'));
+  assert.ok(SECRET_KEY_PATTERN.test('module.API_KEY'));
 });
