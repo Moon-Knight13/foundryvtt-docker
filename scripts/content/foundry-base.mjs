@@ -248,6 +248,48 @@ export function partitionSettings(rows) {
  * a real manifest and substituting the identity is the only version-proof way to
  * write one.
  */
+/**
+ * Setting keys whose value is a credential rather than a preference.
+ *
+ * Matched on the key, because the values are opaque by nature. ddb-importer
+ * keeps a D&D Beyond session cookie in world settings, and this template is
+ * meant to be read, diffed and handed around — a credential in it is a
+ * credential in every copy of it, and in every terminal it is ever pasted into.
+ * A new world should ask you to authenticate again; that is not a preference
+ * worth inheriting.
+ *
+ * The pattern is a word list rather than a list of module ids, so it catches
+ * modules this repo has never heard of. Two exclusions are deliberate and this
+ * is a VTT, so they matter:
+ *
+ * - **`token` is never matched on its own.** Foundry is full of tokens that are
+ *   creatures on a map — `core.defaultToken`, `token-action-hud.*`,
+ *   `tokenmagic.*`. Only compounds like `accessToken` or `api_token` match.
+ * - **`auth` is never matched on its own**, because it is a substring of
+ *   "author". Only `oauth`, `authorization` and `authToken` match.
+ *
+ * Over-matching here silently drops real configuration, which is the same
+ * failure mode a settings whitelist would have had: believing you are
+ * configured when you are not.
+ */
+export const SECRET_KEY_PATTERN =
+  /(cookie|passwo?rd|secret|api[-_]?key|api[-_]?token|access[-_]?token|auth[-_]?token|oauth|authorization|credential|private[-_]?key)/i;
+
+/**
+ * Split credential-bearing rows out of a settings set. They are dropped, not
+ * blanked: writing an empty credential into a new world is indistinguishable
+ * from a broken one, while an absent credential prompts for itself.
+ */
+export function redactSecrets(rows) {
+  const kept = [];
+  const redacted = [];
+  for (const row of rows ?? []) {
+    if (typeof row?.key === 'string' && SECRET_KEY_PATTERN.test(row.key)) redacted.push(row.key);
+    else kept.push(row);
+  }
+  return { kept, redacted };
+}
+
 export function worldShape(worldJson) {
   const shape = {};
   for (const [k, v] of Object.entries(worldJson ?? {})) {
@@ -300,6 +342,7 @@ export async function captureWorld(world, opts = {}) {
     );
   }
   const { kept, regenerated, dropped } = partitionSettings(rows);
+  const { kept: safe, redacted } = redactSecrets(kept);
 
   return {
     capturedFrom: world,
@@ -310,9 +353,12 @@ export async function captureWorld(world, opts = {}) {
     system: worldJson.system ?? null,
     systemVersion: worldJson.systemVersion ?? null,
     worldShape: worldShape(worldJson),
-    settings: kept,
+    settings: safe,
     regeneratedAtCapture: regenerated,
     droppedAsIdentity: dropped.map(r => r.key),
+    // Named, never valued: knowing which credentials a new world will ask for
+    // is useful; carrying them is not.
+    redactedAsSecret: redacted,
   };
 }
 
@@ -584,6 +630,12 @@ async function cmdWorldCapture(opts) {
   }
   if (template.regeneratedAtCapture.length) {
     console.log('  core.moduleConfiguration held aside — new-world regenerates it from the pins');
+  }
+  for (const key of template.redactedAsSecret) {
+    console.log(`  redacted (credential, not preference): ${key}`);
+  }
+  if (template.redactedAsSecret.length) {
+    console.log('  those are not in the file — sign in again in the new world.');
   }
   console.log('\nConfigure the source world the way you want EVERY new world to start,');
   console.log('then re-capture. This file is what new-world applies.');
