@@ -150,7 +150,12 @@ test('the soundtrack sheet reads scene cues and keeps audio out of Foundry', asy
     // The cue sheet is a query over the scene notes, not a second list to keep
     // in step with them — a cue cannot drift from the scene it belongs to.
     assert.match(sheet, /FROM "03 Oneshots\/Zzz Audio\/Scenes"/);
-    assert.match(sheet, /SORT scene/);
+
+    // Games do not agree on how they order scene notes: some number them with a
+    // `scene:` key, some use `act:`, and points-of-interest notes often carry
+    // neither. Sorting on `scene` alone left one game's cue sheet in arbitrary
+    // order, which for a "what to play next" sheet is a silent failure.
+    assert.match(sheet, /SORT scene, act, file\.name/);
 
     // The three keys a scene note carries. Documented where they are used.
     for (const key of ['audio_source', 'audio_ref', 'audio_cue']) {
