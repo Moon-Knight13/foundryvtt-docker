@@ -159,6 +159,27 @@ Glyphs are schematic (this is a "simple battlemap", not fine art).
 | `marker` | Subtle disc (e.g. a ghost's spot); `label` shown on DM only | `size` | — |
 | *anything else* | Labelled fallback disc (never crashes) | `size` | — |
 
+### `background` — keying someone else's map
+
+```json
+{"background": {"file": "../../Assets/Art/derelict_docks.jpg"}}
+```
+
+A spec with a `background` skips floor generation entirely and pastes that image
+as the base, so the tool becomes an **overlay** rather than a cartographer: a
+bought or commissioned battlemap gets the same numbered keys, feature labels and
+legend panel as a generated one. `floor` becomes optional; `file` resolves
+relative to the spec.
+
+Choose `grid` and `ppg` to match the art's own grid — `ppg` = the art's pixels
+per square, `grid.w`/`grid.h` = its size in squares — and the image lands
+unscaled. Anything else is resampled to `grid x ppg`, so a small mismatch
+(3360 px of art into 34 x 100) is a ~1% stretch and invisible; a large one is
+not.
+
+Nothing stops you adding `features` on top of a background, but usually the art
+already has them: keep those specs to `background` + `keys`.
+
 ### `keys`
 
 `{"n": <int>, "at": [x,y], "label": "...", "note": "..."}` — draws a numbered

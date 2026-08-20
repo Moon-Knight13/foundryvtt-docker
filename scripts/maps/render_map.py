@@ -188,8 +188,9 @@ def draw_grid(cv: Canvas):
 
 
 def draw_walls(cv: Canvas, poly, walls):
-    px = [cv.gp(p) for p in poly]
-    cv.d.line(px + [px[0]], fill=WALL, width=14, joint="curve")
+    if poly:
+        px = [cv.gp(p) for p in poly]
+        cv.d.line(px + [px[0]], fill=WALL, width=14, joint="curve")
     for w in walls:
         pts = [cv.gp(p) for p in w]
         cv.d.line(pts, fill=WALL, width=12, joint="curve")
@@ -676,21 +677,52 @@ FEATURES = {
 # --------------------------------------------------------------------------- #
 # Build the shared base map
 # --------------------------------------------------------------------------- #
+def paste_background(cv: Canvas, spec: dict) -> bool:
+    """Draw a real map image as the base instead of a generated floor.
+
+    A spec carrying `"background": {"file": "..."}` is a KEYED COPY of art
+    someone else drew: the generator stops being a cartographer and becomes an
+    overlay, so a bought map gets the same numbered keys and legend panel as a
+    generated one. `file` resolves relative to the spec. The art is scaled to
+    grid x ppg, so choose those to match its native grid and the stretch is nil.
+    """
+    bg = spec.get("background")
+    if not bg:
+        return False
+    src = bg.get("file")
+    if not src:
+        raise ValueError('background needs a "file"')
+    base = os.path.dirname(os.path.abspath(spec.get("_path", ".")))
+    path = src if os.path.isabs(src) else os.path.join(base, src)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"background image not found: {path}")
+    img = Image.open(path).convert("RGBA")
+    if img.size != cv.size:
+        img = img.resize(cv.size, Image.LANCZOS)
+    cv.img.alpha_composite(img)
+    cv.refresh()
+    return True
+
+
 def build_base(spec: dict):
     grid = spec["grid"]
     ppg = spec.get("ppg", 72)
     cv = Canvas(grid["w"], grid["h"], ppg)
+    on_art = paste_background(cv, spec)
 
-    poly = floor_polygon(spec["floor"])
-    draw_floor(cv, spec["floor"], poly)
-    draw_grid(cv)
+    # Art-backed specs have no floor to draw and bring their own grid.
+    poly = floor_polygon(spec["floor"]) if spec.get("floor") else []
+    if not on_art:
+        draw_floor(cv, spec["floor"], poly)
+        draw_grid(cv)
 
     # baked moonlight wedges from arch features
     for f in spec.get("features", []):
         if f.get("type") == "arch":
             bake_wedge(cv, f["at"], DIR_INWARD.get(f.get("dir", "n"), (0, 1)))
 
-    draw_walls(cv, poly, spec.get("walls", []))
+    if poly or spec.get("walls"):
+        draw_walls(cv, poly, spec.get("walls", []))
 
     # feature glyphs (drawn after walls so arches/doors punch through)
     los_extra = []
@@ -721,6 +753,52 @@ def _wrap(draw, text, font, max_w):
     return lines
 
 
+def _legend(d, spec, px, panel_w, draw=True):
+    """Lay out the key panel; return the height it needs.
+
+    One routine for measuring and for drawing, so the sheet can be sized to the
+    legend before anything is committed to pixels.
+    """
+    keys = spec.get("keys", [])
+    fs = panel_w / 360.0
+    title_font = serif_bold(int(26 * fs))
+    label_font = sans_bold(int(18 * fs))
+    note_font = sans(int(15 * fs))
+    chip_font = sans_bold(int(15 * fs))
+    max_w = panel_w - int(48 * fs)
+
+    y = int(24 * fs)
+    for ln in _wrap(d, spec.get("name", "Map") + " — KEY", title_font, panel_w - 48):
+        if draw:
+            d.text((px, y), ln, fill=PANEL_TITLE, font=title_font)
+        y += int(34 * fs)
+    y += int(20 * fs)
+
+    for k in keys:
+        cr = int(13 * fs)
+        if draw:
+            d.ellipse([px, y, px + 2 * cr, y + 2 * cr], fill=KEY_FILL, outline=KEY_EDGE, width=2)
+            d.text((px + cr, y + cr), str(k["n"]), fill=KEY_TEXT, font=chip_font, anchor="mm")
+        # Labels wrap for the same reason notes do: an over-long one used to be
+        # sliced off at the image edge — "Otty's crime scene — the bloo".
+        label_lines = _wrap(d, k.get("label", ""), label_font, max_w - (2 * cr + 12))
+        if draw and label_lines:
+            d.text((px + 2 * cr + 12, y + 1), label_lines[0], fill=PANEL_LABEL, font=label_font)
+        y += 2 * cr + int(6 * fs)
+        for extra in label_lines[1:]:
+            if draw:
+                d.text((px + 2 * cr + 12, y), extra, fill=PANEL_LABEL, font=label_font)
+            y += int(22 * fs)
+        note = k.get("note", "")
+        if note:
+            for ln in _wrap(d, note, note_font, max_w):
+                if draw:
+                    d.text((px + 4, y), ln, fill=PANEL_NOTE, font=note_font)
+                y += int(20 * fs)
+        y += int(14 * fs)
+    return y + int(24 * fs)
+
+
 def render_dm(base_img: Image.Image, spec: dict, ppg: int) -> Image.Image:
     map_w, map_h = base_img.size
     keys = spec.get("keys", [])
@@ -729,7 +807,14 @@ def render_dm(base_img: Image.Image, spec: dict, ppg: int) -> Image.Image:
     # into a column narrower than the art it sits beside, so it scales with the
     # map now — never below the original width, so small maps are unchanged.
     panel_w = max(360, map_w // 6) if keys else 0
-    dm = Image.new("RGBA", (map_w + panel_w, map_h), PANEL_BG)
+
+    # Measure the legend before sizing the sheet. A tall key list beside a short
+    # map used to run off the bottom edge and simply vanish — the GM copy looked
+    # complete and was missing its last two entries.
+    legend_h = _legend(ImageDraw.Draw(Image.new("RGBA", (1, 1))), spec, 0, panel_w,
+                       draw=False) if keys else 0
+    sheet_h = max(map_h, legend_h)
+    dm = Image.new("RGBA", (map_w + panel_w, sheet_h), PANEL_BG)
     dm.paste(base_img, (0, 0))
     d = ImageDraw.Draw(dm, "RGBA")
 
@@ -755,40 +840,9 @@ def render_dm(base_img: Image.Image, spec: dict, ppg: int) -> Image.Image:
 
     # legend panel
     if keys:
-        px = map_w + 24
-        d.line([(map_w, 0), (map_w, map_h)], fill=PANEL_LINE, width=2)
-        # The title wraps for the same reason the labels do: "Monastery Island"
-        # plus " — KEY" ran off the panel and rendered as "Monastery Island — KE".
-        title_font = serif_bold(26)
-        y = 24
-        for ln in _wrap(d, spec.get("name", "Map") + " — KEY", title_font, panel_w - 48):
-            d.text((px, y), ln, fill=PANEL_TITLE, font=title_font)
-            y += 34
-        y += 20
-        label_font = sans_bold(18)
-        note_font = sans(15)
-        max_w = panel_w - 48
-        for k in keys:
-            # numbered chip
-            cr = 13
-            d.ellipse([px, y, px + 2 * cr, y + 2 * cr], fill=KEY_FILL, outline=KEY_EDGE, width=2)
-            d.text((px + cr, y + cr), str(k["n"]), fill=KEY_TEXT, font=sans_bold(15), anchor="mm")
-            # The label wraps too. It used to be drawn as a single unwrapped
-            # run, so any label longer than the panel was silently sliced off
-            # at the image edge — the legend read "Otty's crime scene — the bloo".
-            label_lines = _wrap(d, k.get("label", ""), label_font, max_w - (2 * cr + 12))
-            d.text((px + 2 * cr + 12, y + 1), label_lines[0] if label_lines else "",
-                   fill=PANEL_LABEL, font=label_font)
-            y += 2 * cr + 6
-            for extra in label_lines[1:]:
-                d.text((px + 2 * cr + 12, y), extra, fill=PANEL_LABEL, font=label_font)
-                y += 22
-            note = k.get("note", "")
-            if note:
-                for ln in _wrap(d, note, note_font, max_w):
-                    d.text((px + 4, y), ln, fill=PANEL_NOTE, font=note_font)
-                    y += 20
-            y += 14
+        d.line([(map_w, 0), (map_w, sheet_h)], fill=PANEL_LINE, width=2)
+        _legend(d, spec, map_w + 24, panel_w, draw=True)
+
     return dm
 
 
@@ -817,7 +871,7 @@ def build_dd2vtt(spec: dict, poly, los_extra, player_img: "Image.Image") -> dict
     player_img.convert("RGB").save(buf, "PNG")
     b64 = base64.b64encode(buf.getvalue()).decode()
 
-    los = [_pts(poly + [poly[0]])]
+    los = [_pts(poly + [poly[0]])] if poly else []
     for w in spec.get("walls", []):
         los.append(_pts(w))
     for ob in los_extra:
@@ -883,6 +937,9 @@ def main(argv):
     spec_path, outdir = args
     with open(spec_path) as fh:
         spec = json.load(fh)
+    # Remember where the spec lives so a background image can be named relative
+    # to it rather than to whatever directory the command was run from.
+    spec["_path"] = spec_path
 
     os.makedirs(outdir, exist_ok=True)
     name = spec.get("name", "Map")
