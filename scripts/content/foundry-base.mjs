@@ -665,10 +665,36 @@ async function cmdRemove(opts) {
 // falling back to its compose default of ~/Documents/DnD. JSON cannot expand
 // variables and node does not expand ~, so this is done here.
 const VAULT_TOKEN = '$DND_VAULT_PATH';
+function vaultRoot() {
+  return process.env.DND_VAULT_PATH || path.join(os.homedir(), 'Documents', 'DnD');
+}
 function expandVaultPath(p) {
   if (!p || !p.startsWith(VAULT_TOKEN)) return p;
-  const vault = process.env.DND_VAULT_PATH || path.join(os.homedir(), 'Documents', 'DnD');
-  return vault + p.slice(VAULT_TOKEN.length);
+  return vaultRoot() + p.slice(VAULT_TOKEN.length);
+}
+
+// The game registry lives in the VAULT (<vault>/foundry-games.json), not in
+// this repo — the repo is the pipeline, never a game's content, and a game's
+// existence is content too. The repo manifest's `games` array stays empty and
+// game-agnostic; anything a user does put there still works and runs first.
+// Missing registry file: fine (no games). Malformed: fail loud.
+export async function loadGames(manifest) {
+  const games = [...(manifest.games ?? [])];
+  const registry = path.join(vaultRoot(), 'foundry-games.json');
+  let raw;
+  try {
+    raw = await readFile(registry, 'utf8');
+  } catch {
+    return games; // No vault registry — repo manifest entries only.
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`Cannot parse ${registry} (foundry-games.json): ${err.message}`);
+  }
+  const vaultGames = Array.isArray(parsed) ? parsed : parsed.games ?? [];
+  return games.concat(vaultGames);
 }
 
 export function pullPlan(game) {
@@ -687,9 +713,11 @@ export function pullPlan(game) {
 
 async function cmdPullGames(opts) {
   const manifest = await loadManifest(opts.manifest);
-  const games = manifest.games ?? [];
+  const games = await loadGames(manifest);
   if (!games.length) {
-    console.log('No games listed in the manifest — nothing to pull.');
+    console.log(
+      'No games listed — add entries to <vault>/foundry-games.json (see docs/FOUNDRY_REBUILD.md).',
+    );
     return;
   }
   for (const game of games) {

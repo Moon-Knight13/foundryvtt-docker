@@ -17,8 +17,11 @@ import {
   removeFromCore,
   sharedPrefix,
   pullPlan,
+  loadGames,
   REPO_ROOT,
 } from './foundry-base.mjs';
+import { mkdtemp, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 
 test('enabledModules keeps only the enabled ids, sorted', () => {
   assert.deepEqual(
@@ -325,6 +328,36 @@ test('pull-games gates every game on art coverage between build and sync', () =>
   const plain = pullPlan('/v/g/lamia.config.json');
   assert.equal(plain.length, 3);
   assert.ok(!plain[1][1].includes('--src'));
+});
+
+test('loadGames merges the vault-side registry so the repo stays game-agnostic', async () => {
+  const saved = process.env.DND_VAULT_PATH;
+  const vault = await mkdtemp(path.join(tmpdir(), 'vault-'));
+  try {
+    process.env.DND_VAULT_PATH = vault;
+    // No registry file: repo manifest games only (normally []).
+    assert.deepEqual(await loadGames({ games: [] }), []);
+    // Registry present: its entries are picked up without touching the repo.
+    await writeFile(
+      path.join(vault, 'foundry-games.json'),
+      JSON.stringify({
+        games: [{ config: '$DND_VAULT_PATH/g/lamia.config.json', src: '$DND_VAULT_PATH/g/src' }],
+      }),
+    );
+    const games = await loadGames({ games: [] });
+    assert.equal(games.length, 1);
+    assert.equal(games[0].config, '$DND_VAULT_PATH/g/lamia.config.json');
+    // Repo entries (if any ever exist) come first; vault entries append.
+    const merged = await loadGames({ games: ['/repo/one.config.json'] });
+    assert.deepEqual(merged[0], '/repo/one.config.json');
+    assert.equal(merged.length, 2);
+    // Malformed registry fails loud, not silently empty.
+    await writeFile(path.join(vault, 'foundry-games.json'), '{nope');
+    await assert.rejects(() => loadGames({ games: [] }), /foundry-games\.json/);
+  } finally {
+    if (saved === undefined) delete process.env.DND_VAULT_PATH;
+    else process.env.DND_VAULT_PATH = saved;
+  }
 });
 
 test('pullPlan expands a leading $DND_VAULT_PATH from the environment', () => {

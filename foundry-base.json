@@ -118,13 +118,7 @@
     "multi-token-edit": "Bulk placeable editor. Its main use is fixing up hand-built scenes; this pipeline generates walls, lights and notes from the map spec instead. Its presets are world-scoped and would not survive a rebuild anyway.",
     "scene-packer": "Packages scenes with their dependencies \u2014 overlaps what the compendium pipeline already does."
   },
-  "games": [
-    {
-      "config": "$DND_VAULT_PATH/03 Oneshots/Lure of the Lamia/Foundry/lure-of-the-lamia.config.json",
-      "note": "$DND_VAULT_PATH expands from the environment (compose default ~/Documents/DnD) \u2014 see pullPlan in scripts/content/foundry-base.mjs.",
-      "src": "$DND_VAULT_PATH/03 Oneshots/Lure of the Lamia/Foundry/src"
-    }
-  ],
+  "games": [],
   "system": {
     "id": "dnd5e",
     "manifest": "https://github.com/foundryvtt/dnd5e/releases/latest/download/system.json",
