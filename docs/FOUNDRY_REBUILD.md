@@ -41,8 +41,10 @@ node scripts/content/foundry-base.mjs capture <world>   # read a live world into
 node scripts/content/foundry-base.mjs promote <capture>  # fill core pins from a capture
 node scripts/content/foundry-base.mjs provision         # install the pinned system + modules
 node scripts/content/foundry-base.mjs update [id...]    # move pins forward, deliberately
-node scripts/content/foundry-base.mjs snapshot          # copy the data dir as a restore point
-node scripts/content/foundry-base.mjs restore --yes     # put the snapshot back
+node scripts/content/foundry-base.mjs snapshot          # full copy of the data dir, worlds included
+node scripts/content/foundry-base.mjs restore --yes     # put that full copy back
+node scripts/content/foundry-base.mjs snapshot --golden # the clean slate: no worlds
+node scripts/content/foundry-base.mjs restore --golden --yes  # reset the instance, keep the worlds
 node scripts/content/foundry-base.mjs pull-games        # build + sync every game in the manifest
 ```
 
@@ -63,11 +65,22 @@ about itself — ids are routinely nothing like their titles, so nothing is type
 Adding the same module twice updates it rather than duplicating, an existing
 `note` survives a re-add, and a deliberately pinned URL is never overwritten.
 
-**Expect the first drill to find missing dependencies.** `provision` installs
-exactly what is pinned and does not resolve dependency chains, so a lean core can
-come up with a quality-of-life module quietly broken. That is the point of
-running it: each failure names a module to `add`, with a note saying why it
-earned its place.
+**`provision` does not resolve dependency chains.** It installs exactly what is
+pinned, so a lean core can come up with a quality-of-life module quietly broken.
+Each failure names a module to `add`, with a note saying why it earned its place.
+
+The current core was checked against every reachable manifest and **the set is
+closed** — the only declared requirements are `lib-wrapper` (by
+`fvtt-perf-optim`) and `enhancedcombathud` (by `enhancedcombathud-dnd5e`), and
+both are already pinned. Re-check after any `add` or `update`; a manifest's
+`relationships.requires` is the authority, not memory.
+
+Three pins are hosted on **gitlab.com**, not GitHub: `dice-so-nice`,
+`_chatcommands` and `chatlog-prune`. `provision` runs on the host and reaches
+them fine — but they cannot be verified from inside the devcontainer, whose
+egress allowlist (`.devcontainer/init-firewall.sh`) covers GitHub, npm, PyPI and
+little else. An agent reporting "fetch failed" for exactly those three is
+describing the firewall, not a broken pin.
 
 **Stop Foundry first.** `capture` reads a world's LevelDB settings store, and
 LevelDB takes an exclusive lock — a running Foundry holds it, and the raw error
@@ -126,6 +139,33 @@ and leaves it in the working tree to review and commit. It also warns when
 **Snapshots refuse to write inside the repo.** The data directory contains
 `license.json` and the admin key; a snapshot under the repo tree is one
 `git add -A` away from committing a licence key.
+
+### Backup or golden image — pick the right one
+
+`snapshot` and `restore` do two different jobs, and reaching for the wrong one
+mid-session is the failure this section exists to prevent. The default path
+names the mode so the two cannot be confused on disk.
+
+| | `snapshot` / `restore` | `snapshot --golden` / `restore --golden` |
+| --- | --- | --- |
+| Contains | everything, **worlds included** | system, modules, config, assets — **no worlds** |
+| Default path | `<data>.backup` | `<data>.golden` |
+| Reach for it | before a risky change; campaign preservation; before burning the container volumes | resetting a sick instance; starting a clean slate you will import games into |
+| On restore | replaces worlds with the snapshot's | **leaves live worlds untouched** |
+
+A golden restore protects worlds by excluding them, which stops `rsync --delete`
+removing them — so it resets the instance around whatever worlds are currently
+there. That is the point: the campaign you are mid-way through survives a reset
+of everything else.
+
+Both modes skip `Data/DnD`. The vault is bind-mounted there inside the data
+root; on the host it is an empty mount point, but run either command anywhere
+the vault is actually mounted and it would otherwise copy the entire vault into
+the snapshot.
+
+> The full-snapshot default used to be `<data>.golden` — if you have one from
+> before this change, it is a **full backup** despite the name. Pass it
+> explicitly with `--from`, or rename it to `<data>.backup`.
 
 ## Foundry-side modules
 
