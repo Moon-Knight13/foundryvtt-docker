@@ -519,6 +519,24 @@ export function sharedPrefix(a, b) {
   return n;
 }
 
+/**
+ * Take an id out of `deliberatelyExcluded`, returning the reason that was
+ * recorded against it.
+ *
+ * `add`ing a module that is on the excluded list is a contradiction: the
+ * manifest would say both "pinned in core" and "kept out of core, here is why".
+ * Silently leaving both in place is how a rationale file rots into fiction, and
+ * refusing the add would be worse — the decision to reverse is the operator's,
+ * and they have just made it. So the tool reverses it and says so, quoting the
+ * reason it just overruled, in case that is news.
+ */
+export function dropExclusion(manifest, id) {
+  const reason = manifest?.deliberatelyExcluded?.[id];
+  if (reason === undefined) return null;
+  delete manifest.deliberatelyExcluded[id];
+  return reason;
+}
+
 export function addToCore(manifest, pin, { note } = {}) {
   const core = [...(manifest.core ?? [])];
   const at = core.findIndex(m => m.id === pin.id);
@@ -931,12 +949,20 @@ async function cmdAdd(opts) {
 
   const { core, action } = addToCore(manifest, pin, { note: opts.note });
   manifest.core = core;
+  const overruled = dropExclusion(manifest, pin.id);
   if (opts.dryRun) {
     console.log(`would have ${action} ${pin.id} ${pin.version}`);
+    if (overruled !== null) {
+      console.log(`  would drop it from deliberatelyExcluded, which said: ${overruled}`);
+    }
     return;
   }
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   console.log(`${action} ${pin.id} ${pin.version}${pin.title ? `  (${pin.title})` : ''}`);
+  if (overruled !== null) {
+    console.log(`  removed from deliberatelyExcluded, which said: ${overruled}`);
+    console.log('  that reason is now gone from the manifest — put it in --note if it still holds');
+  }
   if (!isInstallable({ ...pin })) {
     console.log('  no manifest URL — a rebuild will not reinstall it until one is filled in');
   }

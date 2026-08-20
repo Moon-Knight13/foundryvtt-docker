@@ -29,6 +29,7 @@ import {
   COMMANDS,
   addToCore,
   removeFromCore,
+  dropExclusion,
   sharedPrefix,
   pullPlan,
   loadGames,
@@ -964,4 +965,39 @@ test('redactSecrets tolerates malformed rows rather than throwing', () => {
 test('the secret pattern is case-insensitive, since key casing is module choice', () => {
   assert.ok(SECRET_KEY_PATTERN.test('module.CobaltCookie'));
   assert.ok(SECRET_KEY_PATTERN.test('module.API_KEY'));
+});
+
+// ---------------------------------------------------------------------------
+// dropExclusion — a manifest must not say both "pinned" and "kept out, because"
+// ---------------------------------------------------------------------------
+
+test('dropExclusion returns the reason it overruled and removes the entry', () => {
+  const manifest = {
+    core: [],
+    deliberatelyExcluded: {
+      'scene-packer': 'Overlaps what the compendium pipeline already does.',
+      'fa-battlemaps': 'Large art asset pack; would bloat every snapshot.',
+    },
+  };
+  assert.equal(
+    dropExclusion(manifest, 'scene-packer'),
+    'Overlaps what the compendium pipeline already does.',
+  );
+  assert.deepEqual(Object.keys(manifest.deliberatelyExcluded), ['fa-battlemaps']);
+});
+
+test('dropExclusion is a no-op for a module that was never excluded', () => {
+  const manifest = { deliberatelyExcluded: { 'fa-battlemaps': 'reason' } };
+  assert.equal(dropExclusion(manifest, 'lib-wrapper'), null);
+  assert.deepEqual(Object.keys(manifest.deliberatelyExcluded), ['fa-battlemaps']);
+  // Manifests written before deliberatelyExcluded existed must not throw.
+  assert.equal(dropExclusion({}, 'anything'), null);
+});
+
+test('dropExclusion distinguishes an empty reason from no exclusion at all', () => {
+  // An empty string is still a recorded decision; returning null for it would
+  // silently skip the "this overrules something" message.
+  const manifest = { deliberatelyExcluded: { x: '' } };
+  assert.equal(dropExclusion(manifest, 'x'), '');
+  assert.deepEqual(manifest.deliberatelyExcluded, {});
 });
