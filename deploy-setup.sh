@@ -53,18 +53,6 @@ prompt_env() {
   fi
 }
 
-normalize_foundry_root_path() {
-  local path=$1
-  local normalized
-
-  normalized=${path%/}
-  if [[ "$normalized" == */Backups ]]; then
-    normalized=${normalized%/Backups}
-  fi
-
-  echo "$normalized"
-}
-
 ensure_foundry_auth() {
   local foundry_user
   local foundry_pass
@@ -180,14 +168,6 @@ if ! docker compose version &> /dev/null; then
 fi
 
 echo "✅ Docker Compose is installed"
-
-# Create data directory
-if [ ! -d data ]; then
-  echo "📁 Creating data directory..."
-  mkdir -p data
-else
-  echo "✅ Data directory exists"
-fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

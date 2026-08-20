@@ -160,6 +160,7 @@ than remembered — if a stub still says `REPLACE`, that part isn't done.
 | `Tables/` | Rumour / loot tables as markdown tables |
 | `Handouts/` | Anything the players physically receive |
 | `Maps/` | Map briefs, or notes on the generator specs |
+| `Soundtrack.md` | Cue sheet: which ambience plays where, and when to change |
 | `Advert.md` | GroupFlows recruitment post — online games |
 | `Foundry/src/` | The above projected to JSON, **once**, at packaging |
 
