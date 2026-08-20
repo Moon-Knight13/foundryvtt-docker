@@ -3,7 +3,8 @@
 `render_map.py` turns one JSON layout spec into three artifacts: a clean
 **Player** map, a keyed **DM** map, and a Foundry-ready **Universal VTT**
 (`.dd2vtt`) with walls, lights and portals baked in. It is a generalization of
-a one-off Pillow script (the belfry), turned into a reusable tool.
+a one-off Pillow script written for a single bell tower, turned into a reusable
+tool.
 
 ## CLI
 
@@ -86,7 +87,7 @@ All coordinates are in **grid units** (pixels = grid × `ppg`).
 
 ```json
 {
-  "name": "The Belfry",
+  "name": "The Watch Bell",
   "grid": {"w": 16, "h": 16},
   "ppg": 72,
   "floor": {"shape": "octagon", "bounds": [2, 2, 14, 14], "chamfer": 3},
@@ -95,11 +96,11 @@ All coordinates are in **grid units** (pixels = grid × `ppg`).
     {"type": "bell",     "at": [8, 8],       "size": 3, "label": "GREAT BELL"},
     {"type": "arch",     "at": [8, 2],       "dir": "n"},
     {"type": "trapdoor", "at": [11.5, 11.5], "size": 2},
-    {"type": "marker",   "at": [8, 9.3],     "label": "Sela"}
+    {"type": "marker",   "at": [8, 9.3],     "label": "Rook"}
   ],
   "keys": [
     {"n": 1, "at": [8, 8],       "label": "Great Bell", "note": "difficult terrain + partial cover"},
-    {"n": 2, "at": [11.5, 11.5], "label": "Trapdoor",   "note": "entry from the clock room below"}
+    {"n": 2, "at": [11.5, 11.5], "label": "Trapdoor",   "note": "entry from the room below"}
   ],
   "lights": [ {"at": [8, 2.4], "range": 6, "color": "cfe0ff"} ]
 }
@@ -197,10 +198,12 @@ Two things bite when authoring a spec:
 
 ## Example
 
-`examples/belfry.json` reproduces the original belfry (octagon bell tower with
-four louvered arches, a central great bell, an SE trapdoor, and a ghost
-marker). Build it with:
+`examples/watch-bell.json` is the generator's reference spec — an octagonal bell
+tower with four louvered arches, a central great bell, an SE trapdoor and a
+marker for whoever is standing watch. It belongs to **Ashwake Hollow**, the
+invented demo game (see [`examples/demo-game/`](../../examples/demo-game/)), so
+nothing here names a real campaign. Build it with:
 
 ```bash
-python3 scripts/maps/render_map.py scripts/maps/examples/belfry.json /tmp/out
+python3 scripts/maps/render_map.py scripts/maps/examples/watch-bell.json /tmp/out
 ```

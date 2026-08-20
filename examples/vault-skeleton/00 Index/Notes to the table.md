@@ -90,7 +90,8 @@ Scrawl / Watabou / AI) and drop it in `Assets/Maps/` to replace the generated ba
 - **SoSly Obsidian Bridge** — journals ↔ Obsidian, bidirectional.
 - **Universal Battlemap Importer** (`dd-import`) — `.dd2vtt` → scenes with walls/lights.
 - **ddb-importer** — D&D Beyond characters → Foundry.
-- Your **content compendium module(s)** — built from `content/src/` in the repo.
+- Your **content compendium module(s)** — one per game, built from that game's
+  `Foundry/src/` beside its notes.
 
 ## Watch out
 - **One writer at a time now spans Foundry** — don't edit the same journal in Foundry and

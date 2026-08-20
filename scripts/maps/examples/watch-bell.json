@@ -1,0 +1,176 @@
+{
+  "features": [
+    {
+      "at": [
+        8,
+        8
+      ],
+      "label": "GREAT BELL",
+      "size": 3,
+      "type": "bell"
+    },
+    {
+      "at": [
+        8,
+        2
+      ],
+      "dir": "n",
+      "label": "arch",
+      "type": "arch"
+    },
+    {
+      "at": [
+        14,
+        8
+      ],
+      "dir": "e",
+      "type": "arch"
+    },
+    {
+      "at": [
+        8,
+        14
+      ],
+      "dir": "s",
+      "type": "arch"
+    },
+    {
+      "at": [
+        2,
+        8
+      ],
+      "dir": "w",
+      "type": "arch"
+    },
+    {
+      "at": [
+        11.5,
+        11.5
+      ],
+      "label": "trapdoor",
+      "size": 2,
+      "type": "trapdoor"
+    },
+    {
+      "at": [
+        8,
+        9.3
+      ],
+      "label": "Rook",
+      "size": 0.4,
+      "type": "marker"
+    }
+  ],
+  "floor": {
+    "bounds": [
+      2,
+      2,
+      14,
+      14
+    ],
+    "chamfer": 3,
+    "shape": "octagon"
+  },
+  "grid": {
+    "h": 16,
+    "w": 16
+  },
+  "keys": [
+    {
+      "at": [
+        8,
+        8
+      ],
+      "label": "Great Bell",
+      "n": 1,
+      "note": "Swaying on its yoke; the square beneath is difficult terrain and grants partial cover. A hard strike rings the bell and wakes the whole pass."
+    },
+    {
+      "at": [
+        11.5,
+        11.5
+      ],
+      "label": "Trapdoor",
+      "n": 2,
+      "note": "Entry from the clock room below. Ladder down; hatch is unlocked but stiff (DC 12 Athletics to open quietly)."
+    },
+    {
+      "at": [
+        8,
+        9.3
+      ],
+      "label": "Rook",
+      "n": 3,
+      "note": "Where the toll-keeper stands his night watch. He will talk before he shouts, and shout before he rings."
+    }
+  ],
+  "lights": [
+    {
+      "at": [
+        8,
+        2.4
+      ],
+      "color": "cfe0ff",
+      "range": 6
+    },
+    {
+      "at": [
+        13.6,
+        8
+      ],
+      "color": "cfe0ff",
+      "range": 6
+    },
+    {
+      "at": [
+        8,
+        13.6
+      ],
+      "color": "cfe0ff",
+      "range": 6
+    },
+    {
+      "at": [
+        2.4,
+        8
+      ],
+      "color": "cfe0ff",
+      "range": 6
+    },
+    {
+      "at": [
+        8,
+        9.3
+      ],
+      "color": "aecadf",
+      "intensity": 0.4,
+      "range": 3
+    }
+  ],
+  "name": "The Watch Bell",
+  "ppg": 72,
+  "walls": [
+    [
+      [
+        6.5,
+        6.5
+      ],
+      [
+        9.5,
+        6.5
+      ],
+      [
+        9.5,
+        9.5
+      ],
+      [
+        6.5,
+        9.5
+      ],
+      [
+        6.5,
+        6.5
+      ]
+    ]
+  ]
+}

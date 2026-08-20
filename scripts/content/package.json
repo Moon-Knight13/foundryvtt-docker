@@ -3,12 +3,12 @@
     "@foundryvtt/foundryvtt-cli": "^1.0.3",
     "js-yaml": "^4.1.0"
   },
-  "description": "Build tooling for the troubled-waters-content compendium module.",
+  "description": "Build tooling for compiling a game's vault notes into a FoundryVTT compendium module.",
   "name": "foundry-content-tools",
   "private": true,
   "scripts": {
-    "build": "node build.mjs",
-    "coverage:art": "node art-coverage.mjs",
+    "build": "node build.mjs --config ../../examples/demo-game/ashwake-hollow.config.json --src ../../examples/demo-game/src",
+    "coverage:art": "node art-coverage.mjs --config ../../examples/demo-game/ashwake-hollow.config.json --src ../../examples/demo-game/src",
     "stamp:art": "node art-stamp.mjs",
     "test": "node --test"
   },

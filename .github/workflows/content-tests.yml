@@ -9,6 +9,10 @@ name: content-tests
 # and the suite -- build.test.mjs and roundtrip.test.mjs, the only real tests in
 # the repository -- never executed in CI.
 #
+# The build and coverage steps below run against examples/demo-game/ (the
+# invented Ashwake Hollow), because build.mjs has no default module: this repo
+# owns no game content to build.
+#
 # Uses the runner's bundled Node rather than actions/setup-node to avoid adding
 # another third-party action; every action here stays SHA-pinned.
 
@@ -17,6 +21,7 @@ name: content-tests
     paths:
       - scripts/content/**
       - content/**
+      - examples/demo-game/**
       - .github/workflows/content-tests.yml
   push:
     branches:
@@ -24,6 +29,7 @@ name: content-tests
     paths:
       - scripts/content/**
       - content/**
+      - examples/demo-game/**
       - .github/workflows/content-tests.yml
 
 permissions:

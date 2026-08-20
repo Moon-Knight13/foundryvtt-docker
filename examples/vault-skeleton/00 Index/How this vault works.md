@@ -21,7 +21,7 @@ Every prep note is a **card** with typed frontmatter (`type`, `system`,
 `artifact: [in-person, foundry]` in the frontmatter says which outputs a card
 supports. A mood note is `in-person` only; a statted NPC is `both`.
 
-| Card `type` | In-person | Foundry (`content/src/…`) |
+| Card `type` | In-person | Foundry (`<Game>/Foundry/src/…`) |
 |---|---|---|
 | npc / creature | Fantasy Statblocks card | `actors/*.json` |
 | location | note + Leaflet map | `scenes/*.json` |
@@ -36,7 +36,7 @@ supports. A mood note is `in-person` only; a statted NPC is `both`.
 The vault (portable, not in git) hands off to the repo (git-versioned):
 
 1. Hand Claude a card. Claude authors versioned JSON in the repo
-   `content/src/<type>/<name>.json` from the `foundry-content` skill templates.
+   `<Game>/Foundry/src/<type>/<name>.json` from the `foundry-content` skill templates.
 2. `node scripts/content/build.mjs` → `content/dist/<module>/`.
 3. On the host: `scripts/content/sync-content.sh` → Foundry `Data/modules/`.
 4. Enable the module + import packs in Foundry. Vault images/handouts already

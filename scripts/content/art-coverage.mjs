@@ -9,9 +9,9 @@
 // something someone authored — exactly the blank token #88 exists to prevent.
 //
 // Usage:
-//   node scripts/content/art-coverage.mjs [--config <path>] [--src <path>]
+//   node scripts/content/art-coverage.mjs --config <path> [--src <path>]
 //                                         [--vault <path>] [--strict]
-//     --config  module config, as for build.mjs (default content/content.config.json)
+//     --config  module config, as for build.mjs (REQUIRED — no default module)
 //     --src     source root override, as for build.mjs
 //     --vault   vault root for resolving DnD/ paths (default $DND_VAULT_PATH)
 //     --strict  exit non-zero on failures — the warn-to-fail switch, same

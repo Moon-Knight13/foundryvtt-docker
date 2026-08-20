@@ -391,12 +391,12 @@ test('a mook with an unmapped name falls back to its type silhouette', async () 
 });
 
 test('a named NPC built on an SRD base does NOT inherit the base creature icon', async () => {
-  // The Lure of the Lamia case: Amira Granger and Zephyr Silverwind are both
-  // Spy underneath, and the old source:-presence rule dressed both in the same
-  // spy icon with a green gate. A note titled unlike its base is a character.
+  // The measured case: two named NPCs in one module were both Spy underneath,
+  // and the old source:-presence rule dressed both in the same spy icon with a
+  // green gate. A note titled unlike its base is a character.
   const { note, mapPath } = await noteWith(
-    '```statblock\nname: Amira Granger\nsource: "SRD 5.1 (CC-BY-4.0) — Goblin"\ntype: humanoid\nac: 15\nhp: 7\ncr: 0.25\nstats: [8, 14, 10, 10, 8, 8]\n```\n',
-    'Amira Granger.md',
+    '```statblock\nname: Rook Vantle\nsource: "SRD 5.1 (CC-BY-4.0) — Goblin"\ntype: humanoid\nac: 15\nhp: 7\ncr: 0.25\nstats: [8, 14, 10, 10, 8, 8]\n```\n',
+    'Rook Vantle.md',
   );
   const { actor, warnings } = await compileNote(note, { artMap: mapPath });
   assert.equal(actor.img, PLACEHOLDER_IMG);
@@ -457,11 +457,11 @@ test('a vault-relative image: compiles to the DnD/ mount path Foundry needs', as
   // Authors write vault-relative paths so the SAME line renders in Obsidian's
   // statblock plugin; the compiler owns the DnD/ mount prefix.
   const { note, mapPath } = await noteWith(
-    '```statblock\nname: Amira Granger\ntype: humanoid\nimage: "03 Oneshots/Lure of the Lamia/Assets/Tokens/amira.webp"\nac: 12\nhp: 27\ncr: 1\nstats: [10, 12, 10, 12, 14, 16]\n```\n',
-    'Amira Granger.md',
+    '```statblock\nname: Rook Vantle\ntype: humanoid\nimage: "03 Oneshots/Ashwake Hollow/Assets/Tokens/rook-vantle.webp"\nac: 12\nhp: 27\ncr: 1\nstats: [10, 12, 10, 12, 14, 16]\n```\n',
+    'Rook Vantle.md',
   );
   const { actor } = await compileNote(note, { artMap: mapPath });
-  assert.equal(actor.img, 'DnD/03 Oneshots/Lure of the Lamia/Assets/Tokens/amira.webp');
+  assert.equal(actor.img, 'DnD/03 Oneshots/Ashwake Hollow/Assets/Tokens/rook-vantle.webp');
   assert.equal(actor.prototypeToken.texture.src, actor.img);
 });
 

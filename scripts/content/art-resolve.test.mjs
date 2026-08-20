@@ -43,11 +43,11 @@ test('an unmapped mook falls back to its creature-type silhouette', () => {
 });
 
 test("a named NPC built on an SRD base never inherits that base's icon", () => {
-  // Measured on the real Lure of the Lamia module: Amira Granger and Zephyr
-  // Silverwind are both built on the Spy, and source:-presence alone dressed
-  // BOTH in the same spy icon — two named characters, identical tokens, and a
-  // green gate. Someone authored these; the gap must be visible.
-  const r = resolveArt({ name: 'Amira Granger', base: 'Spy', type: 'humanoid' }, MAP);
+  // Measured on a real module: two different named NPCs were both built on the
+  // Spy, and source:-presence alone dressed BOTH in the same spy icon — two
+  // named characters, identical tokens, and a green gate. Someone authored
+  // these; the gap must be visible.
+  const r = resolveArt({ name: 'Rook Vantle', base: 'Spy', type: 'humanoid' }, MAP);
   assert.equal(r.tier, 'none');
   assert.equal(r.src, null);
 });
@@ -79,7 +79,7 @@ test('art_required: true makes even an exact-title mook strict', () => {
 
 test('art_required: false lets a named NPC accept its base icon, then the silhouette', () => {
   const viaBase = resolveArt(
-    { name: 'Amira Granger', base: 'Spy', type: 'humanoid', art_required: false },
+    { name: 'Rook Vantle', base: 'Spy', type: 'humanoid', art_required: false },
     MAP,
   );
   assert.equal(viaBase.tier, 'exact', 'explicit opt-out unlocks the base creature icon');
@@ -126,8 +126,8 @@ test('a vault-relative image path gains the DnD/ mount prefix for Foundry', () =
     'DnD/06 Assets/Tokens/generic/lorc/scorpion.svg',
   );
   assert.equal(
-    normalizeArtPath('03 Oneshots/Lure of the Lamia/Assets/Tokens/amira.webp'),
-    'DnD/03 Oneshots/Lure of the Lamia/Assets/Tokens/amira.webp',
+    normalizeArtPath('03 Oneshots/Ashwake Hollow/Assets/Tokens/rook-vantle.webp'),
+    'DnD/03 Oneshots/Ashwake Hollow/Assets/Tokens/rook-vantle.webp',
   );
 });
 

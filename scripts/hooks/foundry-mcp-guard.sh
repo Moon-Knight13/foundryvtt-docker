@@ -3,7 +3,7 @@
 #
 # Content creation through the MCP bridge burns tokens (fat tool schemas +
 # JSON results in context) and leaves nothing versioned in the repo. The
-# foundry-content skill (content/src + scripts/content/build.mjs) is the
+# foundry-content skill (<Game>/Foundry/src + scripts/content/build.mjs) is the
 # canonical path for new NPCs, quest journals, and bulk content.
 #
 # Guarded tools deny with a pointer to the skill. Overrides for genuine
@@ -31,6 +31,6 @@ jq -n --arg tool "$TOOL" '{
   hookSpecificOutput: {
     hookEventName: "PreToolUse",
     permissionDecision: "deny",
-    permissionDecisionReason: ("\($tool) is guarded: bulk content authoring goes through the foundry-content skill, not foundry-mcp. Author JSON under content/src/ from the skill templates, run `node scripts/content/build.mjs`, then have the user run scripts/content/sync-content.sh on the host and import via the Foundry UI. Only if this is genuinely a live-session one-off, the user can override with `touch .ai/foundry-live-session` or FOUNDRY_MCP_WRITES=allow, then retry.")
+    permissionDecisionReason: ("\($tool) is guarded: bulk content authoring goes through the foundry-content skill, not foundry-mcp. Author JSON under <Game>/Foundry/src/ in the vault from the skill templates, run `node scripts/content/build.mjs --config <game config> --src <game src>`, then have the user run scripts/content/sync-content.sh --config <game config> on the host and import via the Foundry UI. Only if this is genuinely a live-session one-off, the user can override with `touch .ai/foundry-live-session` or FOUNDRY_MCP_WRITES=allow, then retry.")
   }
 }'

@@ -149,7 +149,7 @@ const KEYS = [
 ];
 
 test('notesFromKeys pins at grid*ppg and links entry + page ids', () => {
-  const rel = 'journals/belfry-keys.json';
+  const rel = 'journals/signal-tower-keys.json';
   const notes = notesFromKeys(KEYS, 100, rel);
   assert.equal(notes.length, 2);
   assert.deepEqual([notes[0].x, notes[0].y], [100, 100]);
@@ -165,9 +165,9 @@ test('notesFromKeys pins at grid*ppg and links entry + page ids', () => {
 });
 
 test('keysJournal is GM-only and its page ids match the pins', () => {
-  const rel = 'journals/belfry-keys.json';
-  const j = keysJournal(KEYS, 'The Belfry', rel);
-  assert.equal(j.name, 'The Belfry — GM Keys');
+  const rel = 'journals/signal-tower-keys.json';
+  const j = keysJournal(KEYS, 'The Signal Tower', rel);
+  assert.equal(j.name, 'The Signal Tower — GM Keys');
   assert.equal(j._id, docId(rel));
   assert.equal(j.ownership.default, 0, 'entry must be GM-only — keys hold secrets');
   assert.equal(j.pages.length, 2);
@@ -200,12 +200,12 @@ test('parseArgs rejects --keys without --keys-journal', () => {
 
 test('convertFile writes the keys journal and pins the scene from a spec', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'dd2vtt-'));
-  const ddPath = path.join(dir, 'The Belfry.dd2vtt');
+  const ddPath = path.join(dir, 'The Signal Tower.dd2vtt');
   await writeFile(ddPath, JSON.stringify(DD));
-  const specPath = path.join(dir, 'belfry.json');
-  await writeFile(specPath, JSON.stringify({ name: 'The Belfry', keys: KEYS }));
+  const specPath = path.join(dir, 'signal-tower.json');
+  await writeFile(specPath, JSON.stringify({ name: 'The Signal Tower', keys: KEYS }));
   const out = path.join(dir, 'scene.json');
-  const keysJournalPath = path.join(dir, 'the-belfry-keys.json');
+  const keysJournalPath = path.join(dir, 'the-signal-tower-keys.json');
 
   const { scene, journalOut } = await convertFile(ddPath, {
     background: 'DnD/x/m.png',
@@ -221,7 +221,7 @@ test('convertFile writes the keys journal and pins the scene from a spec', async
   assert.equal(journal.pages.length, 2);
   // The pin's pageId must address the page as build.mjs will stage it, which
   // depends on the journal's FILENAME, not its location on disk.
-  const rel = 'journals/the-belfry-keys.json';
+  const rel = 'journals/the-signal-tower-keys.json';
   assert.equal(scene.notes[0].entryId, docId(rel));
   assert.deepEqual(
     journal.pages.map(p => p._id),
@@ -233,28 +233,34 @@ test('convertFile writes the keys journal and pins the scene from a spec', async
 
 test('convertFile writes a scene JSON, name defaults from the dd2vtt filename', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'dd2vtt-'));
-  const ddPath = path.join(dir, 'The Belfry.dd2vtt');
+  const ddPath = path.join(dir, 'The Signal Tower.dd2vtt');
   await writeFile(ddPath, JSON.stringify(DD));
   const out = path.join(dir, 'scene.json');
   const { scene } = await convertFile(ddPath, { background: 'DnD/x/m.png', out, gridDistance: 5 });
-  assert.equal(scene.name, 'The Belfry');
+  assert.equal(scene.name, 'The Signal Tower');
   const written = JSON.parse(await readFile(out, 'utf8'));
   assert.equal(written.width, 200);
   assert.equal(written.walls.length, 2);
 });
 
 test('keysJournal renders Related links as @UUID references', () => {
-  const rel = 'journals/belfry-keys.json';
+  const rel = 'journals/signal-tower-keys.json';
   const keys = [
-    { n: 4, at: [1, 1], label: "Selyse's dais", note: 'SECRET', links: ['actors/selyse.json'] },
+    {
+      n: 4,
+      at: [1, 1],
+      label: "Rook's landing",
+      note: 'SECRET',
+      links: ['actors/rook-vantle.json'],
+    },
     { n: 5, at: [1, 2], label: 'The hoard', note: 'gold' },
   ];
-  const j = keysJournal(keys, 'The Belfry', rel, {
-    moduleId: 'lure-of-the-lamia-oneshot',
-    names: { 'actors/selyse.json': 'Selyse (Lamia)' },
+  const j = keysJournal(keys, 'The Signal Tower', rel, {
+    moduleId: 'ashwake-hollow-oneshot',
+    names: { 'actors/rook-vantle.json': 'Rook Vantle (Spy)' },
   });
   const html = j.pages[0].text.content;
-  const uuid = `@UUID[Compendium.lure-of-the-lamia-oneshot.actors.Actor.${docId('actors/selyse.json')}]{Selyse (Lamia)}`;
+  const uuid = `@UUID[Compendium.ashwake-hollow-oneshot.actors.Actor.${docId('actors/rook-vantle.json')}]{Rook Vantle (Spy)}`;
   assert.ok(html.includes(uuid), `expected ${uuid} in ${html}`);
   assert.ok(html.includes('Related'), 'linked page carries a Related section');
   assert.ok(html.includes('SECRET'), 'note text is still there');
@@ -290,25 +296,25 @@ test('parseArgs accepts --config and --src for key links', () => {
 
 test('convertFile resolves link names from the module source tree', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'dd2vtt-links-'));
-  const ddPath = path.join(dir, 'The Belfry.dd2vtt');
+  const ddPath = path.join(dir, 'The Signal Tower.dd2vtt');
   await writeFile(ddPath, JSON.stringify(DD));
   const src = path.join(dir, 'src');
   await mkdir(path.join(src, 'actors'), { recursive: true });
   await writeFile(
-    path.join(src, 'actors', 'selyse.json'),
-    JSON.stringify({ name: 'Selyse (Lamia)' }),
+    path.join(src, 'actors', 'rook-vantle.json'),
+    JSON.stringify({ name: 'Rook Vantle (Spy)' }),
   );
   const cfgPath = path.join(dir, 'game.config.json');
   await writeFile(cfgPath, JSON.stringify({ id: 'test-mod', title: 'T' }));
-  const specPath = path.join(dir, 'belfry.json');
+  const specPath = path.join(dir, 'signal-tower.json');
   await writeFile(
     specPath,
     JSON.stringify({
-      keys: [{ n: 1, at: [1, 1], label: 'Dais', note: 's', links: ['actors/selyse.json'] }],
+      keys: [{ n: 1, at: [1, 1], label: 'Dais', note: 's', links: ['actors/rook-vantle.json'] }],
     }),
   );
   const out = path.join(dir, 'scene.json');
-  const kj = path.join(dir, 'belfry-keys.json');
+  const kj = path.join(dir, 'signal-tower-keys.json');
   const { journalOut } = await convertFile(ddPath, {
     background: 'DnD/x.png',
     out,
@@ -318,7 +324,7 @@ test('convertFile resolves link names from the module source tree', async () => 
     src,
   });
   const journal = JSON.parse(await readFile(journalOut, 'utf8'));
-  const uuid = `@UUID[Compendium.test-mod.actors.Actor.${docId('actors/selyse.json')}]{Selyse (Lamia)}`;
+  const uuid = `@UUID[Compendium.test-mod.actors.Actor.${docId('actors/rook-vantle.json')}]{Rook Vantle (Spy)}`;
   assert.ok(journal.pages[0].text.content.includes(uuid));
 });
 

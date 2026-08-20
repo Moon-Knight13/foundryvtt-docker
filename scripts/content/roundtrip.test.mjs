@@ -61,9 +61,9 @@ test('roll tables round-trip with embedded results', async () => {
   const { work, srcRoot, distRoot, configPath } = await workspace('fvtt-tables-');
   await mkdir(path.join(srcRoot, 'tables'), { recursive: true });
   await writeFile(
-    path.join(srcRoot, 'tables', 'harbor-rumors.json'),
+    path.join(srcRoot, 'tables', 'hollow-rumours.json'),
     JSON.stringify({
-      name: 'Harbor Rumors',
+      name: 'Hollow Rumours',
       formula: '1d2',
       results: [
         { type: 'text', description: 'A ship came in flying no flag.', range: [1, 1], weight: 1 },
@@ -85,7 +85,7 @@ test('roll tables round-trip with embedded results', async () => {
   const files = await readdir(outDir);
   assert.equal(files.length, 1);
   const doc = JSON.parse(await readFile(path.join(outDir, files[0]), 'utf8'));
-  assert.equal(doc.name, 'Harbor Rumors');
+  assert.equal(doc.name, 'Hollow Rumours');
   assert.equal(doc.results.length, 2);
   assert.match(doc.results[0]._id, /^[a-z0-9]{16}$/);
 });
@@ -94,9 +94,9 @@ test('scenes round-trip with embedded walls and lights', async () => {
   const { work, srcRoot, distRoot, configPath } = await workspace('fvtt-scenes-');
   await mkdir(path.join(srcRoot, 'scenes'), { recursive: true });
   await writeFile(
-    path.join(srcRoot, 'scenes', 'belfry.json'),
+    path.join(srcRoot, 'scenes', 'signal-tower.json'),
     JSON.stringify({
-      name: 'The Belfry',
+      name: 'The Signal Tower',
       width: 1600,
       height: 1600,
       grid: { type: 1, size: 100, distance: 5, units: 'ft' },
@@ -113,7 +113,7 @@ test('scenes round-trip with embedded walls and lights', async () => {
   const files = await readdir(outDir);
   assert.equal(files.length, 1);
   const doc = JSON.parse(await readFile(path.join(outDir, files[0]), 'utf8'));
-  assert.equal(doc.name, 'The Belfry');
+  assert.equal(doc.name, 'The Signal Tower');
   // The EMBEDDED change must give every wall/light a stable 16-hex id through
   // the LevelDB roundtrip, else the CLI drops them.
   assert.equal(doc.walls.length, 2);
@@ -137,11 +137,11 @@ test('build fails on broken @UUID cross-link', async () => {
   await mkdir(path.join(srcRoot, 'actors'), { recursive: true });
   await mkdir(path.join(srcRoot, 'journals'), { recursive: true });
   await writeFile(
-    path.join(srcRoot, 'actors', 'vela.json'),
-    JSON.stringify({ name: 'Vela', type: 'npc' }),
+    path.join(srcRoot, 'actors', 'rook-vantle.json'),
+    JSON.stringify({ name: 'Rook Vantle', type: 'npc' }),
   );
 
-  const goodId = docId('actors/vela.json');
+  const goodId = docId('actors/rook-vantle.json');
   const badId = 'f'.repeat(16);
   const journal = id =>
     JSON.stringify({
@@ -151,7 +151,7 @@ test('build fails on broken @UUID cross-link', async () => {
           name: 'P',
           type: 'text',
           text: {
-            content: `<p>@UUID[Compendium.${MODULE_ID}.actors.Actor.${id}]{Vela}</p>`,
+            content: `<p>@UUID[Compendium.${MODULE_ID}.actors.Actor.${id}]{Rook Vantle}</p>`,
             format: 1,
           },
         },

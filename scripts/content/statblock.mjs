@@ -538,7 +538,7 @@ export async function compileNote(notePath, opts = {}) {
       {
         // The note title is the actor's identity; the base is what it was
         // built on. The resolver treats them as a mook only when they agree —
-        // "Bandit.md" on Bandit is a bandit, "Amira Granger.md" on Spy is a
+        // "Bandit.md" on Bandit is a bandit, "Rook Vantle.md" on Spy is a
         // character whose art gap must stay visible.
         name,
         base,
