@@ -60,6 +60,9 @@ ALTAR_TOP   = (176, 170, 158, 255)
 ALTAR_EDGE  = (96, 92, 84, 255)
 SHROUD      = (206, 202, 194, 235)
 RUNE_INK    = (150, 128, 210, 190)
+HULL        = (108, 82, 50, 255)
+HULL_EDGE   = (62, 46, 28, 255)
+SAIL_CLOTH  = (206, 199, 182, 235)
 CRATE_WOOD  = (128, 98, 60, 255)
 CRATE_EDGE  = (74, 54, 30, 255)
 SOIL        = (99, 86, 66, 255)
@@ -568,6 +571,51 @@ def feat_wreath(cv: Canvas, f):
     return None
 
 
+def feat_boat(cv: Canvas, f):
+    """A small boat seen from above: pointed hull, thwarts, optional mast.
+
+    `dir` is the bow: n/s point along y, e/w along x. `mast: true` adds a spar
+    and a furled sail across it.
+    """
+    x, y = f["at"]
+    s = f.get("size", 3.0)
+    d = f.get("dir", "n")
+    along = s / 2.0
+    across = s / 5.0
+    if d in ("n", "s"):
+        bow = (x, y - along) if d == "n" else (x, y + along)
+        stern_l = (x - across, y + along * 0.75) if d == "n" else (x - across, y - along * 0.75)
+        stern_r = (x + across, y + along * 0.75) if d == "n" else (x + across, y - along * 0.75)
+        mid_l, mid_r = (x - across, y), (x + across, y)
+    else:
+        bow = (x - along, y) if d == "w" else (x + along, y)
+        stern_l = (x + along * 0.75, y - across) if d == "w" else (x - along * 0.75, y - across)
+        stern_r = (x + along * 0.75, y + across) if d == "w" else (x - along * 0.75, y + across)
+        mid_l, mid_r = (x, y - across), (x, y + across)
+    cv.d.polygon([cv.gp(bow), cv.gp(mid_r), cv.gp(stern_r), cv.gp(stern_l), cv.gp(mid_l)],
+                 fill=HULL, outline=HULL_EDGE, width=4)
+    # thwarts (the bench seats) across the beam
+    for t in (-0.22, 0.10, 0.40):
+        if d in ("n", "s"):
+            yy = y + along * t * (1 if d == "n" else -1)
+            cv.d.line([cv.gp((x - across * 0.86, yy)), cv.gp((x + across * 0.86, yy))],
+                      fill=HULL_EDGE, width=4)
+        else:
+            xx = x + along * t * (1 if d == "w" else -1)
+            cv.d.line([cv.gp((xx, y - across * 0.86)), cv.gp((xx, y + across * 0.86))],
+                      fill=HULL_EDGE, width=4)
+    if f.get("mast"):
+        cv.d.ellipse([cv.g(x - 0.12), cv.g(y - 0.12), cv.g(x + 0.12), cv.g(y + 0.12)],
+                     fill=HULL_EDGE)
+        if d in ("n", "s"):
+            cv.d.line([cv.gp((x - across * 1.5, y)), cv.gp((x + across * 1.5, y))],
+                      fill=SAIL_CLOTH, width=max(5, cv.ppg // 9))
+        else:
+            cv.d.line([cv.gp((x, y - across * 1.5)), cv.gp((x, y + across * 1.5))],
+                      fill=SAIL_CLOTH, width=max(5, cv.ppg // 9))
+    return None
+
+
 def feat_rubble(cv: Canvas, f):
     x, y = f["at"]
     s = f.get("size", 1.5)
@@ -619,6 +667,7 @@ FEATURES = {
     "grave": feat_grave,
     "stain": feat_stain,
     "wreath": feat_wreath,
+    "boat": feat_boat,
     "rubble": feat_rubble,
     "marker": feat_marker,
 }
@@ -676,7 +725,10 @@ def render_dm(base_img: Image.Image, spec: dict, ppg: int) -> Image.Image:
     map_w, map_h = base_img.size
     keys = spec.get("keys", [])
 
-    panel_w = 360 if keys else 0
+    # The panel was a flat 360 px. On a 2000+ px map that squeezed every note
+    # into a column narrower than the art it sits beside, so it scales with the
+    # map now — never below the original width, so small maps are unchanged.
+    panel_w = max(360, map_w // 6) if keys else 0
     dm = Image.new("RGBA", (map_w + panel_w, map_h), PANEL_BG)
     dm.paste(base_img, (0, 0))
     d = ImageDraw.Draw(dm, "RGBA")
@@ -705,9 +757,14 @@ def render_dm(base_img: Image.Image, spec: dict, ppg: int) -> Image.Image:
     if keys:
         px = map_w + 24
         d.line([(map_w, 0), (map_w, map_h)], fill=PANEL_LINE, width=2)
+        # The title wraps for the same reason the labels do: "Monastery Island"
+        # plus " — KEY" ran off the panel and rendered as "Monastery Island — KE".
         title_font = serif_bold(26)
-        d.text((px, 24), (spec.get("name", "Map") + " — KEY"), fill=PANEL_TITLE, font=title_font)
-        y = 78
+        y = 24
+        for ln in _wrap(d, spec.get("name", "Map") + " — KEY", title_font, panel_w - 48):
+            d.text((px, y), ln, fill=PANEL_TITLE, font=title_font)
+            y += 34
+        y += 20
         label_font = sans_bold(18)
         note_font = sans(15)
         max_w = panel_w - 48
