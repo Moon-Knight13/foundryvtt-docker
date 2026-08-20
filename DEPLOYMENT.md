@@ -66,6 +66,18 @@ tar -czf ~/foundry-assets-backup-$(date +%F).tar.gz \
   -C ~/.local/share/FoundryVTT/Data assets
 ```
 
+Or let the tool do it, which is the maintained path and covers the whole data
+directory rather than two hand-picked folders:
+
+```bash
+node scripts/content/foundry-base.mjs snapshot            # full: worlds included
+node scripts/content/foundry-base.mjs snapshot --golden   # clean slate: no worlds
+```
+
+The two are different jobs — full is the undo and the campaign safety net,
+golden is what you restore onto a sick instance without losing the worlds you
+are keeping. `docs/FOUNDRY_REBUILD.md` has the table.
+
 Foundry's own backups (Setup → Manage Backups) restore worlds through the UI.
 Machine-to-machine migration is no longer documented here: prep is synced by
 Obsidian and content is rebuilt from the repo, so a Foundry data dir is

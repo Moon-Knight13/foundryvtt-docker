@@ -239,11 +239,44 @@ baked-lit image with walls only (add dynamic lights by hand if you want them).
 Keep lights for dd2vtt from sources that don't bake light in.
 
 **Automate, then refine by hand.** The converted scene is a *base* — walls,
-lights, and doors auto-placed. Tune lighting/darkness, add ambient sounds or
-note pins in the VTT afterwards. Hand-refinements are **per-world and do not
-round-trip back**: re-import only when the map itself changes, not over a scene
+lights, and doors auto-placed. Tune lighting/darkness or add note pins in the VTT
+afterwards (for ambience, see below — it does not belong in the scene).
+Hand-refinements are **per-world and do not round-trip back**: re-import only
+when the map itself changes, not over a scene
 you've already hand-tuned (re-import replaces the compendium copy; a scene
 already dragged into a world is a separate copy).
+
+## Ambience stays out of Foundry
+
+There is no `Playlist` collection in `build.mjs`, and that is deliberate rather
+than unfinished. Audio in a Foundry playlist is streamed by your server to every
+connected client, over the same connection already carrying the game — and it
+does nothing at all for a session run in person.
+
+So ambience is prep, not content. Each scene note carries the cue:
+
+```yaml
+audio_source: tabletopaudio   # tabletopaudio | spotify | local | none
+audio_ref: https://tabletopaudio.com/...   # or a filename under 06 Assets/Audio/
+audio_cue: as the boat leaves the jetty
+```
+
+and each game's `Soundtrack.md` renders those into a cue sheet with a Dataview
+query over its own `Scenes/` folder. `new-game.sh` scaffolds the file;
+`05 Templates/Soundtrack Template.md` covers games that predate it.
+
+The cue lives on the scene note rather than in a list, so it cannot drift from
+the scene it belongs to, and the sheet stays correct as scenes are added without
+anyone maintaining it.
+
+**The sheet carries a link, never a command.** Bot syntax changes and varies by
+bot; a cue sheet that prints a wrong command is worse than one that prints a
+link you can paste into whatever you actually use.
+
+Local clips live in `06 Assets/Audio/`, shared across games the way
+`06 Assets/Tokens/` is. Because the vault is mounted inside Foundry's data root,
+Foundry *can* see them — the discipline is that we never build playlists from
+them.
 
 ## Stat blocks: compile, don't transcribe
 

@@ -103,7 +103,7 @@ test('new-game.sh scaffolds the full vault game folder by default', async () => 
 
     // Every note a finished game needs exists as a stub — the scaffold is the
     // definition of done, so a missing piece is visible in the vault.
-    for (const note of ['ZZZ Vault Game.md', 'GM Prep.md', 'Advert.md']) {
+    for (const note of ['ZZZ Vault Game.md', 'GM Prep.md', 'Advert.md', 'Soundtrack.md']) {
       assert.ok(existsSync(path.join(game, note)), `expected ${note}`);
     }
     for (const dir of [
@@ -133,6 +133,39 @@ test('new-game.sh scaffolds the full vault game folder by default', async () => 
     await loadConfig(configPath);
 
     assert.match(out, /Definition of done/);
+  } finally {
+    await rm(vault, { recursive: true, force: true });
+  }
+});
+
+test('the soundtrack sheet reads scene cues and keeps audio out of Foundry', async () => {
+  const vault = await mkdtemp(path.join(os.tmpdir(), 'vault-'));
+  try {
+    run(['zzz-audio', '--vault', vault, '--system', 'dnd5e']);
+    const sheet = await readFile(
+      path.join(vault, '03 Oneshots', 'Zzz Audio', 'Soundtrack.md'),
+      'utf8',
+    );
+
+    // The cue sheet is a query over the scene notes, not a second list to keep
+    // in step with them — a cue cannot drift from the scene it belongs to.
+    assert.match(sheet, /FROM "03 Oneshots\/Zzz Audio\/Scenes"/);
+
+    // Games do not agree on how they order scene notes: some number them with a
+    // `scene:` key, some use `act:`, and points-of-interest notes often carry
+    // neither. Sorting on `scene` alone left one game's cue sheet in arbitrary
+    // order, which for a "what to play next" sheet is a silent failure.
+    assert.match(sheet, /SORT scene, act, file\.name/);
+
+    // The three keys a scene note carries. Documented where they are used.
+    for (const key of ['audio_source', 'audio_ref', 'audio_cue']) {
+      assert.ok(sheet.includes(key), `expected ${key} documented in the sheet`);
+    }
+
+    // The standing rule, stated in the file itself: the vault is mounted inside
+    // Foundry's data root, so Foundry CAN see these files. It must not serve
+    // them.
+    assert.match(sheet, /Do not build Foundry playlists/);
   } finally {
     await rm(vault, { recursive: true, force: true });
   }

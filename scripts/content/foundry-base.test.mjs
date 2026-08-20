@@ -7,6 +7,8 @@ import {
   mergeCapture,
   assertOutsideRepo,
   snapshotPath,
+  syncExcludes,
+  rsyncArgs,
   parseArgs,
   dataDir,
   isInstallable,
@@ -132,10 +134,59 @@ test('a snapshot inside the repo tree is refused', () => {
   assert.ok(assertOutsideRepo(`${REPO_ROOT}-elsewhere`));
 });
 
-test('snapshotPath defaults beside the data dir and tolerates a trailing slash', () => {
-  assert.equal(snapshotPath('/var/data/FoundryVTT'), '/var/data/FoundryVTT.golden');
-  assert.equal(snapshotPath('/var/data/FoundryVTT/'), '/var/data/FoundryVTT.golden');
+test('snapshotPath defaults beside the data dir and names the mode', () => {
+  // A full snapshot used to default to `.golden`, which is how someone restores
+  // the wrong thing on game night. The path now says which of the two it is.
+  assert.equal(snapshotPath('/var/data/FoundryVTT'), '/var/data/FoundryVTT.backup');
+  assert.equal(snapshotPath('/var/data/FoundryVTT/'), '/var/data/FoundryVTT.backup');
+  assert.equal(
+    snapshotPath('/var/data/FoundryVTT', undefined, { golden: true }),
+    '/var/data/FoundryVTT.golden',
+  );
+  assert.equal(
+    snapshotPath('/var/data/FoundryVTT/', undefined, { golden: true }),
+    '/var/data/FoundryVTT.golden',
+  );
+  // An explicit --to/--from wins in either mode, and is still repo-guarded.
   assert.equal(snapshotPath('/var/data/FoundryVTT', '/mnt/backup'), '/mnt/backup');
+  assert.equal(
+    snapshotPath('/var/data/FoundryVTT', '/mnt/backup', { golden: true }),
+    '/mnt/backup',
+  );
+});
+
+test('a full sync keeps worlds and always skips the vault mount', () => {
+  assert.deepEqual(syncExcludes(), ['/Data/DnD/']);
+  assert.deepEqual(syncExcludes({ golden: false }), ['/Data/DnD/']);
+});
+
+test('a golden sync additionally skips worlds', () => {
+  assert.deepEqual(syncExcludes({ golden: true }), ['/Data/DnD/', '/Data/worlds/']);
+});
+
+test('rsyncArgs protects excluded paths from --delete', () => {
+  // This is the whole safety property of `restore --golden`: rsync --delete
+  // removes receiver files missing from the source, but --exclude protects
+  // them. Without the exclude, restoring a worlds-free golden snapshot would
+  // delete every live world.
+  const args = rsyncArgs('/src/', '/dst/', { golden: true });
+  assert.deepEqual(args, [
+    '-a',
+    '--delete',
+    '--exclude',
+    '/Data/DnD/',
+    '--exclude',
+    '/Data/worlds/',
+    '/src/',
+    '/dst/',
+  ]);
+  assert.ok(!args.includes('--delete-excluded'), 'must never delete excluded paths');
+
+  // A full sync carries worlds through: no worlds exclude, so they are synced.
+  const full = rsyncArgs('/src/', '/dst/');
+  assert.ok(!full.includes('/Data/worlds/'));
+  assert.deepEqual(full.slice(0, 2), ['-a', '--delete']);
+  assert.deepEqual(full.slice(-2), ['/src/', '/dst/']);
 });
 
 test('parseArgs splits the command from its flags', () => {
@@ -145,6 +196,8 @@ test('parseArgs splits the command from its flags', () => {
   assert.equal(o.data, '/d');
   assert.equal(parseArgs(['provision', '--dry-run']).dryRun, true);
   assert.equal(parseArgs(['restore', '--yes']).yes, true);
+  assert.equal(parseArgs(['snapshot', '--golden']).golden, true);
+  assert.equal(parseArgs(['snapshot']).golden, undefined);
   assert.throws(() => parseArgs(['snapshot', '--nope']), /Unknown argument/);
 });
 

@@ -242,8 +242,50 @@ export function assertOutsideRepo(target) {
   return resolved;
 }
 
-export function snapshotPath(data, explicit) {
-  return assertOutsideRepo(explicit || `${data.replace(/\/+$/, '')}.golden`);
+/**
+ * The vault is bind-mounted *inside* the Foundry data root at Data/DnD. On the
+ * host that path is an empty mount point, so excluding it changes nothing
+ * today — but run either command from anywhere the vault is actually mounted
+ * and it would copy the whole vault (1.6 GB and climbing) into every snapshot.
+ */
+export const VAULT_MOUNT = 'Data/DnD';
+export const WORLDS_DIR = 'Data/worlds';
+
+/**
+ * Two modes, because "golden image" and "backup" are different jobs that were
+ * previously the same command:
+ *
+ *   full   - everything, worlds included. The undo before a risky change, the
+ *            campaign safety net, the thing you take before burning volumes.
+ *   golden - systems, modules, config and assets. No worlds. A clean slate you
+ *            can restore onto without losing the worlds you are keeping.
+ *
+ * The excludes matter as much on restore as on snapshot. rsync --delete removes
+ * receiver files that are absent from the source, but files matched by
+ * --exclude are protected from that deletion. Without these, `restore --golden`
+ * would delete every live world - the exact opposite of what it promises.
+ */
+export function syncExcludes({ golden = false } = {}) {
+  const excludes = [`/${VAULT_MOUNT}/`];
+  if (golden) excludes.push(`/${WORLDS_DIR}/`);
+  return excludes;
+}
+
+export function rsyncArgs(source, target, { golden = false } = {}) {
+  const args = ['-a', '--delete'];
+  for (const exclude of syncExcludes({ golden })) args.push('--exclude', exclude);
+  args.push(source, target);
+  return args;
+}
+
+/**
+ * The default path names the mode. This used to be `<data>.golden` for what was
+ * always a full backup, which is precisely how someone restores the wrong thing
+ * on game night.
+ */
+export function snapshotPath(data, explicit, { golden = false } = {}) {
+  const base = data.replace(/\/+$/, '');
+  return assertOutsideRepo(explicit || `${base}${golden ? '.golden' : '.backup'}`);
 }
 
 /**
@@ -326,6 +368,7 @@ export function parseArgs(argv) {
     else if (a === '--note') opts.note = argv[++i];
     else if (a === '--dry-run') opts.dryRun = true;
     else if (a === '--yes') opts.yes = true;
+    else if (a === '--golden') opts.golden = true;
     else if (a.startsWith('--')) throw new Error(`Unknown argument: ${a}`);
     else opts.positional.push(a);
   }
@@ -341,7 +384,9 @@ export const USAGE = `Usage:
   foundry-base.mjs remove <id>                       drop a module from core
   foundry-base.mjs update [id...]                    move pins to the latest published version
   foundry-base.mjs snapshot [--to <path>]            copy the data dir as a restore point
+  foundry-base.mjs snapshot --golden [--to <path>]   copy it without worlds, as a clean slate
   foundry-base.mjs restore --yes [--from <path>]     recreate the data dir from a snapshot
+  foundry-base.mjs restore --golden --yes            reset the instance, leaving worlds alone
   foundry-base.mjs pull-games                        rebuild + sync every game in the manifest`;
 
 async function cmdCapture(opts) {
@@ -442,29 +487,35 @@ async function cmdProvision(opts) {
 }
 
 async function cmdSnapshot(opts) {
+  const golden = Boolean(opts.golden);
   const data = dataDir(opts.data);
-  const target = snapshotPath(data, opts.to);
-  console.log(`Snapshot ${data} -> ${target}`);
+  const target = snapshotPath(data, opts.to, { golden });
+  console.log(`Snapshot${golden ? ' (golden, no worlds)' : ' (full)'} ${data} -> ${target}`);
   if (opts.dryRun) return;
-  await run('rsync', ['-a', '--delete', `${data.replace(/\/+$/, '')}/`, `${target}/`]);
-  console.log('Done. This is the restore point; verify it exists before wiping anything.');
+  await run('rsync', rsyncArgs(`${data.replace(/\/+$/, '')}/`, `${target}/`, { golden }));
+  console.log(
+    golden
+      ? 'Done. This is the clean slate: modules, system and config, no worlds.'
+      : 'Done. This is the restore point; verify it exists before wiping anything.',
+  );
 }
 
 async function cmdRestore(opts) {
+  const golden = Boolean(opts.golden);
   const data = dataDir(opts.data);
-  const source = snapshotPath(data, opts.from);
+  const source = snapshotPath(data, opts.from, { golden });
   await access(source).catch(() => {
     throw new Error(`No snapshot at ${source}. Nothing to restore from.`);
   });
   if (!opts.yes) {
     throw new Error(
       `Refusing to overwrite ${data} without --yes. This replaces the live data ` +
-        'directory, including worlds, with the snapshot.',
+        `directory${golden ? ', leaving worlds untouched' : ', including worlds'}, with the snapshot.`,
     );
   }
-  console.log(`Restore ${source} -> ${data}`);
+  console.log(`Restore${golden ? ' (golden, worlds untouched)' : ' (full)'} ${source} -> ${data}`);
   if (opts.dryRun) return;
-  await run('rsync', ['-a', '--delete', `${source}/`, `${data.replace(/\/+$/, '')}/`]);
+  await run('rsync', rsyncArgs(`${source}/`, `${data.replace(/\/+$/, '')}/`, { golden }));
 }
 
 /**

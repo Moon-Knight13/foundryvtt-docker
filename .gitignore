@@ -78,3 +78,7 @@ scripts/content/node_modules/
 # foundry-base.mjs capture output: one world's enabled modules, written for
 # review before promoting entries into foundry-base.json.
 /foundry-capture-*.json
+
+# Vestigial: older deploy-setup.sh created this and nothing used it.
+# Ignored so a checkout that still has one can never commit Foundry data.
+data/

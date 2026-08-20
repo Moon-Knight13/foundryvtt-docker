@@ -132,8 +132,9 @@ copies of an NPC.
 
 - `compose.yml` — the FoundryVTT stack. Live user data (worlds, modules,
   systems) is bind-mounted from `FOUNDRY_DATA_PATH` in `.env`
-  (default `~/.local/share/FoundryVTT`) — **not** the repo's gitignored
-  `data/` placeholder directory. Worlds live under `<data>/Data/worlds/`,
+  (default `~/.local/share/FoundryVTT`). There is no repo-local data
+  directory: nothing in `compose.yml` references one. Worlds live under
+  `<data>/Data/worlds/`,
   modules under `<data>/Data/modules/`.
 - `deploy-setup.sh` — interactive environment setup. (The upstream
   image-source tree `src/` was removed — this fork runs the published felddy
@@ -332,11 +333,13 @@ once anyway.
 
 Test against the real stack, with a data-dir snapshot as the undo path:
 
-1. Snapshot the data dir before anything risky
-   (`rsync -a <data>/ <data>.bak-YYYYMMDD/`).
+1. Snapshot the data dir before anything risky:
+   `node scripts/content/foundry-base.mjs snapshot`. That is the **full** mode —
+   worlds included — which is what an undo needs. (`--golden` is the other mode:
+   a clean slate with no worlds. See `docs/FOUNDRY_REBUILD.md`.)
 2. Install/enable the module, turn on Allow Write Operations, exercise it.
 3. Rollback if needed: disable/uninstall the module (worlds are unaffected by a
-   module removal) or restore the snapshot.
+   module removal) or `foundry-base.mjs restore --yes`.
 
 Do this between sessions rather than on game night — the stack is down while a
 restore runs.
