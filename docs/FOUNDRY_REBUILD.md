@@ -38,6 +38,7 @@ devcontainer has no docker socket and does not mount the Foundry data directory.
 
 ```bash
 node scripts/content/foundry-base.mjs capture <world>   # read a live world into a pinned manifest
+node scripts/content/foundry-base.mjs world-capture <world>  # record a configured world as the template
 node scripts/content/foundry-base.mjs promote <capture>  # fill core pins from a capture
 node scripts/content/foundry-base.mjs provision         # install the pinned system + modules
 node scripts/content/foundry-base.mjs update [id...]    # move pins forward, deliberately
@@ -139,6 +140,46 @@ and leaves it in the working tree to review and commit. It also warns when
 **Snapshots refuse to write inside the repo.** The data directory contains
 `license.json` and the admin key; a snapshot under the repo tree is one
 `git add -A` away from committing a licence key.
+
+### Configure one world, capture it, stop reconfiguring
+
+Almost everything you would call "how my Foundry is set up" is **not** in
+`Config/options.json`. Which modules are enabled, the dice settings, the HUD
+layout, the combat tracker — all of it lives in each world's own LevelDB, under
+`worlds/<id>/data/settings`. Create a new world and every bit of it is gone.
+
+So configure one world exactly as you want every future world to start — in the
+UI, by hand, where that belongs — and then record it:
+
+```bash
+node scripts/content/foundry-base.mjs world-capture <world>
+```
+
+That writes `foundry-world-template.json` (gitignored) holding every settings row
+worth inheriting, plus the shape of the world's `world.json`. The manifest shape
+is **captured, never authored**: Foundry's `world.json` gains and loses fields
+between versions, and this repo already paid for guessing at Foundry's own
+vocabulary once — six of eight hand-written module ids were wrong.
+
+Three things it deliberately does not carry:
+
+- **Identity settings** — `core.activeScene`, `core.compendiumConfiguration`,
+  `core.combatTrackerConfig`, `core.time`. These name documents a new world does
+  not have, so cloning them installs a dead reference. Each one is printed as it
+  is dropped, so the list is auditable rather than invisible.
+- **`core.moduleConfiguration`** — held aside rather than dropped. The enabled
+  module set should follow the pins in `foundry-base.json`, not one world's
+  history.
+- **The world's own id, title and description.**
+
+Everything else is kept, including settings from modules this tool has never
+heard of. That is a blacklist rather than a whitelist on purpose: a whitelist
+silently drops settings from anything installed after it was written, and the
+failure mode is believing you are configured when you are not.
+
+Re-capture whenever you change how you like Foundry set up. It is read-only with
+respect to the world — but **stop Foundry first**, like every other command that
+opens a world's LevelDB.
 
 ### Backup or golden image — pick the right one
 

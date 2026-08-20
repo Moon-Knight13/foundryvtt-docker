@@ -7,6 +7,10 @@ import {
   mergeCapture,
   assertOutsideRepo,
   snapshotPath,
+  partitionSettings,
+  worldShape,
+  captureWorld,
+  IDENTITY_SETTINGS,
   syncExcludes,
   rsyncArgs,
   parseArgs,
@@ -22,7 +26,7 @@ import {
   loadGames,
   REPO_ROOT,
 } from './foundry-base.mjs';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtemp, writeFile, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 
 test('enabledModules keeps only the enabled ids, sorted', () => {
@@ -447,4 +451,147 @@ test('sharedPrefix powers a "did you mean" that actually fires on typos', () => 
   assert.ok(sharedPrefix('tokenmagic', 'tokenmagik') >= 4);
   assert.ok(sharedPrefix('dd-import', 'tokenmagic') < 4);
   assert.equal(sharedPrefix('', 'x'), 0);
+});
+
+// ---------------------------------------------------------------------------
+// world template
+// ---------------------------------------------------------------------------
+
+test('partitionSettings keeps preference, holds the module set, drops identity', () => {
+  const rows = [
+    { key: 'core.diceConfiguration', value: '{"d20":"foundry"}' },
+    { key: 'dice-so-nice.settings', value: '{"scale":1}' },
+    { key: 'core.moduleConfiguration', value: '{"dd-import":true}' },
+    { key: 'core.activeScene', value: 'abc123' },
+    { key: 'core.compendiumConfiguration', value: '{}' },
+  ];
+  const { kept, regenerated, dropped } = partitionSettings(rows);
+
+  // Preference travels to a new world.
+  assert.deepEqual(
+    kept.map(r => r.key),
+    ['core.diceConfiguration', 'dice-so-nice.settings'],
+  );
+  // The enabled set follows the pins, not one world's history.
+  assert.deepEqual(
+    regenerated.map(r => r.key),
+    ['core.moduleConfiguration'],
+  );
+  // Identity would carry a reference to documents the new world does not have.
+  assert.deepEqual(
+    dropped.map(r => r.key),
+    ['core.activeScene', 'core.compendiumConfiguration'],
+  );
+});
+
+test('partitionSettings keeps unknown module settings rather than guessing', () => {
+  // The blacklist is deliberate: a whitelist would silently drop settings from
+  // any module installed after it was written, and you would believe you were
+  // configured when you were not.
+  const { kept } = partitionSettings([
+    { key: 'some-module-released-next-year.opts', value: '{"a":1}' },
+  ]);
+  assert.deepEqual(
+    kept.map(r => r.key),
+    ['some-module-released-next-year.opts'],
+  );
+});
+
+test('partitionSettings ignores malformed rows instead of throwing', () => {
+  const { kept, dropped, regenerated } = partitionSettings([null, {}, { key: 42 }, undefined]);
+  assert.deepEqual([kept, regenerated, dropped], [[], [], []]);
+  assert.deepEqual(partitionSettings(undefined).kept, []);
+});
+
+test('worldShape strips the identity and keeps everything else', () => {
+  const shape = worldShape({
+    id: 'old-world',
+    title: 'Old World',
+    description: 'notes',
+    lastPlayed: '2026-01-01',
+    system: 'dnd5e',
+    coreVersion: '14.364',
+    systemVersion: '5.3.3',
+    somethingFoundryAddedLater: true,
+  });
+  assert.deepEqual(shape, {
+    system: 'dnd5e',
+    coreVersion: '14.364',
+    systemVersion: '5.3.3',
+    // Unknown fields survive: the shape is captured, never authored, because
+    // world.json gains and loses fields between Foundry versions.
+    somethingFoundryAddedLater: true,
+  });
+  assert.deepEqual(worldShape(undefined), {});
+});
+
+test('captureWorld reads a real world directory end to end', async () => {
+  // A real LevelDB, not a mock: there is no second Foundry to rehearse on
+  // (one licence, one active server), so the write path this feeds must be
+  // exercised against the actual store format.
+  const { ClassicLevel } = await import('classic-level');
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-'));
+  try {
+    const worldDir = path.join(data, 'Data', 'worlds', 'zzz-source');
+    await mkdir(path.join(worldDir, 'data'), { recursive: true });
+    await writeFile(
+      path.join(worldDir, 'world.json'),
+      JSON.stringify({
+        id: 'zzz-source',
+        title: 'Source World',
+        system: 'dnd5e',
+        coreVersion: '14.364',
+        systemVersion: '5.3.3',
+      }),
+    );
+
+    const db = new ClassicLevel(path.join(worldDir, 'data', 'settings'), {
+      valueEncoding: 'json',
+    });
+    await db.open();
+    await db.put('a', { key: 'core.diceConfiguration', value: '{"d20":"foundry"}' });
+    await db.put('b', { key: 'core.moduleConfiguration', value: '{"dd-import":true}' });
+    await db.put('c', { key: 'core.activeScene', value: 'sceneid' });
+    await db.close();
+
+    const template = await captureWorld('zzz-source', { data });
+
+    assert.equal(template.capturedFrom, 'zzz-source');
+    // Recorded so new-world can refuse a template captured under another
+    // Foundry version rather than writing a world that half-works.
+    assert.equal(template.coreVersion, '14.364');
+    assert.equal(template.system, 'dnd5e');
+    assert.ok(!('id' in template.worldShape), 'the shape must not carry the old id');
+    assert.ok(!('title' in template.worldShape), 'the shape must not carry the old title');
+    assert.deepEqual(
+      template.settings.map(r => r.key),
+      ['core.diceConfiguration'],
+    );
+    assert.deepEqual(template.droppedAsIdentity, ['core.activeScene']);
+    assert.deepEqual(
+      template.regeneratedAtCapture.map(r => r.key),
+      ['core.moduleConfiguration'],
+    );
+  } finally {
+    await rm(data, { recursive: true, force: true });
+  }
+});
+
+test('captureWorld names the available worlds when the id is wrong', async () => {
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-'));
+  try {
+    await mkdir(path.join(data, 'Data', 'worlds', 'real-world'), { recursive: true });
+    await assert.rejects(() => captureWorld('typo', { data }), /Available: real-world/);
+  } finally {
+    await rm(data, { recursive: true, force: true });
+  }
+});
+
+test('every identity setting is a core key, so a module can never be dropped', () => {
+  // A module's settings are namespaced by its id. If a blacklist entry were not
+  // core.*, a future module could collide with it and lose its configuration
+  // silently on every new world.
+  for (const key of IDENTITY_SETTINGS) {
+    assert.ok(key.startsWith('core.'), `${key} must be a core setting`);
+  }
 });

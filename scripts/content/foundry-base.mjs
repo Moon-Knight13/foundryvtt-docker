@@ -10,6 +10,7 @@
 // build.mjs — not because it is content tooling.
 //
 //   node scripts/content/foundry-base.mjs capture <world> [--data <path>]
+//   node scripts/content/foundry-base.mjs world-capture <world> [--to <path>]
 //   node scripts/content/foundry-base.mjs promote <capture.json>
 //   node scripts/content/foundry-base.mjs provision [--dry-run]
 //   node scripts/content/foundry-base.mjs update [id...]
@@ -36,6 +37,7 @@ import { explainLevelError } from './leveldb.mjs';
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
 export const DEFAULT_MANIFEST = path.join(REPO_ROOT, 'foundry-base.json');
+export const WORLD_TEMPLATE_FILE = 'foundry-world-template.json';
 
 export function dataDir(explicit) {
   return (
@@ -171,6 +173,146 @@ export async function capture(world, opts = {}) {
   }
 
   return { world, system, modules, missing };
+}
+
+// ---------------------------------------------------------------------------
+// world template
+// ---------------------------------------------------------------------------
+
+/**
+ * Settings rows that describe *this* world rather than how you like Foundry set
+ * up. Cloning them into a new world carries a reference to documents that world
+ * does not have — a scene id that resolves to nothing, a compendium layout for
+ * packs that are not installed.
+ *
+ * This is a blacklist, not a whitelist, and deliberately so: a whitelist drops
+ * settings from modules installed after it was written, and the failure mode is
+ * believing you are configured when you are not. Everything dropped is reported.
+ */
+export const IDENTITY_SETTINGS = [
+  'core.activeScene',
+  'core.compendiumConfiguration',
+  'core.combatTrackerConfig',
+  'core.time',
+];
+
+/**
+ * Held out separately rather than dropped. The enabled module set should follow
+ * the pins in foundry-base.json, not one world's history — so `new-world`
+ * regenerates it. Keeping the captured copy visible makes the difference
+ * auditable instead of silent.
+ */
+export const REGENERATED_SETTINGS = ['core.moduleConfiguration'];
+
+/** world.json fields that name this particular world, not its shape. */
+export const WORLD_IDENTITY_FIELDS = [
+  'id',
+  'name',
+  'title',
+  'description',
+  'lastPlayed',
+  'nextSession',
+  'playtime',
+];
+
+/**
+ * Split captured settings into what a new world should inherit, what is
+ * regenerated from the pins, and what is this world's identity.
+ */
+export function partitionSettings(rows) {
+  const kept = [];
+  const regenerated = [];
+  const dropped = [];
+  for (const row of rows ?? []) {
+    const key = row?.key;
+    if (typeof key !== 'string') continue;
+    if (REGENERATED_SETTINGS.includes(key)) regenerated.push(row);
+    else if (IDENTITY_SETTINGS.includes(key)) dropped.push(row);
+    else kept.push(row);
+  }
+  const byKey = (a, b) => a.key.localeCompare(b.key);
+  return {
+    kept: kept.sort(byKey),
+    regenerated: regenerated.sort(byKey),
+    dropped: dropped.sort(byKey),
+  };
+}
+
+/**
+ * Strip the fields that name a world, keeping the shape.
+ *
+ * The shape is *captured, never authored*: Foundry's world.json gains and loses
+ * fields between versions, and this repo already paid for guessing at Foundry's
+ * own vocabulary once — six of eight hand-written module ids were wrong. Copying
+ * a real manifest and substituting the identity is the only version-proof way to
+ * write one.
+ */
+export function worldShape(worldJson) {
+  const shape = {};
+  for (const [k, v] of Object.entries(worldJson ?? {})) {
+    if (!WORLD_IDENTITY_FIELDS.includes(k)) shape[k] = v;
+  }
+  return shape;
+}
+
+/** Read every settings row out of a world's LevelDB store. */
+async function readAllSettings(worldDir) {
+  const { ClassicLevel } = await import('classic-level');
+  const db = new ClassicLevel(path.join(worldDir, 'data', 'settings'), {
+    valueEncoding: 'json',
+  });
+  const rows = [];
+  try {
+    await db.open();
+    for await (const [, value] of db.iterator()) {
+      if (value && typeof value.key === 'string') rows.push(value);
+    }
+    return rows;
+  } catch (err) {
+    throw new Error(explainLevelError(err, 'the settings for this world'));
+  } finally {
+    await db.close().catch(() => {});
+  }
+}
+
+/**
+ * Record a world you have configured the way you want every future world to
+ * start. Read-only with respect to the world.
+ */
+export async function captureWorld(world, opts = {}) {
+  const data = dataDir(opts.data);
+  const worldsDir = await assertDataDir(data);
+  const worldDir = path.join(worldsDir, world);
+  await access(worldDir).catch(async () => {
+    const available = await readdir(worldsDir).catch(() => []);
+    throw new Error(
+      `World "${world}" not found in ${worldsDir}.` +
+        (available.length ? `\nAvailable: ${available.join(', ')}` : ''),
+    );
+  });
+
+  const worldJson = JSON.parse(await readFile(path.join(worldDir, 'world.json'), 'utf8'));
+  const rows = await readAllSettings(worldDir);
+  if (!rows.length) {
+    throw new Error(
+      `No settings in ${world}. Launch the world once and configure it before capturing.`,
+    );
+  }
+  const { kept, regenerated, dropped } = partitionSettings(rows);
+
+  return {
+    capturedFrom: world,
+    // A template captured under one Foundry version is not known to apply
+    // cleanly under another; new-world compares this and refuses on a mismatch
+    // rather than writing a world that half-works.
+    coreVersion: worldJson.coreVersion ?? null,
+    system: worldJson.system ?? null,
+    systemVersion: worldJson.systemVersion ?? null,
+    worldShape: worldShape(worldJson),
+    settings: kept,
+    regeneratedAtCapture: regenerated,
+    droppedAsIdentity: dropped.map(r => r.key),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -378,6 +520,7 @@ export function parseArgs(argv) {
 
 export const USAGE = `Usage:
   foundry-base.mjs capture <world> [--data <path>]   read a world's enabled modules into a pinned manifest
+  foundry-base.mjs world-capture <world> [--to <p>]  record a configured world as the template for new ones
   foundry-base.mjs provision [--dry-run]             install the pinned system + modules
   foundry-base.mjs promote <capture.json>            fill core pins from a capture
   foundry-base.mjs add <id> [--from <capture>]       promote a module into core
@@ -422,6 +565,26 @@ async function cmdCapture(opts) {
   const out = opts.to || path.join(REPO_ROOT, `foundry-capture-${world}.json`);
   await writeFile(out, `${JSON.stringify(captured, null, 2)}\n`);
   console.log(`\nWrote ${out}. Promote what belongs into foundry-base.json "core".`);
+}
+
+async function cmdWorldCapture(opts) {
+  const world = opts.positional[0];
+  if (!world) throw new Error('world-capture needs a world id');
+  const template = await captureWorld(world, opts);
+  const out = opts.to ? path.resolve(opts.to) : path.join(REPO_ROOT, WORLD_TEMPLATE_FILE);
+  await writeFile(out, JSON.stringify(template, null, 2) + '\n');
+
+  console.log(`Captured ${world} -> ${path.relative(REPO_ROOT, out) || out}`);
+  console.log(`  core ${template.coreVersion ?? 'unknown'}, system ${template.system ?? 'none'}`);
+  console.log(`  ${template.settings.length} setting(s) a new world will inherit`);
+  for (const key of template.droppedAsIdentity) {
+    console.log(`  dropped (identity, not preference): ${key}`);
+  }
+  if (template.regeneratedAtCapture.length) {
+    console.log('  core.moduleConfiguration held aside — new-world regenerates it from the pins');
+  }
+  console.log('\nConfigure the source world the way you want EVERY new world to start,');
+  console.log('then re-capture. This file is what new-world applies.');
 }
 
 async function cmdProvision(opts) {
@@ -781,6 +944,7 @@ async function cmdPullGames(opts) {
 // test that compares this with USAGE fails if either is forgotten.
 export const COMMANDS = [
   'capture',
+  'world-capture',
   'provision',
   'promote',
   'add',
@@ -796,6 +960,8 @@ export async function main(argv = process.argv.slice(2)) {
   switch (opts.command) {
     case 'capture':
       return cmdCapture(opts);
+    case 'world-capture':
+      return cmdWorldCapture(opts);
     case 'provision':
       return cmdProvision(opts);
     case 'promote':
