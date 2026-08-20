@@ -14,8 +14,8 @@
 //   node scripts/content/foundry-base.mjs promote <capture.json>
 //   node scripts/content/foundry-base.mjs provision [--dry-run]
 //   node scripts/content/foundry-base.mjs update [id...]
-//   node scripts/content/foundry-base.mjs snapshot [--to <path>]
-//   node scripts/content/foundry-base.mjs restore --yes [--from <path>]
+//   node scripts/content/foundry-base.mjs snapshot [--golden] [--to <path>]
+//   node scripts/content/foundry-base.mjs restore --yes [--golden] [--from <path>]
 //   node scripts/content/foundry-base.mjs pull-games
 //
 // Why pinned: "always latest" is the documented hazard, not the goal — see
@@ -23,12 +23,12 @@
 // you move, deliberately and in a reviewable commit.
 //
 // SECURITY: the data directory contains license.json and the admin key. This
-// script never reads, parses or prints either. `snapshot` copies the directory
-// wholesale with cp -a, which necessarily includes them — so the snapshot path
+// script never reads, parses or prints either. `snapshot` mirrors the directory
+// wholesale with rsync, which necessarily includes them — so the snapshot path
 // must live outside the repo tree and is refused if it does not.
 import path from 'node:path';
 import os from 'node:os';
-import { readFile, writeFile, mkdir, access, readdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access, readdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -587,6 +587,46 @@ async function cmdWorldCapture(opts) {
   console.log('then re-capture. This file is what new-world applies.');
 }
 
+/**
+ * Install one pinned entry into <data>/Data/<kind>/<id>.
+ *
+ * The destination is created before anything is written. `provision` has to
+ * work against a data directory Foundry has never started in — which is
+ * exactly the state a rebuild leaves behind — and writing the zip into a
+ * `Data/` that does not exist yet died with a bare ENOENT, after the download
+ * had already been paid for.
+ *
+ * The download's status is checked too: an expired or redirected link answers
+ * with an HTML error page, and unzipping that fails as "not a zipfile" rather
+ * than as the fetch problem it is.
+ *
+ * `deps` exists so the write path can be tested without the network or a real
+ * archive; nothing in production passes it.
+ */
+export async function installEntry(entry, data, deps = {}) {
+  const fetchImpl = deps.fetch ?? fetch;
+  const unpack = deps.unpack ?? ((zip, dest) => run('unzip', ['-o', '-q', zip, '-d', dest]));
+
+  const res = await fetchImpl(entry.manifest);
+  if (!res.ok) throw new Error(`${entry.id}: manifest fetch failed (${res.status})`);
+  const json = await res.json();
+  if (!json.download) throw new Error(`${entry.id}: manifest has no download URL`);
+
+  const dest = path.join(data, 'Data', entry.kind, entry.id);
+  await mkdir(dest, { recursive: true });
+  const zip = path.join(data, 'Data', `.${entry.id}.zip`);
+
+  const download = await fetchImpl(json.download);
+  if (!download.ok) throw new Error(`${entry.id}: download failed (${download.status})`);
+  await writeFile(zip, Buffer.from(await download.arrayBuffer()));
+  try {
+    await unpack(zip, dest);
+  } finally {
+    await rm(zip, { force: true });
+  }
+  return dest;
+}
+
 async function cmdProvision(opts) {
   const manifest = await loadManifest(opts.manifest);
   const data = dataDir(opts.data);
@@ -625,17 +665,7 @@ async function cmdProvision(opts) {
       `${opts.dryRun ? 'would ' : ''}install  ${entry.id} ${entry.version}${installed ? ` (replacing ${installed})` : ''}`,
     );
     if (opts.dryRun) continue;
-
-    const res = await fetch(entry.manifest);
-    if (!res.ok) throw new Error(`${entry.id}: manifest fetch failed (${res.status})`);
-    const json = await res.json();
-    if (!json.download) throw new Error(`${entry.id}: manifest has no download URL`);
-    const zip = path.join(data, 'Data', `.${entry.id}.zip`);
-    const buf = Buffer.from(await (await fetch(json.download)).arrayBuffer());
-    await writeFile(zip, buf);
-    await mkdir(dest, { recursive: true });
-    await run('unzip', ['-o', '-q', zip, '-d', dest]);
-    await run('rm', ['-f', zip]);
+    await installEntry(entry, data);
   }
 
   if (unresolved.length) {
