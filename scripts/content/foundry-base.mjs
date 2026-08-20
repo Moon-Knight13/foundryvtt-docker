@@ -259,21 +259,31 @@ export function partitionSettings(rows) {
  * worth inheriting.
  *
  * The pattern is a word list rather than a list of module ids, so it catches
- * modules this repo has never heard of. Two exclusions are deliberate and this
- * is a VTT, so they matter:
+ * modules this repo has never heard of. Three words are matched ONLY in
+ * compounds, and every one of those exclusions is here because this is a VTT:
  *
- * - **`token` is never matched on its own.** Foundry is full of tokens that are
- *   creatures on a map — `core.defaultToken`, `token-action-hud.*`,
- *   `tokenmagic.*`. Only compounds like `accessToken` or `api_token` match.
- * - **`auth` is never matched on its own**, because it is a substring of
- *   "author". Only `oauth`, `authorization` and `authToken` match.
+ * - **`token`** — Foundry is full of tokens that are creatures on a map:
+ *   `core.defaultToken`, `token-action-hud.*`, `tokenmagic.*`. Only
+ *   `accessToken`, `api_token`, `authToken` match.
+ * - **`auth`** — a substring of "author". Only `oauth`, `authorization` and
+ *   `authToken` match.
+ * - **`secret`** — a tabletop word before it is a security one. A real capture
+ *   of a live world matched `dice-so-nice.hide3dDiceOnSecretRolls` and
+ *   `monks-wall-enhancement.toggle-secret`: secret *rolls* and secret *doors*,
+ *   both plain preferences, both silently dropped. Only `clientSecret`,
+ *   `secretKey` and `api_secret` match now.
  *
- * Over-matching here silently drops real configuration, which is the same
- * failure mode a settings whitelist would have had: believing you are
- * configured when you are not.
+ * That third one was found the hard way, and it is the argument for the whole
+ * shape of this: over-matching silently drops real configuration, which is the
+ * same failure a settings whitelist would have had — believing you are
+ * configured when you are not. When in doubt, do not match. A credential that
+ * slips through is visible in the key list; a preference that is eaten is not.
+ *
+ * `licence`/`license` was dropped for the same reason: nothing puts a licence
+ * key in world settings, while "show licence info" toggles are plausible.
  */
 export const SECRET_KEY_PATTERN =
-  /(cookie|passwo?rd|secret|api[-_]?key|api[-_]?token|access[-_]?token|auth[-_]?token|oauth|authorization|credential|private[-_]?key)/i;
+  /(cookie|passwo?rd|credential|api[-_]?key|api[-_]?token|api[-_]?secret|access[-_]?token|auth[-_]?token|client[-_]?secret|secret[-_]?key|oauth|authorization|private[-_]?key)/i;
 
 /**
  * Split credential-bearing rows out of a settings set. They are dropped, not
@@ -1113,7 +1123,7 @@ export function verifyDependencies(installedManifests, pinnedIds) {
  * rather than a failure because that is routinely correct — a game's own
  * content module is enabled in its world and has no business in the golden base.
  */
-export function verifyWorldModules(moduleConfiguration, pinnedIds) {
+export function verifyWorldModules(moduleConfiguration, pinnedIds, excluded = {}) {
   const enabled = new Set(enabledModules(moduleConfiguration));
   const pinned = new Set(pinnedIds);
   const rows = [];
@@ -1123,13 +1133,18 @@ export function verifyWorldModules(moduleConfiguration, pinnedIds) {
     }
   }
   for (const id of [...enabled].sort()) {
-    if (!pinned.has(id)) {
-      rows.push({
-        level: 'warn',
-        id,
-        text: 'enabled here but not in core — a rebuild will not bring it back',
-      });
-    }
+    if (pinned.has(id)) continue;
+    // A module in deliberatelyExcluded is not an oversight — someone wrote down
+    // why it is out. Repeating the generic warning at them every run is how a
+    // report teaches people to skim it.
+    const reason = excluded[id];
+    rows.push({
+      level: 'warn',
+      id,
+      text: reason
+        ? `enabled here, deliberately excluded from core: ${reason}`
+        : 'enabled here but not in core — a rebuild will not bring it back',
+    });
   }
   return rows;
 }
@@ -1237,7 +1252,7 @@ async function cmdVerify(opts) {
     }
     worldRows = [
       ...verifyWorldSystem(worldJson, manifest.system),
-      ...verifyWorldModules(config, pinnedModuleIds),
+      ...verifyWorldModules(config, pinnedModuleIds, manifest.deliberatelyExcluded ?? {}),
     ];
     console.log(`\nWorld ${world} (core ${worldJson.coreVersion ?? 'unknown'}):`);
     printRows(`Modules and system:`, worldRows);

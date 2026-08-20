@@ -833,6 +833,17 @@ test('verifyWorldModules fails a pinned module the world has switched off', () =
   assert.deepEqual(levels(rows), ['fail lib-wrapper']);
 });
 
+test('verifyWorldModules names a deliberate exclusion instead of repeating itself', () => {
+  // deliberatelyExcluded is someone having written down WHY a module is out.
+  // Answering that with the generic warning every run is how a report teaches
+  // people to skim it.
+  const rows = verifyWorldModules({ 'scene-packer': true }, [], {
+    'scene-packer': 'Overlaps what the compendium pipeline already does.',
+  });
+  assert.deepEqual(levels(rows), ['warn scene-packer']);
+  assert.match(rows[0].text, /deliberately excluded from core: Overlaps what/);
+});
+
 test('verifyWorldModules warns rather than fails on a module outside core', () => {
   // A game's own content module is enabled in its world and has no business in
   // the golden base — routine, so it must not fail the gate. It still gets said
@@ -911,6 +922,37 @@ test('redactSecrets never matches "auth" on its own — it is inside "author"', 
   assert.deepEqual(redactSecrets([{ key: 'some-module.oauthState' }]).redacted, [
     'some-module.oauthState',
   ]);
+});
+
+test('redactSecrets never matches "secret" on its own — secret doors and rolls', () => {
+  // Both keys are real, from a capture of a live world. They were dropped by
+  // the first version of this pattern: secret ROLLS and secret DOORS, plain
+  // preferences, gone silently. A credential that slips through is visible in
+  // the printed key list; a preference that gets eaten is not — so when in
+  // doubt, do not match.
+  // gitleaks fires generic-api-key on the first of these, which is the same
+  // over-match this test exists to prevent — a scanner reading "Secret" in a
+  // dice preference. Allowed inline rather than by widening a rule.
+  const rows = [
+    { key: 'dice-so-nice.hide3dDiceOnSecretRolls' }, // gitleaks:allow
+    { key: 'monks-wall-enhancement.toggle-secret' }, // gitleaks:allow
+  ];
+  const { kept, redacted } = redactSecrets(rows);
+  assert.deepEqual(redacted, []);
+  assert.equal(kept.length, 2);
+
+  // Compounds that really are credentials still match.
+  assert.deepEqual(
+    redactSecrets([{ key: 'x.clientSecret' }, { key: 'y.secret_key' }, { key: 'z.api-secret' }])
+      .redacted,
+    ['x.clientSecret', 'y.secret_key', 'z.api-secret'],
+  );
+});
+
+test('redactSecrets leaves licence keys alone — they are not world settings', () => {
+  // Nothing puts a Foundry licence key in a world's settings, while a
+  // "show licence info" toggle is entirely plausible.
+  assert.deepEqual(redactSecrets([{ key: 'some-module.showLicense' }]).redacted, []);
 });
 
 test('redactSecrets tolerates malformed rows rather than throwing', () => {

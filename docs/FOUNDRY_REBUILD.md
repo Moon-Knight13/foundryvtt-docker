@@ -180,11 +180,21 @@ Four things it deliberately does not carry:
   They are dropped rather than blanked: an empty credential is
   indistinguishable from a broken one, while an absent credential prompts for
   itself. The match is on the key, by word list rather than by module id, so it
-  catches modules this repo has never heard of — and it never matches `token` or
-  `auth` on their own. This is a VTT: `core.defaultToken`, `token-action-hud`
-  and `tokenmagic` are placeable configuration, and `auth` is a substring of
-  "author". Over-matching would silently drop real settings, which is the exact
-  failure a whitelist would have had.
+  catches modules this repo has never heard of.
+
+  Three words match **only in compounds**, and every exclusion is here because
+  this is a VTT. `token` — Foundry is full of tokens that are creatures on a
+  map (`core.defaultToken`, `token-action-hud`, `tokenmagic`). `auth` — a
+  substring of "author". And `secret`, which is a tabletop word before it is a
+  security one: the first version of this matched
+  `dice-so-nice.hide3dDiceOnSecretRolls` and
+  `monks-wall-enhancement.toggle-secret` in a real world — secret *rolls* and
+  secret *doors*, both plain preferences, both dropped silently.
+
+  That is the rule this list is built on: **when in doubt, do not match.** A
+  credential that slips through is visible in the printed key list; a preference
+  that gets eaten is not. Over-matching is the same failure a settings whitelist
+  would have had — believing you are configured when you are not.
 
 > **The template file is not safe to paste.** It is gitignored and credentials
 > are stripped, but it still holds every other setting from a live world. Before
@@ -274,7 +284,10 @@ Two results are warnings rather than failures, on purpose:
 - **A module enabled in the world but not in core.** Routine — a game's own
   content module belongs in its world and has no business in the golden base.
   It is still worth saying out loud, because it is exactly how you find out that
-  something you rely on will not come back after a rebuild.
+  something you rely on will not come back after a rebuild. If the module is in
+  `deliberatelyExcluded`, the line quotes the reason someone wrote down instead
+  of repeating the generic warning — answering a recorded decision with a
+  generic nag is how a report teaches people to skim it.
 - **A world whose `systemVersion` lags the pin.** `world.json` records the
   version the world last *launched* under, so it trails a fresh `provision`
   until you open the world once. Failing on something that fixes itself on
