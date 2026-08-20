@@ -6,10 +6,14 @@ guardrails).
 
 ## What this repo is
 
-A fork of felddy/foundryvtt-docker running FoundryVTT (D&D 5e, world
-"troubled-waters") in Docker, plus an MCP integration that lets Claude Code
-act as an AI game master: create NPCs, quests, journals, and scenes directly
-in the live world.
+A fork of felddy/foundryvtt-docker running FoundryVTT (D&D 5e) in Docker, plus
+an MCP integration that lets Claude Code act as an AI game master: create NPCs,
+quests, journals, and scenes directly in the live world.
+
+The repo is the **pipeline**. It carries no game's content — not a world name,
+not an actor, not a map spec. Games live in the Obsidian vault (below), and the
+only game named anywhere in this repo is **Ashwake Hollow**, which is invented:
+see [`examples/demo-game/`](../examples/demo-game/).
 
 ## Template heritage (detached)
 
@@ -98,9 +102,19 @@ Only **process** changes get committed here: tooling, docs, vault-skeleton
 templates. Committing game content duplicates a source of truth that Obsidian
 already syncs.
 
-The older in-repo layout still works (`new-game.sh --in-repo`), and
-`content/src-mourncastle/` plus the `content/src/` seed predate this and are
-deliberately left alone. See `docs/CONTENT_AUTHORING.md` for both models.
+The older in-repo layout still works (`new-game.sh --in-repo`): it writes
+`content/<slug>.config.json` and `content/src-<slug>/`, and the config's
+`srcDir` tells the build where to look. See `docs/CONTENT_AUTHORING.md` for both
+models.
+
+**No default module, no default source tree.** `build.mjs` and
+`sync-content.sh` both require `--config`, and the build requires `--src` unless
+the config carries a `srcDir`. Earlier versions defaulted to
+`content/content.config.json` + `content/src/`, which quietly made one real
+game's content the implicit subject of every command; that seed and the in-repo
+`content/src-<slug>/` tree beside it have been folded back into their games'
+vault folders and removed from git. The only sources left here belong to the
+invented demo game.
 
 ### A game is more than its compendium
 

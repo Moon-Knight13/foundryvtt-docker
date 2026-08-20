@@ -1,0 +1,64 @@
+{
+  "description": "<p>What they are saying in the toll-yard this week. Roll when the party asks around Ashwake Hollow.</p>",
+  "displayRoll": true,
+  "formula": "1d6",
+  "img": "icons/svg/d20-grey.svg",
+  "name": "Hollow Rumours",
+  "replacement": true,
+  "results": [
+    {
+      "description": "A cart came down the pass before dawn with no drover on it, and the toll-keeper waved it straight through.",
+      "range": [
+        1,
+        1
+      ],
+      "type": "text",
+      "weight": 1
+    },
+    {
+      "description": "The signal-tower on the ridge lit twice at midnight. Nobody has walked up to look.",
+      "range": [
+        2,
+        2
+      ],
+      "type": "text",
+      "weight": 1
+    },
+    {
+      "description": "The gate crew seized a crate that was warm to the touch. It is still in the weigh-house.",
+      "range": [
+        3,
+        3
+      ],
+      "type": "text",
+      "weight": 1
+    },
+    {
+      "description": "Three drovers refused the same run this week. Good coin, too. Nobody says why.",
+      "range": [
+        4,
+        4
+      ],
+      "type": "text",
+      "weight": 1
+    },
+    {
+      "description": "A tinker at the crossroads is paying double for anything dug out of the ash flats.",
+      "range": [
+        5,
+        5
+      ],
+      "type": "text",
+      "weight": 1
+    },
+    {
+      "description": "The tower-keeper has not been seen in a tenday, but the light still burns every night.",
+      "range": [
+        6,
+        6
+      ],
+      "type": "text",
+      "weight": 1
+    }
+  ]
+}

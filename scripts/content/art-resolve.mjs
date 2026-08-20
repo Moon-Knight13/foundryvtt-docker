@@ -15,11 +15,11 @@
 //
 // What makes a mook is the note's TITLE matching its base creature, not the
 // mere presence of source:. Measured on a real module: every named NPC there
-// is built on an SRD base (Amira Granger and Zephyr Silverwind are both Spy
-// underneath), and a source:-presence rule dressed both in the same spy icon —
-// two named characters, identical tokens, and a green gate. "Bandit.md" built
-// on Bandit is a bandit; "Amira Granger.md" built on Spy is a person someone
-// authored, and her art gap must stay visible.
+// was built on an SRD base (two different characters both sat on the Spy),
+// and a source:-presence rule dressed both in the same spy icon — two named
+// characters, identical tokens, and a green gate. "Bandit.md" built on Bandit
+// is a bandit; "Rook Vantle.md" built on Spy is a person someone authored,
+// and that art gap must stay visible.
 //
 // art_required overrides the inference in either direction: true refuses the
 // silhouette even for an exact-title mook, false unlocks the base creature's

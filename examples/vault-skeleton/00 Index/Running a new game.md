@@ -210,7 +210,7 @@ Then run the pipes **in this order** (objects exist before notes/scenes link to 
 4. **PCs** — ddb-importer pulls each player character from D&D Beyond.
 
 **One owner per document.** A creature's stats live *either* in the vault
-statblock *or* in `content/src-<slug>/` — port once at packaging, then stop
+statblock *or* in its `Foundry/src/` JSON — port once at packaging, then stop
 hand-editing the other. A journal is carried by the Bridge (prose) *or* the
 compendium (structured), never both. See
 [[How this vault works#Foundry pipeline]] and `docs/FOUNDRY_REBUILD.md`.
@@ -226,7 +226,7 @@ compendium (structured), never both. See
 Change the source, rebuild, re-import — in place:
 
 ```text
-edit content/src-<slug>/…  ->  build --config …  ->  sync --config …  ->  re-import
+edit <Game>/Foundry/src/…  ->  build --config … --src …  ->  sync --config …  ->  re-import
 ```
 
 - **Never rename a source file** — the compendium id derives from the path, so a
@@ -236,7 +236,7 @@ edit content/src-<slug>/…  ->  build --config …  ->  sync --config …  ->  
 
 ## Token-lean prep
 - Scope to one game: point Claude at `03 Oneshots/<Name>/` (or the campaign
-  folder) + `content/src-<slug>/`, not the whole vault.
+  folder) — its notes and its `Foundry/src/` together, not the whole vault.
 - **Cite by `[[link]]` or page range**, never "read my vault" — Claude reads only
   what you cite. Navigate via MOCs / Dataview, not wholesale reads.
 - In-person games cost zero Foundry/MCP tokens. Content-as-code (build + import)

@@ -2,14 +2,14 @@
 # Sync the built content module into a Foundry data directory.
 # Run this on the HOST, not inside the devcontainer.
 #
-# Usage: scripts/content/sync-content.sh [--config <path>] [--dry-run] [--data <path>]
-#   --config   module config to sync (default content/content.config.json)
+# Usage: scripts/content/sync-content.sh --config <path> [--dry-run] [--data <path>]
+#   --config   module config to sync (REQUIRED — this repo has no default module)
 #   --data     explicit data directory (overrides env vars)
 #   --dry-run  show what rsync would do
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CONFIG="$REPO_ROOT/content/content.config.json"
+CONFIG=""
 
 DATA_PATH="${FOUNDRY_DATA_PATH:-$HOME/.local/share/FoundryVTT}"
 DRY_RUN=()
@@ -35,6 +35,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [[ -z "$CONFIG" ]]; then
+  echo "Error: --config is required — this repo is the pipeline, not a game, so there is no default module." >&2
+  echo "Usage: scripts/content/sync-content.sh --config <path> [--dry-run] [--data <path>]" >&2
+  exit 1
+fi
 if [[ ! -f "$CONFIG" ]]; then
   echo "Error: config not found: $CONFIG" >&2
   exit 1

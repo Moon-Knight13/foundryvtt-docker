@@ -21,7 +21,7 @@ Every prep note is a **card** with typed frontmatter (`type`, `system`,
 `artifact: [in-person, foundry]` in the frontmatter says which outputs a card
 supports. A mood note is `in-person` only; a statted NPC is `both`.
 
-| Card `type` | In-person | Foundry (`content/src/…`) |
+| Card `type` | In-person | Foundry (`<Game>/Foundry/src/…`) |
 |---|---|---|
 | npc / creature | Fantasy Statblocks card | `actors/*.json` |
 | location | note + Leaflet map | `scenes/*.json` |
@@ -33,12 +33,15 @@ supports. A mood note is `in-person` only; a statted NPC is `both`.
 
 ## Foundry pipeline
 
-The vault (portable, not in git) hands off to the repo (git-versioned):
+The vault holds the content; the repo (git-versioned) is only the pipeline that
+compiles it. Every game gets its **own** module, and every command names it:
 
-1. Hand Claude a card. Claude authors versioned JSON in the repo
-   `content/src/<type>/<name>.json` from the `foundry-content` skill templates.
-2. `node scripts/content/build.mjs` → `content/dist/<module>/`.
-3. On the host: `scripts/content/sync-content.sh` → Foundry `Data/modules/`.
+1. Hand Claude a card. Claude authors versioned JSON beside the game's notes, in
+   `<Game>/Foundry/src/<type>/<name>.json`, from the `foundry-content` skill templates.
+2. `node scripts/content/build.mjs --config <Game>/Foundry/<slug>.config.json --src <Game>/Foundry/src`
+   → `content/dist/<module>/`. There is no default module — a build with no
+   `--config` refuses to guess.
+3. On the host: `scripts/content/sync-content.sh --config <same config>` → Foundry `Data/modules/`.
 4. Enable the module + import packs in Foundry. Vault images/handouts already
    appear in Foundry's file picker via the shared vault mount.
 5. During play, MCP stages it live (scenes, tokens, dice).
@@ -65,7 +68,7 @@ Getting a new device (laptop, tablet, phone) onto this vault:
 4. **Set Templater** (the only config that isn't automatic): Settings →
    Templater → **Template folder = `05 Templates`**, **trigger on new file
    creation = ON**, and optionally the **Folder Templates** table. Full
-   per-plugin settings: **[[Plugins Setup]]**.
+   per-plugin settings: **[[_Plugins Setup]]**.
 5. **Verify.** Open **[[Home]]** — the Dataview tables should populate. Open an
    NPC card — the Fantasy Statblocks block should render.
 

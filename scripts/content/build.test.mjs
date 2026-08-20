@@ -11,6 +11,7 @@ import {
   validateLinks,
   loadConfig,
   resolveSrcRoot,
+  main,
   COLLECTIONS,
 } from './build.mjs';
 
@@ -123,25 +124,52 @@ test('loadConfig applies defaults and validates id/title', async () => {
   );
 });
 
-test('resolveSrcRoot: explicit arg > config srcDir > default content/src', () => {
+test('resolveSrcRoot: explicit arg > config srcDir, and nothing else', () => {
   // explicit srcRoot always wins
   assert.equal(resolveSrcRoot({ srcDir: 'ignored' }, '/explicit/src'), '/explicit/src');
-  // config srcDir resolves under content/
-  assert.ok(resolveSrcRoot({ srcDir: 'src-noir' }).endsWith(path.join('content', 'src-noir')));
-  // default when neither given
-  assert.ok(resolveSrcRoot({}).endsWith(path.join('content', 'src')));
-  assert.ok(resolveSrcRoot().endsWith(path.join('content', 'src')));
+  // config srcDir resolves under content/ (the in-repo layout)
+  assert.ok(
+    resolveSrcRoot({ srcDir: 'src-ashwake-hollow' }).endsWith(
+      path.join('content', 'src-ashwake-hollow'),
+    ),
+  );
+  // There is NO default source tree. This repo is the pipeline, not a game:
+  // a build that names neither --src nor srcDir has nothing to compile, and
+  // silently reaching for content/src used to hide that behind a seed module.
+  assert.throws(() => resolveSrcRoot({}), /--src/);
+  assert.throws(() => resolveSrcRoot(), /--src/);
+  assert.throws(() => resolveSrcRoot(null, ''), /--src/);
+});
+
+test('loadConfig and main refuse to guess a module config', async () => {
+  // Same doctrine as resolveSrcRoot: no repo-owned default module exists, so
+  // "which module?" is always the caller's answer, never a fallback.
+  await assert.rejects(() => loadConfig(), /config path is required/);
+  await assert.rejects(() => loadConfig(''), /config path is required/);
+  await assert.rejects(() => loadConfig(undefined), /config path is required/);
+  await assert.rejects(() => main(), /config path is required/);
+  await assert.rejects(() => main({}), /config path is required/);
+  await assert.rejects(() => main({ srcRoot: '/tmp/x' }), /config path is required/);
+});
+
+test('build.mjs exports no default config path', async () => {
+  const mod = await import('./build.mjs');
+  assert.equal(
+    mod.DEFAULT_CONFIG_PATH,
+    undefined,
+    'a repo-level default config is the bias this repo is meant not to have',
+  );
 });
 
 test('validateLinks resolves ids and pack placement', () => {
-  const targetId = docId('actors/vela.json');
+  const targetId = docId('actors/rook-vantle.json');
   const idType = { [targetId]: 'actors' };
   const link = who => ({
     name: 'J',
     pages: [
       {
         type: 'text',
-        text: { content: `see @UUID[Compendium.test-content.actors.Actor.${who}]{Vela}` },
+        text: { content: `see @UUID[Compendium.test-content.actors.Actor.${who}]{Rook Vantle}` },
       },
     ],
   });
@@ -157,7 +185,7 @@ test('validateLinks resolves ids and pack placement', () => {
     pages: [
       {
         type: 'text',
-        text: { content: `@UUID[Compendium.test-content.items.Item.${targetId}]{Vela}` },
+        text: { content: `@UUID[Compendium.test-content.items.Item.${targetId}]{Rook Vantle}` },
       },
     ],
   };

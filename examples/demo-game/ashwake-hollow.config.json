@@ -1,0 +1,16 @@
+{
+  "compatibility": {
+    "minimum": "12",
+    "verified": "14"
+  },
+  "description": "Ashwake Hollow \u2014 the invented demo game this repo ships as a pipeline smoke test. Not a real campaign.",
+  "id": "ashwake-hollow-oneshot",
+  "ownership": {
+    "ASSISTANT": "OWNER",
+    "PLAYER": "OBSERVER"
+  },
+  "packLabelPrefix": "Ashwake Hollow",
+  "system": "dnd5e",
+  "title": "Ashwake Hollow",
+  "version": "1.0.0"
+}

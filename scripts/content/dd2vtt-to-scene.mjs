@@ -21,7 +21,7 @@
  * key) plus a scene Note pinned at each key. The GM clicks pin 4 instead of
  * reading the legend off the DM image.
  *
- * A key may carry `links: ["actors/selyse.json", ...]` — curated module source
+ * A key may carry `links: ["actors/rook-vantle.json", ...]` — curated module source
  * paths rendered on its page as a "Related:" row of @UUID references (actor
  * sheets, handouts, other journals). Links need --config (module id) and, for
  * vault-hosted games, --src (where to read each document's display name).
@@ -109,7 +109,7 @@ export function lightFromDd2vtt(light, ppg, distance) {
 // ids here match the ones the compiled pack will carry.
 export function keysJournal(keys, sceneName, journalRelPath, { moduleId, names = {} } = {}) {
   const pages = keys.map((k, i) => {
-    // A key's optional `links` are module source paths ("actors/selyse.json"),
+    // A key's optional `links` are module source paths ("actors/rook-vantle.json"),
     // rendered as @UUID references so the pin's page opens the actor sheet /
     // handout / journal directly. Curated in the spec, never inferred from the
     // note text — same philosophy as the art map.

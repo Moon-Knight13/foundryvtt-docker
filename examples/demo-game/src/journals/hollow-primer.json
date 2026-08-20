@@ -1,0 +1,31 @@
+{
+  "name": "Hollow Primer",
+  "pages": [
+    {
+      "name": "Ashwake Hollow at a Glance",
+      "sort": 0,
+      "text": {
+        "content": "<p>Ashwake Hollow is one road, one toll-gate, and a dead signal-tower on the ridge above it. Everything that crosses the pass crosses here, and everyone who lives here knows it.</p><p>All toll business runs through @UUID[Compendium.ashwake-hollow-oneshot.actors.Actor.4e3dd5ad90e47600]{Rook Vantle}. Nothing goes up the pass, or comes down it, without his book knowing.</p>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    },
+    {
+      "name": "Hooks",
+      "sort": 100,
+      "text": {
+        "content": "<ul><li>A cart in the yard is listed against a drover who died two winters ago.</li><li>Rook pays quietly for word of anything moving up the pass after the gate is shut.</li></ul>",
+        "format": 1
+      },
+      "title": {
+        "level": 1,
+        "show": true
+      },
+      "type": "text"
+    }
+  ]
+}

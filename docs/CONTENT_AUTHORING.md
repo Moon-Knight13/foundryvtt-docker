@@ -1,22 +1,30 @@
 # Content authoring (content-as-code)
 
 Campaign content — NPCs, items, quest journals, scenes, roll tables, factions,
-encounters — is authored as JSON files in the repo and compiled into a
-compendium module (this repo's: **Troubled Waters Content**, dnd5e). This
-replaces the foundry-mcp content-creation tools for anything bulk or offline:
-it costs a fraction of the tokens (no MCP tool schemas or JSON results in
-Claude's context), every document is versioned in git, and content survives
-world rebuilds because it lives in a module, not the world database.
+encounters — is authored as JSON files and compiled into a compendium module,
+one module per game. This replaces the foundry-mcp content-creation tools for
+anything bulk or offline: it costs a fraction of the tokens (no MCP tool schemas
+or JSON results in Claude's context), every document is versioned alongside the
+game's notes, and content survives world rebuilds because it lives in a module,
+not the world database.
 
-Module identity lives in **`content/content.config.json`** (`id`, `title`,
+Module identity lives in the game's **`<slug>.config.json`** (`id`, `title`,
 `system`, version, ownership). The build and `sync-content.sh` both read it —
 change the module there, not in scripts. Omit `system` for a system-agnostic
-module; set it (here: `dnd5e`) to bind packs to a system.
+module; set it (`dnd5e` for the games here) to bind packs to a system.
+
+> **This repo owns no game.** There is no default module config and no default
+> source tree: `build.mjs` and `sync-content.sh` both **require `--config`**, and
+> the build requires `--src` unless the config carries a `srcDir`. Every example
+> below therefore names a game. The one that lives in this repo,
+> [`examples/demo-game/`](../examples/demo-game/), is **Ashwake Hollow** — an
+> invented oneshot that exists only as a documentation subject and pipeline smoke
+> test. Real games live in the vault; see `docs/PROJECT.md`.
 
 ## Pipeline
 
 ```text
-content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Data/modules/  --import-->  world
+<game>/Foundry/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Data/modules/  --import-->  world
 ```
 
 1. **Author** (Claude, in the devcontainer): the `foundry-content` skill —
@@ -24,17 +32,21 @@ content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Dat
    foundry-gm@foundry-gm-marketplace`) — copies a template —
    system-agnostic: `templates/common/{journal,scene,roll-table,faction,encounter}.json`;
    dnd5e: `templates/dnd5e/{npc,item}.json` — into
-   `content/src/{actors,items,journals,scenes,tables}/<kebab-name>.json` and
-   edits the needed fields (factions and encounters are journal documents).
+   the game's `Foundry/src/{actors,items,journals,scenes,tables}/<kebab-name>.json`
+   and edits the needed fields (factions and encounters are journal documents).
    Templates are minimal on purpose — Foundry defaults every omitted system
    field on import.
 2. **Build** (Claude, in the devcontainer):
 
    ```bash
-   node scripts/content/build.mjs
+   node scripts/content/build.mjs \
+     --config "<vault>/03 Oneshots/<Game>/Foundry/<slug>.config.json" \
+     --src    "<vault>/03 Oneshots/<Game>/Foundry/src"
    ```
 
-   Validates every source file (fails with file + field), validates `@UUID`
+   Both flags are required (`--src` may be replaced by a `srcDir` in the config
+   for the in-repo layout). Validates every source file (fails with file +
+   field), validates `@UUID`
    cross-links against staged sources (broken links fail the build), assigns
    deterministic IDs, and compiles LevelDB packs plus `module.json` into
    `content/dist/<module-id>/`. One-time setup:
@@ -43,11 +55,11 @@ content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Dat
    data dir):
 
    ```bash
-   ./scripts/content/sync-content.sh          # Foundry data dir ($FOUNDRY_DATA_PATH)
+   ./scripts/content/sync-content.sh --config "<same config>"   # into $FOUNDRY_DATA_PATH
    ```
 
-4. **Import** (you, in the Foundry UI): enable the "Troubled Waters Content"
-   module in the world (Game Settings → Manage Modules — packs are invisible
+4. **Import** (you, in the Foundry UI): enable the game's module
+   in the world (Game Settings → Manage Modules — packs are invisible
    until the module is on), open Compendium Packs, import documents — with
    **"Keep Document IDs" ticked**, or scene map pins will render but open
    nothing (see *Rules that bite*).
@@ -59,10 +71,10 @@ content/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Dat
 
 ## Multiple modules — one per game (one repo, N games)
 
-`build.mjs` and `sync-content.sh` default to `content/content.config.json` +
-`content/src/`. Every **game** (oneshot or campaign) gets its **own** module —
-its own config + `srcDir` — so its compendium is a separate module you enable
-only in that game's world.
+Every **game** (oneshot or campaign) gets its **own** module — its own config and
+its own source tree — so its compendium is a separate module you enable only in
+that game's world. Neither `build.mjs` nor `sync-content.sh` has a default: both
+take `--config`, and the build takes `--src` (or reads `srcDir` from the config).
 
 ### Scaffold a new game's module
 
@@ -91,7 +103,10 @@ existing config. Omit `--system` for a system-agnostic module.
 | module `id` | `<slug>-oneshot` or `<slug>-campaign` |
 | `packLabelPrefix` | the game's title |
 | `system` | per game; omit for system-agnostic |
-| exception | default `content/src/` + `troubled-waters-content` is the seed/demo — left as-is. |
+
+The table describes the **in-repo** layout (`new-game.sh --in-repo`). A
+vault-hosted game — the default — names its config `Foundry/<slug>.config.json`
+beside the notes, omits `srcDir` entirely, and is built with `--src`.
 
 ### Build + sync a specific module
 
@@ -100,9 +115,19 @@ node scripts/content/build.mjs    --config content/<slug>.config.json
 ./scripts/content/sync-content.sh --config content/<slug>.config.json   # on the host
 ```
 
-`srcDir` is a directory under `content/` (default `src`); each module builds into
-its own `content/dist/<id>/`. Source-root precedence: `--src` / explicit
-`srcRoot` arg > config `srcDir` > `content/src`. The full lifecycle (spark,
+The demo game ships the vault-hosted shape in miniature:
+
+```bash
+node scripts/content/build.mjs \
+  --config examples/demo-game/ashwake-hollow.config.json \
+  --src    examples/demo-game/src
+```
+
+`srcDir` is a directory under `content/`; each module builds into its own
+`content/dist/<id>/`. Source-root precedence: `--src` / explicit `srcRoot` arg >
+config `srcDir` > **error**. There is no third tier: a build that names neither
+has nothing to compile, and saying so beats silently compiling whatever happens
+to sit in `content/src`. The full lifecycle (spark,
 author in the vault, package, play) lives in the vault guide
 `examples/vault-skeleton/00 Index/Running a new game.md`.
 
@@ -177,12 +202,12 @@ journal the player cannot see.
 never inferred from the note text (same philosophy as the art map):
 
 ```json
-{ "n": 4, "label": "Selyse's dais", "note": "SECRET: …",
-  "links": ["actors/selyse.json", "actors/bandit.json"] }
+{ "n": 4, "label": "Rook's landing", "note": "SECRET: …",
+  "links": ["actors/rook-vantle.json", "actors/bandit.json"] }
 ```
 
 Each renders on the key's page as a **Related:** row of `@UUID` references,
-so pin 4 opens straight onto Selyse's actor sheet, the relevant handout, or
+so pin 4 opens straight onto Rook's actor sheet, the relevant handout, or
 another journal. Links need the module id, so pass `--config` (and the
 converter reads each linked file's `name` for the display text — pass
 `map-to-scene.sh --config <game config>`, which also derives `--src` from the
@@ -320,7 +345,7 @@ something wrong: fine in the JSON, obviously broken on the map.
 The compiler resolves art through a chain, and stops deliberately short:
 
 1. **`image:` in the fence** — always wins. Write it **vault-relative**
-   (`03 Oneshots/<Game>/Assets/Tokens/amira.webp`) so the same line renders in
+   (`03 Oneshots/<Game>/Assets/Tokens/<npc>.webp`) so the same line renders in
    Obsidian's statblock plugin; the compiler adds the `DnD/` mount prefix for
    Foundry. Paths Foundry already understands (`DnD/…`, `icons/…`, `systems/…`,
    `modules/…`, URLs) pass through verbatim.
@@ -338,7 +363,7 @@ The compiler resolves art through a chain, and stops deliberately short:
    would hide exactly the gap the coverage gate exists to catch.
 
 **What makes a mook is the note's title matching its base creature** —
-`Bandit.md` built on Bandit is a bandit; `Amira Granger.md` built on Spy is a
+`Bandit.md` built on Bandit is a bandit; `Rook Vantle.md` built on Spy is a
 character. `source:` presence alone is NOT the test: measured on a real
 module, every named NPC there is built on an SRD base, and a `source:` rule
 dressed two different named characters in the same spy icon with a green gate.
@@ -394,14 +419,15 @@ the manual way: make the image in any web UI, save it under the game's
 ### Named-NPC art: the standard flow
 
 When the gate stops a game on a named NPC, this is the normal way to close the
-gap (first used for Lure of the Lamia's Amira/Selyse/Zephyr, 2026-08-19):
+gap (first used on a real module's three named NPCs, 2026-08-19):
 
 1. **Ask Claude to draw the token from the note.** The note's `## Appearance`
    and roleplay sections are the brief — write them well and the token draws
    itself. Claude hand-writes a flat-vector SVG portrait: 512 viewBox,
    circular token composition with a coloured rim, bust (or body, for
    non-humanoids) over a scene-appropriate backdrop, the character's tells
-   made visible (Amira's gold ear cuffs, Zephyr's glowing *geas* eyes).
+   made visible — whatever the note says people notice about them first (a pair
+   of gold ear cuffs, eyes lit from inside by a compulsion).
    Obsidian and Foundry both render SVG natively, files are a few KB, and
    revisions are one edit away — "warmer palette", "angrier brows" are cheap
    asks.
@@ -581,14 +607,14 @@ Two things to know about the cached data:
 ## Rules that bite
 
 - **IDs derive from the source path** (sha256 of e.g.
-  `actors/harbormaster-vela.json`, first 16 hex chars). Renaming a file
+  `actors/rook-vantle.json`, first 16 hex chars). Renaming a file
   changes its compendium ID — a re-import then creates a duplicate instead of
   updating. Name files well the first time.
 - **Cross-links**: get the full
   `@UUID[Compendium.<module-id>.<pack>.<Type>.<id16>]{Name}` string with
-  `node scripts/content/uuid.mjs actors/FILE.json ["Display Name"]` — pass
-  `--config <game config>` for a per-game module, or the link names the
-  default module.
+  `node scripts/content/uuid.mjs --config <game config> actors/FILE.json
+  ["Display Name"]`. `--config` is **required**: the link names a module, and a
+  link naming the wrong one resolves to nothing in the VTT.
   The build fails on links to this module whose id matches no source file;
   links into other compendia (dnd5e SRD etc.) are left alone.
 - **Roll tables** use the Foundry v13 result shape (`"type": "text"`,
@@ -636,11 +662,21 @@ toggle) — its tool schemas are pure token overhead there.
 
 ## Sample content
 
-`content/src/actors/harbormaster-vela.json`,
-`content/src/journals/harbor-district-primer.json`, and
-`content/src/tables/harbor-rumors.json` are the seed examples — a
-cross-linked NPC + journal pair plus a rumor table that double as the
-pipeline smoke test.
+[`examples/demo-game/`](../examples/demo-game/) holds **Ashwake Hollow**, an
+invented oneshot that exists only to be an example. Its three sources —
+`src/actors/rook-vantle.json`, `src/journals/hollow-primer.json` and
+`src/tables/hollow-rumours.json` — are a cross-linked NPC + journal pair plus a
+rumour table, the smallest set that exercises document validation, `@UUID` link
+validation and pack compilation. They double as the pipeline smoke test:
+
+```bash
+node scripts/content/build.mjs \
+  --config examples/demo-game/ashwake-hollow.config.json \
+  --src    examples/demo-game/src
+```
+
+No real game's content lives in this repo. See `docs/PROJECT.md`, "This repo is
+the pipeline, not the content".
 
 ## Tests
 

@@ -59,11 +59,12 @@ Works for any **oneshot** (`03 Oneshots/<Game>/`) or **campaign** (`02 Campaigns
 One-time: install the 3 modules (below) and confirm the shared vault mount. All steps
 run on the **host**.
 
-1. **Content → compendium** (statted NPCs, items, journals, roll tables). In the repo, on the
-   branch holding this game's content:
+1. **Content → compendium** (statted NPCs, items, journals, roll tables). The sources live
+   with the game, in the vault; the repo only builds them:
    ```bash
-   node scripts/content/build.mjs    --config content/<game>.config.json
-   ./scripts/content/sync-content.sh --config content/<game>.config.json
+   G="<vault>/03 Oneshots/<Game>/Foundry"
+   node scripts/content/build.mjs    --config "$G/<slug>.config.json" --src "$G/src"
+   ./scripts/content/sync-content.sh --config "$G/<slug>.config.json"
    ```
    Foundry → **Manage Modules → enable the game's module → Compendium Packs → import**.
 2. **Notes → SoSly bridge.** Point the bridge at your vault's
@@ -90,7 +91,8 @@ Scrawl / Watabou / AI) and drop it in `Assets/Maps/` to replace the generated ba
 - **SoSly Obsidian Bridge** — journals ↔ Obsidian, bidirectional.
 - **Universal Battlemap Importer** (`dd-import`) — `.dd2vtt` → scenes with walls/lights.
 - **ddb-importer** — D&D Beyond characters → Foundry.
-- Your **content compendium module(s)** — built from `content/src/` in the repo.
+- Your **content compendium module(s)** — one per game, built from that game's
+  `Foundry/src/` beside its notes.
 
 ## Watch out
 - **One writer at a time now spans Foundry** — don't edit the same journal in Foundry and

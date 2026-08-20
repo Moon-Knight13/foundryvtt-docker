@@ -59,24 +59,24 @@ test('stampGame writes the map pick into a mook note, and the round trip holds',
 
 test('stampGame never touches named NPCs, explicit lines, or artless notes', async () => {
   const named =
-    '```statblock\nname: Amira Granger\nsource: "SRD 5.1 (CC-BY-4.0) — Goblin"\ntype: humanoid\nac: 12\nhp: 27\ncr: 1\nstats: [10, 12, 10, 12, 14, 16]\n```\n';
+    '```statblock\nname: Rook Vantle\nsource: "SRD 5.1 (CC-BY-4.0) — Goblin"\ntype: humanoid\nac: 12\nhp: 27\ncr: 1\nstats: [10, 12, 10, 12, 14, 16]\n```\n';
   const explicit = GOBLIN_FENCE.replace(
     'name: Goblin\n',
     'name: Goblin\nimage: DnD/x/goblin.webp\n',
   );
   const { game, mapPath } = await gameWith({
-    'Amira Granger.md': `# Amira\n\n${named}`,
+    'Rook Vantle.md': `# Rook\n\n${named}`,
     'Explicit Goblin.md': `# G\n\n${explicit}`,
   });
   const before = {
-    amira: await readFile(path.join(game, 'NPCs', 'Amira Granger.md'), 'utf8'),
+    rook: await readFile(path.join(game, 'NPCs', 'Rook Vantle.md'), 'utf8'),
     explicit: await readFile(path.join(game, 'NPCs', 'Explicit Goblin.md'), 'utf8'),
   };
   const report = await stampGame(game, { artMap: mapPath });
   assert.equal(report.stamped.length, 0);
   assert.equal(
-    await readFile(path.join(game, 'NPCs', 'Amira Granger.md'), 'utf8'),
-    before.amira,
+    await readFile(path.join(game, 'NPCs', 'Rook Vantle.md'), 'utf8'),
+    before.rook,
     'a named NPC has no art to stamp — the gap stays visible',
   );
   assert.equal(

@@ -2,18 +2,19 @@
 /**
  * Print the deterministic compendium id and full @UUID cross-link for a
  * content source file.
- * Usage: node scripts/content/uuid.mjs [--config <path>] <type>/<file>.json ["Display Name"]
- *   e.g. node scripts/content/uuid.mjs actors/grimtooth-the-fence.json "Grimtooth"
- *        node scripts/content/uuid.mjs --config content/harborwatch.config.json actors/vela.json
+ * Usage: node scripts/content/uuid.mjs --config <path> <type>/<file>.json ["Display Name"]
+ *   e.g. node scripts/content/uuid.mjs --config examples/demo-game/ashwake-hollow.config.json \
+ *          actors/rook-vantle.json "Rook Vantle"
  *
  * The document id is derived from the path alone, but the module id in the
- * @UUID comes from the config — pass --config for a per-game module, or the
- * link will name the default module instead.
+ * @UUID comes from the config, so --config is REQUIRED: there is no default
+ * module to fall back on, and a link naming the wrong module resolves to
+ * nothing in the VTT.
  */
-import { docId, COLLECTIONS, loadConfig, DEFAULT_CONFIG_PATH } from './build.mjs';
+import { docId, COLLECTIONS, loadConfig } from './build.mjs';
 
 const argv = process.argv.slice(2);
-let configPath = DEFAULT_CONFIG_PATH;
+let configPath;
 const positional = [];
 for (let i = 0; i < argv.length; i += 1) {
   if (argv[i] === '--config') {
@@ -29,10 +30,14 @@ for (let i = 0; i < argv.length; i += 1) {
 }
 
 const [relPath, displayName] = positional;
-if (!relPath) {
+if (!relPath || !configPath) {
   console.error(
-    'Usage: node scripts/content/uuid.mjs [--config <path>] <type>/<file>.json ["Display Name"]',
+    'Usage: node scripts/content/uuid.mjs --config <path> <type>/<file>.json ["Display Name"]',
   );
+  if (!configPath)
+    console.error(
+      '--config is required: the @UUID names a module, and this repo has no default one.',
+    );
   process.exit(1);
 }
 

@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 /**
- * Build the content compendium module from content/src.
- * Module identity (id, title, system, ...) comes from content/content.config.json.
+ * Build a game's compendium module from its source tree.
+ *
+ * Both halves are always named by the caller: `--config <game config>` supplies
+ * the module identity (id, title, system, ...) and `--src <dir>` (or the config's
+ * `srcDir`, for the in-repo layout) supplies the documents. This repo is the
+ * pipeline, not a game — there is deliberately no default module and no default
+ * source tree to fall back on.
  * Usage: node scripts/content/build.mjs
  */
 import { createHash } from 'node:crypto';
@@ -110,9 +115,14 @@ export function validateLinks(doc, relPath, moduleId, idType) {
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
-export const DEFAULT_CONFIG_PATH = path.join(REPO_ROOT, 'content', 'content.config.json');
+// No DEFAULT_CONFIG_PATH. A repo-level default module made one game's content
+// the implicit subject of every command; every entry point now names its game.
+const NO_CONFIG =
+  'A module config path is required — pass --config <game config> ' +
+  '(e.g. "<vault>/03 Oneshots/<Game>/Foundry/<slug>.config.json").';
 
-export async function loadConfig(configPath = DEFAULT_CONFIG_PATH) {
+export async function loadConfig(configPath) {
+  if (!configPath) throw new Error(NO_CONFIG);
   let raw;
   try {
     raw = JSON.parse(await readFile(configPath, 'utf8'));
@@ -134,18 +144,24 @@ export async function loadConfig(configPath = DEFAULT_CONFIG_PATH) {
   };
 }
 
-// srcRoot precedence: explicit arg > config "srcDir" (a dir under content/) >
-// the default content/src. Lets one repo build N modules from N source dirs.
+// srcRoot precedence: explicit arg > config "srcDir" (a dir under content/).
+// There is no third tier: a build that names neither has nothing to compile,
+// and saying so beats silently compiling whatever happens to sit in content/src.
 export function resolveSrcRoot(config, srcRoot) {
   if (srcRoot) return srcRoot;
-  return path.join(REPO_ROOT, 'content', config?.srcDir ?? 'src');
+  if (config?.srcDir) return path.join(REPO_ROOT, 'content', config.srcDir);
+  throw new Error(
+    'No source tree — pass --src <dir> (vault-hosted games) or set "srcDir" ' +
+      'in the module config (the in-repo layout).',
+  );
 }
 
 export async function main({
   srcRoot,
   distRoot = path.join(REPO_ROOT, 'content', 'dist'),
-  configPath = DEFAULT_CONFIG_PATH,
+  configPath,
 } = {}) {
+  if (!configPath) throw new Error(NO_CONFIG);
   const config = await loadConfig(configPath);
   const resolvedSrcRoot = resolveSrcRoot(config, srcRoot);
   const moduleDir = path.join(distRoot, config.id);
@@ -220,7 +236,7 @@ export async function main({
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const argv = process.argv.slice(2);
-  let configPath = DEFAULT_CONFIG_PATH;
+  let configPath;
   let srcRoot;
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--config') {
@@ -244,6 +260,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       console.error(`Unknown argument: ${argv[i]}`);
       process.exit(1);
     }
+  }
+  if (!configPath) {
+    console.error(NO_CONFIG);
+    console.error('usage: node scripts/content/build.mjs --config <path> [--src <dir>]');
+    process.exit(1);
   }
   main({ configPath, srcRoot })
     .then(({ counts, config }) => {

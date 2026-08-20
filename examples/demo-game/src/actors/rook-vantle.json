@@ -1,0 +1,69 @@
+{
+  "img": "DnD/06 Assets/Tokens/generic/delapouite/spy.svg",
+  "items": [],
+  "name": "Rook Vantle",
+  "prototypeToken": {
+    "actorLink": false,
+    "displayName": 20,
+    "disposition": 0,
+    "name": "Rook Vantle",
+    "texture": {
+      "src": "DnD/06 Assets/Tokens/generic/delapouite/spy.svg"
+    }
+  },
+  "system": {
+    "abilities": {
+      "cha": {
+        "value": 13
+      },
+      "con": {
+        "value": 12
+      },
+      "dex": {
+        "value": 14
+      },
+      "int": {
+        "value": 15
+      },
+      "str": {
+        "value": 11
+      },
+      "wis": {
+        "value": 16
+      }
+    },
+    "attributes": {
+      "ac": {
+        "calc": "flat",
+        "flat": 13
+      },
+      "hp": {
+        "max": 22,
+        "value": 22
+      },
+      "movement": {
+        "units": "ft",
+        "walk": 30
+      }
+    },
+    "details": {
+      "alignment": "Lawful Neutral",
+      "biography": {
+        "value": "<p>Rook keeps the toll-book for Ashwake Hollow and knows every cart, drover and unlisted crate that has come down the pass. He sells that knowledge carefully. Ash-burned hands, a ledger chained to his belt, and a habit of reading the weather while you talk.</p><p><em>Roleplay:</em> clipped sentences, quotes the toll ordinance from memory, softens only when someone mentions the old signal-tower.</p>"
+      },
+      "cr": 1,
+      "type": {
+        "value": "humanoid"
+      }
+    },
+    "traits": {
+      "languages": {
+        "value": [
+          "common"
+        ]
+      },
+      "size": "med"
+    }
+  },
+  "type": "npc"
+}
