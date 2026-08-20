@@ -145,6 +145,7 @@ Glyphs are schematic (this is a "simple battlemap", not fine art).
 | `stairs` | Stepped block | `size`, `dir` | — |
 | `pillar` | Stone column | `size` | small LOS obstacle |
 | `water` | Translucent pool | `size` | — |
+| `pit` | Ragged black chasm, jittered edge | `w`, `h` (or `size`) | — (you can see across a hole) |
 | `rubble` | Scattered debris | `size` | — |
 | `marker` | Subtle disc (e.g. a ghost's spot); `label` shown on DM only | `size` | — |
 | *anything else* | Labelled fallback disc (never crashes) | `size` | — |
@@ -192,7 +193,8 @@ mount, where Foundry can serve them.
 Two things bite when authoring a spec:
 
 - `size` is a **radius** in grid units, not a diameter. `size: 3` is six squares
-  across.
+  across. **`pit` is the exception** — its `w`/`h` (or `size`) are full width and
+  height, because a chasm is usually drawn to span a corridor exactly.
 - An unrecognised `type` silently falls back to a labelled disc. Stick to the
   feature table above; use `marker` for anything decorative.
 

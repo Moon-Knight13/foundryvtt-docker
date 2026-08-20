@@ -53,6 +53,8 @@ MOONLIGHT   = (225, 230, 255, 34)
 WATER       = (54, 96, 138, 150)
 WATER_EDGE  = (70, 120, 170, 180)
 RUBBLE      = (120, 110, 92, 220)
+PIT_DARK    = (22, 20, 24, 255)
+PIT_EDGE    = (58, 52, 48, 255)
 PILLAR      = (110, 106, 100, 255)
 PILLAR_EDGE = (70, 67, 62, 255)
 DOOR_WOOD   = (104, 74, 44, 255)
@@ -296,6 +298,32 @@ def feat_water(cv: Canvas, f):
     return None
 
 
+def feat_pit(cv: Canvas, f):
+    """A ragged chasm — an ellipse with a jittered edge, black to the bottom.
+
+    Sized by `w`/`h` in grid units so it can span a corridor wall-to-wall
+    (`size` sets both if given). Returns no LOS: you can see across a hole.
+    """
+    x, y = f["at"]
+    s = f.get("size", 3)
+    w = float(f.get("w", s))
+    h = float(f.get("h", s))
+    import random
+    rnd = random.Random(int((x * 733 + y * 311) * 1000))
+    steps = 48
+    ring = []
+    for i in range(steps):
+        t = i / steps * math.tau
+        j = 1.0 + rnd.uniform(-0.08, 0.08)
+        ring.append((x + math.cos(t) * (w / 2.0) * j,
+                     y + math.sin(t) * (h / 2.0) * j))
+    cv.d.polygon([cv.gp(pt) for pt in ring], fill=PIT_DARK, outline=PIT_EDGE, width=4)
+    # Depth cue: a second, blacker ring inset toward the centre.
+    inner = [(x + (px - x) * 0.7, y + (py - y) * 0.7) for px, py in ring]
+    cv.d.polygon([cv.gp(pt) for pt in inner], fill=VOID)
+    return None
+
+
 def feat_rubble(cv: Canvas, f):
     x, y = f["at"]
     s = f.get("size", 1.5)
@@ -337,6 +365,7 @@ FEATURES = {
     "stairs": feat_stairs,
     "pillar": feat_pillar,
     "water": feat_water,
+    "pit": feat_pit,
     "rubble": feat_rubble,
     "marker": feat_marker,
 }
@@ -434,8 +463,16 @@ def render_dm(base_img: Image.Image, spec: dict, ppg: int) -> Image.Image:
             cr = 13
             d.ellipse([px, y, px + 2 * cr, y + 2 * cr], fill=KEY_FILL, outline=KEY_EDGE, width=2)
             d.text((px + cr, y + cr), str(k["n"]), fill=KEY_TEXT, font=sans_bold(15), anchor="mm")
-            d.text((px + 2 * cr + 12, y + 1), k.get("label", ""), fill=PANEL_LABEL, font=label_font)
+            # The label wraps too. It used to be drawn as a single unwrapped
+            # run, so any label longer than the panel was silently sliced off
+            # at the image edge — the legend read "Otty's crime scene — the bloo".
+            label_lines = _wrap(d, k.get("label", ""), label_font, max_w - (2 * cr + 12))
+            d.text((px + 2 * cr + 12, y + 1), label_lines[0] if label_lines else "",
+                   fill=PANEL_LABEL, font=label_font)
             y += 2 * cr + 6
+            for extra in label_lines[1:]:
+                d.text((px + 2 * cr + 12, y), extra, fill=PANEL_LABEL, font=label_font)
+                y += 22
             note = k.get("note", "")
             if note:
                 for ln in _wrap(d, note, note_font, max_w):
