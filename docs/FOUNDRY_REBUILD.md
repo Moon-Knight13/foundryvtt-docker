@@ -357,6 +357,14 @@ What it checks:
 - **With a world**: that the pinned modules are actually enabled in it, and that
   it runs the pinned system.
 
+**Pinned means installed and enabled, both.** That is one rule rather than
+two, and it is why a pinned module switched off in a world is a failure rather
+than a note. `new-world` enables everything in `core` from the pins, so worlds created
+after this only fail the check if someone turns something off on purpose. A
+module you want present but not switched on everywhere does not fit this model —
+the honest options are to enable it and accept the load time, or to drop it from
+`core` and install it by hand when the need comes up.
+
 Two results are warnings rather than failures, on purpose:
 
 - **A module enabled in the world but not in core.** Routine — a game's own
@@ -396,16 +404,18 @@ sit expired for months and only bite at the moment you have already wiped the
 data directory. Wiping the data directory is exactly what forces the container
 to install Foundry again.
 
-So make refreshing it the first step of the drill rather than a surprise in the
-middle of it. Two ways, and they are a real choice:
+So refreshing it is **step one of the drill**, decided and not re-litigated each
+time: set Operating System to **Node.js** on the licence page, click **Timed
+URL**, paste it into `.env`. Nothing long-lived is stored, and this repo would
+rather ask for thirty seconds of clicking than hold a password.
 
-- **Refresh the timed URL.** Set Operating System to **Node.js** on the licence
-  page, click **Timed URL**, paste it into `.env`. Nothing long-lived is stored.
-- **Fall back to credentials.** Leave `FOUNDRY_RELEASE_URL` blank and set
-  `FOUNDRY_USERNAME` / `FOUNDRY_PASSWORD`; the felddy image logs in and fetches
-  the build itself. It does not expire, which is what makes it the better choice
-  for a rebuild you might have to run in a hurry — at the price of keeping your
-  Foundry account password in `.env`.
+The alternative exists and was weighed: leaving `FOUNDRY_RELEASE_URL` blank and
+setting `FOUNDRY_USERNAME` / `FOUNDRY_PASSWORD` lets the felddy image log in and
+fetch the build itself, which never expires and would survive an unattended
+rebuild. It was **not** chosen, because it puts a Foundry account password in
+`.env` permanently to save a manual step taken rarely. If a rebuild ever has to
+run with nobody watching, that is the trade to revisit — deliberately, not by
+drifting into it.
 
 Either way, keep `FOUNDRY_VERSION` **pinned** (`.env.example` ships `14.363`).
 The image tag `:release` floating is fine — that is the container's own tooling,

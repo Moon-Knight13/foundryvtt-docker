@@ -15,6 +15,8 @@ import {
   compileHandout,
   slug,
   OWNERSHIP,
+  maskComments,
+  decodePath,
 } from './handout.mjs';
 
 test('parseEmbeds finds wikilink and markdown image embeds, in order', () => {
@@ -209,4 +211,51 @@ test('the emitted journal is valid input for the compendium build', async () => 
   assert.equal(typeof round.name, 'string');
   assert.ok(Array.isArray(round.pages));
   assert.ok(round.pages.every(p => p.name && p.type === 'image' && p.src));
+});
+
+// ---------------------------------------------------------------------------
+// maskComments — removing a comment must not manufacture another one
+// ---------------------------------------------------------------------------
+
+test('maskComments blanks a comment without changing the length', () => {
+  const masked = maskComments('a<!-- hidden -->b');
+  assert.equal(masked.length, 'a<!-- hidden -->b'.length);
+  assert.equal(masked, `a${' '.repeat('<!-- hidden -->'.length)}b`);
+});
+
+test('maskComments cannot splice a new comment out of the leftovers', () => {
+  // Deleting matches would reduce this to `<!-- ![[art.webp]] -->` — an embed
+  // that was live text, now inside a comment the single pass has already gone
+  // past. The same trick run the other way resurrects an embed the author
+  // deliberately commented out.
+  const nasty = '<!<!-- -->-- ![[art.webp]] -->';
+  assert.ok(!maskComments(nasty).includes('<!--'), 'must not manufacture a comment');
+  assert.deepEqual(
+    parseEmbeds(nasty).map(e => e.file),
+    ['art.webp'],
+    'the embed is live text by HTML rules, and stays live',
+  );
+});
+
+test('parseEmbeds still ignores a genuinely commented-out embed', () => {
+  // The Handout template ships one as a hint; picking it up would make every
+  // scaffolded note claim art it does not have.
+  assert.deepEqual(parseEmbeds('<!-- ![[example.webp]] -->'), []);
+});
+
+test('maskComments tolerates an unterminated comment and non-strings', () => {
+  assert.equal(maskComments('text <!-- never closed'), 'text <!-- never closed');
+  assert.equal(maskComments(null), '');
+});
+
+test('decodePath survives a filename that is not valid percent-encoding', () => {
+  // decodeURIComponent throws URIError on a stray %, and a literal percent in a
+  // filename is likelier than a mis-encoded one. A note that cannot be built is
+  // worse than a filename read verbatim.
+  assert.equal(decodePath('my%20art.webp'), 'my art.webp');
+  assert.equal(decodePath('100%-done.webp'), '100%-done.webp');
+  assert.deepEqual(
+    parseEmbeds('![](100%-done.webp)').map(e => e.file),
+    ['100%-done.webp'],
+  );
 });

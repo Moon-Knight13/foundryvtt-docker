@@ -45,8 +45,43 @@ export function parseFrontmatter(markdown) {
  * ignored — the Handout template ships one as a hint, and picking that up would
  * make every scaffolded note claim art it does not have.
  */
+/**
+ * Blank out HTML comments, preserving length.
+ *
+ * Deleting them would be the obvious thing and is wrong: removing a match can
+ * splice the surrounding text into a NEW comment that the same pass has already
+ * gone by. `<!` + `<!-- -->` + `-- ![[art.webp]] -->` deletes down to
+ * `<!-- ![[art.webp]] -->`, and an embed that was live text is now inside a
+ * comment — or, run the other way, an embed the author had commented out comes
+ * back to life. Replacing with spaces cannot create syntax that was not there,
+ * so one pass is genuinely enough.
+ *
+ * Non-greedy on purpose: an HTML comment ends at the first `-->`, and comments
+ * do not nest. Matching Foundry's and Obsidian's own reading of the text
+ * matters more here than matching an author's intent.
+ */
+export function maskComments(markdown) {
+  return String(markdown ?? '').replace(/<!--[\s\S]*?-->/g, m => ' '.repeat(m.length));
+}
+
+/**
+ * Percent-decode a markdown image target, tolerating one that is not valid
+ * percent-encoding.
+ *
+ * `decodeURIComponent` throws a URIError on a stray `%`, and a filename with a
+ * literal percent in it is likelier than a mis-encoded one. A note that cannot
+ * be built is worse than a filename read verbatim.
+ */
+export function decodePath(target) {
+  try {
+    return decodeURIComponent(target);
+  } catch {
+    return target;
+  }
+}
+
 export function parseEmbeds(markdown) {
-  const withoutComments = markdown.replace(/<!--[\s\S]*?-->/g, '');
+  const withoutComments = maskComments(markdown);
   const found = [];
   const push = (file, alias) => {
     const name = file.trim();
@@ -58,7 +93,7 @@ export function parseEmbeds(markdown) {
     push(m[1], m[2]);
   }
   for (const m of withoutComments.matchAll(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
-    push(decodeURIComponent(m[2]), m[1]);
+    push(decodePath(m[2]), m[1]);
   }
   return found;
 }
