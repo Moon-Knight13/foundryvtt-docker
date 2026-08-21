@@ -30,6 +30,15 @@ import {
   addToCore,
   removeFromCore,
   dropExclusion,
+  assertValidWorldId,
+  settingsDbKey,
+  documentId,
+  newWorldJson,
+  moduleConfigurationFor,
+  settingsToWrite,
+  freshRow,
+  main,
+  WORLD_IDENTITY_FIELDS,
   sharedPrefix,
   pullPlan,
   loadGames,
@@ -1000,4 +1009,283 @@ test('dropExclusion distinguishes an empty reason from no exclusion at all', () 
   const manifest = { deliberatelyExcluded: { x: '' } };
   assert.equal(dropExclusion(manifest, 'x'), '');
   assert.deepEqual(manifest.deliberatelyExcluded, {});
+});
+
+// ---------------------------------------------------------------------------
+// new-world — apply the captured template to a world that has never existed
+// ---------------------------------------------------------------------------
+
+const TEMPLATE = {
+  capturedFrom: 'source-world',
+  coreVersion: '14.364',
+  system: 'dnd5e',
+  systemVersion: '5.3.3',
+  worldShape: {
+    system: 'dnd5e',
+    coreVersion: '14.364',
+    systemVersion: '5.3.3',
+    compatibility: { minimum: '14' },
+    flags: { 'some-module': { seen: true } },
+  },
+  settings: [
+    {
+      key: 'core.diceConfiguration',
+      user: null,
+      value: '{}',
+      _id: 'OLDIDOLDIDOLDID1',
+      _stats: { lastModifiedBy: 'someuserid00000' },
+    },
+  ],
+  regeneratedAtCapture: [
+    {
+      key: 'core.moduleConfiguration',
+      user: null,
+      value: '{"old":true}',
+      _id: 'OLDIDOLDIDOLDID2',
+      _stats: {},
+    },
+  ],
+};
+
+const NEW_WORLD_PINS = { core: [{ id: 'lib-wrapper' }, { id: 'socketlib' }] };
+
+test('settingsDbKey uses the prefix Foundry actually uses', () => {
+  // Read off a live world, not assumed. A bare id writes rows the server never
+  // looks at, which fails as an empty settings screen rather than as an error —
+  // the worst kind of wrong, because it looks like the capture was empty.
+  assert.equal(settingsDbKey('09v0Fjkkjc4qEI2o'), '!settings!09v0Fjkkjc4qEI2o');
+});
+
+test('documentId looks like a Foundry document id', () => {
+  const id = documentId();
+  assert.match(id, /^[A-Za-z0-9]{16}$/);
+  assert.notEqual(documentId(), documentId());
+});
+
+test('documentId draws in range instead of taking a byte modulo 62', () => {
+  // The first version did `randomByte % 62`, which biases: 256 is not a
+  // multiple of 62, so the first eight letters would come up five times per 256
+  // draws and the rest four. randomInt rejection-samples, so the drawn value is
+  // used unmodified — that is what this pins.
+  const asked = [];
+  const id = documentId(max => {
+    asked.push(max);
+    return 61;
+  });
+  assert.equal(id, '9999999999999999', 'index 61 is the last character of the alphabet');
+  assert.deepEqual([...new Set(asked)], [62], 'always asks across the whole alphabet');
+  assert.equal(asked.length, 16);
+});
+
+test('assertValidWorldId refuses ids that would be awkward forever', () => {
+  assert.equal(assertValidWorldId('winters-teeth'), 'winters-teeth');
+  for (const bad of ['Winters Teeth', 'winters_teeth', '-leading', '../escape', '']) {
+    assert.throws(() => assertValidWorldId(bad), /world id|needs a world id/i);
+  }
+});
+
+test('newWorldJson copies the captured shape and puts identity back', () => {
+  const world = newWorldJson(TEMPLATE, { id: 'winters-teeth', title: "Winter's Teeth" });
+  assert.equal(world.id, 'winters-teeth');
+  assert.equal(world.title, "Winter's Teeth");
+  // Fields this tool has never heard of travel unread — the whole reason the
+  // shape is captured rather than composed.
+  assert.deepEqual(world.compatibility, { minimum: '14' });
+  assert.deepEqual(world.flags, { 'some-module': { seen: true } });
+  assert.equal(world.coreVersion, '14.364');
+});
+
+test('newWorldJson demands the two things Foundry cannot invent', () => {
+  assert.throws(() => newWorldJson(TEMPLATE, { id: 'x' }), /--title/);
+  assert.throws(() => newWorldJson(TEMPLATE, { title: 'T' }), /needs a world id/);
+  assert.throws(() => newWorldJson({}, { id: 'x', title: 'T' }), /world-capture/);
+});
+
+test('newWorldJson lets the operator override system and core version', () => {
+  const world = newWorldJson(TEMPLATE, {
+    id: 'x',
+    title: 'T',
+    system: 'cairn',
+    coreVersion: '15.1',
+  });
+  assert.equal(world.system, 'cairn');
+  assert.equal(world.coreVersion, '15.1');
+});
+
+test("packs is treated as identity — it names the old world's own compendia", () => {
+  // For this table that is ddb-importer's twelve world-scoped world.ddb-* packs,
+  // which die with the world that made them. Copying the list into a new world
+  // declares packs that do not exist.
+  assert.ok(WORLD_IDENTITY_FIELDS.includes('packs'));
+  assert.ok(
+    !('packs' in worldShape({ id: 'x', packs: [{ name: 'ddb-spells' }], system: 'dnd5e' })),
+  );
+});
+
+test('moduleConfigurationFor follows the pins, not the source world', () => {
+  assert.deepEqual(moduleConfigurationFor(NEW_WORLD_PINS), {
+    'lib-wrapper': true,
+    socketlib: true,
+  });
+  assert.deepEqual(moduleConfigurationFor({}), {});
+});
+
+test('freshRow reissues the id and clears the user who last touched it', () => {
+  const row = freshRow(TEMPLATE.settings[0], () => 'NEWIDNEWIDNEWID1');
+  assert.equal(row._id, 'NEWIDNEWIDNEWID1');
+  // That user account does not exist in a world that has never been opened.
+  assert.equal(row._stats.lastModifiedBy, null);
+  assert.equal(row.key, 'core.diceConfiguration');
+  assert.equal(row.value, '{}');
+});
+
+test('settingsToWrite regenerates the module set and re-ids everything', () => {
+  let n = 0;
+  const rows = settingsToWrite(TEMPLATE, NEW_WORLD_PINS, {
+    newId: () => `ID${String(n++).padStart(14, '0')}`,
+  });
+  assert.deepEqual(
+    rows.map(r => r.key),
+    ['core.diceConfiguration', 'core.moduleConfiguration'],
+  );
+  // The captured module set is discarded; the pins win.
+  assert.deepEqual(JSON.parse(rows[1].value), { 'lib-wrapper': true, socketlib: true });
+  // ...but the captured row's other fields are kept, so anything Foundry
+  // expects on a settings document still travels.
+  assert.equal(rows[1].user, null);
+  assert.ok('_stats' in rows[1]);
+  assert.equal(new Set(rows.map(r => r._id)).size, 2, 'every row gets its own fresh id');
+});
+
+test('settingsToWrite still writes a module configuration when none was captured', () => {
+  const rows = settingsToWrite({ settings: [] }, NEW_WORLD_PINS);
+  assert.deepEqual(
+    rows.map(r => r.key),
+    ['core.moduleConfiguration'],
+  );
+});
+
+test('partitionSettings sets aside rows belonging to one specific user', () => {
+  // A settings row with a `user` is one player's own preference. A new world
+  // has no such account, so it would be a dead reference on arrival.
+  const { kept, userScoped } = partitionSettings([
+    { key: 'a.pref', user: null },
+    { key: 'b.pref' },
+    { key: 'c.pref', user: 'aUserDocumentId0' },
+  ]);
+  assert.deepEqual(
+    kept.map(r => r.key),
+    ['a.pref', 'b.pref'],
+  );
+  assert.deepEqual(
+    userScoped.map(r => r.key),
+    ['c.pref'],
+  );
+});
+
+test('new-world writes a store that captureWorld reads straight back', async () => {
+  // The strongest available proof, and the only one that matters: there is no
+  // second Foundry to rehearse against (one licence, one active server), so the
+  // write path is exercised against a real ClassicLevel store and then read by
+  // the same code that reads Foundry's own.
+  const { ClassicLevel } = await import('classic-level');
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-nw-'));
+  const quiet = console.log;
+  console.log = () => {};
+  try {
+    await mkdir(path.join(data, 'Data', 'worlds'), { recursive: true });
+    const templatePath = path.join(data, 'template.json');
+    await writeFile(templatePath, JSON.stringify(TEMPLATE));
+    const manifestPath = path.join(data, 'manifest.json');
+    await writeFile(manifestPath, JSON.stringify(NEW_WORLD_PINS));
+
+    await main([
+      'new-world',
+      'winters-teeth',
+      '--title',
+      "Winter's Teeth",
+      '--data',
+      data,
+      '--from',
+      templatePath,
+      '--manifest',
+      manifestPath,
+    ]);
+
+    const worldDir = path.join(data, 'Data', 'worlds', 'winters-teeth');
+    const world = JSON.parse(await readFile(path.join(worldDir, 'world.json'), 'utf8'));
+    assert.equal(world.id, 'winters-teeth');
+    assert.equal(world.title, "Winter's Teeth");
+    assert.deepEqual(world.compatibility, { minimum: '14' });
+    assert.ok(!('packs' in world), "must not declare the source world's compendia");
+
+    // Keys carry Foundry's prefix; a bare id would be silently ignored.
+    const db = new ClassicLevel(path.join(worldDir, 'data', 'settings'), { valueEncoding: 'json' });
+    await db.open();
+    const seen = [];
+    for await (const [k, v] of db.iterator()) seen.push([k, v]);
+    await db.close();
+    assert.ok(seen.length >= 2);
+    for (const [k, v] of seen) assert.equal(k, `!settings!${v._id}`);
+
+    // And the round trip: the same reader Foundry's own settings go through.
+    const back = await captureWorld('winters-teeth', { data });
+    assert.deepEqual(
+      back.settings.map(r => r.key),
+      ['core.diceConfiguration'],
+    );
+    assert.deepEqual(
+      back.regeneratedAtCapture.map(r => r.key),
+      ['core.moduleConfiguration'],
+    );
+    assert.deepEqual(JSON.parse(back.regeneratedAtCapture[0].value), {
+      'lib-wrapper': true,
+      socketlib: true,
+    });
+  } finally {
+    console.log = quiet;
+    await rm(data, { recursive: true, force: true });
+  }
+});
+
+test('new-world refuses to touch a world that already exists', async () => {
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-nw-'));
+  const quiet = console.log;
+  console.log = () => {};
+  try {
+    await mkdir(path.join(data, 'Data', 'worlds', 'taken'), { recursive: true });
+    const templatePath = path.join(data, 'template.json');
+    await writeFile(templatePath, JSON.stringify(TEMPLATE));
+    // A world is somebody's campaign. There is no --force for this.
+    await assert.rejects(
+      () => main(['new-world', 'taken', '--title', 'T', '--data', data, '--from', templatePath]),
+      /already exists. Refusing to touch an existing world/,
+    );
+  } finally {
+    console.log = quiet;
+    await rm(data, { recursive: true, force: true });
+  }
+});
+
+test('new-world says how to make a template when there is none', async () => {
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-nw-'));
+  try {
+    await mkdir(path.join(data, 'Data', 'worlds'), { recursive: true });
+    await assert.rejects(
+      () =>
+        main([
+          'new-world',
+          'x',
+          '--title',
+          'T',
+          '--data',
+          data,
+          '--from',
+          path.join(data, 'absent.json'),
+        ]),
+      /world-capture <that world>/,
+    );
+  } finally {
+    await rm(data, { recursive: true, force: true });
+  }
 });
