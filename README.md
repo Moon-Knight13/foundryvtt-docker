@@ -31,6 +31,15 @@ This page is a landing pad. Anything past "how do I start it" lives in
 - **DM prep backbone** — an **Obsidian vault you own** is the system-agnostic
   source of truth. FoundryVTT is a transient projection you can wipe and rebuild
   from the vault, the git content module, and D&D Beyond.
+- **Golden base** (`foundry-base.json`) — the pinned system and 24 core modules
+  a rebuilt install needs, captured from a live world rather than guessed at.
+  `scripts/content/foundry-base.mjs provision` installs them and fails if a URL
+  served a version other than the pin, `verify` is the gate that proves the
+  rebuild matched, and `new-world` opens a world already configured from a
+  captured settings template. The whole path was proved on 2026-08-21 by wiping
+  the install and rebuilding it —
+  [`docs/FOUNDRY_REBUILD.md`](docs/FOUNDRY_REBUILD.md) carries the drill, what it
+  costs, and the six defects the first run exposed.
 - **AI game master (optional)** —
   [Claude Code](https://claude.com/claude-code) authors NPCs, items, quests and
   scenes as code compiled into a compendium module, and drives the running world
@@ -90,7 +99,7 @@ docker compose -f compose.yml -f compose.cloudflare.yml up -d   # remote access 
 | [`DEPLOYMENT.md`](DEPLOYMENT.md) | Deployment guide: env setup, profiles, monitoring, performance, troubleshooting |
 | [`docs/PROJECT.md`](docs/PROJECT.md) | FoundryVTT specifics for agents: MCP integration, content routing, container operations, security hard rules |
 | [`docs/CONTENT_AUTHORING.md`](docs/CONTENT_AUTHORING.md) | Content-as-code pipeline: compile statblocks, curated art map + coverage gate, build → sync → import; skill-vs-MCP routing |
-| [`docs/FOUNDRY_REBUILD.md`](docs/FOUNDRY_REBUILD.md) | Rebuild a wiped Foundry world from the durable sources (vault, git content module, D&D Beyond) |
+| [`docs/FOUNDRY_REBUILD.md`](docs/FOUNDRY_REBUILD.md) | The golden base and the rebuild drill: pinned modules, snapshot vs golden image, world settings templates, and rebuilding a wiped install from the durable sources (vault, git content module, D&D Beyond) |
 | [`examples/vault-skeleton/`](examples/vault-skeleton/) | Copy-to-start Obsidian vault: taxonomy, blank Templater templates, and the in-person/Foundry "two surfaces" guide |
 | [`scripts/maps/README.md`](scripts/maps/README.md) | Spec-driven battlemap generator: Player PNG + keyed DM PNG + Foundry `.dd2vtt` |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Working on this repo: devcontainer setup, tests, branch model, upstream contributions |
