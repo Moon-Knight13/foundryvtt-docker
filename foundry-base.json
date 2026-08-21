@@ -34,7 +34,7 @@
       "manifest": "https://github.com/mrprimate/ddb-importer/releases/download/latest/module.json",
       "note": "The only automated path for player characters, and D&D Beyond is their source of truth. Nothing else in the pipeline needs it \u2014 statblocks come from the vault via the SRD caches, scenes from dd-import, journals from obsidian-bridge \u2014 so it earns its pin on PCs alone. It is also the most expensive pin: a live D&D Beyond session cookie in world settings (the reason world-capture redacts credentials at all), twelve world-scoped world.ddb-* packs that die with the world, and therefore a full munch re-run as step 7 of every rebuild. Kept anyway: re-typing a party of sheets per session costs more than one re-run per rebuild, and rebuilds are rare while sessions are not.",
       "title": "D&D Beyond Importer",
-      "version": "7.3.8"
+      "version": "7.4.2"
     },
     {
       "id": "obsidian-bridge",
@@ -61,7 +61,7 @@
       "manifest": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/-/raw/master/module/module.json",
       "note": "Renders 3D dice in WebGL on every client \u2014 a lag lever if the canvas-off test points at client rendering.",
       "title": "Dice So Nice!",
-      "version": "6.2.8"
+      "version": "6.2.9"
     },
     {
       "id": "_chatcommands",
@@ -79,7 +79,7 @@
       "id": "dice-calculator",
       "manifest": "https://github.com/mclemente/fvtt-dice-tray/releases/latest/download/module.json",
       "title": "Dice Tray",
-      "version": "3.6.7"
+      "version": "4.0.5"
     },
     {
       "id": "less-chat",
@@ -91,7 +91,7 @@
       "id": "fvtt-perf-optim",
       "manifest": "https://github.com/Codas/foundryvtt-performance-hacks/releases/latest/download/module.json",
       "title": "Prime Performance",
-      "version": "0.12.7"
+      "version": "0.12.8"
     },
     {
       "id": "enhancedcombathud",
@@ -110,14 +110,14 @@
       "manifest": "https://github.com/theripper93/enhancedcombathud-dnd5e/releases/latest/download/module.json",
       "note": "System half of Argon; enhancedcombathud alone does nothing for dnd5e.",
       "title": "Argon - Combat HUD (DND5E)",
-      "version": "5.2.1"
+      "version": "5.2.2"
     },
     {
       "id": "monks-combat-details",
       "manifest": "https://github.com/ironmonk108/monks-combat-details/releases/latest/download/module.json",
       "note": "Monk's combat quality-of-life; enabled in the reference world.",
       "title": "Monk's Combat Details",
-      "version": "14.02"
+      "version": "14.03"
     },
     {
       "id": "monks-combat-marker",
@@ -159,14 +159,14 @@
       "manifest": "https://github.com/Feu-Secret/Tokenmagic/releases/latest/download/module.json",
       "note": "Visual effects; enabled in the reference world.",
       "title": "Token Magic FX",
-      "version": "0.8.3"
+      "version": "0.8.4"
     },
     {
       "id": "multi-token-edit",
       "manifest": "https://github.com/Aedif/multi-token-edit/releases/latest/download/module.json",
       "note": "Bulk placeable editor. Was excluded as overlapping the map-spec pipeline; kept because it is in active use.",
       "title": "Baileywiki Mass Edit",
-      "version": "3.2.2"
+      "version": "3.3.1"
     },
     {
       "id": "scene-packer",
