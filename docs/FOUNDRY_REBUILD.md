@@ -185,7 +185,7 @@ is **captured, never authored**: Foundry's `world.json` gains and loses fields
 between versions, and this repo already paid for guessing at Foundry's own
 vocabulary once — six of eight hand-written module ids were wrong.
 
-Five things it deliberately does not carry:
+Six things it deliberately does not carry:
 
 - **Identity settings** — `core.activeScene`, `core.compendiumConfiguration`,
   `core.combatTrackerConfig`, `core.time`. These name documents a new world does
@@ -198,6 +198,20 @@ Five things it deliberately does not carry:
   the world's *own* compendium packs, which here means ddb-importer's twelve
   world-scoped `world.ddb-*` packs. They die with the world that made them, so
   copying the list into a new world declares packs that do not exist.
+- **Settings whose *value* names a world-scoped pack.** The same dead reference
+  as `packs`, one level down. ddb-importer stores each of its twelve pack ids as
+  an ordinary preference, and a real capture of `lure-of-the-lamia` held
+  `ddb-importer.entity-spell-compendium = "world.ddb-lure-of-the-lamia-ddb-spells"`
+  — a pack only that world has. Every such row is dropped and its key printed;
+  the module rebuilds its own packs in the new world, and an absent setting
+  falls back to the module's default, which is world-correct by construction.
+
+  Only the `world.` scope is dropped. A module-scoped pack (`dnd5e.monsters`,
+  `<your-game>-oneshot.actors`) lives in the module folder and survives a wipe,
+  so it travels. The match is on the decoded value being a **whole** pack id,
+  never a substring, for the same reason the credential word list refuses to
+  match bare `token`: prose that merely mentions "world." is a preference, and a
+  preference eaten silently is worse than a reference that announces itself.
 - **Rows belonging to one specific user.** A settings row with a `user` is one
   player's own preference, filed under a user id. A new world has no such
   account, so the row would arrive as a dead reference. The count is reported;

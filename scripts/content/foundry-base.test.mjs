@@ -17,6 +17,7 @@ import {
   verifyWorldModules,
   verifyWorldSystem,
   redactSecrets,
+  dropWorldScopedPackRefs,
   SECRET_KEY_PATTERN,
   IDENTITY_SETTINGS,
   syncExcludes,
@@ -574,6 +575,10 @@ test('captureWorld reads a real world directory end to end', async () => {
       key: 'ddb-importer.cobalt-cookie',
       value: 'FIXTURE-NOT-A-REAL-COOKIE-E2E',
     });
+    await db.put('e', {
+      key: 'ddb-importer.entity-spell-compendium',
+      value: '"world.ddb-zzz-source-ddb-spells"',
+    });
     await db.close();
 
     const template = await captureWorld('zzz-source', { data });
@@ -597,6 +602,9 @@ test('captureWorld reads a real world directory end to end', async () => {
     // The credential is named but never carried — the template file is meant to
     // be read, diffed and handed around, and this one is a live session cookie.
     assert.deepEqual(template.redactedAsSecret, ['ddb-importer.cobalt-cookie']);
+    // The pack id belongs to the world that made it. Carried into a new world
+    // it names a pack that does not exist there.
+    assert.deepEqual(template.droppedAsWorldPack, ['ddb-importer.entity-spell-compendium']);
     assert.ok(
       !JSON.stringify(template).includes('FIXTURE-NOT-A-REAL-COOKIE-E2E'),
       'no part of the template may carry the credential value',
@@ -974,6 +982,83 @@ test('redactSecrets tolerates malformed rows rather than throwing', () => {
 test('the secret pattern is case-insensitive, since key casing is module choice', () => {
   assert.ok(SECRET_KEY_PATTERN.test('module.CobaltCookie'));
   assert.ok(SECRET_KEY_PATTERN.test('module.API_KEY'));
+});
+
+// ---------------------------------------------------------------------------
+// dropWorldScopedPackRefs — a setting whose VALUE names another world's pack
+// ---------------------------------------------------------------------------
+
+test('dropWorldScopedPackRefs drops a setting pointing at a world-scoped pack', () => {
+  // Captured from a real world: ddb-importer files its twelve packs under the
+  // world that made them, and stores the pack id as a preference. Cloned into a
+  // new world, every one of those is a pointer to a pack that does not exist.
+  const { kept, dropped } = dropWorldScopedPackRefs([
+    { key: 'ddb-importer.entity-spell-compendium', value: '"world.ddb-old-world-ddb-spells"' },
+    { key: 'ddb-importer.entity-monster-compendium', value: '"world.ddb-old-world-ddb-monsters"' },
+    { key: 'core.diceConfiguration', value: '{"d20":"foundry"}' },
+  ]);
+  assert.deepEqual(
+    kept.map(r => r.key),
+    ['core.diceConfiguration'],
+  );
+  assert.deepEqual(dropped, [
+    'ddb-importer.entity-spell-compendium',
+    'ddb-importer.entity-monster-compendium',
+  ]);
+});
+
+test('dropWorldScopedPackRefs keeps a pack id that belongs to a module', () => {
+  // Module packs survive a world wipe — they live in the module folder. Only
+  // the `world.` scope dies with the world, so only it is dropped.
+  const { kept, dropped } = dropWorldScopedPackRefs([
+    { key: 'some-module.defaultPack', value: '"dnd5e.monsters"' },
+    { key: 'other.pack', value: '"my-game-oneshot.actors"' },
+  ]);
+  assert.deepEqual(dropped, []);
+  assert.equal(kept.length, 2);
+});
+
+test('dropWorldScopedPackRefs drops a list of world-scoped packs', () => {
+  const { kept, dropped } = dropWorldScopedPackRefs([
+    { key: 'multi-token-edit.hideManagedPacks', value: '["world.ddb-old-ddb-items"]' },
+    { key: 'other.packs', value: '["dnd5e.items","world.ddb-old-ddb-spells"]' },
+  ]);
+  assert.deepEqual(kept, []);
+  assert.deepEqual(dropped, ['multi-token-edit.hideManagedPacks', 'other.packs']);
+});
+
+test('dropWorldScopedPackRefs will not match prose that merely says "world."', () => {
+  // Same rule as the secret word list: when in doubt, do not match. A dropped
+  // preference is invisible, while a dead pack reference announces itself the
+  // first time you open the module. Only a whole string shaped like a pack id.
+  const { kept, dropped } = dropWorldScopedPackRefs([
+    { key: 'module.welcome', value: '"Welcome to the world. Enjoy."' },
+    { key: 'module.note', value: '"see world.md for setup"' },
+    { key: 'module.flag', value: 'true' },
+    { key: 'module.count', value: '3' },
+  ]);
+  assert.deepEqual(dropped, []);
+  assert.equal(kept.length, 4);
+});
+
+test('dropWorldScopedPackRefs tolerates malformed rows rather than throwing', () => {
+  const { kept, dropped } = dropWorldScopedPackRefs([
+    null,
+    undefined,
+    {},
+    { key: 'x.y' },
+    { key: 'a.b', value: '{not json' },
+  ]);
+  assert.deepEqual(dropped, []);
+  // The three rows without a string key are not settings at all. The two that
+  // are — one with no value, one whose value is not JSON — are kept: neither
+  // can be read as a pack id, and dropping on unreadable is how configuration
+  // goes missing quietly.
+  assert.deepEqual(
+    kept.map(r => r.key),
+    ['x.y', 'a.b'],
+  );
+  assert.deepEqual(dropWorldScopedPackRefs(undefined).kept, []);
 });
 
 // ---------------------------------------------------------------------------
