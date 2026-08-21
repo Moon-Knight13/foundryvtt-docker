@@ -32,6 +32,7 @@
     {
       "id": "ddb-importer",
       "manifest": "https://github.com/mrprimate/ddb-importer/releases/download/latest/module.json",
+      "note": "The only automated path for player characters, and D&D Beyond is their source of truth. Nothing else in the pipeline needs it \u2014 statblocks come from the vault via the SRD caches, scenes from dd-import, journals from obsidian-bridge \u2014 so it earns its pin on PCs alone. It is also the most expensive pin: a live D&D Beyond session cookie in world settings (the reason world-capture redacts credentials at all), twelve world-scoped world.ddb-* packs that die with the world, and therefore a full munch re-run as step 7 of every rebuild. Kept anyway: re-typing a party of sheets per session costs more than one re-run per rebuild, and rebuilds are rare while sessions are not.",
       "title": "D&D Beyond Importer",
       "version": "7.3.8"
     },
