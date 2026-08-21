@@ -512,6 +512,28 @@ it runs.
    pins render but open nothing).
 7. Re-run **ddb-importer**: its packs are world-scoped and did not survive.
 8. Run the SoSly bridge import to bring vault notes back as journals.
+
+   **Steps 6 to 8 are conditional, and usually free.** They rebuild a world from
+   nothing. If you still have a full `snapshot`, copy the world folder back
+   instead and skip all three — the imported documents, the twelve `world.ddb-*`
+   packs and the bridged journals all live *inside* the world folder, so they
+   return with it:
+
+   ```bash
+   docker compose stop foundry
+   cp -a <data>.backup/Data/worlds/<world> <data>/Data/worlds/
+   node scripts/content/foundry-base.mjs pull-games   # the content module was wiped
+   docker compose up -d
+   ```
+
+   Note `pull-games` is still required: a game's content module lives in
+   `Data/modules`, which the wipe took, so the restored world would come up with
+   its own module *enabled but missing*. That is the one part of a world's
+   content that does not travel inside the world folder.
+
+   Do **not** reach for `restore --yes` to get one world back. It replaces the
+   whole data directory, dragging the old module versions over the set you just
+   rebuilt.
 9. `foundry-base.mjs verify <world>`, then **check both surfaces** — the
    command covers the pins and the enabled module set, and nothing below it:
    - *Foundry* — scenes carry walls and lights, actors carry real art rather
@@ -523,6 +545,33 @@ it runs.
 
 Assets resolve through the `/data/Data/DnD` mount — nothing is copied into the
 world.
+
+### What the drill costs
+
+First run end to end: **2026-08-21**, one operator, one instance. Rough figures
+from that run rather than a stopwatch, so treat them as an order of magnitude.
+
+| | Time | Notes |
+| --- | --- | --- |
+| Whole drill, first run | **~1 hour** | Including six defects found and fixed mid-run |
+| Estimated clean re-run | **15–30 min** | Nothing left to discover |
+| Foundry re-download | the bulk of it | One timed URL, one image pull |
+| `provision` (25 pins + system) | ~1 min | 25 zips; `restore --golden` skips this entirely |
+| `verify` | seconds | Runs twice — after provision, and again with a world |
+| Restoring one world from a snapshot | ~1 min | `cp -a` plus `pull-games` |
+| Manual, unavoidable | minutes | Licence key entry, and the two eyeball passes at step 9 |
+
+The honest headline: **a rebuild fits between sessions, not into an evening's
+prep.** It does not need its own night, and with a golden snapshot
+(`restore --golden --yes`) it costs no downloads at all.
+
+The first run's real cost was not the clock. It was the six defects, none of
+which were reachable without wiping a live install: world templates carrying
+twelve dead ddb pack pointers; seven modules unzipped one level too deep and
+invisible to Foundry; pins that never pinned; a version-locked manifest whose
+own download link floated; `verify` giving the wrong advice for drift; and a
+manifest writer fighting the repo's own formatter. A drill that finds nothing is
+worth running. This one paid for itself six times.
 
 ## Guardrails
 
