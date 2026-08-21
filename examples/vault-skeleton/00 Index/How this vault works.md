@@ -46,6 +46,11 @@ compiles it. Every game gets its **own** module, and every command names it:
    appear in Foundry's file picker via the shared vault mount.
 5. During play, MCP stages it live (scenes, tokens, dice).
 
+Foundry itself is rebuildable on the same principle: the repo pins the system and
+module set in `foundry-base.json`, so a wiped install comes back with one command
+and is checked with another. See
+[[Notes to the table#Rebuild Foundry from scratch (drilled, not theoretical)]].
+
 ## Recommended plugins
 
 Templater (scaffold + auto-file cards), Dataview (auto-indexes), Fantasy

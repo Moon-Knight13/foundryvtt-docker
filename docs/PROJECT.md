@@ -234,9 +234,15 @@ Requirements and gotchas:
   spends ~70s retrying 127.0.0.1:31414 and Claude Code's 30s MCP handshake
   times out. `setup-mcp.sh` preserves an installed backend across re-runs
   and fails loudly if it is absent (extraction instructions in its error).
-- **Version drift**: the manifest URL installs the *latest* module release.
-  When the module moves past 0.8.x, bump `MCP_VERSION` in
-  `scripts/setup-mcp.sh` and re-run it so server and module stay in step.
+- **Version drift — this pin is coupled.** The module and the server are one
+  fact, so `foundry-base.json` version-locks `foundry-mcp-bridge` to the
+  **v0.8.2 tag**, manifest *and* `download`, rather than to `master` or
+  `/releases/latest/`. Both locks are needed: a rebuild found the v0.8.2
+  manifest pointing its own download at `/releases/latest/`, so provision read
+  0.8.2 and installed 0.8.3 — a module ahead of its server with nothing saying
+  so. Move this pin by editing the tag in both URLs, the `version`, and
+  `MCP_VERSION` in `scripts/setup-mcp.sh` **together**, then re-run that script.
+  `update` will report the pin current forever, by design.
 - In the devcontainer, port 31415 is forwarded (see devcontainer.json) so the
   GM browser on the host reaches the backend inside the container.
 

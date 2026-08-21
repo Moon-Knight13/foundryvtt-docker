@@ -793,7 +793,9 @@
               rebuilt install against the pins and exits non-zero if it doesn't match, so &ldquo;it
               came back&rdquo; is something you can prove rather than hope. And
               <span class="mono">new-world</span> applies a captured settings template, so a rebuilt
-              world opens configured instead of blank.
+              world opens configured instead of blank. This is not a claim on paper: the install was
+              wiped and rebuilt end to end on <b>2026-08-21</b>, and the six things that broke were
+              fixed rather than written up as caveats.
             </p>
           </div>
           <div class="card">
@@ -827,6 +829,16 @@
               The published <b>felddy/foundryvtt-docker</b> image — this fork builds no image of its
               own. Worlds and modules bind-mount from <b>FOUNDRY_DATA_PATH</b>; locally it answers
               on :30000.
+            </dd>
+          </div>
+          <div>
+            <dt>Golden base<span class="tag">foundry-base.json</span></dt>
+            <dd>
+              The pinned system and <b>24 core modules</b> a rebuilt install needs — captured from a
+              live world, never guessed at. <span class="mono">provision</span> installs them and
+              fails if a URL served something other than the pin,
+              <span class="mono">verify</span> is the gate, and <span class="mono">new-world</span>
+              opens a world already configured from a captured settings template.
             </dd>
           </div>
           <div>
@@ -884,8 +896,9 @@
         <p class="eyebrow">Under the hood</p>
         <h2>How the pieces actually work</h2>
         <p class="section-note">
-          Four close-ups: the content pipeline, the art resolver behind its gate, the map generator,
-          and the sealed environment the repo is developed in.
+          Five close-ups: the content pipeline, the art resolver behind its gate, the map generator,
+          the rebuild path that makes the world disposable, and the sealed environment the repo is
+          developed in.
         </p>
 
         <div class="dgram">
@@ -1036,6 +1049,122 @@
             <span class="mono">.dd2vtt</span> becomes a compendium <b>Scene</b> with walls, doors
             and lights, plus a GM-only <b>“— GM Keys” journal</b> whose map pins sit exactly on the
             numbered keys.
+          </p>
+        </div>
+
+        <div class="dgram">
+          <div class="dgram-h">
+            <h3>Wiping the install &mdash; and getting it back</h3>
+            <span class="path">foundry-base.json &middot; scripts/content/foundry-base.mjs</span>
+          </div>
+          <div class="engines">
+            <div class="engine cloud">
+              <div class="en-h">Durable &mdash; survives a wipe</div>
+              <div class="en-s">vault &middot; git &middot; pins</div>
+              <ul>
+                <li>
+                  Every note, statblock and map in the <b>Obsidian vault</b>, under your own sync
+                </li>
+                <li>
+                  Each game's compendium module &mdash; rebuilt from those notes by
+                  <span class="mono">pull-games</span>
+                </li>
+                <li>
+                  The <b>pinned</b> system and module set, and a captured
+                  <b>world settings template</b>
+                </li>
+                <li>
+                  A full <span class="mono">snapshot</span> of the data dir, taken between sessions
+                </li>
+              </ul>
+              <div class="en-f">none of it lives only inside Foundry</div>
+            </div>
+            <div class="engine edge">
+              <div class="en-h">Transient &mdash; dies with the world</div>
+              <div class="en-s">expected losses</div>
+              <ul>
+                <li>Token positions, fog, the combat tracker, the active scene</li>
+                <li>
+                  <b>World-scoped compendium packs</b> (<span class="mono">world.ddb-*</span>)
+                  &mdash; hence a D&amp;D Beyond re-import
+                </li>
+                <li>
+                  The D&amp;D Beyond session cookie &mdash;
+                  <b>redacted on capture, deliberately</b>: a template must not carry credentials
+                  out of a world
+                </li>
+                <li>Anything ever typed straight into Foundry and nowhere else</li>
+              </ul>
+              <div class="en-f">the list is short on purpose</div>
+            </div>
+          </div>
+          <div class="prail">
+            <div class="pstep">
+              <span class="pn">step zero &middot; refresh the install URL</span>
+              <span class="pd"
+                >Foundry's download link is <b>presigned and expires</b>. It is the one step that
+                cannot be done from inside a broken install, and skipping it turns the rebuild into
+                a 403 at the worst possible moment.</span
+              >
+            </div>
+            <div class="parrow" aria-hidden="true">&#9660;</div>
+            <div class="pstep">
+              <span class="pn">snapshot</span>
+              <span class="pd"
+                >The full data dir, worlds included &mdash; the undo path. Separate from
+                <span class="mono">--golden</span>, which is the clean slate you restore
+                <em>onto</em> a sick instance without touching the worlds you are keeping.</span
+              >
+            </div>
+            <div class="parrow" aria-hidden="true">&#9660;</div>
+            <div class="pstep">
+              <span class="pn">provision</span>
+              <span class="pd"
+                >Installs the pinned system and every core module into a bare data dir, then
+                compares what the URL actually served against the pin and
+                <b>exits non-zero on drift</b>. Roughly a minute.</span
+              >
+            </div>
+            <div class="parrow" aria-hidden="true">&#9660;</div>
+            <div class="pstep">
+              <span class="pn">new-world</span>
+              <span class="pd"
+                >Creates a world and applies the captured settings template, so it opens
+                <b>configured</b> &mdash; module toggles, scene defaults, house rules &mdash;
+                instead of blank.</span
+              >
+            </div>
+            <div class="parrow" aria-hidden="true">&#9660;</div>
+            <div class="pstep">
+              <span class="pn">pull-games</span>
+              <span class="pd"
+                >Rebuilds each game's compendium module from the vault, through the same art gate as
+                a normal ship. Required
+                <b>even when a world was restored from a snapshot</b> &mdash; the world holds
+                documents, not the module they came from.</span
+              >
+            </div>
+            <div class="parrow" aria-hidden="true">&#9660;</div>
+            <div class="pstep gate-step">
+              <span class="pn">verify</span>
+              <span class="pd"
+                >The gate. Checks the rebuilt install against every pin, and the world against the
+                template, and exits non-zero if it does not match &mdash; so &ldquo;it came
+                back&rdquo; is proved rather than eyeballed.</span
+              >
+            </div>
+          </div>
+          <p class="d-note">
+            <b>This was run for real</b>, not just written down: on 2026-08-21 the install was wiped
+            and rebuilt end to end &mdash; about an hour the first time,
+            <b>15&ndash;30 minutes</b> clean, most of it Foundry downloading. It surfaced
+            <b>six defects nothing short of a real wipe would have found</b>: a settings template
+            that named the dead world's packs, seven modules unpacked one directory too deep where
+            Foundry could not see them, and nine of twenty-five pins quietly installing whatever
+            <span class="mono">/releases/latest/</span> served that day. The lesson is in the
+            manifest now &mdash;
+            <b>a pinned version is a record, not a constraint; the URL decides</b> &mdash; and drift
+            is a failing exit code rather than a line of output nobody reads.
           </p>
         </div>
 

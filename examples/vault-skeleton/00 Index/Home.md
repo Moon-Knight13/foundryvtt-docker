@@ -26,6 +26,7 @@ model.
 - New NPC → copy `05 Templates/NPC Template`
 - New session → copy `05 Templates/Session Template`
 - Build Foundry content from a card → see [[How this vault works#Foundry pipeline]]
+- Rebuild Foundry after a wipe → [[Notes to the table#Rebuild Foundry from scratch (drilled, not theoretical)]]
 
 ## Oneshots (auto)
 ```dataview

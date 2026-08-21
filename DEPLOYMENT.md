@@ -78,6 +78,14 @@ The two are different jobs — full is the undo and the campaign safety net,
 golden is what you restore onto a sick instance without losing the worlds you
 are keeping. `docs/FOUNDRY_REBUILD.md` has the table.
 
+A snapshot is not the only way back. An install with no snapshot at all still
+rebuilds from the pins: `foundry-base.mjs provision` installs the pinned system
+and module set into a bare data dir and exits non-zero if a URL served anything
+other than the pin, `new-world` opens a world already configured from a captured
+settings template, `pull-games` rebuilds each game's compendium module from the
+vault, and `verify` is the gate that proves the result. That path was run end to
+end on 2026-08-21 — roughly 15–30 minutes, most of it Foundry downloading.
+
 Foundry's own backups (Setup → Manage Backups) restore worlds through the UI.
 Machine-to-machine migration is no longer documented here: prep is synced by
 Obsidian and content is rebuilt from the repo, so a Foundry data dir is
