@@ -11,6 +11,7 @@ import {
   worldShape,
   captureWorld,
   installEntry,
+  installedVersion,
   requiredIds,
   verifyPins,
   verifyDependencies,
@@ -680,6 +681,12 @@ test('installEntry works against a data dir Foundry has never started in', async
         // The zip must exist by the time the unpacker runs.
         assert.equal(await readFile(zip, 'utf8'), 'ZIPBYTES');
         unpacked.push([zip, target]);
+        // A real unpack leaves a manifest behind; installEntry now refuses a
+        // payload without one rather than reporting a silent half-install.
+        await writeFile(
+          path.join(target, 'module.json'),
+          JSON.stringify({ id: 'dice-so-nice', version: '5.1.4' }),
+        );
       },
     });
 
@@ -745,6 +752,105 @@ test('installEntry refuses a manifest with no download URL before touching disk'
       /manifest has no download URL/,
     );
     await assert.rejects(() => access(path.join(data, 'Data')), { code: 'ENOENT' });
+  } finally {
+    await rm(data, { recursive: true, force: true });
+  }
+});
+
+test('installEntry flattens a release zip that wraps everything in a folder', async () => {
+  // Found by the first end-to-end rebuild drill. Seven of twenty-five pins
+  // unzipped to Data/modules/<id>/<id>-<version>/module.json — one level too
+  // deep for Foundry AND for `verify`, which reported them "not installed"
+  // while provision reported success. Nothing threw, because nothing failed:
+  // the payload was on disk, just not where a module lives.
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-wrap-'));
+  try {
+    const dest = await installEntry(ENTRY, data, {
+      fetch: fakeFetch(),
+      unpack: async (_zip, target) => {
+        const wrapped = path.join(target, 'dice-so-nice-5.1.4');
+        await mkdir(path.join(wrapped, 'scripts'), { recursive: true });
+        await writeFile(
+          path.join(wrapped, 'module.json'),
+          JSON.stringify({ id: 'dice-so-nice', version: '5.1.4' }),
+        );
+        await writeFile(path.join(wrapped, 'scripts', 'main.js'), '// code');
+      },
+    });
+
+    // The manifest has to sit at the module root, and the rest travels with it.
+    assert.equal(
+      JSON.parse(await readFile(path.join(dest, 'module.json'), 'utf8')).version,
+      '5.1.4',
+    );
+    assert.equal(await readFile(path.join(dest, 'scripts', 'main.js'), 'utf8'), '// code');
+    // The wrapper is gone rather than left beside its own contents.
+    await assert.rejects(() => access(path.join(dest, 'dice-so-nice-5.1.4')), { code: 'ENOENT' });
+  } finally {
+    await rm(data, { recursive: true, force: true });
+  }
+});
+
+test('installEntry leaves an already-flat release zip alone', async () => {
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-flat-'));
+  try {
+    const dest = await installEntry(ENTRY, data, {
+      fetch: fakeFetch(),
+      unpack: async (_zip, target) => {
+        await mkdir(path.join(target, 'styles'), { recursive: true });
+        await writeFile(
+          path.join(target, 'module.json'),
+          JSON.stringify({ id: 'dice-so-nice', version: '5.1.4' }),
+        );
+        await writeFile(path.join(target, 'styles', 'x.css'), 'body{}');
+      },
+    });
+    assert.equal(
+      JSON.parse(await readFile(path.join(dest, 'module.json'), 'utf8')).version,
+      '5.1.4',
+    );
+    assert.equal(await readFile(path.join(dest, 'styles', 'x.css'), 'utf8'), 'body{}');
+  } finally {
+    await rm(data, { recursive: true, force: true });
+  }
+});
+
+test('installEntry says so when the payload holds no manifest at all', async () => {
+  // Silence is the failure mode this whole fix exists to end: a module that is
+  // on disk but invisible looks identical to one that was never installed,
+  // and only `verify` catches it, much later.
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-nomanifest-'));
+  try {
+    await assert.rejects(
+      () =>
+        installEntry(ENTRY, data, {
+          fetch: fakeFetch(),
+          unpack: async (_zip, target) => {
+            await mkdir(path.join(target, 'docs'), { recursive: true });
+            await writeFile(path.join(target, 'docs', 'README.md'), '# nothing useful');
+          },
+        }),
+      /dice-so-nice: no module\.json/,
+    );
+  } finally {
+    await rm(data, { recursive: true, force: true });
+  }
+});
+
+test('installedVersion reads what is actually on disk, not what was pinned', async () => {
+  // The pin is a record, not a constraint: most manifest URLs resolve to
+  // /latest/, so provision installs whatever is current and must report the
+  // version it really put down.
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-ver-'));
+  try {
+    const dest = path.join(data, 'Data', 'modules', 'dice-so-nice');
+    await mkdir(dest, { recursive: true });
+    await writeFile(path.join(dest, 'module.json'), JSON.stringify({ version: '6.2.9' }));
+    assert.equal(await installedVersion(data, ENTRY), '6.2.9');
+    // Absent and malformed both mean "nothing usable here", not a throw.
+    assert.equal(await installedVersion(data, { ...ENTRY, id: 'absent' }), null);
+    await writeFile(path.join(dest, 'module.json'), 'not json');
+    assert.equal(await installedVersion(data, ENTRY), null);
   } finally {
     await rm(data, { recursive: true, force: true });
   }

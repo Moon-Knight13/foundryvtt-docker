@@ -161,6 +161,32 @@ and leaves it in the working tree to review and commit. It also warns when
 `foundry-mcp-bridge` moves, because that pin and `MCP_VERSION` in
 `scripts/setup-mcp.sh` are the same fact.
 
+**A pinned version is a record, not a constraint — the URL decides.** The first
+end-to-end drill installed eight modules *newer* than their pins and reported
+success for every one. Almost every manifest URL in `foundry-base.json` ends in
+`/releases/latest/download/module.json` or points at a branch tip, so `provision`
+fetches whatever is current no matter what `version` says. `scene-packer` was the
+only pin that held, because its URL names a version.
+
+`provision` now reads back what it installed and **exits non-zero on drift**,
+naming each module and what the URL actually served. A rebuild that installs
+versions nobody chose has not reproduced anything, so it fails rather than
+reports. Two ways forward and they are a real choice: `update <id>` to move the
+pin deliberately in a reviewable commit, or edit the manifest URL to name a
+version, the way `scene-packer` does.
+
+Note what this means for `verify`'s advice: `provision` fixes a **missing** pin,
+never a **drifted** one — running it again just fetches latest again.
+
+**A release zip that wraps its contents is unpacked, then flattened.** Seven of
+twenty-five pins ship a zip with a single top-level folder, so unzipping into
+`Data/modules/<id>/` left `Data/modules/<id>/<id>-<version>/module.json` — one
+level too deep for Foundry and for `verify`, which called them "not installed"
+while `provision` said they were fine. Nothing had failed; the files were simply
+in the wrong place, and that silence was the defect. `installEntry` now unwinds
+an unambiguous wrap (exactly one directory, manifest inside it) and **throws**
+on any other layout rather than leaving a half-install behind.
+
 **Snapshots refuse to write inside the repo.** The data directory contains
 `license.json` and the admin key; a snapshot under the repo tree is one
 `git add -A` away from committing a licence key.

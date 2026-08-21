@@ -30,7 +30,7 @@
 // must live outside the repo tree and is refused if it does not.
 import path from 'node:path';
 import os from 'node:os';
-import { readFile, writeFile, mkdir, access, readdir, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access, readdir, rm, rename } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { randomInt } from 'node:crypto';
@@ -775,6 +775,66 @@ async function cmdWorldCapture(opts) {
  * `deps` exists so the write path can be tested without the network or a real
  * archive; nothing in production passes it.
  */
+/** The file that makes a directory a module or a system to Foundry. */
+function manifestFileFor(kind) {
+  return kind === 'systems' ? 'system.json' : 'module.json';
+}
+
+/**
+ * Read the version actually installed at <data>/Data/<kind>/<id>.
+ *
+ * The pin is a record, not a constraint: most manifest URLs in foundry-base.json
+ * resolve to `/latest/` or a branch tip, so `provision` installs whatever is
+ * current and has to report what it really put down. Absent or malformed both
+ * yield null — "nothing usable here" is an answer, not an error.
+ */
+export async function installedVersion(data, entry) {
+  const file = path.join(data, 'Data', entry.kind, entry.id, manifestFileFor(entry.kind));
+  try {
+    return JSON.parse(await readFile(file, 'utf8')).version ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Move a wrapped payload up so the manifest sits at the module root.
+ *
+ * Found by the first end-to-end rebuild drill: seven of twenty-five pins ship a
+ * release zip with a single top-level folder, so unzipping into
+ * `Data/modules/<id>/` produced `Data/modules/<id>/<id>-<version>/module.json`.
+ * Foundry cannot see that, `verify` reported "not installed", and `provision`
+ * reported success — nothing had failed, the files were simply one level too
+ * deep. Silence was the whole defect.
+ *
+ * Only an unambiguous wrap is unwound: exactly one directory, and the manifest
+ * inside it. Anything else throws and names the module, because guessing at a
+ * layout is how a module ends up half-installed.
+ */
+async function flattenIfWrapped(dest, entry) {
+  const manifest = manifestFileFor(entry.kind);
+  const entries = await readdir(dest, { withFileTypes: true });
+  if (entries.some(e => e.isFile() && e.name === manifest)) return;
+
+  const dirs = entries.filter(e => e.isDirectory());
+  const wrapper = dirs.length === 1 ? path.join(dest, dirs[0].name) : null;
+  if (wrapper) {
+    const inner = await readdir(wrapper);
+    if (inner.includes(manifest)) {
+      for (const name of inner) {
+        await rename(path.join(wrapper, name), path.join(dest, name));
+      }
+      await rm(wrapper, { recursive: true, force: true });
+      return;
+    }
+  }
+  throw new Error(
+    `${entry.id}: no ${manifest} in the unpacked payload (found: ` +
+      `${entries.map(e => e.name).join(', ') || 'nothing'}). ` +
+      'The download succeeded, so this is a layout this installer does not know.',
+  );
+}
+
 export async function installEntry(entry, data, deps = {}) {
   const fetchImpl = deps.fetch ?? fetch;
   const unpack = deps.unpack ?? ((zip, dest) => run('unzip', ['-o', '-q', zip, '-d', dest]));
@@ -796,6 +856,7 @@ export async function installEntry(entry, data, deps = {}) {
   } finally {
     await rm(zip, { force: true });
   }
+  await flattenIfWrapped(dest, entry);
   return dest;
 }
 
@@ -808,6 +869,7 @@ async function cmdProvision(opts) {
   ];
   if (!entries.length) throw new Error('Manifest has no system or core modules.');
   const unresolved = [];
+  const drifted = [];
 
   for (const entry of entries) {
     const dest = path.join(data, 'Data', entry.kind, entry.id);
@@ -838,6 +900,18 @@ async function cmdProvision(opts) {
     );
     if (opts.dryRun) continue;
     await installEntry(entry, data);
+
+    // Say what actually landed. Most pinned manifest URLs resolve to /latest/
+    // or a branch tip, so the line above echoes the pin while the disk gets
+    // whatever is current — the first rebuild drill installed eight modules
+    // newer than their pins and reported success for all of them.
+    const got = await installedVersion(data, entry);
+    if (got !== entry.version) {
+      drifted.push({ id: entry.id, want: entry.version, got });
+      console.log(
+        `  DRIFT  ${entry.id}: pinned ${entry.version}, the URL served ${got ?? 'nothing'}`,
+      );
+    }
   }
 
   if (unresolved.length) {
@@ -847,6 +921,21 @@ async function cmdProvision(opts) {
         '\nthen fill the pins from it:' +
         '\n  node scripts/content/foundry-base.mjs capture <world>' +
         '\n  node scripts/content/foundry-base.mjs promote foundry-capture-<world>.json',
+    );
+  }
+
+  if (drifted.length) {
+    throw new Error(
+      `${drifted.length} pin(s) did not install at their pinned version:\n` +
+        drifted.map(d => `  ${d.id}: wanted ${d.want}, got ${d.got ?? 'nothing'}`).join('\n') +
+        '\n\nThe pin is not what fetched this — the manifest URL is, and most of' +
+        '\nthem resolve to /latest/ or a branch tip, so they serve whatever is' +
+        '\ncurrent. A rebuild that installs versions nobody chose is the hazard' +
+        '\nthis manifest exists to prevent, so this exits non-zero.' +
+        '\n\nTwo ways forward, and they are a real choice:' +
+        '\n  update <id>   move the pin to what is current, deliberately, in a commit' +
+        '\n  version-lock  edit the manifest URL to name a version, as scene-packer' +
+        '\n                does — the only pin in core that cannot drift',
     );
   }
 }
@@ -1380,7 +1469,9 @@ async function cmdVerify(opts) {
   if (failures.length) {
     throw new Error(
       `${failures.length} check(s) failed. ` +
-        'Run `provision` for missing or drifted pins; `add <id>` for an unpinned requirement.',
+        'Run `provision` for a missing pin; `add <id>` for an unpinned requirement. ' +
+        'A pin installed at the WRONG version will not be fixed by provision — its ' +
+        'manifest URL floats, so `update <id>` the pin or version-lock the URL.',
     );
   }
   console.log('\nAll checks passed.');
