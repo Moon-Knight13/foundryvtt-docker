@@ -12,6 +12,7 @@ import {
   captureWorld,
   installEntry,
   installedVersion,
+  manifestJson,
   requiredIds,
   verifyPins,
   verifyDependencies,
@@ -1479,4 +1480,28 @@ test('new-world says how to make a template when there is none', async () => {
   } finally {
     await rm(data, { recursive: true, force: true });
   }
+});
+
+// ---------------------------------------------------------------------------
+// manifestJson — write the encoding pre-commit expects, not a rival one
+// ---------------------------------------------------------------------------
+
+test('manifestJson escapes non-ASCII so pre-commit has nothing to fix', () => {
+  // `update` used to write raw JSON.stringify while the repo's
+  // pretty-format-json hook escapes non-ASCII. The two disagreed, so every pin
+  // bump arrived buried in an em-dash diff across every note, and committing
+  // triggered the autofix-and-abort that this repo already trips over.
+  const out = manifestJson({ note: 'one fact — not two', title: 'Dice So Nice!' });
+  assert.ok(out.includes('\\u2014'), 'the em dash must be escaped');
+  assert.ok(!out.includes('—'), 'no raw non-ASCII may survive');
+  // Still valid JSON, still the same data, still two-space indented with a
+  // trailing newline.
+  assert.deepEqual(JSON.parse(out), { note: 'one fact — not two', title: 'Dice So Nice!' });
+  assert.ok(out.endsWith('}\n'));
+  assert.ok(out.includes('\n  "note"'));
+});
+
+test('manifestJson leaves plain ASCII exactly as JSON.stringify would', () => {
+  const value = { core: [{ id: 'dd-import', version: '6.1.1' }] };
+  assert.equal(manifestJson(value), `${JSON.stringify(value, null, 2)}\n`);
 });

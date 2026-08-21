@@ -449,6 +449,21 @@ export async function captureWorld(world, opts = {}) {
 // manifest
 // ---------------------------------------------------------------------------
 
+/**
+ * Serialise the manifest the way the repo's pre-commit hook will anyway.
+ *
+ * `pretty-format-json` escapes non-ASCII; plain JSON.stringify does not. With
+ * the two disagreeing, every `update` rewrote each em dash in every note, so a
+ * two-line pin bump arrived as a wall of encoding churn — and committing hit the
+ * autofix-and-abort that makes a commit look like it worked when HEAD never
+ * moved. Writing what the hook wants makes the hook a no-op.
+ */
+export function manifestJson(value) {
+  const json = JSON.stringify(value, null, 2);
+  // eslint-disable-next-line no-control-regex
+  return `${json.replace(/[^\x00-\x7F]/g, ch => `\\u${ch.charCodeAt(0).toString(16).padStart(4, '0')}`)}\n`;
+}
+
 export async function loadManifest(manifestPath = DEFAULT_MANIFEST) {
   try {
     return JSON.parse(await readFile(manifestPath, 'utf8'));
@@ -1011,7 +1026,7 @@ async function cmdUpdate(opts) {
     console.log('\nEverything already at its pinned version.');
     return;
   }
-  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  await writeFile(manifestPath, manifestJson(manifest));
   console.log(`\nUpdated ${manifestPath}. Review, run \`provision\`, then commit the pin change.`);
   // The MCP bridge pin and MCP_VERSION in setup-mcp.sh are the same fact; a
   // silent divergence there is the drift this whole mechanism exists to stop.
@@ -1062,7 +1077,7 @@ async function cmdPromote(opts) {
   if (opts.dryRun) {
     console.log(`would fill ${filled.length} pin(s) from ${capturePath}`);
   } else {
-    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    await writeFile(manifestPath, manifestJson(manifest));
     console.log(`Filled ${filled.length} pin(s) in ${manifestPath} from ${capturePath}`);
   }
   for (const id of filled) console.log(`  ${id}`);
@@ -1136,7 +1151,7 @@ async function cmdAdd(opts) {
     }
     return;
   }
-  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  await writeFile(manifestPath, manifestJson(manifest));
   console.log(`${action} ${pin.id} ${pin.version}${pin.title ? `  (${pin.title})` : ''}`);
   if (overruled !== null) {
     console.log(`  removed from deliberatelyExcluded, which said: ${overruled}`);
@@ -1164,7 +1179,7 @@ async function cmdRemove(opts) {
     console.log(`would remove ${id}`);
     return;
   }
-  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  await writeFile(manifestPath, manifestJson(manifest));
   console.log(`removed ${id}; core is now ${core.length} module(s)`);
 }
 
