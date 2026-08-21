@@ -1505,3 +1505,49 @@ test('manifestJson leaves plain ASCII exactly as JSON.stringify would', () => {
   const value = { core: [{ id: 'dd-import', version: '6.1.1' }] };
   assert.equal(manifestJson(value), `${JSON.stringify(value, null, 2)}\n`);
 });
+
+test('installEntry prefers a pinned download URL over the manifest one', async () => {
+  // A version-locked MANIFEST is not a version-locked module. The v0.8.2
+  // manifest of foundry-mcp-bridge declares
+  // download: .../releases/latest/download/foundry-vtt-mcp.zip — so provision
+  // read "0.8.2" and installed 0.8.3. A pin may name its own download; when it
+  // does, the manifest's is not consulted.
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-dl-'));
+  try {
+    const fetchImpl = fakeFetch();
+    await installEntry({ ...ENTRY, download: 'https://example.invalid/v5.1.4/module.zip' }, data, {
+      fetch: fetchImpl,
+      unpack: async (_zip, target) => {
+        await writeFile(
+          path.join(target, 'module.json'),
+          JSON.stringify({ id: 'dice-so-nice', version: '5.1.4' }),
+        );
+      },
+    });
+    assert.deepEqual(fetchImpl.calls, [
+      ENTRY.manifest,
+      'https://example.invalid/v5.1.4/module.zip',
+    ]);
+  } finally {
+    await rm(data, { recursive: true, force: true });
+  }
+});
+
+test('installEntry still follows the manifest when a pin names no download', async () => {
+  const data = await mkdtemp(path.join(tmpdir(), 'fvtt-dl2-'));
+  try {
+    const fetchImpl = fakeFetch();
+    await installEntry(ENTRY, data, {
+      fetch: fetchImpl,
+      unpack: async (_zip, target) => {
+        await writeFile(
+          path.join(target, 'module.json'),
+          JSON.stringify({ id: 'dice-so-nice', version: '5.1.4' }),
+        );
+      },
+    });
+    assert.deepEqual(fetchImpl.calls, [ENTRY.manifest, 'https://example.invalid/module.zip']);
+  } finally {
+    await rm(data, { recursive: true, force: true });
+  }
+});

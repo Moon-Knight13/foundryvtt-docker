@@ -857,13 +857,18 @@ export async function installEntry(entry, data, deps = {}) {
   const res = await fetchImpl(entry.manifest);
   if (!res.ok) throw new Error(`${entry.id}: manifest fetch failed (${res.status})`);
   const json = await res.json();
-  if (!json.download) throw new Error(`${entry.id}: manifest has no download URL`);
+  // A pinned `download` wins over the manifest's own. A version-locked manifest
+  // is not a version-locked module: foundry-mcp-bridge's v0.8.2 manifest points
+  // its download at /releases/latest/, so provision read 0.8.2 and installed
+  // 0.8.3 — the pin looked honest and the disk disagreed.
+  const downloadUrl = entry.download || json.download;
+  if (!downloadUrl) throw new Error(`${entry.id}: manifest has no download URL`);
 
   const dest = path.join(data, 'Data', entry.kind, entry.id);
   await mkdir(dest, { recursive: true });
   const zip = path.join(data, 'Data', `.${entry.id}.zip`);
 
-  const download = await fetchImpl(json.download);
+  const download = await fetchImpl(downloadUrl);
   if (!download.ok) throw new Error(`${entry.id}: download failed (${download.status})`);
   await writeFile(zip, Buffer.from(await download.arrayBuffer()));
   try {
