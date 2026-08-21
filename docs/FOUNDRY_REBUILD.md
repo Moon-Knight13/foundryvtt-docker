@@ -178,6 +178,15 @@ version, the way `scene-packer` does.
 Note what this means for `verify`'s advice: `provision` fixes a **missing** pin,
 never a **drifted** one — running it again just fetches latest again.
 
+**A version-locked manifest is not a version-locked module.** The manifest names
+a version; the *zip it points at* is what gets installed, and those can disagree.
+`foundry-mcp-bridge` pinned to its `v0.8.2` manifest still installed 0.8.3,
+because that manifest's own `download` field reads
+`.../releases/latest/download/foundry-vtt-mcp.zip`. The pin looked honest and the
+disk disagreed. A pin may therefore carry its own **`download`** URL, which wins
+over the manifest's — check the manifest's `download` before calling any pin
+locked.
+
 **A release zip that wraps its contents is unpacked, then flattened.** Seven of
 twenty-five pins ship a zip with a single top-level folder, so unzipping into
 `Data/modules/<id>/` left `Data/modules/<id>/<id>-<version>/module.json` — one

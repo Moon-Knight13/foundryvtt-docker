@@ -17,9 +17,10 @@
   ],
   "core": [
     {
+      "download": "https://github.com/adambdooley/foundry-vtt-mcp/releases/download/v0.8.2/foundry-vtt-mcp.zip",
       "id": "foundry-mcp-bridge",
       "manifest": "https://raw.githubusercontent.com/adambdooley/foundry-vtt-mcp/v0.8.2/packages/foundry-module/module.json",
-      "note": "Pin must stay in step with MCP_VERSION in scripts/setup-mcp.sh \u2014 the module and the server are one fact. Version-locked to the v0.8.2 tag rather than master, because master served 0.8.3 during a rebuild and would have put the module ahead of the server with nothing saying so. `update` will report this pin current forever; move it by editing the tag in the URL, the version here, and MCP_VERSION together, then re-run scripts/setup-mcp.sh.",
+      "note": "Pin must stay in step with MCP_VERSION in scripts/setup-mcp.sh \u2014 the module and the server are one fact. Version-locked to the v0.8.2 tag rather than master, because master served 0.8.3 during a rebuild and would have put the module ahead of the server with nothing saying so. `update` will report this pin current forever; move it by editing the tag in the URL, the version here, and MCP_VERSION together, then re-run scripts/setup-mcp.sh. The `download` is pinned too, and has to be: the v0.8.2 manifest points its own download at /releases/latest/, so locking the manifest alone read 0.8.2 and installed 0.8.3.",
       "title": "Foundry MCP Bridge",
       "version": "0.8.2"
     },
