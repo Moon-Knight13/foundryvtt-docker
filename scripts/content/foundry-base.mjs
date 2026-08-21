@@ -314,6 +314,58 @@ export function redactSecrets(rows) {
   return { kept, redacted };
 }
 
+/**
+ * A pack id, whole and on its own: `world.ddb-<world>-ddb-spells`,
+ * `dnd5e.monsters`. Anchored deliberately — see dropWorldScopedPackRefs.
+ */
+const PACK_ID = /^[A-Za-z0-9._-]+$/;
+
+/** Is this decoded value a pack id in the `world.` scope, or a list of them? */
+function namesWorldScopedPack(value) {
+  if (typeof value === 'string') return PACK_ID.test(value) && value.startsWith('world.');
+  if (Array.isArray(value)) return value.some(namesWorldScopedPack);
+  return false;
+}
+
+/**
+ * Drop rows whose *value* names a pack that dies with the world it came from.
+ *
+ * `packs` and `core.compendiumConfiguration` are excluded by key; this is the
+ * same dead reference one level down, in a value. ddb-importer stores each of
+ * its twelve pack ids as a preference — `ddb-importer.entity-spell-compendium`
+ * held `"world.ddb-lure-of-the-lamia-ddb-spells"` in a real capture. Cloned into
+ * a new world, that names a pack only the old world has. A `world.`-scoped pack
+ * lives inside the world folder; a module-scoped one (`dnd5e.monsters`) lives in
+ * the module and survives, so only the `world.` scope is dropped.
+ *
+ * Dropped rather than rewritten: guessing a new world's pack ids means encoding
+ * ddb-importer's naming scheme here, and an absent setting falls back to the
+ * module's own default, which is world-correct by construction.
+ *
+ * The match is on the decoded value being a **whole** pack id, not a substring:
+ * over-matching would eat a preference silently, which is the failure the secret
+ * word list was already taught to avoid. Prose that merely mentions "world." is
+ * not a pack id and is kept.
+ */
+export function dropWorldScopedPackRefs(rows) {
+  const kept = [];
+  const dropped = [];
+  for (const row of rows ?? []) {
+    if (typeof row?.key !== 'string') continue;
+    let decoded;
+    try {
+      decoded = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+    } catch {
+      // Not JSON: nothing to read a pack id out of. Keep it.
+      kept.push(row);
+      continue;
+    }
+    if (namesWorldScopedPack(decoded)) dropped.push(row.key);
+    else kept.push(row);
+  }
+  return { kept, dropped };
+}
+
 export function worldShape(worldJson) {
   const shape = {};
   for (const [k, v] of Object.entries(worldJson ?? {})) {
@@ -367,6 +419,7 @@ export async function captureWorld(world, opts = {}) {
   }
   const { kept, regenerated, dropped, userScoped } = partitionSettings(rows);
   const { kept: safe, redacted } = redactSecrets(kept);
+  const { kept: portable, dropped: worldPacks } = dropWorldScopedPackRefs(safe);
 
   return {
     capturedFrom: world,
@@ -377,7 +430,7 @@ export async function captureWorld(world, opts = {}) {
     system: worldJson.system ?? null,
     systemVersion: worldJson.systemVersion ?? null,
     worldShape: worldShape(worldJson),
-    settings: safe,
+    settings: portable,
     regeneratedAtCapture: regenerated,
     droppedAsIdentity: dropped.map(r => r.key),
     // Counted, not named: which player set what is nobody else's business, and
@@ -386,6 +439,9 @@ export async function captureWorld(world, opts = {}) {
     // Named, never valued: knowing which credentials a new world will ask for
     // is useful; carrying them is not.
     redactedAsSecret: redacted,
+    // Named, because the module will rebuild these itself and you want to know
+    // which modules to expect that from.
+    droppedAsWorldPack: worldPacks,
   };
 }
 
@@ -686,6 +742,12 @@ async function cmdWorldCapture(opts) {
       `  dropped ${template.droppedAsUserScoped} row(s) belonging to a specific user — ` +
         'a new world has no such accounts',
     );
+  }
+  for (const key of template.droppedAsWorldPack) {
+    console.log(`  dropped (names a pack of ${world}, which a new world has not): ${key}`);
+  }
+  if (template.droppedAsWorldPack.length) {
+    console.log('  each module rebuilds its own packs in a new world.');
   }
   for (const key of template.redactedAsSecret) {
     console.log(`  redacted (credential, not preference): ${key}`);
