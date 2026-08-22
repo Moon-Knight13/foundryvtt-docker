@@ -47,6 +47,7 @@ node scripts/content/foundry-base.mjs snapshot --keep 3 # …keeping three gener
 node scripts/content/foundry-base.mjs restore --yes     # put that full copy back
 node scripts/content/foundry-base.mjs snapshot --golden # the clean slate: no worlds
 node scripts/content/foundry-base.mjs restore --golden --yes  # reset the instance, keep the worlds
+node scripts/content/foundry-base.mjs restore --world <id> # one world back, install untouched
 node scripts/content/foundry-base.mjs pull-games        # build + sync every game in the manifest
 node scripts/content/foundry-base.mjs verify [world]   # check the install against the pins
 node scripts/content/foundry-base.mjs new-world <id> --title "<Title>"  # a world that starts configured
@@ -379,6 +380,46 @@ you want to keep.
 > before this change, it is a **full backup** despite the name. Pass it
 > explicitly with `--from`, or rename it to `<data>.backup`.
 
+### Restoring one world
+
+Wholesale restore is the rare emergency; "I want that oneshot back on this
+install" is routine. `restore --world <id>` copies exactly one world directory
+out of a snapshot and touches nothing else — not the module set, not the other
+worlds:
+
+```bash
+node scripts/content/foundry-base.mjs restore --world lure-of-the-lamia
+node scripts/content/foundry-base.mjs restore --world lure-of-the-lamia \
+  --from ~/FoundryVTT.pre-drill-2026-08-21 --force --pull
+```
+
+- `--from` reads a specific snapshot, including a rotated `<data>.backup.1` or
+  an archived copy. Default is `<data>.backup`.
+- `--force` is required to restore **over** a world that is already there; the
+  world being replaced is only deleted once the new copy is fully in place.
+- `--pull` chains `pull-games`. Without it the command prints the instruction:
+  the world's content module lives in `Data/modules` and does not travel inside
+  the world folder, so a restored world boots with its own module enabled but
+  missing until `pull-games` rebuilds it.
+- `--golden --world` is refused. A golden snapshot excludes `Data/worlds/`, so
+  there is no world in it to restore.
+
+Uploads are **not** copied. Anything added through Foundry's file picker lives
+in `Data/assets`, shared across worlds; the command compares the snapshot's
+uploads with the install's and names what is missing, because a scene that used
+one would otherwise just come up with holes. `restore --golden --yes` is what
+carries assets.
+
+**On the running-Foundry check.** The command refuses to touch anything while
+Foundry looks like it is up, and there is no flag to override it. Two signals:
+something answering on the Foundry port (`--port`, else `FOUNDRY_PORT`, else
+30000), and a world's settings LevelDB refusing a second opener. The port catches
+a Foundry sitting on the setup screen or running against a data dir that was
+just wiped — states where no world database is held and the LevelDB probe alone
+would see nothing. The LevelDB signal is the stronger one: it proves *this* data
+directory is held. Neither can prove Foundry is stopped, so the check is a guard
+rail, not a licence to skip `docker compose stop foundry`.
+
 ### A snapshot cannot destroy the backup you already have
 
 The sync is `rsync -a --delete`, which mirrors: whatever the source has lost,
@@ -571,26 +612,29 @@ it runs.
 8. Run the SoSly bridge import to bring vault notes back as journals.
 
    **Steps 6 to 8 are conditional, and usually free.** They rebuild a world from
-   nothing. If you still have a full `snapshot`, copy the world folder back
-   instead and skip all three — the imported documents, the twelve `world.ddb-*`
-   packs and the bridged journals all live *inside* the world folder, so they
-   return with it:
+   nothing. If you still have a full `snapshot`, restore the world instead and
+   skip all three — the imported documents, the twelve `world.ddb-*` packs and
+   the bridged journals all live *inside* the world folder, so they return with
+   it:
 
    ```bash
    docker compose stop foundry
-   cp -a <data>.backup/Data/worlds/<world> <data>/Data/worlds/
-   node scripts/content/foundry-base.mjs pull-games   # the content module was wiped
+   node scripts/content/foundry-base.mjs restore --world <world> --pull
    docker compose up -d
    ```
 
-   Note `pull-games` is still required: a game's content module lives in
-   `Data/modules`, which the wipe took, so the restored world would come up with
-   its own module *enabled but missing*. That is the one part of a world's
-   content that does not travel inside the world folder.
+   `--pull` runs `pull-games`, which is **still required**: a game's content
+   module lives in `Data/modules`, which the wipe took, so the restored world
+   would otherwise come up with its own module *enabled but missing*. That is
+   the one part of a world's content that does not travel inside the world
+   folder. Leave `--pull` off and the command prints the same instruction rather
+   than acting on it — worth doing when the art gate is likely to need attention,
+   since `pull-games` rebuilds every game in the registry, not just this one.
 
-   Do **not** reach for `restore --yes` to get one world back. It replaces the
-   whole data directory, dragging the old module versions over the set you just
-   rebuilt.
+   `restore --yes` is still the wrong tool for one world — it replaces the whole
+   data directory, dragging the old module versions over the set you just
+   rebuilt — but you no longer have to remember that, because `--world` exists
+   and does the narrow thing.
 9. `foundry-base.mjs verify <world>`, then **check both surfaces** — the
    command covers the pins and the enabled module set, and nothing below it:
    - *Foundry* — scenes carry walls and lights, actors carry real art rather
@@ -615,7 +659,7 @@ from that run rather than a stopwatch, so treat them as an order of magnitude.
 | Foundry re-download | the bulk of it | One timed URL, one image pull |
 | `provision` (25 pins + system) | ~1 min | 25 zips; `restore --golden` skips this entirely |
 | `verify` | seconds | Runs twice — after provision, and again with a world |
-| Restoring one world from a snapshot | ~1 min | `cp -a` plus `pull-games` |
+| Restoring one world from a snapshot | ~1 min | `restore --world <id> --pull` |
 | Manual, unavoidable | minutes | Licence key entry, and the two eyeball passes at step 9 |
 
 The honest headline: **a rebuild fits between sessions, not into an evening's

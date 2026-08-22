@@ -787,11 +787,13 @@
             <p>
               The Foundry world is a projection you can wipe and rebuild from the vault, the git
               content module, and D&amp;D Beyond. The notes you'd actually mourn live in Obsidian,
-              under your own sync. Two restore modes back that up: a full snapshot for the undo, and
-              a <span class="mono">--golden</span> one that resets the instance without touching the
-              worlds you're keeping. A <span class="mono">verify</span> command then checks the
-              rebuilt install against the pins and exits non-zero if it doesn't match, so &ldquo;it
-              came back&rdquo; is something you can prove rather than hope. And
+              under your own sync. Three restore modes back that up: a full snapshot for the undo, a
+              <span class="mono">--golden</span> one that resets the instance without touching the
+              worlds you're keeping, and <span class="mono">--world</span> for bringing a single
+              world back onto an install you just rebuilt. A
+              <span class="mono">verify</span> command then checks the rebuilt install against the
+              pins and exits non-zero if it doesn't match, so &ldquo;it came back&rdquo; is
+              something you can prove rather than hope. And
               <span class="mono">new-world</span> applies a captured settings template, so a rebuilt
               world opens configured instead of blank. This is not a claim on paper: the install was
               wiped and rebuilt end to end on <b>2026-08-21</b>, and the six things that broke were
