@@ -866,8 +866,9 @@
             <dt>Content pipeline<span class="tag">scripts/content/</span></dt>
             <dd>
               Vault notes compile into a <b>per-game compendium module</b>: statblocks from SRD
-              fences, token art through a curated resolver, an art-coverage gate, then build → sync
-              → restart. One command: <span class="mono">ship-game.sh</span>.
+              fences, <b>pregen player characters</b> derived from cached class tables, token art
+              through a curated resolver, an art-coverage gate, then build → sync → restart. One
+              command: <span class="mono">ship-game.sh</span>.
             </dd>
           </div>
           <div>
@@ -926,8 +927,9 @@
             <div class="pstep">
               <span class="pn">vault notes</span>
               <span class="pd"
-                >NPCs as markdown with SRD statblock fences; handouts as image embeds. The note is
-                the master copy — Foundry JSON is a projection of it.</span
+                >NPCs as markdown with SRD statblock fences; pregen player characters as
+                <span class="mono">pregen</span> fences; handouts as image embeds. The note is the
+                master copy — Foundry JSON is a projection of it.</span
               >
             </div>
             <div class="parrow" aria-hidden="true">▼</div>
@@ -935,7 +937,8 @@
               <span class="pn">compile-game.mjs</span>
               <span class="pd"
                 >Compiles every statblock fence against the cached SRD base creature — proficiency
-                math, divergence reports — and every handout embed, incrementally.</span
+                math, divergence reports — every pregen into a character actor <i>and</i> a filled
+                character sheet PDF, and every handout embed, incrementally.</span
               >
             </div>
             <div class="parrow" aria-hidden="true">▼</div>
