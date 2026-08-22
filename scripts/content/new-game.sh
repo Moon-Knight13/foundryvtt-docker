@@ -118,14 +118,15 @@ $SYSTEM_LINE
 }
 EOF
 
-  for type in actors items journals scenes tables; do
+  for type in actors items journals macros scenes tables; do
     mkdir -p "$SRC_ROOT/$type"
     touch "$SRC_ROOT/$type/.gitkeep"
   done
+  cp "$REPO_ROOT/scripts/content/assets/cue-reminder.json" "$SRC_ROOT/macros/"
 
   echo "Scaffolded module $ID (in-repo)"
   echo "  config:  content/$SLUG.config.json"
-  echo "  sources: content/$SRC_DIR/{actors,items,journals,scenes,tables}/"
+  echo "  sources: content/$SRC_DIR/{actors,items,journals,macros,scenes,tables}/"
   echo
   echo "Next: author cards into content/$SRC_DIR/, then build + sync:"
   echo "  node scripts/content/build.mjs --config content/$SLUG.config.json"
@@ -167,9 +168,13 @@ mkdir -p "$GAME_DIR"/{Handouts,Maps,NPCs,Scenes,Tables}
 # (SRD ships token art only, and it does not enlarge well).
 mkdir -p "$GAME_DIR/Assets"/{Maps,Tokens,Art}
 mkdir -p "$GAME_DIR/Foundry/maps"
-for type in actors items journals scenes tables; do
+for type in actors items journals macros scenes tables; do
   mkdir -p "$GAME_DIR/Foundry/src/$type"
 done
+# The cue reminder is identical for every game, so it is copied from one
+# canonical copy rather than re-emitted here — two copies of a macro drift, and
+# the drift only shows up mid-session.
+cp "$REPO_ROOT/scripts/content/assets/cue-reminder.json" "$GAME_DIR/Foundry/src/macros/"
 
 # The module config. No "srcDir": that key resolves under content/ in this repo
 # and would silently point at the wrong tree — build with --src instead.
@@ -271,6 +276,9 @@ REPLACE — minutes per scene, and which scene to cut if you run long.
 
 ## Run it well
 
+- Online: run the **Cue reminder** macro once, so each scene change whispers
+  its ambience cue. Paste the session-start command from [[Soundtrack]] when
+  the bot joins.
 - REPLACE — the one thing that makes this session land.
 
 ## Safety
@@ -293,6 +301,9 @@ type: soundtrack
 system: $SYSTEM_FM
 artifact: [online, in-person]
 tags: [$SYSTEM_FM, $TYPE, $TAG, audio]
+audio_bot: flavibot
+audio_command: "/play {ref}"
+soundtrack_playlist: REPLACE
 ---
 
 # $TITLE — Soundtrack
@@ -302,14 +313,22 @@ the room when you are not. Foundry serves no audio, so nothing here is streamed
 to your players over the same connection carrying the game, and the same cue
 sheet works at a physical table where Foundry is not running at all.
 
+## Session start
+
+Paste this once, when the bot joins:
+
+\`=replace(this.audio_command, "{ref}", this.soundtrack_playlist)\`
+
+After that, most scene changes are the skip button on the bot's control panel.
+
 ## Cue sheet (auto)
 
 \`\`\`dataview
 TABLE WITHOUT ID
   file.link AS Scene,
+  audio_cue AS "Bring it in when",
   audio_source AS Source,
-  audio_ref AS Play,
-  audio_cue AS "Bring it in when"
+  replace(this.audio_command, "{ref}", default(audio_ref, this.soundtrack_playlist)) AS Paste
 FROM "$SECTION/$TITLE/Scenes"
 SORT scene, act, file.name
 \`\`\`
@@ -320,8 +339,9 @@ The cue lives on the scene note, not in a list here, so it cannot drift from the
 scene it belongs to. Add three keys to that note's frontmatter:
 
 \`\`\`yaml
-audio_source: tabletopaudio   # tabletopaudio | spotify | local
-audio_ref: https://tabletopaudio.com/...   # or a filename under 06 Assets/Audio/
+audio_source: tabletopaudio   # tabletopaudio | spotify | local | none
+audio_ref: https://tabletopaudio.com/...   # or a saved-playlist name, or a
+                                           # filename under 06 Assets/Audio/
 audio_cue: as the boat leaves the jetty
 \`\`\`
 
@@ -329,15 +349,31 @@ A scene with no cue shows blank in the table above — that is a to-do, not an
 error. Silence is a legitimate choice; write \`audio_source: none\` when it is
 deliberate, so you can tell the two apart at a glance.
 
+**\`audio_ref\` is optional.** Leave it off and the scene falls back to
+\`soundtrack_playlist\` above — right for a game you run start to finish, where
+one ordered playlist plus the skip button is the whole interface. Set it per
+scene when the game jumps around and "next" means nothing.
+
 ## What plays it
 
-Whatever you already use — a Discord music bot, Spotify shared into voice, or a
-local player. The sheet gives you the link, not a command to paste: bot syntax
-changes, and a cue sheet printing the wrong command is worse than one printing
-a link.
+The bot is named once, in this file's frontmatter, and the sheet builds each
+paste-ready command from it. That is a deliberate change of mind: this sheet
+used to print a link and never a command, on the grounds that bot syntax drifts
+and a wrong command is worse than a link. Keeping the syntax in **one** place per
+game answers that — switching bots is a one-line edit here, not a sweep through
+every scene note — and printing the command removes the step you skip when you
+are mid-sentence and the party has already walked into the next room.
 
 Local clips live in \`06 Assets/Audio/\`, shared across games the way
 \`06 Assets/Tokens/\` is.
+
+## Not remembering it at all
+
+\`compile-game.mjs\` copies each scene's cue onto the Foundry scene it belongs
+to, and the **Cue reminder** macro in this game's compendium whispers it to you
+every time a scene loads. Run that macro once at the start of an online session
+and the reminder arrives on its own. It does nothing at an in-person table —
+that is what this sheet is for.
 
 > [!warning] Do not build Foundry playlists from these
 > The vault is mounted inside Foundry's data root, so Foundry **can** see files
@@ -404,7 +440,8 @@ echo "Scaffolded $TYPE \"$TITLE\" ($ID)"
 echo "  game:    $GAME_DIR"
 echo "  notes:   $TITLE.md, GM Prep.md, Soundtrack.md$([[ "$TYPE" == "oneshot" ]] && echo ", Advert.md")"
 echo "  folders: Handouts/ Maps/ NPCs/ Scenes/ Tables/ Assets/{Maps,Tokens,Art}/"
-echo "  foundry: Foundry/$SLUG.config.json + Foundry/src/{actors,items,journals,scenes,tables}/"
+echo "  foundry: Foundry/$SLUG.config.json + Foundry/src/{actors,items,journals,macros,scenes,tables}/"
+echo "  macro:   Foundry/src/macros/cue-reminder.json (whispers each scene's ambience cue)"
 echo
 echo "Definition of done — a finished game has ALL of these:"
 todo() { printf '  [ ] %-18s %s\n' "$1" "$2"; }
@@ -412,7 +449,7 @@ todo "$TITLE.md" "index: premise, run order, GM shelf, dataview blocks"
 todo "GM Prep.md" "the truth, arc, pacing, scaling, safety, rewards"
 todo "NPCs/" "one card per creature, each with a statblock block"
 todo "Scenes/" "one note per scene: read-aloud, map embed, beats"
-todo "Soundtrack.md" "a cue per scene: audio_source/audio_ref/audio_cue"
+todo "Soundtrack.md" "soundtrack_playlist + a cue per scene (audio_source/_ref/_cue)"
 todo "Tables/" "rumour/loot tables as markdown tables"
 todo "Handouts/" "anything the players physically receive"
 todo "Maps/" "map briefs or generator specs"

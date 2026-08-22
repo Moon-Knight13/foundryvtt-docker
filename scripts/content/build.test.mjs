@@ -1,8 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   docId,
   validateDoc,
@@ -14,6 +15,8 @@ import {
   main,
   COLLECTIONS,
 } from './build.mjs';
+
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 const CONFIG = {
   id: 'test-content',
@@ -71,7 +74,7 @@ test('moduleManifest shape follows config', () => {
   const m = moduleManifest(Object.keys(COLLECTIONS), CONFIG);
   assert.equal(m.id, 'test-content');
   assert.equal(m.title, 'Test Content');
-  assert.equal(m.packs.length, 5);
+  assert.equal(m.packs.length, Object.keys(COLLECTIONS).length);
   assert.ok(m.packs.every(p => p.system === 'dnd5e'));
   assert.ok(m.packs.every(p => p.label.startsWith('Test ')));
   assert.deepEqual(m.relationships.systems[0].id, 'dnd5e');
@@ -97,6 +100,39 @@ test('COLLECTIONS maps journal and table collections correctly', () => {
   assert.equal(COLLECTIONS.journals.type, 'JournalEntry');
   assert.equal(COLLECTIONS.tables.key, 'tables');
   assert.equal(COLLECTIONS.tables.type, 'RollTable');
+  assert.equal(COLLECTIONS.macros.key, 'macros');
+  assert.equal(COLLECTIONS.macros.type, 'Macro');
+});
+
+test('a macro must carry a command', () => {
+  // A macro with no command builds and imports cleanly, then does nothing when
+  // pressed — a failure you would find mid-session, which is exactly when the
+  // cue reminder is supposed to be helping.
+  const errors = validateDoc({ name: 'Cue reminder', type: 'script' }, 'macros', 'macros/c.json');
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /missing required field "command"/);
+  assert.equal(
+    validateDoc(
+      { name: 'Cue reminder', type: 'script', command: 'ui.notifications.info("hi")' },
+      'macros',
+      'macros/c.json',
+    ).length,
+    0,
+  );
+});
+
+test('the shipped cue reminder macro is a valid macro document', async () => {
+  // The scaffold copies this exact file into every new game, so if it stops
+  // validating, every game scaffolded after that point ships a broken pack.
+  const macro = JSON.parse(
+    await readFile(path.join(SCRIPT_DIR, 'assets', 'cue-reminder.json'), 'utf8'),
+  );
+  assert.deepEqual(validateDoc(macro, 'macros', 'macros/cue-reminder.json'), []);
+
+  // The module's pack default is PLAYER: OBSERVER. A player who could run this
+  // would whisper themselves the ambience plan for a scene they have not
+  // reached yet, so the document overrides that to GM-only.
+  assert.equal(macro.ownership.default, 0);
 });
 
 test('loadConfig applies defaults and validates id/title', async () => {

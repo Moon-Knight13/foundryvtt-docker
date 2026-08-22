@@ -26,6 +26,7 @@ export const COLLECTIONS = {
   actors: { key: 'actors', type: 'Actor', plural: 'Actors' },
   items: { key: 'items', type: 'Item', plural: 'Items' },
   journals: { key: 'journal', type: 'JournalEntry', plural: 'Journals' },
+  macros: { key: 'macros', type: 'Macro', plural: 'Macros' },
   scenes: { key: 'scenes', type: 'Scene', plural: 'Scenes' },
   tables: { key: 'tables', type: 'RollTable', plural: 'Roll Tables' },
 };
@@ -34,6 +35,9 @@ const REQUIRED_FIELDS = {
   actors: ['name', 'type'],
   items: ['name', 'type'],
   journals: ['name', 'pages'],
+  // A macro with no command is a button that does nothing — the one failure
+  // mode you would not notice until you pressed it mid-session.
+  macros: ['name', 'type', 'command'],
   scenes: ['name'],
   tables: ['name', 'results'],
 };
