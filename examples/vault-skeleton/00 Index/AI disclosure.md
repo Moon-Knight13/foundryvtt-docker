@@ -15,6 +15,13 @@ Written against the Discord server rule:
 The rule covers **imagery**. The threshold is met, so the disclosure is a
 standing line rather than a per-game judgement call.
 
+It goes further than the rule requires, and deliberately. The prep writing is
+Claude-assisted; that is outside the rule and disclosing it is optional. But a
+disclosure that answers only the compulsory question invites the reader to
+wonder what else was not mentioned — and the writing is the thing a player is
+most likely to guess at anyway. Volunteering it is what makes the rest of the
+statement worth believing.
+
 ## The pin (paste once, per server)
 
 > **AI in my games — the short version.** A few NPC portrait tokens are
@@ -44,6 +51,15 @@ standing line rather than a per-game judgement call.
 > **The maps are not AI.** They are rendered by a script from a layout I wrote
 > square by square — the same input always produces the same map. If I ever use
 > a painted map that came out of an image generator, I will say so for that map.
+>
+> **The writing is Claude-assisted, and I would rather you heard it from me.**
+> The server rule covers imagery, so this part is volunteered. I use Claude the
+> way I would use a very fast editor: I outline the scene, the NPC, the handout;
+> it drafts; I cut, rewrite and keep what is mine. Statblocks get built and
+> balanced that way, journals and props get their first pass that way, and so did
+> the recruitment post you answered. Nothing reaches you that I have not read and
+> signed off on, and the adventures are my own or published one-shots I paid for
+> and adapted — not a plot a model invented while I watched.
 >
 > **Nothing at the table is AI.** NPCs are voiced and played by me, improvisation
 > is mine, dice are yours, and no model decides what happens to your character.
@@ -75,7 +91,7 @@ them.
 | A painted map dropped in from an image generator | **Yes** | Allowed by the pipeline; say so when it happens. |
 | `scripts/maps/render_map.py` output | No | Deterministic renderer over a hand-authored JSON spec — every random flourish is seeded from the tile's own coordinates, so the same spec always renders the same map. |
 | SRD token art and the curated icon map | No | Licensed system art, matched by hand. The one automated matcher was rejected for pairing *Adult Gold Dragon* with a gold bar. |
-| Statblocks, journals, adverts, this note | No | Text. The server rule covers imagery. |
+| Statblocks, journals, adverts, this note | Not *imagery* — but AI-assisted | The server rule covers imagery only, so none of this needs declaring. It is declared anyway: drafted with Claude from my outline, edited and approved by me. Saying "not AI" here would be false, and a player who worked that out on their own would be right to distrust the rest. |
 
 ## Things that are not wired up
 

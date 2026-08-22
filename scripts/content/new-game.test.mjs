@@ -215,7 +215,7 @@ test('the generated advert carries the AI disclosure inside the paste block', as
     assert.match(block, /\*\*AI disclosure:\*\*/, 'expected an AI heading in the pasted block');
     assert.match(block, /portrait tokens are AI-drawn/i, 'expected the token-art disclosure');
     assert.match(block, /not\s+AI-generated/i, 'expected maps called out as not AI-generated');
-    assert.match(block, /no AI runs the game/i, 'expected the no-AI-at-the-table line');
+    assert.match(block, /never AI is the game/i, 'expected the no-AI-at-the-table line');
 
     // The three objections players actually raise. Stating that a model was
     // involved without answering these reads as a technicality, so each one is
@@ -227,6 +227,11 @@ test('the generated advert carries the AI disclosure inside the paste block', as
       'expected the displaced-artist answer',
     );
     assert.match(block, /plain tokens/i, 'expected the opt-out offer');
+
+    // The writing disclosure is volunteered -- the server rule covers imagery
+    // only -- so nothing external will catch its removal. Pin it here.
+    assert.match(block, /writing is Claude-assisted/i, 'expected the writing disclosure');
+    assert.match(block, /signed off on/i, 'expected the human-approval commitment');
   } finally {
     await rm(vault, { recursive: true, force: true });
   }
