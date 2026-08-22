@@ -157,22 +157,34 @@ fi
 # 5. Placeholder scan (only in files that should NOT have placeholders)
 echo ""
 echo "[5] Placeholder scan:"
-# Scan content files only. Scripts, workflows, and command definitions legitimately
-# reference these patterns as detection logic or setup instructions, not as unfilled
-# placeholders — so they are excluded from this scan.
+# Scan tracked content files only, for two separate reasons.
+#
+# Tracked, because walking the working directory made this gate useless locally
+# and dishonest everywhere: it failed on scratch files and .claude/worktrees/
+# debris that CI, running on a fresh checkout, can never see — so "it passes in
+# CI" and "it passes here" answered different questions, and a gate that always
+# fails stops being read. `git ls-files` is the same set on both sides, which is
+# also why .git/ and node_modules/ need no exclude here.
+#
+# Content, because scripts, workflows and command definitions legitimately
+# reference these patterns as detection logic or setup instructions rather than
+# as unfilled placeholders.
+if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+    echo "  --  not a git work tree; placeholder scan skipped"
+    ((SKIP++)) || true
+fi
 _placeholder_clean=true
 while IFS= read -r -d '' f; do
-    [[ "$f" == "./README.md" ]] && continue
-    [[ "$f" == "./.github/CODEOWNERS" ]] && continue
+    [[ "$f" == "README.md" ]] && continue
+    case "$f" in
+        scripts/* | .github/workflows/* | .claude/commands/* | .claude/skills/*) continue ;;
+    esac
     if grep -qE '_TODO:|your-org/your-team|<!-- Replace' "$f" 2>/dev/null; then
         check "No placeholder in $f" "fail" "Unexpected template placeholder found — check the file"
         _placeholder_clean=false
     fi
-done < <(find . -type f \( -name "*.md" -o -name "*.json" \) \
-    ! -path "./.git/*" ! -path "./node_modules/*" \
-    ! -path "./scripts/*" ! -path "./.github/workflows/*" ! -path "./.claude/commands/*" \
-    ! -path "./.claude/skills/*" -print0)
-if [[ "$_placeholder_clean" == "true" ]]; then
+done < <(git ls-files -z -- '*.md' '*.json' 2>/dev/null || true)
+if [[ "$_placeholder_clean" == "true" ]] && git rev-parse --is-inside-work-tree &>/dev/null; then
     check "No unexpected placeholders in tracked files" "pass"
 fi
 
