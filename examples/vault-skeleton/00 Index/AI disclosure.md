@@ -41,9 +41,10 @@ statement worth believing.
 > for another artist's name or style. What comes out is drawn from my prose, not
 > assembled out of anyone's portfolio.
 >
-> **It has not taken work from an artist.** These tokens only appear where the
-> alternative was a blank grey placeholder — the choice was portrait or nothing,
-> never portrait or commission. Where art already exists I use that first:
+> **It has not taken work from an artist.** These are characters I made up, so
+> there is no stock art of them to use — nobody has drawn my innkeeper. The
+> tokens only appear in that gap, where the alternative was a blank grey
+> placeholder: the choice was portrait or nothing, never portrait or commission. Where art already exists I use that first:
 > creature art from the system's own licensed set, and icons from game-icons.net
 > under CC-BY-3.0, with a file in the assets folder naming every artist and the
 > licence. If I ever commission or buy art, that is what goes in.
@@ -63,6 +64,14 @@ statement worth believing.
 >
 > **Nothing at the table is AI.** NPCs are voiced and played by me, improvisation
 > is mine, dice are yours, and no model decides what happens to your character.
+>
+> **Why I do it this way.** Honestly: time. I work full time, and the gap between
+> "I have an idea for a one-shot" and "it is ready to run" is where most games
+> quietly die. I am a developer, so I built tooling to close that gap the way I
+> would for any job I do more than twice. It buys me evenings, and I spend them
+> on the parts you actually notice — the NPC who remembers what you said three
+> scenes ago, the fight tuned to the party that actually turned up, the handout
+> that exists at all.
 >
 > Ask me anything about this — including which tokens, and I will show you.
 

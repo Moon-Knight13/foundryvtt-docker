@@ -224,12 +224,24 @@ test('the generated advert carries the short AI disclosure inside the paste bloc
     // ones that earn their place: the objection is theft and replacement, and a
     // reader who wants more has to be told where more lives.
     assert.match(block, /paid artist/i, 'expected the displaced-artist answer');
+
+    // The strongest half of the displaced-artist answer is that these are
+    // invented characters nobody has drawn. Without it the line reads as
+    // "I used AI instead of an artist" rather than "there was no artist to use".
+    assert.match(block, /custom NPCs/i, 'expected the custom-NPC scope');
+    assert.match(block, /no stock art exists/i, 'expected the no-stock-art gap');
     assert.match(block, /at the table/i, 'expected the no-AI-at-the-table line');
     assert.match(block, /pinned in the server/i, 'expected the pointer to the pin');
     assert.match(block, /plain tokens/i, 'expected the opt-out offer');
 
-    // The long form belongs in the pin, not the post.
-    assert.ok(block.length < 600, `paste-block disclosure should stay short, got ${block.length}`);
+    // The long form belongs in the pin, not the post. Measure the disclosure
+    // alone -- capping the whole block would move every time the scaffold above
+    // it changed, which is not what this is guarding.
+    const disclosure = block.slice(block.indexOf('**AI:**'));
+    assert.ok(
+      disclosure.length < 400,
+      `advert disclosure should stay one sentence, got ${disclosure.length} chars`,
+    );
   } finally {
     await rm(vault, { recursive: true, force: true });
   }
@@ -244,7 +256,7 @@ test('the advert template and the scaffolded advert make the same AI claim', asy
     'utf8',
   );
   const script = await readFile(SCRIPT, 'utf8');
-  const claim = /Some NPC tokens are AI-drawn and my prep writing is AI-assisted/;
+  const claim = /Tokens for my own custom NPCs are AI-drawn where no stock art exists/;
   assert.match(template, claim, 'advert template is missing the AI disclosure');
   assert.match(script, claim, 'new-game.sh is missing the AI disclosure');
 });
@@ -253,10 +265,14 @@ test('the advert template and the scaffolded advert make the same AI claim', asy
 // writing disclosure, and no player will notice a paragraph quietly going
 // missing. Each of these answers an objection the one-sentence version cannot.
 test('the pinned disclosure answers the objections the advert line cannot', async () => {
-  const pin = await readFile(
-    path.join(REPO_ROOT, 'examples', 'vault-skeleton', '00 Index', 'AI disclosure.md'),
-    'utf8',
-  );
+  const pin = (
+    await readFile(
+      path.join(REPO_ROOT, 'examples', 'vault-skeleton', '00 Index', 'AI disclosure.md'),
+      'utf8',
+    )
+  )
+    .replace(/^\s*>\s?/gm, '') // the pin is a blockquote; the markers are not the text
+    .replace(/\s+/g, ' ');
   const claims = [
     [/not an image generator/i, 'training provenance'],
     [/blank grey placeholder/i, 'no artist was displaced'],
@@ -265,6 +281,7 @@ test('the pinned disclosure answers the objections the advert line cannot', asyn
     [/signed off on/i, 'the human-approval commitment'],
     [/Nothing at the table is AI/i, 'no AI runs the game'],
     [/plain tokens/i, 'the opt-out offer'],
+    [/Why I do it this way/i, 'the reason the process exists at all'],
   ];
   for (const [re, what] of claims) {
     assert.match(pin, re, `pin is missing: ${what}`);
