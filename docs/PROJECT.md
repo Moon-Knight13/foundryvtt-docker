@@ -150,8 +150,12 @@ copies of an NPC.
   image-source tree `src/` was removed — this fork runs the published felddy
   image.)
 - `foundry-base.json` — the pinned system + core module set a rebuilt Foundry
-  install needs. Nothing in it floats; move a pin with
-  `scripts/content/foundry-base.mjs update` and commit the change. See
+  install needs. Twenty-one of the twenty-five URLs name an exact version, each
+  with a floating `check` URL beside it so the pin stays visible to the watcher;
+  the four `gitlab.com` pins float on purpose, because that host is off the
+  devcontainer firewall allowlist and a locked URL there cannot be verified from
+  here. Move a pin with `scripts/content/foundry-base.mjs update`, which rewrites
+  the URL and the version together, and commit the change. See
   `docs/FOUNDRY_REBUILD.md`.
 - `scripts/` — template foundation scripts (board, day-0) plus project
   scripts: `scripts/ci/*` (CI gates), `scripts/setup-mcp.sh`,

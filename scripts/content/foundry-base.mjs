@@ -1505,6 +1505,35 @@ export function checkUrlFor(entry) {
 }
 
 /**
+ * Rewrite a version-locked URL to name a new version, or refuse.
+ *
+ * Locking a manifest URL buys a binding record and introduces one failure mode:
+ * `update` writes the new version into foundry-base.json while the URL still
+ * names the old tag, so `provision` installs the old one and reports drift
+ * against the record it was just handed. The URL has to move with the version
+ * it locks.
+ *
+ * The old version is matched as a whole number, never as a fragment of a longer
+ * one, so 1.13.5 does not rewrite half of 1.13.5.1. Any prefix the repo puts on
+ * its tags survives untouched — lib-wrapper ships v1.13.5.1, dnd5e ships
+ * release-5.3.3, and neither prefix is ours to invent.
+ *
+ * Returns null when the URL does not name the version at all: a commit SHA, a
+ * branch tip or a CI job artifact cannot be rewritten mechanically, and a
+ * guessed URL 404s mid-rebuild.
+ */
+export function relockManifest(url, from, to) {
+  if (!url || !from || !to) return null;
+  const pattern = new RegExp(
+    `(?<![\\d.])${from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\d.])`,
+    'g',
+  );
+  if (!pattern.test(url)) return null;
+  pattern.lastIndex = 0;
+  return url.replace(pattern, to);
+}
+
+/**
  * Ask every pin what version is current, and sort the answers into three very
  * different kinds of news.
  *
@@ -1552,14 +1581,25 @@ export async function checkPins(entries, { fetchImpl = fetch } = {}) {
  */
 export function pinReport({
   bumps = [],
+  stuck = [],
   current = [],
   unreachable = [],
   unpinned = [],
   deferred = [],
 } = {}) {
   const lines = [];
-  lines.push(bumps.length ? `${bumps.length} pin(s) moved:` : 'No pins moved.');
+  const moved = bumps.length + stuck.length;
+  lines.push(moved ? `${moved} pin(s) moved:` : 'No pins moved.');
   for (const b of bumps) lines.push(`  ${b.id} ${b.from} -> ${b.to}`);
+  if (stuck.length) {
+    lines.push(
+      '',
+      `${stuck.length} pin(s) moved but were left where they are — their locked URL`,
+      'names a tag this cannot rewrite, so move each one by hand: edit the URL and',
+      'the version together, then run `provision`.',
+    );
+    for (const p of stuck) lines.push(`  ${p.id} ${p.from} -> ${p.to}\n    ${p.url}`);
+  }
   if (unreachable.length) {
     lines.push(
       '',
@@ -1596,11 +1636,31 @@ async function cmdUpdate(opts, deps = {}) {
   }
 
   const found = await checkPins(entries, { fetchImpl: deps.fetchImpl });
-  console.log(pinReport({ ...found, deferred }));
+  // A pin whose `check` URL floats has a `manifest` URL that does not, and the
+  // two have to move together. When the URL cannot be rewritten mechanically,
+  // the pin is reported as moved and left alone: a foundry-base.json whose
+  // version and URL disagree is worse than one that is visibly a month behind.
+  const byId = new Map(entries.map(e => [e.id, e]));
+  const stuck = [];
+  const movable = [];
+  for (const bump of found.bumps) {
+    const entry = byId.get(bump.id);
+    if (entry.check && !relockManifest(entry.manifest, bump.from, bump.to))
+      stuck.push({ ...bump, url: entry.manifest });
+    else movable.push(bump);
+  }
+  found.bumps = movable;
+  console.log(pinReport({ ...found, stuck, deferred }));
 
   if (found.bumps.length && !opts.dryRun) {
-    const byId = new Map(entries.map(e => [e.id, e]));
-    for (const bump of found.bumps) byId.get(bump.id).version = bump.to;
+    for (const bump of found.bumps) {
+      const entry = byId.get(bump.id);
+      entry.version = bump.to;
+      for (const field of ['manifest', 'download']) {
+        if (!entry[field]) continue;
+        entry[field] = relockManifest(entry[field], bump.from, bump.to) ?? entry[field];
+      }
+    }
     await writeFile(manifestPath, manifestJson(manifest));
     console.log(
       `\nUpdated ${manifestPath}. Review, run \`provision\`, then commit the pin change.`,

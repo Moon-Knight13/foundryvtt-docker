@@ -27,6 +27,7 @@ import {
   rotationPlan,
   updateTargets,
   checkUrlFor,
+  relockManifest,
   checkPins,
   pinReport,
   worldRestorePlan,
@@ -2357,3 +2358,137 @@ function servingVersions(versions) {
     return { ok: true, status: 200, json: async () => ({ version }) };
   };
 }
+
+// ---------------------------------------------------------------------------
+// re-locking a locked pin (#134)
+// ---------------------------------------------------------------------------
+
+test('relockManifest moves the version inside a locked URL', () => {
+  // Writing the new version into foundry-base.json while the manifest URL
+  // still names the old tag is the failure mode locking introduces: provision
+  // installs the old one and reports drift against the record it just wrote.
+  assert.equal(
+    relockManifest(
+      'https://github.com/SoSly/foundryvtt-obsidian-bridge/releases/download/1.3.0/module.json',
+      '1.3.0',
+      '1.4.0',
+    ),
+    'https://github.com/SoSly/foundryvtt-obsidian-bridge/releases/download/1.4.0/module.json',
+  );
+});
+
+test('relockManifest keeps whatever prefix the tag wears', () => {
+  // Tags are not versions: lib-wrapper ships v1.13.5.1, dnd5e ships
+  // release-5.3.3, and the prefix belongs to the repo, not to us.
+  assert.equal(
+    relockManifest(
+      'https://github.com/ruipin/fvtt-lib-wrapper/releases/download/v1.13.5.1/module.json',
+      '1.13.5.1',
+      '1.14.0',
+    ),
+    'https://github.com/ruipin/fvtt-lib-wrapper/releases/download/v1.14.0/module.json',
+  );
+  assert.equal(
+    relockManifest(
+      'https://github.com/foundryvtt/dnd5e/releases/download/release-5.3.3/system.json',
+      '5.3.3',
+      '5.4.0',
+    ),
+    'https://github.com/foundryvtt/dnd5e/releases/download/release-5.4.0/system.json',
+  );
+});
+
+test('relockManifest refuses to guess when the URL does not name the version', () => {
+  // A commit SHA, a CI job artifact, a branch tip: nothing here can be
+  // rewritten mechanically, and a guessed URL 404s mid-rebuild.
+  assert.equal(
+    relockManifest(
+      'https://gitlab.com/foundry-azzurite/settings-extender/-/jobs/artifacts/x/raw/module.json',
+      '2.0.0',
+      '2.1.0',
+    ),
+    null,
+  );
+});
+
+test('update rewrites the locked URL of a pin it moves', async () => {
+  const { file } = await aManifest();
+  try {
+    await main(['update', 'foundry-mcp-bridge', '--manifest', file], {
+      fetchImpl: servingVersions({ 'https://example.invalid/mcp-latest.json': '0.9.0' }),
+    });
+    const written = JSON.parse(await readFile(file, 'utf8'));
+    const pin = written.core.find(e => e.id === 'foundry-mcp-bridge');
+    assert.equal(pin.version, '0.9.0');
+    assert.equal(
+      pin.manifest,
+      'https://example.invalid/v0.9.0/mcp.json',
+      'the locked URL has to move with the version it locks',
+    );
+  } finally {
+    await rm(file, { force: true });
+  }
+});
+
+test('update leaves a locked pin it cannot rewrite alone, and says which', async () => {
+  // Better a pin that visibly did not move than a foundry-base.json whose
+  // recorded version and manifest URL disagree.
+  const { file } = await aManifest();
+  const manifest = JSON.parse(await readFile(file, 'utf8'));
+  manifest.core[1].manifest = 'https://example.invalid/artifacts/build/mcp.json';
+  await writeFile(file, JSON.stringify(manifest, null, 2));
+  try {
+    await main(['update', 'foundry-mcp-bridge', '--manifest', file], {
+      fetchImpl: servingVersions({ 'https://example.invalid/mcp-latest.json': '0.9.0' }),
+    });
+    const written = JSON.parse(await readFile(file, 'utf8'));
+    const pin = written.core.find(e => e.id === 'foundry-mcp-bridge');
+    assert.equal(pin.version, '0.8.2', 'the record must not move without its URL');
+    assert.equal(pin.manifest, 'https://example.invalid/artifacts/build/mcp.json');
+  } finally {
+    await rm(file, { force: true });
+  }
+});
+
+test('pinReport names a pin whose locked URL could not be rewritten', () => {
+  const report = pinReport({
+    bumps: [{ id: 'lib-wrapper', from: '1.13.5', to: '1.14.0' }],
+    stuck: [{ id: 'settings-extender', from: '2.0.0', to: '2.1.0', url: 'https://x.invalid/j' }],
+  });
+  assert.match(report, /settings-extender/);
+  assert.match(report, /by hand/i);
+});
+
+test('every locked pin in foundry-base.json can be moved without hand-editing a URL', async () => {
+  // The invariant that makes locking safe to live with: if a pin carries a
+  // check URL, its manifest names a version, and `update` can move both.
+  const real = JSON.parse(
+    await readFile(path.join(import.meta.dirname, '../../foundry-base.json'), 'utf8'),
+  );
+  const stuck = [...real.core, real.system]
+    .filter(e => e.check)
+    .filter(e => !relockManifest(e.manifest, e.version, 'X.Y.Z'));
+  assert.deepEqual(
+    stuck.map(e => e.id),
+    [],
+    'a locked pin whose URL does not name its version silently rots',
+  );
+});
+
+test('every floating pin in foundry-base.json says in writing why it floats', async () => {
+  // "Always latest" is the documented hazard. A pin may still float — the
+  // GitLab hosts are unreachable from the devcontainer and cannot be verified
+  // there — but only on purpose, in a note somebody has to read to remove.
+  const real = JSON.parse(
+    await readFile(path.join(import.meta.dirname, '../../foundry-base.json'), 'utf8'),
+  );
+  const floats = u => /\/releases\/latest\/|\/-?\/?raw\/(master|main)\/|\/(master|main)\//.test(u);
+  const unexplained = [...real.core, real.system]
+    .filter(e => typeof e.manifest === 'string' && floats(e.manifest))
+    .filter(e => !/float/i.test(e.note ?? ''));
+  assert.deepEqual(
+    unexplained.map(e => e.id),
+    [],
+    'a pin that floats without saying so reads as a pin',
+  );
+});
