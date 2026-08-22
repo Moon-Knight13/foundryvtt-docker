@@ -14,6 +14,7 @@ model.
 - **[[How this vault works]]** — cards, artifacts, the Foundry pipeline
 - **[[Running a new game]]** — DM process: build a game by conversation, reference, or your own notes
 - **[[Notes to the table]]** — get prep to the table: in-person + FoundryVTT (Foundry stays transient)
+- **[[AI disclosure]]** — what in this prep is AI-generated imagery, and the line players get told
 - **01 Systems** — rules refs & PDFs (dnd5e, cairn)
 - **02 Campaigns** — ongoing games (one MOC each)
 - **03 Oneshots** — self-contained games (one folder each)

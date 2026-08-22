@@ -199,3 +199,91 @@ test('new-game.sh errors clearly when no vault can be found', () => {
     stderrMatches(/no vault found|--vault/),
   );
 });
+
+// Discord's server rules require the GM to be explicit about generative AI in
+// imagery (issue #102). The disclosure is split in two: one sentence inside the
+// advert's paste block, and the full statement in the server pin. The post has
+// to carry the short half -- it is the half that survives the copy into Discord.
+test('the generated advert carries the short AI disclosure inside the paste block', async () => {
+  const vault = await mkdtemp(path.join(os.tmpdir(), 'vault-'));
+  try {
+    run(['zzz-vault-ai', '--vault', vault, '--title', 'ZZZ Vault AI']);
+    const advert = await readFile(
+      path.join(vault, '03 Oneshots', 'ZZZ Vault AI', 'Advert.md'),
+      'utf8',
+    );
+    // Matched against whitespace-collapsed text: the disclosure is hard-wrapped
+    // in the source, so a phrase that straddles a line break is still one phrase
+    // to a reader, and a test that cared would break on every rewrap.
+    const block = (advert.split('```')[1] ?? '').replace(/\s+/g, ' ');
+    assert.match(block, /\*\*AI:\*\*/, 'expected an AI heading in the pasted block');
+    assert.match(block, /AI-drawn/i, 'expected the token-art disclosure');
+    assert.match(block, /AI-assisted/i, 'expected the writing disclosure');
+
+    // One sentence has room for two reassurances and a pointer. These are the
+    // ones that earn their place: the objection is theft and replacement, and a
+    // reader who wants more has to be told where more lives.
+    assert.match(block, /paid artist/i, 'expected the displaced-artist answer');
+
+    // The strongest half of the displaced-artist answer is that these are
+    // invented characters nobody has drawn. Without it the line reads as
+    // "I used AI instead of an artist" rather than "there was no artist to use".
+    assert.match(block, /custom NPCs/i, 'expected the custom-NPC scope');
+    assert.match(block, /no stock art exists/i, 'expected the no-stock-art gap');
+    assert.match(block, /at the table/i, 'expected the no-AI-at-the-table line');
+    assert.match(block, /pinned in the server/i, 'expected the pointer to the pin');
+    assert.match(block, /plain tokens/i, 'expected the opt-out offer');
+
+    // The long form belongs in the pin, not the post. Measure the disclosure
+    // alone -- capping the whole block would move every time the scaffold above
+    // it changed, which is not what this is guarding.
+    const disclosure = block.slice(block.indexOf('**AI:**'));
+    assert.ok(
+      disclosure.length < 400,
+      `advert disclosure should stay one sentence, got ${disclosure.length} chars`,
+    );
+  } finally {
+    await rm(vault, { recursive: true, force: true });
+  }
+});
+
+// Both copies of the advert -- the Templater template and new-game.sh's
+// heredoc -- must state the same thing, or the two paths disagree about what
+// players were told.
+test('the advert template and the scaffolded advert make the same AI claim', async () => {
+  const template = await readFile(
+    path.join(REPO_ROOT, 'examples', 'vault-skeleton', '05 Templates', 'Advert Template.md'),
+    'utf8',
+  );
+  const script = await readFile(SCRIPT, 'utf8');
+  const claim = /Tokens for my own custom NPCs are AI-drawn where no stock art exists/;
+  assert.match(template, claim, 'advert template is missing the AI disclosure');
+  assert.match(script, claim, 'new-game.sh is missing the AI disclosure');
+});
+
+// The pin is the half nothing else enforces: no server rule requires the
+// writing disclosure, and no player will notice a paragraph quietly going
+// missing. Each of these answers an objection the one-sentence version cannot.
+test('the pinned disclosure answers the objections the advert line cannot', async () => {
+  const pin = (
+    await readFile(
+      path.join(REPO_ROOT, 'examples', 'vault-skeleton', '00 Index', 'AI disclosure.md'),
+      'utf8',
+    )
+  )
+    .replace(/^\s*>\s?/gm, '') // the pin is a blockquote; the markers are not the text
+    .replace(/\s+/g, ' ');
+  const claims = [
+    [/not an image generator/i, 'training provenance'],
+    [/blank grey placeholder/i, 'no artist was displaced'],
+    [/CC-BY-3\.0/, 'licensed art is credited'],
+    [/writing is Claude-assisted/i, 'the volunteered writing disclosure'],
+    [/signed off on/i, 'the human-approval commitment'],
+    [/Nothing at the table is AI/i, 'no AI runs the game'],
+    [/plain tokens/i, 'the opt-out offer'],
+    [/Why I do it this way/i, 'the reason the process exists at all'],
+  ];
+  for (const [re, what] of claims) {
+    assert.match(pin, re, `pin is missing: ${what}`);
+  }
+});

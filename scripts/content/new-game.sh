@@ -380,6 +380,12 @@ Max ~REPLACE hours
 
 **Tools:**
 Discord VC, D&D Beyond & FoundryVTT (links will be provided)
+
+**AI:**
+Tokens for my own custom NPCs are AI-drawn where no stock art exists for them,
+and my prep writing is AI-assisted — never in place of a paid artist and never
+at the table itself; the full detail is pinned in the server, and plain tokens
+are yours for the asking.
 \`\`\`
 
 ## Playstyle & expectations

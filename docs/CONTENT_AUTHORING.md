@@ -477,6 +477,15 @@ Prefer painterly art for a particular face? Generate it in any web UI
 place, same `image:` line — steps 2–4 are identical. The two sources coexist
 per-character; swapping later is a one-line change.
 
+Both routes produce **AI-generated imagery** and both need disclosing to
+players: a model drew the picture from a prompt, whether the output was vector
+code or a painted PNG. The standing wording lives in the vault's
+`00 Index/AI disclosure.md`, with a one-line version inside the advert's paste
+block (`05 Templates/Advert Template.md`, mirrored by `new-game.sh`); keep the
+two in step. Maps out of `scripts/maps/render_map.py` are *not* in scope — the
+renderer is deterministic, seeding each flourish from the tile's own
+coordinates, so one spec always yields one map.
+
 ### The gate: prove it, not promise it
 
 ```bash
