@@ -36,6 +36,29 @@ import { compilePregen, signed } from './pregen.mjs';
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
 
+/**
+ * Which rules editions a template can print.
+ *
+ * A list rather than one value, because a form is not tied to an edition the way
+ * the rules are. Measured on the WotC fillable sheet: a 2024 character writes
+ * the same 58 values as a 2014 one and every one of them has a box, so the same
+ * blank prints both. What changed between editions is mostly the *names* of
+ * table columns (`cantrips-known` became `cantrips`, `ki-points` became
+ * `focus-points`), and those live in the cache, not on the form.
+ *
+ * Accepts the older single `edition` key so an entry written before this stays
+ * valid.
+ */
+export function editionsOf(template) {
+  if (Array.isArray(template?.editions)) return template.editions.map(String);
+  return template?.edition ? [String(template.edition)] : [];
+}
+
+/** The first template that can print this edition. */
+export function templateFor(templates, edition) {
+  return Object.keys(templates).find(id => editionsOf(templates[id]).includes(String(edition)));
+}
+
 export async function loadTemplates(referenceDir) {
   const dir = referenceDir ?? path.join(REPO_ROOT, 'content', 'reference');
   const file = path.join(dir, 'sheet-templates.json');
@@ -195,16 +218,15 @@ export async function writeSheet(notePath, opts = {}) {
     hooks: opts.hooks,
   });
 
-  const id = opts.template ?? `wotc-${character.edition}`;
+  const id = opts.template ?? templateFor(templates, character.edition);
   const template = templates[id];
   if (!template) {
     throw new Error(`Unknown sheet template "${id}". Known: ${Object.keys(templates).join(', ')}`);
   }
-  if (template.edition !== character.edition) {
-    // A 2024 character on a 2014 form would print numbers the boxes do not
-    // mean. The mismatch is an error, never a silent substitution.
+  if (!editionsOf(template).includes(character.edition)) {
     throw new Error(
-      `${character.name} is ${character.edition} but template "${id}" is ${template.edition}.`,
+      `${character.name} is ${character.edition} but template "${id}" covers ` +
+        `${editionsOf(template).join(', ')}.`,
     );
   }
 
