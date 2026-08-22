@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Compile a whole game's vault notes in one pass: every NPCs/*.md with a
 // ```statblock fence becomes an actor JSON, every Handouts/*.md with image
-// embeds becomes an image journal. This replaces the most manual step in the
+// embeds becomes an image journal, and every Scenes/*.md carrying an ambience
+// cue stamps that cue onto its scene. This replaces the most manual step in the
 // loop — one statblock.mjs / handout.mjs invocation per note.
 //
 // Usage:
@@ -16,7 +17,8 @@ import path from 'node:path';
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { compileNote } from './statblock.mjs';
-import { compileHandout, slug } from './handout.mjs';
+import { compileHandout, parseFrontmatter, slug } from './handout.mjs';
+import { readGameAudio, resolveCue, stampCue } from './cue.mjs';
 
 /** True when `out` is missing or older than `note`. */
 async function stale(note, out) {
@@ -37,15 +39,16 @@ async function noteFiles(dir) {
 }
 
 /**
- * Compile every stale statblock and handout note under `gameDir`.
- * Returns { actors, handouts, errors }; entries carry { note, out, skipped,
- * warnings, deltas }. Errors are per-note strings, never thrown, so one bad
- * note cannot hide the state of the others.
+ * Compile every stale statblock and handout note under `gameDir`, and stamp
+ * every scene note's ambience cue onto the scene it belongs to.
+ * Returns { actors, handouts, cues, errors }; entries carry { note, out,
+ * skipped, warnings, deltas }. Errors are per-note strings, never thrown, so
+ * one bad note cannot hide the state of the others.
  */
 export async function compileGame(gameDir, opts = {}) {
   // <vault>/<section>/<game> — the vault root anchors handout image paths.
   const vault = opts.vault ?? path.dirname(path.dirname(path.resolve(gameDir)));
-  const report = { actors: [], handouts: [], errors: [] };
+  const report = { actors: [], handouts: [], cues: [], errors: [] };
 
   for (const file of await noteFiles(path.join(gameDir, 'NPCs'))) {
     const note = path.join(gameDir, 'NPCs', file);
@@ -106,6 +109,47 @@ export async function compileGame(gameDir, opts = {}) {
     }
   }
 
+  // Ambience cues. Deliberately not mtime-gated like the passes above: the
+  // scene JSON is both the input and the output here, and regenerating a map
+  // through dd2vtt-to-scene.mjs writes a fresh file with no cue on it. A
+  // mtime check would call that file current and silently drop the cue, so
+  // the cue is recomputed every run and written only when it differs.
+  const game = await readGameAudio(gameDir);
+  for (const file of await noteFiles(path.join(gameDir, 'Scenes'))) {
+    const note = path.join(gameDir, 'Scenes', file);
+    const out = path.join(
+      gameDir,
+      'Foundry',
+      'src',
+      'scenes',
+      `${slug(path.basename(file, '.md'))}.json`,
+    );
+    try {
+      const audio = resolveCue(parseFrontmatter(await readFile(note, 'utf8')), game);
+      if (!audio) continue; // No cue yet, or silence on purpose.
+
+      let scene;
+      try {
+        scene = JSON.parse(await readFile(out, 'utf8'));
+      } catch {
+        // A scene note routinely lands before its map does. Say so and move
+        // on — the cue is not lost, it stamps on the next run.
+        report.cues.push({ note, out, skipped: true, warning: 'no scene JSON yet' });
+        continue;
+      }
+
+      const { scene: stamped, changed } = stampCue(scene, audio);
+      if (!changed) {
+        report.cues.push({ note, out, skipped: true });
+        continue;
+      }
+      await writeFile(out, `${JSON.stringify(stamped, null, 2)}\n`);
+      report.cues.push({ note, out, skipped: false, cue: audio.cue });
+    } catch (err) {
+      report.errors.push(`${note}: ${err.message}`);
+    }
+  }
+
   return report;
 }
 
@@ -137,6 +181,12 @@ async function main() {
   }
   for (const h of report.handouts) {
     console.log(`${h.skipped ? 'fresh ' : 'journal'} ${path.relative(opts.gameDir, h.out)}`);
+  }
+  for (const c of report.cues) {
+    // A warned cue is neither written nor current, so it must not read "fresh".
+    const label = c.warning ? 'no cue' : c.skipped ? 'fresh ' : 'cue   ';
+    console.log(`${label} ${path.relative(opts.gameDir, c.out)}`);
+    if (c.warning) console.warn(`  warning: ${c.warning}`);
   }
   for (const e of report.errors) console.error(`FAIL ${e}`);
   if (report.errors.length) {

@@ -74,6 +74,16 @@ carries no note content and stays out of git.
   one-writer / sync-clobber caveat applies, and the host dir must be writable
   by the container's runtime UID or writes fail. Restart the Foundry stack
   (`docker compose up -d`) to apply.
+- **Audio is a vault fact, not a Foundry one.** There is deliberately no
+  `Playlist` collection: a Foundry playlist streams from your server to every
+  connected client and does nothing for the sessions run in person. Each scene
+  note carries `audio_source` / `audio_ref` / `audio_cue`, the game's
+  `Soundtrack.md` names the bot once and renders a paste-ready cue sheet, and
+  `compile-game.mjs` copies the cue onto the built scene so a GM-only macro can
+  whisper it at the scene change. Never answer an audio question by creating a
+  Foundry playlist — see
+  [`docs/CONTENT_AUTHORING.md`](CONTENT_AUTHORING.md#ambience-stays-out-of-foundry),
+  which also records why FlaviBot and Spotify cannot be driven from Foundry.
 
 ### This repo is the pipeline, not the content
 

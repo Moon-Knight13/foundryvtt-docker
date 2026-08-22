@@ -51,6 +51,13 @@ This page is a landing pad. Anything past "how do I start it" lives in
   gate** that proves no blank tokens, `build.mjs` packages the module, and
   `ship-game.sh` runs compile → gate → build → sync → Foundry restart in one
   command. Gated in CI by the `content-tests` workflow.
+- **Ambience deliberately stays outside Foundry** — a Foundry playlist streams
+  from your server to every client and does nothing for a session run in person,
+  so there is no `Playlist` collection. Each scene note carries its own cue, each
+  game's `Soundtrack.md` renders those into a paste-ready cue sheet, and a
+  GM-only macro whispers the cue as the scene loads so the music change happens
+  at the scene change. See
+  [`docs/CONTENT_AUTHORING.md`](docs/CONTENT_AUTHORING.md#ambience-stays-out-of-foundry).
 
 The repository itself is developed AI-first — devcontainer, deny-by-default
 firewall, CI gates, Kanban flow — from
@@ -98,7 +105,7 @@ docker compose -f compose.yml -f compose.cloudflare.yml up -d   # remote access 
 | --- | --- |
 | [`DEPLOYMENT.md`](DEPLOYMENT.md) | Deployment guide: env setup, profiles, monitoring, performance, troubleshooting |
 | [`docs/PROJECT.md`](docs/PROJECT.md) | FoundryVTT specifics for agents: MCP integration, content routing, container operations, security hard rules |
-| [`docs/CONTENT_AUTHORING.md`](docs/CONTENT_AUTHORING.md) | Content-as-code pipeline: compile statblocks, curated art map + coverage gate, build → sync → import; skill-vs-MCP routing |
+| [`docs/CONTENT_AUTHORING.md`](docs/CONTENT_AUTHORING.md) | Content-as-code pipeline: compile statblocks, curated art map + coverage gate, build → sync → import; ambience cues and why they stay out of Foundry; skill-vs-MCP routing |
 | [`docs/FOUNDRY_REBUILD.md`](docs/FOUNDRY_REBUILD.md) | The golden base and the rebuild drill: pinned modules, snapshot vs golden image, world settings templates, and rebuilding a wiped install from the durable sources (vault, git content module, D&D Beyond) |
 | [`examples/vault-skeleton/`](examples/vault-skeleton/) | Copy-to-start Obsidian vault: taxonomy, blank Templater templates, and the in-person/Foundry "two surfaces" guide |
 | [`scripts/maps/README.md`](scripts/maps/README.md) | Spec-driven battlemap generator: Player PNG + keyed DM PNG + Foundry `.dd2vtt` |

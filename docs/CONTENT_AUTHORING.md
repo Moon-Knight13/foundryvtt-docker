@@ -257,7 +257,8 @@ So ambience is prep, not content. Each scene note carries the cue:
 
 ```yaml
 audio_source: tabletopaudio   # tabletopaudio | spotify | local | none
-audio_ref: https://tabletopaudio.com/...   # or a filename under 06 Assets/Audio/
+audio_ref: https://tabletopaudio.com/...   # or a saved-playlist name, or a
+                                           # filename under 06 Assets/Audio/
 audio_cue: as the boat leaves the jetty
 ```
 
@@ -269,14 +270,87 @@ The cue lives on the scene note rather than in a list, so it cannot drift from
 the scene it belongs to, and the sheet stays correct as scenes are added without
 anyone maintaining it.
 
-**The sheet carries a link, never a command.** Bot syntax changes and varies by
-bot; a cue sheet that prints a wrong command is worse than one that prints a
-link you can paste into whatever you actually use.
-
 Local clips live in `06 Assets/Audio/`, shared across games the way
 `06 Assets/Tokens/` is. Because the vault is mounted inside Foundry's data root,
 Foundry *can* see them — the discipline is that we never build playlists from
 them.
+
+### Two tiers, because games are not shaped the same
+
+`Soundtrack.md`'s own frontmatter names the bot and one playlist for the whole
+game:
+
+```yaml
+audio_bot: flavibot
+audio_command: "/play {ref}"
+soundtrack_playlist: https://open.spotify.com/playlist/...
+```
+
+A scene's own `audio_ref` wins over that playlist; a scene without one falls
+back to it. Which tier you use is a property of the game, not a preference:
+
+- **Runs start to finish** — set `soundtrack_playlist` and leave `audio_ref`
+  off. One paste when the bot joins, and every change after that is the skip
+  button on the bot's control panel.
+- **Jumps around** — back to the tavern, into a surprise fight, revisiting a
+  location. "Next" means nothing here, so each scene names its own ref.
+
+### The sheet prints a command (a reversal)
+
+This section used to say, in bold, that the sheet carries **a link, never a
+command** — because bot syntax varies and drifts, and a sheet printing a wrong
+command is worse than one printing a link.
+
+That is now reversed. The concern was real but the trade was wrong: the sheet
+exists to remove steps at the exact moment they get skipped, and "translate this
+link into your bot's syntax" is a step. What answers the original concern is
+keeping the syntax in **one** place per game rather than on every row — the
+`audio_command` field above, with `{ref}` substituted per scene. Switching bots
+is a one-line edit in one file; it was never going to be a per-scene fact.
+
+### Getting the cue in front of you at the scene change
+
+A cue sheet in Obsidian is the right artifact for an in-person table and the
+wrong one for an online session, where you are looking at Foundry. So
+`compile-game.mjs` copies each scene note's cue onto the Foundry scene it maps
+to (by slug, `Scenes/The Belfry.md` → `src/scenes/the-belfry.json`), under
+`flags['foundry-cue'].audio`, and every scaffolded game ships a GM-only **Cue
+reminder** macro. Run it once at the start of a session; from then on each scene
+load whispers you that scene's cue and its paste-ready command.
+
+**A flag is not a playlist.** It carries four strings. Nothing streams from your
+server, and the standing rule above is intact — which is the point, because the
+in-person half of the calendar depends on it.
+
+Two details worth knowing when changing this:
+
+- Cues are recomputed on every run rather than gated on mtimes like the actor
+  and handout passes. Regenerating a map through `dd2vtt-to-scene.mjs` rewrites
+  the scene JSON wholesale, leaving a file that is *newer* than the note and
+  carries no cue; an mtime check would call that current and drop the cue with
+  no warning. Nothing is written when the cue is unchanged.
+- A scene note with no scene JSON yet is a reported warning, not an error. Scene
+  notes routinely land before their maps do.
+
+### What is not automated, and why
+
+The bot cannot be driven from Foundry, and this is settled rather than pending:
+
+- **FlaviBot is hosted-only** — no self-hosting, no public API. Its GitHub org
+  publishes the ingredients (a Lavalink fork, Shoukaku, Eris, nirn-proxy), not
+  the bot. Driving it programmatically would mean issuing slash commands from a
+  user account, which is a selfbot and against Discord's terms.
+- **Spotify's playback endpoints need Premium** (`403 PREMIUM_REQUIRED`) plus
+  OAuth and refresh-token handling, and break when the active device changes.
+- **Half the sessions have no Discord voice at all.** Anything that only works
+  online is dead weight on the other half — the same reasoning that moved
+  ambience out of Foundry to begin with.
+
+So the target is not a bot that plays on its own. It is a reminder that arrives
+without being remembered, and a command that pastes without being read. A
+hook-runner module could auto-arm the macro and drop the once-per-session run,
+but that is another pinned dependency, and PR #122 is the standing reminder of
+what a floating manifest costs.
 
 ## Stat blocks: compile, don't transcribe
 

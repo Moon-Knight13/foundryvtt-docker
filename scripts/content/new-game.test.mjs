@@ -7,11 +7,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadConfig } from './build.mjs';
+import { CUE_FLAG_SCOPE } from './cue.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
 const SCRIPT = path.join(SCRIPT_DIR, 'new-game.sh');
-const TYPE_DIRS = ['actors', 'items', 'journals', 'scenes', 'tables'];
+const TYPE_DIRS = ['actors', 'items', 'journals', 'macros', 'scenes', 'tables'];
 
 function run(args) {
   return execFileSync('bash', [SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
@@ -138,6 +139,45 @@ test('new-game.sh scaffolds the full vault game folder by default', async () => 
   }
 });
 
+test('a scaffolded game ships the cue reminder macro, ready to build', async () => {
+  const vault = await mkdtemp(path.join(os.tmpdir(), 'vault-'));
+  try {
+    run(['zzz-vault-game', '--vault', vault, '--system', 'dnd5e']);
+    const macro = JSON.parse(
+      await readFile(
+        path.join(
+          vault,
+          '03 Oneshots',
+          'Zzz Vault Game',
+          'Foundry',
+          'src',
+          'macros',
+          'cue-reminder.json',
+        ),
+        'utf8',
+      ),
+    );
+
+    // build.mjs requires all three; a macro with no command is a button that
+    // does nothing, which you only discover by pressing it mid-session.
+    assert.equal(macro.type, 'script');
+    assert.ok(macro.name);
+    assert.ok(macro.command);
+
+    // It reads the flag compile-game.mjs writes. If either side renames the
+    // scope, the reminder goes quiet rather than failing loudly — so pin it.
+    assert.ok(
+      macro.command.includes(CUE_FLAG_SCOPE),
+      'macro must read the same flag scope the compiler writes',
+    );
+
+    // Cue text is authored in the vault but lands in chat HTML.
+    assert.match(macro.command, /esc\(/);
+  } finally {
+    await rm(vault, { recursive: true, force: true });
+  }
+});
+
 test('the soundtrack sheet reads scene cues and keeps audio out of Foundry', async () => {
   const vault = await mkdtemp(path.join(os.tmpdir(), 'vault-'));
   try {
@@ -161,6 +201,22 @@ test('the soundtrack sheet reads scene cues and keeps audio out of Foundry', asy
     for (const key of ['audio_source', 'audio_ref', 'audio_cue']) {
       assert.ok(sheet.includes(key), `expected ${key} documented in the sheet`);
     }
+
+    // `none` means silence was chosen; a blank means nobody has decided yet.
+    // The enum comment once omitted `none` while the prose below it told you
+    // to write exactly that — the sheet contradicted itself in twelve lines.
+    assert.match(sheet, /tabletopaudio \| spotify \| local \| none/);
+
+    // The bot is named once per game, so the per-scene rows stay bot-agnostic
+    // and switching bots is a one-line edit rather than a sweep.
+    assert.match(sheet, /^audio_bot: flavibot$/m);
+    assert.match(sheet, /^audio_command: "\/play \{ref\}"$/m);
+    assert.match(sheet, /^soundtrack_playlist: REPLACE$/m);
+
+    // Both tiers of the cue model are reachable from the sheet: the game
+    // playlist for games that run in order, a per-scene ref for games that
+    // jump around. `default()` is what makes the fallback work.
+    assert.match(sheet, /default\(audio_ref, this\.soundtrack_playlist\)/);
 
     // The standing rule, stated in the file itself: the vault is mounted inside
     // Foundry's data root, so Foundry CAN see these files. It must not serve

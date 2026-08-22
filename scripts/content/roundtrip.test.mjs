@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { extractPack } from '@foundryvtt/foundryvtt-cli';
 import { main, docId } from './build.mjs';
+import { CUE_FLAG_SCOPE } from './cue.mjs';
 
 const MODULE_ID = 'test-content';
 
@@ -102,6 +103,11 @@ test('scenes round-trip with embedded walls and lights', async () => {
       grid: { type: 1, size: 100, distance: 5, units: 'ft' },
       walls: [{ c: [0, 0, 1600, 0] }, { c: [1600, 0, 1600, 1600], door: 1, ds: 0 }],
       lights: [{ x: 800, y: 800, config: { dim: 30, bright: 15, color: '#ffdca8', alpha: 0.5 } }],
+      flags: {
+        [CUE_FLAG_SCOPE]: {
+          audio: { cue: 'as the beacon lights', command: '/play tower-list' },
+        },
+      },
     }),
   );
 
@@ -120,6 +126,14 @@ test('scenes round-trip with embedded walls and lights', async () => {
   assert.match(doc.walls[0]._id, /^[a-z0-9]{16}$/);
   assert.equal(doc.lights.length, 1);
   assert.match(doc.lights[0]._id, /^[a-z0-9]{16}$/);
+
+  // The ambience cue rides to the table on the scene itself. If packing drops
+  // an unknown flag scope, the Cue reminder macro goes quiet — and a reminder
+  // that fails silently is worse than no reminder, because you stop checking.
+  assert.deepEqual(doc.flags[CUE_FLAG_SCOPE].audio, {
+    cue: 'as the beacon lights',
+    command: '/play tower-list',
+  });
 });
 
 test('build fails loudly on invalid source', async () => {

@@ -1,0 +1,11 @@
+{
+  "command": "// Cue reminder \u2014 run once at the start of a session.\n//\n// From then on, every scene change whispers you that scene's ambience cue and\n// the command to paste into your music bot. The cue is compiled onto the scene\n// from its vault note by compile-game.mjs; nothing here streams audio, and\n// nothing here is a Foundry playlist (see docs/CONTENT_AUTHORING.md,\n// \"Ambience stays out of Foundry\").\n//\n// Safe to run twice \u2014 the second run just tells you it is already armed.\nconst SCOPE = \"foundry-cue\";\n\n// The cue is authored in your own vault, but it lands in chat HTML, so escape\n// it rather than trusting that no note ever contains an angle bracket.\nconst esc = s =>\n  String(s).replace(\n    /[&<>\"']/g,\n    c => ({ \"&\": \"&amp;\", \"<\": \"&lt;\", \">\": \"&gt;\", '\"': \"&quot;\", \"'\": \"&#39;\" })[c],\n  );\n\nconst show = scene => {\n  const audio = scene?.flags?.[SCOPE]?.audio;\n  if (!audio) return;\n  const rows = [];\n  if (audio.cue) rows.push(`<p><em>${esc(audio.cue)}</em></p>`);\n  const paste = audio.command ?? audio.ref;\n  if (paste) rows.push(`<p><code>${esc(paste)}</code></p>`);\n  if (!rows.length) return;\n  ChatMessage.create({\n    content: `<strong>&#9834; ${esc(scene.name)}</strong>${rows.join(\"\")}`,\n    whisper: [game.user.id],\n  });\n};\n\nif (globalThis.__foundryCueArmed) {\n  ui.notifications.info(\"Cue reminder is already armed for this session.\");\n} else {\n  Hooks.on(\"canvasReady\", () => show(canvas.scene));\n  globalThis.__foundryCueArmed = true;\n  ui.notifications.info(\"Cue reminder armed \u2014 each scene change will whisper its cue.\");\n  show(canvas.scene); // Do not wait for the next scene to say something useful.\n}\n",
+  "flags": {},
+  "img": "icons/svg/sound.svg",
+  "name": "Cue reminder (arm once)",
+  "ownership": {
+    "default": 0
+  },
+  "scope": "global",
+  "type": "script"
+}

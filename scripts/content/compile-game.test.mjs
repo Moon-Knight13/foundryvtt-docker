@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, writeFile, readFile, stat, utimes } from 'node:fs/promi
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { compileGame } from './compile-game.mjs';
+import { CUE_FLAG_SCOPE } from './cue.mjs';
 
 const GOBLIN_NOTE = `---
 type: npc
@@ -88,4 +89,118 @@ test('one broken note does not abandon the rest of the game', async () => {
   assert.match(report.errors[0], /Broken\.md/);
   assert.match(report.errors[0], /does-not-exist-anywhere/);
   assert.equal(report.actors.length, 1, 'the goblin still compiled');
+});
+
+/** Add a Soundtrack.md, a Scenes/ note, and the scene JSON it maps onto. */
+async function cueFixture({
+  sceneFrontmatter,
+  sheet = SOUNDTRACK,
+  scene = { name: 'The Belfry' },
+}) {
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Scenes'), { recursive: true });
+  await mkdir(path.join(gameDir, 'Foundry', 'src', 'scenes'), { recursive: true });
+  if (sheet !== null) await writeFile(path.join(gameDir, 'Soundtrack.md'), sheet);
+  await writeFile(
+    path.join(gameDir, 'Scenes', 'The Belfry.md'),
+    `---\n${sceneFrontmatter}\n---\n\n# The Belfry\n`,
+  );
+  const out = path.join(gameDir, 'Foundry', 'src', 'scenes', 'the-belfry.json');
+  if (scene !== null) await writeFile(out, `${JSON.stringify(scene, null, 2)}\n`);
+  return { gameDir, out };
+}
+
+const SOUNDTRACK =
+  '---\naudio_bot: flavibot\naudio_command: "/play {ref}"\nsoundtrack_playlist: game-list\n---\n\n# Sheet\n';
+
+async function audioOf(out) {
+  return JSON.parse(await readFile(out, 'utf8')).flags[CUE_FLAG_SCOPE].audio;
+}
+
+test('a scene note stamps its cue and a paste-ready command onto its scene', async () => {
+  const { gameDir, out } = await cueFixture({
+    sceneFrontmatter:
+      'audio_source: spotify\naudio_ref: belfry-list\naudio_cue: as the bells start',
+  });
+  const report = await compileGame(gameDir);
+
+  assert.equal(report.cues.length, 1);
+  assert.equal(report.cues[0].skipped, false);
+  assert.deepEqual(await audioOf(out), {
+    source: 'spotify',
+    ref: 'belfry-list',
+    cue: 'as the bells start',
+    command: '/play belfry-list',
+    bot: 'flavibot',
+  });
+});
+
+test('a scene with no ref of its own falls back to the game playlist', async () => {
+  const { gameDir, out } = await cueFixture({
+    sceneFrontmatter: 'audio_source: spotify\naudio_cue: as the doors close',
+  });
+  await compileGame(gameDir);
+  const audio = await audioOf(out);
+  assert.equal(audio.ref, 'game-list');
+  assert.equal(audio.command, '/play game-list');
+});
+
+test('deliberate silence stamps nothing at all', async () => {
+  const { gameDir, out } = await cueFixture({ sceneFrontmatter: 'audio_source: none' });
+  const report = await compileGame(gameDir);
+  assert.equal(report.cues.length, 0);
+  const scene = JSON.parse(await readFile(out, 'utf8'));
+  assert.equal(scene.flags?.[CUE_FLAG_SCOPE], undefined);
+});
+
+test('a scene note that has no scene JSON yet warns, and does not fail the run', async () => {
+  // Scene notes routinely land before their map does. Losing the whole
+  // compile over one is worse than saying so and carrying on.
+  const { gameDir } = await cueFixture({
+    sceneFrontmatter: 'audio_source: spotify\naudio_cue: later',
+    scene: null,
+  });
+  const report = await compileGame(gameDir);
+
+  assert.equal(report.errors.length, 0);
+  assert.equal(report.cues.length, 1);
+  assert.equal(report.cues[0].skipped, true);
+  assert.match(report.cues[0].warning, /no scene JSON yet/);
+});
+
+test('a cue survives its scene being regenerated from the map', async () => {
+  // dd2vtt-to-scene.mjs rewrites the scene JSON wholesale, which leaves it
+  // NEWER than the note and carrying no cue. An mtime check would call that
+  // file current and drop the cue silently — so cues are recomputed instead.
+  const { gameDir, out } = await cueFixture({
+    sceneFrontmatter: 'audio_source: spotify\naudio_ref: belfry-list\naudio_cue: bells',
+  });
+  await compileGame(gameDir);
+  await writeFile(out, `${JSON.stringify({ name: 'The Belfry' }, null, 2)}\n`);
+
+  await compileGame(gameDir);
+  assert.equal((await audioOf(out)).ref, 'belfry-list');
+});
+
+test('recompiling an unedited game rewrites nothing', async () => {
+  const { gameDir, out } = await cueFixture({
+    sceneFrontmatter: 'audio_source: spotify\naudio_cue: bells',
+  });
+  await compileGame(gameDir);
+  const before = (await stat(out)).mtimeMs;
+
+  const report = await compileGame(gameDir);
+  assert.equal(report.cues[0].skipped, true);
+  assert.equal((await stat(out)).mtimeMs, before);
+});
+
+test('a game with no Soundtrack.md still gets its cue text', async () => {
+  const { gameDir, out } = await cueFixture({
+    sceneFrontmatter: 'audio_source: local\naudio_cue: as the chanting starts',
+    sheet: null,
+  });
+  await compileGame(gameDir);
+  const audio = await audioOf(out);
+  assert.equal(audio.cue, 'as the chanting starts');
+  assert.equal(audio.command, null);
 });
