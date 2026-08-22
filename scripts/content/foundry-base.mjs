@@ -971,7 +971,7 @@ export const USAGE = `Usage:
   foundry-base.mjs promote <capture.json>            fill core pins from a capture
   foundry-base.mjs add <id> [--from <capture>]       promote a module into core
   foundry-base.mjs remove <id>                       drop a module from core
-  foundry-base.mjs update [id...]                    move pins to the latest published version
+  foundry-base.mjs update [id...] [--dry-run]        move pins to the latest published version
   foundry-base.mjs snapshot [--to <path>] [--keep <n>]  copy the data dir as a restore point
   foundry-base.mjs snapshot --force                  overwrite a backup holding worlds you lost
   foundry-base.mjs snapshot --golden [--to <path>]   copy it without worlds, as a clean slate
@@ -1469,51 +1469,168 @@ async function cmdRestore(opts) {
 }
 
 /**
+ * Which pins this run may move, and which are held back.
+ *
+ * A pin marked `coupled` is one half of a fact that lives in two places — the
+ * MCP bridge module and `MCP_VERSION` in scripts/setup-mcp.sh; the dnd5e system
+ * and the world data it migrates on first launch. Sweeping either along with
+ * fifteen ordinary module bumps is how a batch change breaks a stack quietly,
+ * so they are excluded unless named outright, which is what naming one means.
+ */
+export function updateTargets(manifest, only = []) {
+  const named = new Set(only);
+  const all = [...(manifest.system ? [manifest.system] : []), ...(manifest.core ?? [])].filter(e =>
+    named.size ? named.has(e.id) : true,
+  );
+  const entries = [];
+  const deferred = [];
+  for (const entry of all) {
+    if (entry.coupled && !named.has(entry.id))
+      deferred.push({ id: entry.id, reason: entry.coupled });
+    else entries.push(entry);
+  }
+  return { entries, deferred };
+}
+
+/**
+ * The URL to ask "what is current?".
+ *
+ * A version-locked `manifest` serves its own version forever, so checking it
+ * can only ever answer "current" — which is precisely what the notes on
+ * scene-packer and foundry-mcp-bridge already admit. `check` is the
+ * deliberately floating URL that keeps a locked pin visible to the watcher.
+ */
+export function checkUrlFor(entry) {
+  return entry.check ?? entry.manifest;
+}
+
+/**
+ * Ask every pin what version is current, and sort the answers into three very
+ * different kinds of news.
+ *
+ * `unreachable` is the one that matters most: a manifest URL that no longer
+ * resolves is **rot**, not staleness. GitLab expires the CI job artifact
+ * settings-extender resolves through, and a version-locked release URL 404s if
+ * the release is deleted. Either way the rebuild is already broken and nothing
+ * has said so — which is why the caller exits non-zero on it, while a module
+ * merely having moved is routine.
+ */
+export async function checkPins(entries, { fetchImpl = fetch } = {}) {
+  const bumps = [];
+  const current = [];
+  const unreachable = [];
+  const unpinned = [];
+  for (const entry of entries) {
+    if (!isInstallable(entry)) {
+      unpinned.push({ id: entry.id });
+      continue;
+    }
+    const url = checkUrlFor(entry);
+    let latest;
+    try {
+      const res = await fetchImpl(url);
+      if (!res.ok) {
+        unreachable.push({ id: entry.id, url, reason: `HTTP ${res.status}` });
+        continue;
+      }
+      latest = (await res.json()).version;
+    } catch (err) {
+      unreachable.push({ id: entry.id, url, reason: err.message });
+      continue;
+    }
+    if (!latest || latest === entry.version) current.push({ id: entry.id, version: entry.version });
+    else bumps.push({ id: entry.id, from: entry.version, to: latest });
+  }
+  return { bumps, current, unreachable, unpinned };
+}
+
+/**
+ * One report, used both as terminal output and as the body of the monthly PR,
+ * so the thing you read in CI is the thing you read locally.
+ *
+ * Pins that did not move are counted, not listed: a report is news.
+ */
+export function pinReport({
+  bumps = [],
+  current = [],
+  unreachable = [],
+  unpinned = [],
+  deferred = [],
+} = {}) {
+  const lines = [];
+  lines.push(bumps.length ? `${bumps.length} pin(s) moved:` : 'No pins moved.');
+  for (const b of bumps) lines.push(`  ${b.id} ${b.from} -> ${b.to}`);
+  if (unreachable.length) {
+    lines.push(
+      '',
+      `${unreachable.length} pin(s) could not be resolved AT ALL — this is rot, not staleness.`,
+    );
+    lines.push('A rebuild would fail on these today:');
+    for (const u of unreachable) lines.push(`  ${u.id}: ${u.reason}\n    ${u.url}`);
+  }
+  if (unpinned.length) {
+    lines.push(
+      '',
+      `${unpinned.length} pin(s) have no manifest URL yet: ${unpinned.map(u => u.id).join(', ')}`,
+    );
+  }
+  if (deferred.length) {
+    lines.push('', 'Held back — these move on their own, with their own change:');
+    for (const d of deferred) lines.push(`  ${d.id}: ${d.reason}`);
+  }
+  if (current.length) lines.push('', `${current.length} pin(s) already current.`);
+  return lines.join('\n');
+}
+
+/**
  * Move pins forward on purpose. Nothing here floats: `update` resolves the
  * latest published version, rewrites foundry-base.json, and leaves the change
  * in the working tree to be reviewed and committed like any other.
  */
-async function cmdUpdate(opts) {
+async function cmdUpdate(opts, deps = {}) {
   const manifestPath = opts.manifest || DEFAULT_MANIFEST;
   const manifest = await loadManifest(manifestPath);
-  const only = new Set(opts.positional);
-  const entries = [...(manifest.system ? [manifest.system] : []), ...(manifest.core ?? [])].filter(
-    e => (only.size ? only.has(e.id) : true),
-  );
-  if (!entries.length) throw new Error('Nothing matched — check the ids you passed.');
-
-  const changed = [];
-  for (const entry of entries) {
-    if (!isInstallable(entry)) {
-      console.log(`skip     ${entry.id}: no manifest URL pinned yet`);
-      continue;
-    }
-    const res = await fetch(entry.manifest);
-    if (!res.ok) {
-      console.log(`FAILED   ${entry.id}: manifest fetch returned ${res.status}`);
-      continue;
-    }
-    const latest = (await res.json()).version;
-    if (!latest || latest === entry.version) {
-      console.log(`current  ${entry.id} ${entry.version}`);
-      continue;
-    }
-    console.log(`bump     ${entry.id} ${entry.version} -> ${latest}`);
-    changed.push(`${entry.id} ${entry.version} -> ${latest}`);
-    entry.version = latest;
+  const { entries, deferred } = updateTargets(manifest, opts.positional);
+  if (!entries.length && !deferred.length) {
+    throw new Error('Nothing matched — check the ids you passed.');
   }
 
-  if (!changed.length) {
-    console.log('\nEverything already at its pinned version.');
-    return;
-  }
-  await writeFile(manifestPath, manifestJson(manifest));
-  console.log(`\nUpdated ${manifestPath}. Review, run \`provision\`, then commit the pin change.`);
-  // The MCP bridge pin and MCP_VERSION in setup-mcp.sh are the same fact; a
-  // silent divergence there is the drift this whole mechanism exists to stop.
-  if (changed.some(c => c.startsWith('foundry-mcp-bridge'))) {
+  const found = await checkPins(entries, { fetchImpl: deps.fetchImpl });
+  console.log(pinReport({ ...found, deferred }));
+
+  if (found.bumps.length && !opts.dryRun) {
+    const byId = new Map(entries.map(e => [e.id, e]));
+    for (const bump of found.bumps) byId.get(bump.id).version = bump.to;
+    await writeFile(manifestPath, manifestJson(manifest));
     console.log(
-      'NOTE: foundry-mcp-bridge moved — update MCP_VERSION in scripts/setup-mcp.sh to match.',
+      `\nUpdated ${manifestPath}. Review, run \`provision\`, then commit the pin change.`,
+    );
+    // The MCP bridge pin and MCP_VERSION in setup-mcp.sh are the same fact; a
+    // silent divergence there is the drift this whole mechanism exists to stop.
+    if (found.bumps.some(b => b.id === 'foundry-mcp-bridge')) {
+      console.log(
+        'NOTE: foundry-mcp-bridge moved — update MCP_VERSION in scripts/setup-mcp.sh to match,',
+      );
+      console.log('then re-run scripts/setup-mcp.sh. The module and the server are one fact.');
+    }
+  } else if (found.bumps.length) {
+    console.log(`\nDry run: ${manifestPath} not written.`);
+  }
+
+  // Last, so a real bump is never discarded because another pin rotted — but
+  // still non-zero, because a URL that no longer resolves means the rebuild is
+  // broken today and only this command is in a position to say so.
+  if (found.unreachable.length) {
+    throw new Error(
+      `${found.unreachable.length} pin(s) could not be resolved — this is rot, not staleness,` +
+        '\nand they are listed above. A rebuild would fail on them today: a GitLab' +
+        '\njob artifact expires, and a version-locked release URL 404s once the' +
+        '\nrelease is deleted. Fix the URL rather than finding out mid-rebuild.' +
+        (existsSync('/.dockerenv')
+          ? '\n\nBUT this looks like a container, and the devcontainer firewall allows' +
+            '\nonly an allowlist of hosts — gitlab.com is not on it, so those pins' +
+            '\nfail here whatever their real state. Believe this from CI or the host.'
+          : ''),
     );
   }
 }
@@ -2210,7 +2327,7 @@ export const COMMANDS = [
   'new-world',
 ];
 
-export async function main(argv = process.argv.slice(2)) {
+export async function main(argv = process.argv.slice(2), deps = {}) {
   const opts = parseArgs(argv);
   switch (opts.command) {
     case 'capture':
@@ -2226,7 +2343,7 @@ export async function main(argv = process.argv.slice(2)) {
     case 'remove':
       return cmdRemove(opts);
     case 'update':
-      return cmdUpdate(opts);
+      return cmdUpdate(opts, deps);
     case 'snapshot':
       return cmdSnapshot(opts);
     case 'restore':

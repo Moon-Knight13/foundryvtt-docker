@@ -42,6 +42,7 @@ node scripts/content/foundry-base.mjs world-capture <world>  # record a configur
 node scripts/content/foundry-base.mjs promote <capture>  # fill core pins from a capture
 node scripts/content/foundry-base.mjs provision         # install the pinned system + modules
 node scripts/content/foundry-base.mjs update [id...]    # move pins forward, deliberately
+node scripts/content/foundry-base.mjs update --dry-run # report staleness, write nothing
 node scripts/content/foundry-base.mjs snapshot          # full copy of the data dir, worlds included
 node scripts/content/foundry-base.mjs snapshot --keep 3 # …keeping three generations, not two
 node scripts/content/foundry-base.mjs restore --yes     # put that full copy back
@@ -179,6 +180,69 @@ version, the way `scene-packer` does.
 
 Note what this means for `verify`'s advice: `provision` fixes a **missing** pin,
 never a **drifted** one — running it again just fetches latest again.
+
+### Keeping pins fresh without letting them float
+
+Locking a URL makes the manifest binding on a rebuild, and then the pin goes
+stale in silence: six months on, a rebuild installs a module set nobody chose.
+Neither floating nor locking is safe alone. What makes it safe is locking the
+versions *and* watching them, with a human deciding when to move.
+
+`update --dry-run` is the watcher's primitive — it reports and writes nothing:
+
+```bash
+node scripts/content/foundry-base.mjs update --dry-run   # what would move
+node scripts/content/foundry-base.mjs update             # move it, in the working tree
+node scripts/content/foundry-base.mjs update dnd5e       # move one pin, by name
+```
+
+It sorts the answers into things that mean different things:
+
+| Report | Means |
+| --- | --- |
+| *pins moved* | ordinary staleness — this is what the monthly PR is for |
+| *could not be resolved AT ALL* | **rot.** The URL is dead; a rebuild would fail on it today. The command exits non-zero |
+| *held back* | a coupled pin, excluded from the batch on purpose |
+| *no manifest URL yet* | a placeholder pin, never guessed at |
+
+Two manifest fields carry that behaviour. **`coupled`** marks a pin that is half
+of a fact living in two places, so `update` holds it out of a batch and names
+it; ask for it by id to move it. **`check`** is a deliberately floating URL used
+only to ask what is current — a version-locked `manifest` serves its own version
+forever, so a locked pin without a `check` URL is invisible to the watcher and
+will report "current" until the day it breaks.
+
+Three pins are coupled, and each is coupled to something a batch bump would
+miss:
+
+- **`foundry-mcp-bridge`** ↔ `MCP_VERSION` in `scripts/setup-mcp.sh`. The module
+  and the server are one fact; moving one alone is the drift `docs/PROJECT.md`
+  records as a real failure. Move both, then re-run that script.
+- **`dnd5e`** migrates world data on first launch, and downgrades are
+  unsupported. Its own change, its own snapshot first, its own game-free evening.
+- **`FOUNDRY_VERSION`** in `.env` is not in the manifest at all and no workflow
+  can see it. It moves by hand, deliberately, or not at all.
+
+**The monthly PR.** `.github/workflows/pin-freshness.yml` runs the dry-run on the
+1st of each month (and on demand), and opens or refreshes a single
+`pins/monthly` PR when anything moved. It **never merges** — "always latest" is
+the hazard the manifest exists to prevent, and an auto-merging watcher would
+reintroduce it wearing a badge. It runs on a GitHub runner rather than the host
+because runners have open egress: the devcontainer firewall allows an allowlist
+that does not include `gitlab.com`, so the four GitLab pins can never be
+resolved from inside it and always report as rot there. Believe a rot report
+from CI or the host, not from the devcontainer.
+
+**Applying it is a ritual, and the last step is the one that gets forgotten:**
+
+1. Between sessions, **never on game day**.
+2. Merge the pins PR, then `git pull` on the host.
+3. `foundry-base.mjs provision` — exits non-zero if a URL served something other
+   than the pin.
+4. `foundry-base.mjs verify` — the gate.
+5. **`foundry-base.mjs snapshot --golden` again.** The golden image is stale the
+   moment pins move, and restoring it would otherwise put the old modules right
+   back.
 
 **A version-locked manifest is not a version-locked module.** The manifest names
 a version; the *zip it points at* is what gets installed, and those can disagree.

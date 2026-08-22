@@ -839,8 +839,12 @@
               The pinned system and <b>24 core modules</b> a rebuilt install needs — captured from a
               live world, never guessed at. <span class="mono">provision</span> installs them and
               fails if a URL served something other than the pin,
-              <span class="mono">verify</span> is the gate, and <span class="mono">new-world</span>
-              opens a world already configured from a captured settings template.
+              <span class="mono">verify</span> is the gate, and
+              <span class="mono">new-world</span> opens a world already configured from a captured
+              settings template. A monthly workflow runs
+              <span class="mono">update --dry-run</span> and opens a PR when pins move — it never
+              merges one, because a locked pin going stale and a floating pin drifting are two ways
+              to lose the same thing.
             </dd>
           </div>
           <div>
