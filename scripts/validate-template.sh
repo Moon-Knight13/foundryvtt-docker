@@ -219,6 +219,28 @@ else
     check "CODEOWNERS has no unfilled placeholder owners" "fail" "$_co_out"
 fi
 
+# 9. Foundry version single source. The pinned version lived in three places at
+# once -- .env.example, a compose default, and a doc sentence -- and two of them
+# were a build behind without anything noticing. A compose default is the
+# dangerous copy: it is what runs when .env is missing the line, and Foundry
+# migrates world data on first launch while refusing to downgrade. So the
+# variable is required, never defaulted, and this check keeps it that way.
+echo ""
+echo "[9] Foundry version single source:"
+_fv_defaults="$(grep -rn 'FOUNDRY_VERSION:-' compose*.yml 2>/dev/null || true)"
+if [[ -z "$_fv_defaults" ]]; then
+    check "no compose file hardcodes a FOUNDRY_VERSION default" "pass"
+else
+    check "no compose file hardcodes a FOUNDRY_VERSION default" "fail" \
+        "Found: ${_fv_defaults}. Use \${FOUNDRY_VERSION:?...} so .env stays the only source."
+fi
+if grep -qE '^FOUNDRY_VERSION=[0-9]' .env.example 2>/dev/null; then
+    check ".env.example pins a Foundry version" "pass"
+else
+    check ".env.example pins a Foundry version" "fail" \
+        "compose.yml requires FOUNDRY_VERSION; the template must ship a value to copy."
+fi
+
 echo ""
 if [[ $SKIP -gt 0 ]]; then
     echo "Results: ${PASS} passed, ${FAIL} failed, ${SKIP} skipped (subsystems off in template.conf)"

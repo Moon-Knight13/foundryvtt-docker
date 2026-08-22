@@ -22,6 +22,12 @@ Required variables:
   option), **or** `FOUNDRY_USERNAME` + `FOUNDRY_PASSWORD` as fallback
 - `FOUNDRY_ADMIN_KEY` — admin panel password (compose refuses to start
   without it)
+- `FOUNDRY_VERSION` — the pinned Foundry build (compose refuses to start
+  without it, on purpose). `.env` is the only place it is written: a default in
+  `compose.yml` would be a second copy, and the two drifted a build apart before
+  anyone noticed. A version bump migrates world data on first launch and
+  downgrades are unsupported, so an unset version must stop the stack rather
+  than quietly start an older Foundry. `.env.example` ships the current pin.
 
 Optional:
 
