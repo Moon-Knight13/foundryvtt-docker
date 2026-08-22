@@ -1182,7 +1182,12 @@
             <span class="mono">/releases/latest/</span> served that day. The lesson is in the
             manifest now &mdash;
             <b>a pinned version is a record, not a constraint; the URL decides</b> &mdash; and drift
-            is a failing exit code rather than a line of output nobody reads.
+            is a failing exit code rather than a line of output nobody reads. Twenty-one of the
+            twenty-five URLs now name an exact version, each with a floating
+            <span class="mono">check</span> URL beside it so a locked pin stays visible to the
+            monthly watcher; the four on <span class="mono">gitlab.com</span> float on purpose,
+            because that host is off the devcontainer firewall allowlist and a locked URL there
+            cannot be verified from here.
           </p>
         </div>
 

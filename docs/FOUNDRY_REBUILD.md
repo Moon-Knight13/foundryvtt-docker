@@ -166,10 +166,17 @@ and leaves it in the working tree to review and commit. It also warns when
 
 **A pinned version is a record, not a constraint — the URL decides.** The first
 end-to-end drill installed eight modules *newer* than their pins and reported
-success for every one. Almost every manifest URL in `foundry-base.json` ends in
-`/releases/latest/download/module.json` or points at a branch tip, so `provision`
-fetches whatever is current no matter what `version` says. `scene-packer` was the
-only pin that held, because its URL names a version.
+success for every one, because almost every manifest URL in `foundry-base.json`
+ended in `/releases/latest/download/module.json` or pointed at a branch tip:
+`provision` fetched whatever was current no matter what `version` said, and
+`scene-packer` was the only pin that held, because its URL named a version.
+
+Twenty-one of the twenty-five now name a version, each with a floating `check`
+URL beside it so it stays visible to the watcher (below). The four that do not
+are the `gitlab.com` pins, and they float **on purpose**: that host is not on the
+devcontainer firewall allowlist, so a locked tag URL there cannot be resolved or
+verified from inside the container, and an unverified URL 404s mid-rebuild. Each
+of those four says so in its own `note`. Locking them is host-side or CI work.
 
 `provision` now reads back what it installed and **exits non-zero on drift**,
 naming each module and what the URL actually served. A rebuild that installs
@@ -201,6 +208,7 @@ It sorts the answers into things that mean different things:
 | Report | Means |
 | --- | --- |
 | *pins moved* | ordinary staleness — this is what the monthly PR is for |
+| *moved but were left where they are* | the pin moved and its locked URL could not be rewritten mechanically. Move the URL and the version by hand, together |
 | *could not be resolved AT ALL* | **rot.** The URL is dead; a rebuild would fail on it today. The command exits non-zero |
 | *held back* | a coupled pin, excluded from the batch on purpose |
 | *no manifest URL yet* | a placeholder pin, never guessed at |
@@ -211,6 +219,17 @@ it; ask for it by id to move it. **`check`** is a deliberately floating URL used
 only to ask what is current — a version-locked `manifest` serves its own version
 forever, so a locked pin without a `check` URL is invisible to the watcher and
 will report "current" until the day it breaks.
+
+**A locked URL moves with the version it locks.** That is the failure mode
+locking introduces: write the new version into `foundry-base.json` while the URL
+still names the old tag, and `provision` installs the old one and reports drift
+against the record it was just handed. So `update` rewrites both — it finds the
+old version inside the `manifest` (and `download`) URL and swaps it, keeping
+whatever prefix the repo puts on its tags, since `lib-wrapper` ships `v1.13.5.1`
+and `dnd5e` ships `release-5.3.3`. A URL it *cannot* rewrite — a commit SHA, a
+branch tip, a CI job artifact — is never guessed at: that pin is reported as
+moved, left exactly where it is, and named for a hand edit. A pin visibly a
+month behind beats a `foundry-base.json` whose version and URL disagree.
 
 Three pins are coupled, and each is coupled to something a batch bump would
 miss:

@@ -1,8 +1,8 @@
 {
   "$comment": [
     "Golden base: the pinned system and modules a rebuilt Foundry install needs.",
-    "Nothing here floats. \"Always latest\" is the documented hazard, not the goal",
-    "(see docs/PROJECT.md on foundry-mcp module/server drift). Move a pin with",
+    "\"Always latest\" is the documented hazard, not the goal (see docs/PROJECT.md on",
+    "foundry-mcp module/server drift). Move a pin with",
     "`node scripts/content/foundry-base.mjs update`, review the diff, commit it.",
     "",
     "Ids and versions came from `foundry-base.mjs capture` against a live world,",
@@ -21,10 +21,23 @@
     "            id, together with its other half, in its own change.",
     "  check   - a deliberately floating URL, used ONLY to ask what is current. A",
     "            version-locked manifest URL serves its own version forever, so a",
-    "            locked pin without a check URL is invisible to the watcher."
+    "            locked pin without a check URL is invisible to the watcher.",
+    "",
+    "Every pin that can be is version-locked: the manifest URL names the exact tag",
+    "a rebuild installs, and a floating `check` URL sits beside it so the pin stays",
+    "visible to `update`. Before this, 22 URLs ended in /releases/latest/ or a branch",
+    "tip, so `provision` installed whatever was current and wrote that back \u2014 a",
+    "record of what happened, not a constraint on what will. The 2026-08-21 drill",
+    "proved it: nine pins installed at versions nobody chose.",
+    "",
+    "`update` moves a locked pin's URL and its version together, and reports rather",
+    "than half-moves a pin whose URL it cannot rewrite. The four gitlab.com pins",
+    "stay floating on purpose: that host is not on the devcontainer firewall",
+    "allowlist, so a locked tag URL cannot be verified from here. Each says so."
   ],
   "core": [
     {
+      "check": "https://raw.githubusercontent.com/adambdooley/foundry-vtt-mcp/master/packages/foundry-module/module.json",
       "coupled": "MCP_VERSION in scripts/setup-mcp.sh is the other half. The module and the server are one fact, and a batch bump would move one of them.",
       "download": "https://github.com/adambdooley/foundry-vtt-mcp/releases/download/v0.8.2/foundry-vtt-mcp.zip",
       "id": "foundry-mcp-bridge",
@@ -34,34 +47,40 @@
       "version": "0.8.2"
     },
     {
+      "check": "https://raw.githubusercontent.com/moo-man/FVTT-DD-Import/master/module.json",
       "id": "dd-import",
-      "manifest": "https://raw.githubusercontent.com/moo-man/FVTT-DD-Import/master/module.json",
+      "manifest": "https://raw.githubusercontent.com/moo-man/FVTT-DD-Import/6.1.1/module.json",
+      "note": "Version-locked to the 6.1.1 tag; `check` reads the master tip, which is where this module publishes without cutting release assets.",
       "title": "Universal Battlemap Importer",
       "version": "6.1.1"
     },
     {
+      "check": "https://github.com/mrprimate/ddb-importer/releases/download/latest/module.json",
       "id": "ddb-importer",
-      "manifest": "https://github.com/mrprimate/ddb-importer/releases/download/latest/module.json",
-      "note": "The only automated path for player characters, and D&D Beyond is their source of truth. Nothing else in the pipeline needs it \u2014 statblocks come from the vault via the SRD caches, scenes from dd-import, journals from obsidian-bridge \u2014 so it earns its pin on PCs alone. It is also the most expensive pin: a live D&D Beyond session cookie in world settings (the reason world-capture redacts credentials at all), twelve world-scoped world.ddb-* packs that die with the world, and therefore a full munch re-run as step 7 of every rebuild. Kept anyway: re-typing a party of sheets per session costs more than one re-run per rebuild, and rebuilds are rare while sessions are not.",
+      "manifest": "https://github.com/mrprimate/ddb-importer/releases/download/7.4.2/module.json",
+      "note": "The only automated path for player characters, and D&D Beyond is their source of truth. Nothing else in the pipeline needs it \u2014 statblocks come from the vault via the SRD caches, scenes from dd-import, journals from obsidian-bridge \u2014 so it earns its pin on PCs alone. It is also the most expensive pin: a live D&D Beyond session cookie in world settings (the reason world-capture redacts credentials at all), twelve world-scoped world.ddb-* packs that die with the world, and therefore a full munch re-run as step 7 of every rebuild. Kept anyway: re-typing a party of sheets per session costs more than one re-run per rebuild, and rebuilds are rare while sessions are not. Version-locked to the 7.4.2 release tag: the module also publishes under a rolling tag named literally `latest`, which is what the `check` URL reads.",
       "title": "D&D Beyond Importer",
       "version": "7.4.2"
     },
     {
+      "check": "https://github.com/SoSly/foundryvtt-obsidian-bridge/releases/latest/download/module.json",
       "id": "obsidian-bridge",
-      "manifest": "https://github.com/SoSly/foundryvtt-obsidian-bridge/releases/latest/download/module.json",
+      "manifest": "https://github.com/SoSly/foundryvtt-obsidian-bridge/releases/download/1.3.0/module.json",
       "title": "Obsidian Bridge",
       "version": "1.3.0"
     },
     {
+      "check": "https://github.com/ruipin/fvtt-lib-wrapper/releases/latest/download/module.json",
       "id": "lib-wrapper",
-      "manifest": "https://github.com/ruipin/fvtt-lib-wrapper/releases/latest/download/module.json",
+      "manifest": "https://github.com/ruipin/fvtt-lib-wrapper/releases/download/v1.13.5.1/module.json",
       "note": "Dependency of several below; pinned so it cannot float.",
       "title": "libWrapper",
       "version": "1.13.5.1"
     },
     {
+      "check": "https://github.com/farling42/foundryvtt-socketlib/releases/latest/download/module.json",
       "id": "socketlib",
-      "manifest": "https://github.com/farling42/foundryvtt-socketlib/releases/latest/download/module.json",
+      "manifest": "https://github.com/farling42/foundryvtt-socketlib/releases/download/v1.1.4/module.json",
       "note": "Dependency of several below; pinned so it cannot float.",
       "title": "socketlib",
       "version": "v1.1.4"
@@ -69,90 +88,103 @@
     {
       "id": "dice-so-nice",
       "manifest": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/-/raw/master/module/module.json",
-      "note": "Renders 3D dice in WebGL on every client \u2014 a lag lever if the canvas-off test points at client rendering.",
+      "note": "Renders 3D dice in WebGL on every client \u2014 a lag lever if the canvas-off test points at client rendering. Deliberately floating on the branch tip: gitlab.com is not on the devcontainer firewall allowlist, so a locked tag URL cannot be resolved or verified from here, and an unverified URL 404s mid-rebuild. Lock it from the host or a CI run, then give it a floating `check` URL.",
       "title": "Dice So Nice!",
       "version": "6.2.9"
     },
     {
       "id": "_chatcommands",
       "manifest": "https://gitlab.com/woodentavern/foundryvtt-chat-command-lib/-/raw/master/src/module.json",
+      "note": "Deliberately floating on the branch tip: gitlab.com is not on the devcontainer firewall allowlist, so a locked tag URL cannot be resolved or verified from here, and an unverified URL 404s mid-rebuild. Lock it from the host or a CI run, then give it a floating `check` URL.",
       "title": "Chat Commander",
       "version": "2.0.6"
     },
     {
       "id": "chatlog-prune",
       "manifest": "https://gitlab.com/tposney/chatlog-prune/-/raw/main/package/module.json",
+      "note": "Deliberately floating on the branch tip: gitlab.com is not on the devcontainer firewall allowlist, so a locked tag URL cannot be resolved or verified from here, and an unverified URL 404s mid-rebuild. Lock it from the host or a CI run, then give it a floating `check` URL.",
       "title": "Chat Log Prune",
       "version": "1.1.9"
     },
     {
+      "check": "https://github.com/mclemente/fvtt-dice-tray/releases/latest/download/module.json",
       "id": "dice-calculator",
-      "manifest": "https://github.com/mclemente/fvtt-dice-tray/releases/latest/download/module.json",
+      "manifest": "https://github.com/mclemente/fvtt-dice-tray/releases/download/4.0.5/module.json",
       "title": "Dice Tray",
       "version": "4.0.5"
     },
     {
+      "check": "https://github.com/xyzzy42/less-chat/releases/latest/download/module.json",
       "id": "less-chat",
-      "manifest": "https://github.com/xyzzy42/less-chat/releases/latest/download/module.json",
+      "manifest": "https://github.com/xyzzy42/less-chat/releases/download/v2.0.2/module.json",
       "title": "Less Chat",
       "version": "2.0.2"
     },
     {
+      "check": "https://github.com/Codas/foundryvtt-performance-hacks/releases/latest/download/module.json",
       "id": "fvtt-perf-optim",
-      "manifest": "https://github.com/Codas/foundryvtt-performance-hacks/releases/latest/download/module.json",
+      "manifest": "https://github.com/Codas/foundryvtt-performance-hacks/releases/download/v0.12.8/module.json",
       "title": "Prime Performance",
       "version": "0.12.8"
     },
     {
+      "check": "https://github.com/theripper93/enhancedcombathud/releases/latest/download/module.json",
       "id": "enhancedcombathud",
-      "manifest": "https://github.com/theripper93/enhancedcombathud/releases/latest/download/module.json",
+      "manifest": "https://github.com/theripper93/enhancedcombathud/releases/download/5.0.1/module.json",
       "title": "Argon - Combat HUD (CORE)",
       "version": "5.0.1"
     },
     {
+      "check": "https://github.com/theripper93/combat-tracker-dock/releases/latest/download/module.json",
       "id": "combat-tracker-dock",
-      "manifest": "https://github.com/theripper93/combat-tracker-dock/releases/latest/download/module.json",
+      "manifest": "https://github.com/theripper93/combat-tracker-dock/releases/download/5.0.0/module.json",
       "title": "Carousel Combat Tracker",
       "version": "5.0.0"
     },
     {
+      "check": "https://github.com/theripper93/enhancedcombathud-dnd5e/releases/latest/download/module.json",
       "id": "enhancedcombathud-dnd5e",
-      "manifest": "https://github.com/theripper93/enhancedcombathud-dnd5e/releases/latest/download/module.json",
+      "manifest": "https://github.com/theripper93/enhancedcombathud-dnd5e/releases/download/5.2.2/module.json",
       "note": "System half of Argon; enhancedcombathud alone does nothing for dnd5e.",
       "title": "Argon - Combat HUD (DND5E)",
       "version": "5.2.2"
     },
     {
+      "check": "https://github.com/ironmonk108/monks-combat-details/releases/latest/download/module.json",
       "id": "monks-combat-details",
-      "manifest": "https://github.com/ironmonk108/monks-combat-details/releases/latest/download/module.json",
+      "manifest": "https://github.com/ironmonk108/monks-combat-details/releases/download/14.03/module.json",
       "note": "Monk's combat quality-of-life; enabled in the reference world.",
       "title": "Monk's Combat Details",
       "version": "14.03"
     },
     {
+      "check": "https://github.com/ironmonk88/monks-combat-marker/releases/latest/download/module.json",
       "id": "monks-combat-marker",
-      "manifest": "https://github.com/ironmonk88/monks-combat-marker/releases/latest/download/module.json",
+      "manifest": "https://github.com/ironmonk88/monks-combat-marker/releases/download/12.01/module.json",
       "note": "Monk's combat quality-of-life; enabled in the reference world.",
       "title": "Monk's Combat Marker",
       "version": "12.01"
     },
     {
+      "check": "https://github.com/ironmonk108/monks-scene-navigation/releases/latest/download/module.json",
       "id": "monks-scene-navigation",
-      "manifest": "https://github.com/ironmonk108/monks-scene-navigation/releases/latest/download/module.json",
+      "manifest": "https://github.com/ironmonk108/monks-scene-navigation/releases/download/14.02/module.json",
       "note": "Monk's scene quality-of-life; enabled in the reference world.",
       "title": "Monk's Scene Navigation",
       "version": "14.02"
     },
     {
+      "check": "https://github.com/ironmonk108/monks-wall-enhancement/releases/latest/download/module.json",
       "id": "monks-wall-enhancement",
-      "manifest": "https://github.com/ironmonk108/monks-wall-enhancement/releases/latest/download/module.json",
+      "manifest": "https://github.com/ironmonk108/monks-wall-enhancement/releases/download/14.01/module.json",
       "note": "Monk's wall/door tooling; enabled in the reference world.",
       "title": "Monk's Wall Enhancement",
       "version": "14.01"
     },
     {
+      "check": "https://github.com/Larkinabout/fvtt-token-action-hud-core/releases/latest/download/module.json",
       "id": "token-action-hud-core",
-      "manifest": "https://github.com/Larkinabout/fvtt-token-action-hud-core/releases/latest/download/module.json",
+      "manifest": "https://github.com/Larkinabout/fvtt-token-action-hud-core/releases/download/2.1.1/module.json",
       "note": "Token action HUD; runs alongside Argon in the reference world.",
       "title": "Token Action HUD Core",
       "version": "2.1.1"
@@ -160,25 +192,28 @@
     {
       "id": "settings-extender",
       "manifest": "https://gitlab.com/foundry-azzurite/settings-extender/-/jobs/artifacts/2.0.0/raw/dist/settings-extender/module.json?job=build",
-      "note": "Library module; enabled in the reference world. WARNING: its manifest URL is a GitLab CI job artifact, and GitLab expires job artifacts. This pin can rot without anything changing here \u2014 if `provision` fails on it during a rebuild, the URL is the suspect, not the module.",
+      "note": "Library module; enabled in the reference world. WARNING: its manifest URL is a GitLab CI job artifact, and GitLab expires job artifacts. This pin can rot without anything changing here \u2014 if `provision` fails on it during a rebuild, the URL is the suspect, not the module. Left as it is for now: it already names a version, but it has no floating `check` URL, so `update` reads it as current forever \u2014 and gitlab.com is unreachable from the devcontainer, so a check URL cannot be verified from here. Both halves are host-side or CI work.",
       "title": "Settings Extender",
       "version": "2.0.0"
     },
     {
+      "check": "https://github.com/Feu-Secret/Tokenmagic/releases/latest/download/module.json",
       "id": "tokenmagic",
-      "manifest": "https://github.com/Feu-Secret/Tokenmagic/releases/latest/download/module.json",
+      "manifest": "https://github.com/Feu-Secret/Tokenmagic/releases/download/0.8.4/module.json",
       "note": "Visual effects; enabled in the reference world.",
       "title": "Token Magic FX",
       "version": "0.8.4"
     },
     {
+      "check": "https://github.com/Aedif/multi-token-edit/releases/latest/download/module.json",
       "id": "multi-token-edit",
-      "manifest": "https://github.com/Aedif/multi-token-edit/releases/latest/download/module.json",
+      "manifest": "https://github.com/Aedif/multi-token-edit/releases/download/3.3.1/module.json",
       "note": "Bulk placeable editor. Was excluded as overlapping the map-spec pipeline; kept because it is in active use.",
       "title": "Baileywiki Mass Edit",
       "version": "3.3.1"
     },
     {
+      "check": "https://github.com/League-of-Foundry-Developers/scene-packer/releases/latest/download/module.json",
       "id": "scene-packer",
       "manifest": "https://github.com/League-of-Foundry-Developers/scene-packer/releases/download/2.8.12/module.json",
       "note": "Was excluded as overlapping the compendium pipeline; kept because it is in active use. Its manifest URL is version-locked (.../2.8.12/...) rather than /latest/, so `update` can never move this pin \u2014 it will report \"current\" forever. Bump it by editing the URL and the version together.",
@@ -192,9 +227,10 @@
   },
   "games": [],
   "system": {
+    "check": "https://github.com/foundryvtt/dnd5e/releases/latest/download/system.json",
     "coupled": "A system bump migrates world data on first launch and downgrades are unsupported. It gets its own change, its own snapshot taken first, and its own game-free evening.",
     "id": "dnd5e",
-    "manifest": "https://github.com/foundryvtt/dnd5e/releases/latest/download/system.json",
+    "manifest": "https://github.com/foundryvtt/dnd5e/releases/download/release-5.3.3/system.json",
     "title": "D&D Fifth Edition",
     "version": "5.3.3"
   }
