@@ -194,6 +194,14 @@ export function poolNote(spec, { source } = {}) {
     `hp: ${spec.hp}`,
     '```',
     '',
+    '## Sheet',
+    '',
+    `Printed from the fence above: \`${spec.name}.pdf\`. Hand it to a player as it`,
+    'is, or let a game draw this character and print its own copy with the hooks',
+    'that game adds.',
+    '',
+    `![[${spec.name}.pdf]]`,
+    '',
     '> [!note] Provenance',
     source
       ? `> Read from \`${source}\`, then checked against it: every derived number`
