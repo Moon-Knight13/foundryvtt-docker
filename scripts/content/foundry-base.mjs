@@ -14,7 +14,7 @@
 //   node scripts/content/foundry-base.mjs promote <capture.json>
 //   node scripts/content/foundry-base.mjs provision [--dry-run]
 //   node scripts/content/foundry-base.mjs update [id...]
-//   node scripts/content/foundry-base.mjs snapshot [--golden] [--to <path>]
+//   node scripts/content/foundry-base.mjs snapshot [--golden] [--to <path>] [--keep <n>]
 //   node scripts/content/foundry-base.mjs restore --yes [--golden] [--from <path>]
 //   node scripts/content/foundry-base.mjs pull-games
 //   node scripts/content/foundry-base.mjs verify [world]
@@ -30,7 +30,7 @@
 // must live outside the repo tree and is refused if it does not.
 import path from 'node:path';
 import os from 'node:os';
-import { readFile, writeFile, mkdir, access, readdir, rm, rename } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access, readdir, rm, rename, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { randomInt } from 'node:crypto';
@@ -558,11 +558,110 @@ export function syncExcludes({ golden = false } = {}) {
   return excludes;
 }
 
-export function rsyncArgs(source, target, { golden = false } = {}) {
+export function rsyncArgs(source, target, { golden = false, linkDest = null } = {}) {
   const args = ['-a', '--delete'];
   for (const exclude of syncExcludes({ golden })) args.push('--exclude', exclude);
+  // Keeping a second backup would otherwise cost a second full copy of a data
+  // directory measured in gigabytes, because the sync writes to a staging
+  // directory rather than over the previous backup. --link-dest hardlinks
+  // whatever is unchanged since that backup, so the real cost is the delta.
+  // rsync replaces a changed file by writing a temp file and renaming over it,
+  // never in place, so the older copy keeps its own content.
+  if (linkDest) args.push('--link-dest', linkDest);
   args.push(source, target);
   return args;
+}
+
+/**
+ * How many backups to keep, newest first: `<target>`, `<target>.1`, and so on.
+ * Two is the floor that makes the drill failure impossible — one command can
+ * no longer be the difference between having a backup and not.
+ */
+export const DEFAULT_SNAPSHOT_KEEP = 2;
+
+export function snapshotKeep(explicit) {
+  if (explicit === undefined) return DEFAULT_SNAPSHOT_KEEP;
+  const keep = Number(explicit);
+  if (!Number.isInteger(keep) || keep < 1) {
+    throw new Error(`--keep needs a whole number of backups (got ${explicit}).`);
+  }
+  return keep;
+}
+
+/**
+ * Worlds the backup holds that the source no longer does — everything a
+ * `--delete` sync would erase from the backup.
+ *
+ * This is the whole safety property. During the 2026-08-21 drill the install
+ * lost worlds, and the reflex ("take a snapshot to be safe") would have
+ * mirrored the emptier source over the only copy. What saved it was a manual
+ * `mv` nothing had suggested.
+ */
+export function worldsOnlyInBackup(sourceWorlds, backupWorlds) {
+  const present = new Set(sourceWorlds);
+  return [...backupWorlds].filter(w => !present.has(w)).sort();
+}
+
+/** World ids in a data directory or a snapshot of one. Missing dir means none. */
+export async function listWorlds(dir) {
+  const entries = await readdir(path.join(dir, WORLDS_DIR), { withFileTypes: true }).catch(
+    () => [],
+  );
+  return entries
+    .filter(e => e.isDirectory())
+    .map(e => e.name)
+    .sort();
+}
+
+/**
+ * What to move and what to drop before the staged sync takes over `<target>`,
+ * so the previous backup survives as `<target>.1`.
+ *
+ * Deliberately does not prune slots above `keep`: lowering `--keep` should not
+ * silently delete backups somebody already has. Only the one falling off the
+ * end of the rotation is removed.
+ */
+export function rotationPlan(target, { keep = DEFAULT_SNAPSHOT_KEEP, exists = new Set() } = {}) {
+  if (keep <= 1 || !exists.has(target)) return { remove: [], moves: [] };
+  const slot = i => `${target}.${i}`;
+  const remove = exists.has(slot(keep - 1)) ? [slot(keep - 1)] : [];
+  const moves = [];
+  for (let i = keep - 2; i >= 1; i--) {
+    if (exists.has(slot(i))) moves.push({ from: slot(i), to: slot(i + 1) });
+  }
+  moves.push({ from: target, to: slot(1) });
+  return { remove, moves };
+}
+
+/**
+ * Where a snapshot is written before it earns the backup path.
+ *
+ * rsync into `<target>` directly means the backup is incomplete for as long as
+ * the sync runs, and stays incomplete if it dies — a half-written backup at the
+ * path everyone reaches for. Staging costs a rename.
+ */
+export function syncStage(target) {
+  return `${target}.incoming`;
+}
+
+/**
+ * The previous backup, as rsync wants it: absolute, or nothing on a first run.
+ *
+ * rsync resolves a relative --link-dest against the *destination* directory
+ * rather than the working directory, so a relative one hardlinks nothing and
+ * says nothing about it.
+ */
+export function linkDestFor(target, previousExists) {
+  return previousExists ? path.resolve(target) : null;
+}
+
+/** One line naming what a backup held, so an overwrite is visible in the log. */
+export function backupSummary(target, worlds, mtime) {
+  const when = mtime
+    ? `${new Date(mtime).toISOString().slice(0, 16).replace('T', ' ')} UTC`
+    : 'unknown date';
+  const held = worlds.length ? `${worlds.length} world(s): ${worlds.join(', ')}` : 'no worlds';
+  return `Existing backup ${target} (${when}) holds ${held}.`;
 }
 
 /**
@@ -674,6 +773,8 @@ export function parseArgs(argv) {
     else if (a === '--dry-run') opts.dryRun = true;
     else if (a === '--yes') opts.yes = true;
     else if (a === '--golden') opts.golden = true;
+    else if (a === '--force') opts.force = true;
+    else if (a === '--keep') opts.keep = argv[++i];
     else if (a === '--title') opts.title = argv[++i];
     else if (a === '--description') opts.description = argv[++i];
     else if (a === '--system') opts.system = argv[++i];
@@ -693,7 +794,8 @@ export const USAGE = `Usage:
   foundry-base.mjs add <id> [--from <capture>]       promote a module into core
   foundry-base.mjs remove <id>                       drop a module from core
   foundry-base.mjs update [id...]                    move pins to the latest published version
-  foundry-base.mjs snapshot [--to <path>]            copy the data dir as a restore point
+  foundry-base.mjs snapshot [--to <path>] [--keep <n>]  copy the data dir as a restore point
+  foundry-base.mjs snapshot --force                  overwrite a backup holding worlds you lost
   foundry-base.mjs snapshot --golden [--to <path>]   copy it without worlds, as a clean slate
   foundry-base.mjs restore --yes [--from <path>]     recreate the data dir from a snapshot
   foundry-base.mjs restore --golden --yes            reset the instance, leaving worlds alone
@@ -960,13 +1062,88 @@ async function cmdProvision(opts) {
   }
 }
 
+/** Which rotation slots are on disk right now, `<target>` through `<target>.<keep-1>`. */
+async function existingSlots(target, keep) {
+  const candidates = [target];
+  for (let i = 1; i < keep; i++) candidates.push(`${target}.${i}`);
+  const found = new Set();
+  for (const c of candidates) {
+    const present = await access(c).then(
+      () => true,
+      () => false,
+    );
+    if (present) found.add(c);
+  }
+  return found;
+}
+
+/**
+ * Free up `<target>` by shifting the existing backups down a slot, and report
+ * the plan that was carried out.
+ *
+ * Renames, not copies: instant whatever the size of the tree, and they leave
+ * the hardlinks the staged sync just made intact.
+ */
+export async function rotateBackups(target, { keep = DEFAULT_SNAPSHOT_KEEP } = {}) {
+  const plan = rotationPlan(target, { keep, exists: await existingSlots(target, keep) });
+  for (const stale of plan.remove) await rm(stale, { recursive: true, force: true });
+  for (const { from, to } of plan.moves) await rename(from, to);
+  return plan;
+}
+
 async function cmdSnapshot(opts) {
   const golden = Boolean(opts.golden);
   const data = dataDir(opts.data);
   const target = snapshotPath(data, opts.to, { golden });
+  const keep = snapshotKeep(opts.keep);
+
+  const previous = await stat(target).catch(() => null);
+  if (previous) {
+    const held = await listWorlds(target);
+    console.log(backupSummary(target, held, previous.mtime));
+    // A golden sync excludes /Data/worlds/, and rsync --delete cannot remove an
+    // excluded path, so it can never cost a world. Only the full mode can.
+    const lost = golden ? [] : worldsOnlyInBackup(await listWorlds(data), held);
+    if (lost.length && !opts.force) {
+      throw new Error(
+        `Refusing to overwrite ${target}: it holds ${lost.length} world(s) that ` +
+          `${data} does not.\n\n` +
+          lost.map(w => `  ${w}`).join('\n') +
+          '\n\nThis sync uses --delete, so it would erase them from the backup —' +
+          '\nand the source no longer has them. That is the shape of the accident:' +
+          '\nsnapshotting *after* a loss destroys the copy that could undo it.' +
+          '\n\nIf the worlds are gone by accident, restore them first:' +
+          `\n  node scripts/content/foundry-base.mjs restore --yes --from ${target}` +
+          '\n\nIf they are gone on purpose and this backup should be discarded,' +
+          '\nsay so: rerun with --force.',
+      );
+    }
+  }
+
   console.log(`Snapshot${golden ? ' (golden, no worlds)' : ' (full)'} ${data} -> ${target}`);
   if (opts.dryRun) return;
-  await run('rsync', rsyncArgs(`${data.replace(/\/+$/, '')}/`, `${target}/`, { golden }));
+
+  // Sync into staging, rotate, then rename into place: until the last step the
+  // backup path still names the last complete backup, so a failed rsync costs
+  // nothing but the staging directory.
+  const stage = syncStage(target);
+  const linkDest = linkDestFor(target, Boolean(previous));
+  try {
+    await run(
+      'rsync',
+      rsyncArgs(`${data.replace(/\/+$/, '')}/`, `${stage}/`, { golden, linkDest }),
+    );
+  } catch (err) {
+    await rm(stage, { recursive: true, force: true });
+    throw err;
+  }
+
+  const plan = await rotateBackups(target, { keep });
+  for (const stale of plan.remove) {
+    console.log(`Dropped the oldest of ${keep} backup(s), which was ${stale}`);
+  }
+  if (plan.moves.length) console.log(`Previous backup kept as ${target}.1`);
+  await rename(stage, target);
   console.log(
     golden
       ? 'Done. This is the clean slate: modules, system and config, no worlds.'

@@ -43,6 +43,7 @@ node scripts/content/foundry-base.mjs promote <capture>  # fill core pins from a
 node scripts/content/foundry-base.mjs provision         # install the pinned system + modules
 node scripts/content/foundry-base.mjs update [id...]    # move pins forward, deliberately
 node scripts/content/foundry-base.mjs snapshot          # full copy of the data dir, worlds included
+node scripts/content/foundry-base.mjs snapshot --keep 3 # …keeping three generations, not two
 node scripts/content/foundry-base.mjs restore --yes     # put that full copy back
 node scripts/content/foundry-base.mjs snapshot --golden # the clean slate: no worlds
 node scripts/content/foundry-base.mjs restore --golden --yes  # reset the instance, keep the worlds
@@ -378,6 +379,59 @@ you want to keep.
 > before this change, it is a **full backup** despite the name. Pass it
 > explicitly with `--from`, or rename it to `<data>.backup`.
 
+### A snapshot cannot destroy the backup you already have
+
+The sync is `rsync -a --delete`, which mirrors: whatever the source has lost,
+the target loses too. That is harmless while the install is healthy and lethal
+at the one moment a backup matters — you lose a world, reach for `snapshot` *to
+be safe*, and the emptier source is mirrored over the last good copy. The
+2026-08-21 drill came one command from exactly that, and what saved it was a
+manual `mv` nothing had suggested.
+
+Two things now stand in the way, and neither depends on remembering anything.
+
+**It refuses the destructive case.** Before syncing, `snapshot` compares the
+worlds in the data dir with the worlds in the existing backup. If the backup
+holds one the source does not, it names it and exits non-zero:
+
+```text
+Refusing to overwrite /…/FoundryVTT.backup: it holds 1 world(s) that /…/FoundryVTT does not.
+
+  lure-of-the-lamia
+```
+
+Restore first if the loss was an accident. If the world is gone on purpose and
+the backup should go with it, say so with **`--force`** — that flag is the
+documented way to discard a backup deliberately, and the only way to.
+
+`--golden` is exempt, because it excludes `Data/worlds/` from the sync and
+`--delete` cannot remove an excluded path. A golden snapshot never cost a world
+and still cannot.
+
+**It keeps the previous backup.** Each snapshot shifts the old one down a slot
+before syncing:
+
+| | holds |
+| --- | --- |
+| `<data>.backup` | the snapshot you just took |
+| `<data>.backup.1` | the one before it |
+
+`--keep <n>` sets how many to hold (default 2, minimum 1 — which restores the
+old overwrite-in-place behaviour). Only the backup falling off the end is
+removed; *lowering* `--keep` leaves higher-numbered ones alone rather than
+deleting backups you did not ask about.
+
+The sync writes to `<data>.backup.incoming` and is renamed into place only once
+rsync succeeds, so `<data>.backup` names a *complete* backup at every moment —
+a failed or interrupted snapshot costs the staging directory and nothing else.
+It passes `--link-dest` at the previous backup, so unchanged files are
+hardlinked rather than copied and the second generation costs the delta, not a
+second full copy. The rotation itself is a rename: instant whatever the size of
+the tree.
+
+`restore` reads `<data>.backup`. To go back a generation, name it:
+`restore --yes --from <data>.backup.1`.
+
 ### Checking a rebuild instead of eyeballing one
 
 A rebuild you cannot check is one you will not trust on game night, and the
@@ -481,7 +535,10 @@ it runs.
 
 1. Refresh the install source, above. Do this before anything is destroyed.
 2. `foundry-base.mjs snapshot` — the full one, worlds included. Confirm it
-   exists before wiping anything.
+   exists before wiping anything. It keeps the previous backup as
+   `<data>.backup.1` and refuses to overwrite a backup holding worlds the
+   install has since lost (see *A snapshot cannot destroy the backup you already
+   have*).
 3. Wipe the world, or the data directory.
 4. `foundry-base.mjs provision`. It does **not** need Foundry to have started
    first: it creates what it needs under `Data/`, so it runs against a directory
