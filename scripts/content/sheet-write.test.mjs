@@ -11,9 +11,11 @@ import { fieldMap, readFields } from './sheet-fields.mjs';
 import { derive, toCharacterActor } from './pregen.mjs';
 import {
   checkCapacity,
+  editionsOf,
   fillSheet,
   loadTemplates,
   sheetValues,
+  templateFor,
   verifyTemplate,
 } from './sheet-write.mjs';
 
@@ -36,12 +38,12 @@ const SPEC = {
   speed: 30,
 };
 
-const wotc2014 = async () => (await loadTemplates())['wotc-2014'];
+const wotcSheet = async () => (await loadTemplates())['wotc-fillable'];
 
 test('the registry keeps whitespace exactly as the form spells it', async () => {
   // Every one of these looks like a typo and is not. Retyping any of them
   // writes to a box that does not exist.
-  const t = await wotc2014();
+  const t = await wotcSheet();
   assert.equal(t.skill.stealth, 'Stealth ');
   assert.equal(t.skill.deception, 'Deception ');
   assert.equal(t.fields.race, 'Race ');
@@ -51,9 +53,42 @@ test('the registry keeps whitespace exactly as the form spells it', async () => 
   assert.equal(t.attacks[2].bonus, 'Wpn3 AtkBonus  ');
 });
 
+test('one form prints both editions', async () => {
+  // Edition and template are independent, and that cuts both ways: what changed
+  // between 2014 and 2024 is mostly the names of TABLE COLUMNS, which live in
+  // the progression cache, not boxes on the paper. A 2024 character writes the
+  // same values into the same boxes, so the same blank serves both and 2024
+  // needs no second sheet.
+  const template = await wotcSheet();
+  assert.deepEqual(editionsOf(template), ['2014', '2024']);
+  assert.equal(templateFor(await loadTemplates(), '2024'), 'wotc-fillable');
+
+  const spec = { ...SPEC, edition: '2024' };
+  const of2014 = sheetValues(derive(SPEC, await progression('2014')), template);
+  const of2024 = sheetValues(derive(spec, await progression('2024')), template);
+  assert.deepEqual(
+    Object.keys(of2024).sort(),
+    Object.keys(of2014).sort(),
+    'a 2024 character fills the same boxes',
+  );
+  assert.equal(of2024.ProfBonus, '+3');
+  assert.equal(of2024['SlotsTotal 21'], '2');
+});
+
+test('a template that cannot print an edition says which it covers', async () => {
+  const templates = await loadTemplates();
+  assert.equal(templateFor(templates, '5.5e'), undefined);
+  assert.deepEqual(
+    editionsOf({ edition: '2014' }),
+    ['2014'],
+    'an older single-edition entry still reads',
+  );
+  assert.deepEqual(editionsOf({}), []);
+});
+
 test('every derived number reaches a named box', async () => {
   const character = derive(SPEC, await progression('2014'));
-  const values = sheetValues(character, await wotc2014());
+  const values = sheetValues(character, await wotcSheet());
   assert.equal(values.CharacterName, 'Elf Wizard');
   assert.equal(values.ClassLevel, 'Wizard 5');
   assert.equal(values['Race '], 'High Elf');
@@ -71,13 +106,13 @@ test('every derived number reaches a named box', async () => {
 test('experience reads as milestone rather than a number', async () => {
   // A zero in the box invites someone to start adding to it. A pregen is
   // levelled by rebuilding it.
-  const values = sheetValues(derive(SPEC, await progression('2014')), await wotc2014());
+  const values = sheetValues(derive(SPEC, await progression('2014')), await wotcSheet());
   assert.equal(values.XP, '(Milestone)');
 });
 
 test('a non-caster gets no spellcasting boxes', async () => {
   const character = derive({ ...SPEC, class: 'fighter' }, await progression('2014'));
-  const values = sheetValues(character, await wotc2014());
+  const values = sheetValues(character, await wotcSheet());
   assert.equal(values['SpellSaveDC  2'], undefined);
   assert.equal(values['SlotsTotal 19'], undefined);
 });
@@ -86,7 +121,7 @@ test('pact magic goes where a reader will look for it', async () => {
   // There is no pact row on this form, and writing pact slots into a tier box
   // would read as ordinary spellcasting.
   const character = derive({ ...SPEC, class: 'warlock', level: 5 }, await progression('2014'));
-  const values = sheetValues(character, await wotc2014());
+  const values = sheetValues(character, await wotcSheet());
   assert.match(values.AttacksSpellcasting, /Pact Magic: 2 slots at 3rd level/);
   assert.equal(values['SlotsTotal 21'], undefined);
 });
@@ -96,7 +131,7 @@ test('a fourth attack is refused, not quietly dropped', async () => {
   // than casters. A character arriving at a table missing an attack they are
   // entitled to is worse than a build that stops.
   const character = derive(SPEC, await progression('2014'));
-  const template = await wotc2014();
+  const template = await wotcSheet();
   assert.deepEqual(checkCapacity(character, template, ['a', 'b', 'c']), []);
   const problems = checkCapacity(character, template, ['a', 'b', 'c', 'd']);
   assert.equal(problems.length, 1);
@@ -104,7 +139,7 @@ test('a fourth attack is refused, not quietly dropped', async () => {
 });
 
 test('a changed blank fails the build rather than printing gaps', async () => {
-  const template = await wotc2014();
+  const template = await wotcSheet();
   assert.throws(() => verifyTemplate(Buffer.from('not the sheet'), template), /checksum mismatch/);
   // And the pin is the real file's checksum, not a placeholder.
   assert.match(template.sha256, /^[0-9a-f]{64}$/);
@@ -169,7 +204,7 @@ test('the printed sheet and the Foundry actor cannot disagree', async () => {
   // come from one calculation, so a change to the derivation moves both or
   // fails the build.
   const character = derive(SPEC, await progression('2014'));
-  const template = await wotc2014();
+  const template = await wotcSheet();
   const values = sheetValues(character, template);
   const { actor } = toCharacterActor(character);
 
@@ -208,7 +243,7 @@ const BLANK =
 const skip = BLANK && existsSync(BLANK) ? false : 'vault not mounted';
 
 test('every name in the registry exists on the real form', { skip }, async () => {
-  const template = await wotc2014();
+  const template = await wotcSheet();
   const present = new Set(readFields(await readFile(BLANK)).map(f => f.name));
   const mapped = [
     ...Object.values(template.fields),
@@ -230,7 +265,7 @@ test('every name in the registry exists on the real form', { skip }, async () =>
 });
 
 test('the pinned checksum is the blank actually on the shelf', { skip }, async () => {
-  const template = await wotc2014();
+  const template = await wotcSheet();
   const bytes = await readFile(BLANK);
   assert.equal(createHash('sha256').update(bytes).digest('hex'), template.sha256);
   verifyTemplate(bytes, template);
@@ -238,7 +273,7 @@ test('the pinned checksum is the blank actually on the shelf', { skip }, async (
 
 test('a character prints onto the real sheet and reads back correctly', { skip }, async () => {
   const character = derive(SPEC, await progression('2014'));
-  const template = await wotc2014();
+  const template = await wotcSheet();
   const values = sheetValues(character, template);
   const filled = await fillSheet(await readFile(BLANK), values, {
     identityFields: template.identityFields,

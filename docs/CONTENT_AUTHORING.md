@@ -675,10 +675,19 @@ Neither is transcribed from the other, so they cannot drift.
 Printing is opt-in because the blank sheets are publisher-issued and live in the
 vault; without `--sheets` the Foundry side still compiles. Field names live in
 `content/reference/sheet-templates.json`, pinned to each blank by checksum —
-adding the 2024 sheet is a registry entry, not a code change. Names are
-extracted, never retyped: several carry whitespace that looks like a typo and is
-not — `"Race "`, `"DEXmod "` and `"Stealth "` each end in a space, and
-`"SpellSaveDC  2"` has two in the middle.
+adding a form is a registry entry, not a code change. Names are extracted, never
+retyped: several carry whitespace that looks like a typo and is not — `"Race "`,
+`"DEXmod "` and `"Stealth "` each end in a space, and `"SpellSaveDC  2"` has two
+in the middle.
+
+**One form prints both editions.** A template lists the editions it covers, and
+the WotC fillable sheet covers 2014 and 2024: a 2024 character writes the same
+values into the same boxes, verified by printing one. What actually changed
+between editions is the names of *table columns* — `cantrips-known` became
+`cantrips`, `ki-points` became `focus-points` — and those live in the
+progression cache, not on the paper. Two cosmetic gaps worth knowing: the box is
+labelled RACE where 2024 says Species, and there is no weapon-mastery box (that
+column is not printed for either edition).
 
 The sheet holds **three attack rows**. A fourth is a build error, not a
 truncation: a character arriving at a table missing an attack is worse than a
