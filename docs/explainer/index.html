@@ -1111,7 +1111,9 @@
             <div class="pstep">
               <span class="pn">snapshot</span>
               <span class="pd"
-                >The full data dir, worlds included &mdash; the undo path. Separate from
+                >The full data dir, worlds included &mdash; the undo path. It keeps the previous
+                backup as <span class="mono">.backup.1</span> and refuses to mirror an install that
+                has lost worlds over a backup that still has them. Separate from
                 <span class="mono">--golden</span>, which is the clean slate you restore
                 <em>onto</em> a sick instance without touching the worlds you are keeping.</span
               >

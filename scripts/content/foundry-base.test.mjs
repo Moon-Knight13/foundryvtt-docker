@@ -24,6 +24,14 @@ import {
   IDENTITY_SETTINGS,
   syncExcludes,
   rsyncArgs,
+  rotationPlan,
+  linkDestFor,
+  syncStage,
+  snapshotKeep,
+  rotateBackups,
+  worldsOnlyInBackup,
+  listWorlds,
+  backupSummary,
   parseArgs,
   dataDir,
   isInstallable,
@@ -1551,3 +1559,211 @@ test('installEntry still follows the manifest when a pin names no download', asy
     await rm(data, { recursive: true, force: true });
   }
 });
+
+// ---------------------------------------------------------------------------
+// snapshot safety (#125)
+// ---------------------------------------------------------------------------
+
+test('worldsOnlyInBackup names what an overwrite would destroy', () => {
+  // The drill case: the install lost worlds, then a "to be safe" snapshot
+  // mirrored the emptier source over the last good backup.
+  assert.deepEqual(worldsOnlyInBackup(['keep'], ['keep', 'lure-of-the-lamia', 'ashwake']), [
+    'ashwake',
+    'lure-of-the-lamia',
+  ]);
+});
+
+test('worldsOnlyInBackup is silent when the source still holds everything', () => {
+  assert.deepEqual(worldsOnlyInBackup(['a', 'b', 'c'], ['a', 'b']), []);
+  assert.deepEqual(worldsOnlyInBackup([], []), []);
+});
+
+test('listWorlds reads world ids off disk and tolerates a missing worlds dir', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'fvtt-worlds-'));
+  try {
+    assert.deepEqual(await listWorlds(dir), []);
+    await mkdir(path.join(dir, 'Data', 'worlds', 'zeta'), { recursive: true });
+    await mkdir(path.join(dir, 'Data', 'worlds', 'alpha'), { recursive: true });
+    await writeFile(path.join(dir, 'Data', 'worlds', 'notes.txt'), 'not a world');
+    assert.deepEqual(await listWorlds(dir), ['alpha', 'zeta']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('rotationPlan moves the last backup aside instead of overwriting it', () => {
+  const plan = rotationPlan('/var/fvtt.backup', { keep: 2, exists: new Set(['/var/fvtt.backup']) });
+  assert.deepEqual(plan.remove, []);
+  assert.deepEqual(plan.moves, [{ from: '/var/fvtt.backup', to: '/var/fvtt.backup.1' }]);
+});
+
+test('rotationPlan drops only the backup that falls off the end', () => {
+  const plan = rotationPlan('/var/fvtt.backup', {
+    keep: 3,
+    exists: new Set(['/var/fvtt.backup', '/var/fvtt.backup.1', '/var/fvtt.backup.2']),
+  });
+  assert.deepEqual(plan.remove, ['/var/fvtt.backup.2']);
+  assert.deepEqual(plan.moves, [
+    { from: '/var/fvtt.backup.1', to: '/var/fvtt.backup.2' },
+    { from: '/var/fvtt.backup', to: '/var/fvtt.backup.1' },
+  ]);
+});
+
+test('linkDestFor is absolute, because rsync resolves it against the destination', () => {
+  // A relative --link-dest is resolved against the *destination* directory, not
+  // the working directory, so it silently hardlinks nothing at all.
+  assert.equal(linkDestFor('relative.backup', true), path.resolve('relative.backup'));
+  assert.equal(linkDestFor('/var/fvtt.backup', true), '/var/fvtt.backup');
+  assert.equal(linkDestFor('/var/fvtt.backup', false), null);
+});
+
+test('rotationPlan does nothing on the first snapshot', () => {
+  const plan = rotationPlan('/var/fvtt.backup', { keep: 2, exists: new Set() });
+  assert.deepEqual(plan, { remove: [], moves: [] });
+});
+
+test('rotationPlan with keep 1 overwrites in place, as it always did', () => {
+  const plan = rotationPlan('/var/fvtt.backup', { keep: 1, exists: new Set(['/var/fvtt.backup']) });
+  assert.deepEqual(plan, { remove: [], moves: [] });
+});
+
+test('rsyncArgs hardlinks unchanged files against the rotated backup', () => {
+  // Without --link-dest, rotation would cost a full copy of the data dir every
+  // snapshot. With it, the second copy is mostly hardlinks.
+  const args = rsyncArgs('/src/', '/dst/', { linkDest: '/dst.1' });
+  assert.ok(args.includes('--link-dest'));
+  assert.equal(args[args.indexOf('--link-dest') + 1], '/dst.1');
+  assert.deepEqual(args.slice(-2), ['/src/', '/dst/']);
+  assert.ok(!rsyncArgs('/src/', '/dst/').includes('--link-dest'));
+});
+
+test('snapshot refuses to mirror a lossy source over a backup that has the worlds', async () => {
+  const { data, backup } = await drillDirs({ source: ['keep'], backup: ['keep', 'lost-world'] });
+  try {
+    await assert.rejects(
+      () => main(['snapshot', '--data', data, '--dry-run']),
+      err => {
+        assert.match(err.message, /lost-world/);
+        assert.match(err.message, /--force/);
+        assert.ok(!/^\s+keep$/m.test(err.message), 'should list only the worlds at risk');
+        return true;
+      },
+    );
+  } finally {
+    await rm(data, { recursive: true, force: true });
+    await rm(backup, { recursive: true, force: true });
+  }
+});
+
+test('snapshot --force overwrites deliberately', async () => {
+  const { data, backup } = await drillDirs({ source: ['keep'], backup: ['keep', 'lost-world'] });
+  try {
+    await main(['snapshot', '--data', data, '--dry-run', '--force']);
+  } finally {
+    await rm(data, { recursive: true, force: true });
+    await rm(backup, { recursive: true, force: true });
+  }
+});
+
+test('a golden snapshot is not blocked by worlds it never touches', async () => {
+  // `--golden` excludes /Data/worlds/ from the sync, and rsync --delete cannot
+  // remove an excluded path — so there is nothing to refuse.
+  const { data, golden } = await drillDirs({
+    source: [],
+    golden: ['lure-of-the-lamia'],
+  });
+  try {
+    await main(['snapshot', '--golden', '--data', data, '--dry-run']);
+  } finally {
+    await rm(data, { recursive: true, force: true });
+    await rm(golden, { recursive: true, force: true });
+  }
+});
+
+test('syncStage keeps the backup path pointing at a complete backup', () => {
+  // The sync writes to a staging directory and is renamed into place only once
+  // it succeeds, so a failed or interrupted rsync cannot leave `<data>.backup`
+  // half-written — the thing you would reach for next.
+  assert.equal(syncStage('/var/fvtt.backup'), '/var/fvtt.backup.incoming');
+});
+
+test('rotateBackups shifts the slots on disk and drops only the oldest', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'fvtt-rot-'));
+  const target = path.join(root, 'FoundryVTT.backup');
+  try {
+    for (const [dir, tag] of [
+      [target, 'newest'],
+      [`${target}.1`, 'older'],
+      [`${target}.2`, 'oldest'],
+    ]) {
+      await mkdir(dir, { recursive: true });
+      await writeFile(path.join(dir, 'which'), tag);
+    }
+
+    await rotateBackups(target, { keep: 3 });
+
+    await assert.rejects(() => access(target), 'the newest slot is freed for the staged sync');
+    assert.equal(await readFile(path.join(`${target}.1`, 'which'), 'utf8'), 'newest');
+    assert.equal(await readFile(path.join(`${target}.2`, 'which'), 'utf8'), 'older');
+    await assert.rejects(() => access(`${target}.3`), 'retention is bounded');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('backupSummary says what the previous backup held, so an overwrite is visible', () => {
+  const line = backupSummary(
+    '/var/fvtt.backup',
+    ['ashwake', 'lamia'],
+    new Date('2026-08-21T10:00:00Z'),
+  );
+  assert.match(line, /\/var\/fvtt\.backup/);
+  assert.match(line, /ashwake/);
+  assert.match(line, /lamia/);
+  assert.match(line, /2026-08-21/);
+});
+
+test('snapshotKeep rejects a retention that is not a count of backups', () => {
+  // --keep 0 or --keep two would otherwise fall through to a rotation plan that
+  // silently keeps nothing.
+  assert.equal(snapshotKeep(undefined), 2);
+  assert.equal(snapshotKeep('3'), 3);
+  assert.throws(() => snapshotKeep('0'), /whole number/);
+  assert.throws(() => snapshotKeep('two'), /whole number/);
+  assert.throws(() => snapshotKeep('1.5'), /whole number/);
+});
+
+test('the flags that discard a backup are documented where snapshot is', () => {
+  // --force deletes a backup deliberately. A destructive flag nobody can find
+  // in the usage text is not an escape hatch, it is folklore.
+  const snapshotLines = USAGE.split('\n').filter(l => l.includes('foundry-base.mjs snapshot'));
+  assert.ok(
+    snapshotLines.some(l => l.includes('--force')),
+    '--force must be in the usage text',
+  );
+  assert.ok(
+    snapshotLines.some(l => l.includes('--keep')),
+    '--keep must be in the usage text',
+  );
+});
+
+/** Build a data dir and its sibling snapshot targets, each holding named worlds. */
+async function drillDirs({ source = [], backup = null, golden = null } = {}) {
+  const root = await mkdtemp(path.join(tmpdir(), 'fvtt-drill-'));
+  const data = path.join(root, 'FoundryVTT');
+  const make = async (dir, worlds) => {
+    for (const w of worlds) await mkdir(path.join(dir, 'Data', 'worlds', w), { recursive: true });
+    await mkdir(path.join(dir, 'Data', 'worlds'), { recursive: true });
+  };
+  await make(data, source);
+  const out = { root, data };
+  if (backup) {
+    out.backup = `${data}.backup`;
+    await make(out.backup, backup);
+  }
+  if (golden) {
+    out.golden = `${data}.golden`;
+    await make(out.golden, golden);
+  }
+  return out;
+}

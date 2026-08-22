@@ -342,7 +342,9 @@ Test against the real stack, with a data-dir snapshot as the undo path:
 1. Snapshot the data dir before anything risky:
    `node scripts/content/foundry-base.mjs snapshot`. That is the **full** mode —
    worlds included — which is what an undo needs. (`--golden` is the other mode:
-   a clean slate with no worlds. See `docs/FOUNDRY_REBUILD.md`.)
+   a clean slate with no worlds. See `docs/FOUNDRY_REBUILD.md`.) It keeps the
+   previous backup as `<data>.backup.1` and refuses to mirror an install that
+   has lost worlds over a backup that still has them.
 2. Install/enable the module, turn on Allow Write Operations, exercise it.
 3. Rollback if needed: disable/uninstall the module (worlds are unaffected by a
    module removal) or `foundry-base.mjs restore --yes`.
