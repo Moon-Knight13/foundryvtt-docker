@@ -380,6 +380,11 @@ Max ~REPLACE hours
 
 **Tools:**
 Discord VC, D&D Beyond & FoundryVTT (links will be provided)
+
+**AI:**
+Some NPC token art in this game is AI-generated — vector portraits drawn by
+Claude from my own notes. Maps are rendered from a hand-authored spec, not
+AI-generated. No AI is used to play NPCs at the table.
 \`\`\`
 
 ## Playstyle & expectations

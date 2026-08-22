@@ -124,6 +124,7 @@ Note → **Map Brief** ([[Map Brief Template]]) → **default:** Claude runs the
 - **`<name>.dd2vtt`** — Foundry scene (walls + lights) via Universal Battlemap Importer.
 Print either for in-person. For **painted art**, build in **DungeonMapBuilder** (or Dungeon
 Scrawl / Watabou / AI) and drop it in `Assets/Maps/` to replace the generated background.
+An AI-generated map has to be disclosed to players — see [[AI disclosure]].
 
 ## Foundry-side modules (install once)
 - **SoSly Obsidian Bridge** — journals ↔ Obsidian, bidirectional.

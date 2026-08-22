@@ -199,3 +199,38 @@ test('new-game.sh errors clearly when no vault can be found', () => {
     stderrMatches(/no vault found|--vault/),
   );
 });
+
+// Discord's server rules require the GM to be explicit about generative AI in
+// imagery (issue #102). The disclosure is a standing line inside the paste
+// block, not GM-facing scratch: it has to survive the copy into Discord.
+test('the generated advert carries the AI disclosure inside the paste block', async () => {
+  const vault = await mkdtemp(path.join(os.tmpdir(), 'vault-'));
+  try {
+    run(['zzz-vault-ai', '--vault', vault, '--title', 'ZZZ Vault AI']);
+    const advert = await readFile(
+      path.join(vault, '03 Oneshots', 'ZZZ Vault AI', 'Advert.md'),
+      'utf8',
+    );
+    const block = advert.split('```')[1] ?? '';
+    assert.match(block, /\*\*AI:\*\*/, 'expected an AI heading in the pasted block');
+    assert.match(block, /token art/i, 'expected the token-art disclosure');
+    assert.match(block, /not\s+AI-generated/i, 'expected maps called out as not AI-generated');
+    assert.match(block, /play NPCs/i, 'expected the no-AI-at-the-table line');
+  } finally {
+    await rm(vault, { recursive: true, force: true });
+  }
+});
+
+// Both copies of the advert -- the Templater template and new-game.sh's
+// heredoc -- must state the same thing, or the two paths disagree about what
+// players were told.
+test('the advert template and the scaffolded advert make the same AI claim', async () => {
+  const template = await readFile(
+    path.join(REPO_ROOT, 'examples', 'vault-skeleton', '05 Templates', 'Advert Template.md'),
+    'utf8',
+  );
+  const script = await readFile(SCRIPT, 'utf8');
+  const claim = /Some NPC token art in this game is AI-generated/;
+  assert.match(template, claim, 'advert template is missing the AI disclosure');
+  assert.match(script, claim, 'new-game.sh is missing the AI disclosure');
+});
