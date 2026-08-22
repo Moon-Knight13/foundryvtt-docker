@@ -37,22 +37,10 @@ Max ~REPLACE-H hours
 **Tools:**
 Discord VC, D&D Beyond & FoundryVTT (links will be provided)
 
-**AI disclosure:**
-A few NPC portrait tokens are AI-drawn — simple flat-vector art made from my own
-written notes on that character, and only where the alternative was a blank grey
-placeholder, never instead of paying an artist. It is not an image generator
-trained on artists' portfolios: nothing is traced, copied, or done in anyone
-else's style. Where licensed art exists I use that instead and credit the artist
-by name. Maps are drawn by a script from a layout I wrote, not AI-generated.
-
-The writing is Claude-assisted as well, and this post is a fair example: I
-outline, it drafts, I cut and rewrite, and nothing reaches you that I have not
-read and signed off on. The adventures themselves are mine or are published
-one-shots I paid for, adapted for our table — not a plot a model invented.
-
-What is never AI is the game. I play the NPCs, I make the rulings, and no model
-decides what happens to your character. If AI art is still a dealbreaker for you,
-say so and you get plain tokens; no hard feelings and no questions asked.
+**AI:**
+Some NPC tokens are AI-drawn and my prep writing is AI-assisted — never in place
+of a paid artist and never at the table itself; the full detail is pinned in the
+server, and plain tokens are yours for the asking.
 ```
 
 ## Playstyle & expectations
@@ -62,6 +50,30 @@ line up into the post only if players need it before they sign up.*
 
 - REPLACE — house rules, safety tools, expected roleplay/combat balance.
 - REPLACE — anything you want players to know before they build a character.
+
+## AI disclosure — the two halves
+
+*GM-facing. The short half is already in the paste block above; this section is
+about the other half.*
+
+The disclosure is deliberately split, because a recruitment post and a server pin
+are read differently. Someone skimming eight adverts wants one sentence that
+tells them whether to keep reading — a wall of text there costs you players who
+would have been fine with the answer. Someone who stopped on that sentence
+because they care wants the whole thing, and wants it somewhere permanent rather
+than buried in a post that scrolls away.
+
+So the post carries the sentence and the pin carries the detail: what the art
+actually is, why no artist lost work over it, what the writing assistance does
+and does not cover, and the standing offer of plain tokens.
+
+**The pin text is in [[AI disclosure]]** — paste it once per server and leave it
+pinned. It is written to be pasted verbatim; do not retype a fresh version per
+game, because two disclosures that differ are worse than one that is blunt.
+
+If a game genuinely departs from the standing statement — a bought painted map
+that came out of an image generator, say — the honest fix is a line about that
+map in this game's own post, not a rewritten pin.
 
 ## Scheduling
 

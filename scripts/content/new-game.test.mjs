@@ -201,9 +201,10 @@ test('new-game.sh errors clearly when no vault can be found', () => {
 });
 
 // Discord's server rules require the GM to be explicit about generative AI in
-// imagery (issue #102). The disclosure is a standing line inside the paste
-// block, not GM-facing scratch: it has to survive the copy into Discord.
-test('the generated advert carries the AI disclosure inside the paste block', async () => {
+// imagery (issue #102). The disclosure is split in two: one sentence inside the
+// advert's paste block, and the full statement in the server pin. The post has
+// to carry the short half -- it is the half that survives the copy into Discord.
+test('the generated advert carries the short AI disclosure inside the paste block', async () => {
   const vault = await mkdtemp(path.join(os.tmpdir(), 'vault-'));
   try {
     run(['zzz-vault-ai', '--vault', vault, '--title', 'ZZZ Vault AI']);
@@ -211,27 +212,24 @@ test('the generated advert carries the AI disclosure inside the paste block', as
       path.join(vault, '03 Oneshots', 'ZZZ Vault AI', 'Advert.md'),
       'utf8',
     );
-    const block = advert.split('```')[1] ?? '';
-    assert.match(block, /\*\*AI disclosure:\*\*/, 'expected an AI heading in the pasted block');
-    assert.match(block, /portrait tokens are AI-drawn/i, 'expected the token-art disclosure');
-    assert.match(block, /not\s+AI-generated/i, 'expected maps called out as not AI-generated');
-    assert.match(block, /never AI is the game/i, 'expected the no-AI-at-the-table line');
+    // Matched against whitespace-collapsed text: the disclosure is hard-wrapped
+    // in the source, so a phrase that straddles a line break is still one phrase
+    // to a reader, and a test that cared would break on every rewrap.
+    const block = (advert.split('```')[1] ?? '').replace(/\s+/g, ' ');
+    assert.match(block, /\*\*AI:\*\*/, 'expected an AI heading in the pasted block');
+    assert.match(block, /AI-drawn/i, 'expected the token-art disclosure');
+    assert.match(block, /AI-assisted/i, 'expected the writing disclosure');
 
-    // The three objections players actually raise. Stating that a model was
-    // involved without answering these reads as a technicality, so each one is
-    // load-bearing: training provenance, displaced artists, and an opt-out.
-    assert.match(block, /not an image generator/i, 'expected the training-provenance answer');
-    assert.match(
-      block,
-      /never instead of paying an artist/i,
-      'expected the displaced-artist answer',
-    );
+    // One sentence has room for two reassurances and a pointer. These are the
+    // ones that earn their place: the objection is theft and replacement, and a
+    // reader who wants more has to be told where more lives.
+    assert.match(block, /paid artist/i, 'expected the displaced-artist answer');
+    assert.match(block, /at the table/i, 'expected the no-AI-at-the-table line');
+    assert.match(block, /pinned in the server/i, 'expected the pointer to the pin');
     assert.match(block, /plain tokens/i, 'expected the opt-out offer');
 
-    // The writing disclosure is volunteered -- the server rule covers imagery
-    // only -- so nothing external will catch its removal. Pin it here.
-    assert.match(block, /writing is Claude-assisted/i, 'expected the writing disclosure');
-    assert.match(block, /signed off on/i, 'expected the human-approval commitment');
+    // The long form belongs in the pin, not the post.
+    assert.ok(block.length < 600, `paste-block disclosure should stay short, got ${block.length}`);
   } finally {
     await rm(vault, { recursive: true, force: true });
   }
@@ -246,7 +244,29 @@ test('the advert template and the scaffolded advert make the same AI claim', asy
     'utf8',
   );
   const script = await readFile(SCRIPT, 'utf8');
-  const claim = /A few NPC portrait tokens are AI-drawn/;
+  const claim = /Some NPC tokens are AI-drawn and my prep writing is AI-assisted/;
   assert.match(template, claim, 'advert template is missing the AI disclosure');
   assert.match(script, claim, 'new-game.sh is missing the AI disclosure');
+});
+
+// The pin is the half nothing else enforces: no server rule requires the
+// writing disclosure, and no player will notice a paragraph quietly going
+// missing. Each of these answers an objection the one-sentence version cannot.
+test('the pinned disclosure answers the objections the advert line cannot', async () => {
+  const pin = await readFile(
+    path.join(REPO_ROOT, 'examples', 'vault-skeleton', '00 Index', 'AI disclosure.md'),
+    'utf8',
+  );
+  const claims = [
+    [/not an image generator/i, 'training provenance'],
+    [/blank grey placeholder/i, 'no artist was displaced'],
+    [/CC-BY-3\.0/, 'licensed art is credited'],
+    [/writing is Claude-assisted/i, 'the volunteered writing disclosure'],
+    [/signed off on/i, 'the human-approval commitment'],
+    [/Nothing at the table is AI/i, 'no AI runs the game'],
+    [/plain tokens/i, 'the opt-out offer'],
+  ];
+  for (const [re, what] of claims) {
+    assert.match(pin, re, `pin is missing: ${what}`);
+  }
 });
