@@ -693,6 +693,26 @@ The sheet holds **three attack rows**. A fourth is a build error, not a
 truncation: a character arriving at a table missing an attack is worse than a
 build that stops. Spells are not the constraint — 100 lines, 9 slot tiers.
 
+### Seeding the pool from sheets you already have
+
+Pool notes do not have to be typed. `pool-from-sheets.mjs` reads filled
+character sheets and writes the notes:
+
+```bash
+node scripts/content/pool-from-sheets.mjs "<vault>/…/Pregens/"*.pdf \
+  --out "<vault>/01 Systems/dnd5e/Pregens"
+```
+
+Everything a note needs is already on a filled sheet — ability scores, which
+skills are ticked, AC, hit points — and the rest derives. Each note is checked
+against the sheet it came from before it is written, and a mismatch is refused
+rather than written: a pool pregen that disagrees with its own source is worse
+than not having it.
+
+Two things are deliberately not carried across: the **player name**, because a
+pool pregen is handed to a stranger and belongs to nobody; and anything
+**game-specific**, because a pool pregen is a generic chassis.
+
 ### Drawing a party, and hooking it to the game
 
 A pool pregen is a generic chassis with **no game context at all**, which is what
