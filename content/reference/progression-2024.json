@@ -1,0 +1,3852 @@
+{
+  "edition": "2024",
+  "srd": "5.2",
+  "source": "open5e-api/data/v2/wizards-of-the-coast/srd-2024",
+  "licence": "CC-BY-4.0",
+  "repairs": [
+    "srd-2024_monk_unarmored-movement L2: dropped a blank duplicate"
+  ],
+  "classes": {
+    "barbarian": {
+      "name": "Barbarian",
+      "hitDie": 12,
+      "saves": [
+        "con",
+        "str"
+      ],
+      "casterType": "none",
+      "subclasses": {
+        "path-of-the-berserker": {
+          "name": "Path of the Berserker",
+          "levels": {
+            "3": {
+              "features": [
+                "Frenzy"
+              ]
+            },
+            "6": {
+              "features": [
+                "Mindless Rage"
+              ]
+            },
+            "10": {
+              "features": [
+                "Retaliation"
+              ]
+            },
+            "14": {
+              "features": [
+                "Intimidating Presence"
+              ]
+            }
+          }
+        }
+      },
+      "levels": {
+        "1": {
+          "profBonus": 2,
+          "features": [
+            "Rage",
+            "Unarmored Defense",
+            "Weapon Mastery"
+          ],
+          "tracks": {
+            "rage-damage": "+2",
+            "rages": "2",
+            "weapon-mastery-count": "2"
+          }
+        },
+        "2": {
+          "profBonus": 2,
+          "features": [
+            "Danger Sense",
+            "Reckless Attack"
+          ],
+          "tracks": {
+            "rage-damage": "+2",
+            "rages": "2",
+            "weapon-mastery-count": "2"
+          }
+        },
+        "3": {
+          "profBonus": 2,
+          "features": [
+            "Barbarian Subclass",
+            "Primal Knowledge"
+          ],
+          "tracks": {
+            "rage-damage": "+2",
+            "rages": "3",
+            "weapon-mastery-count": "2"
+          }
+        },
+        "4": {
+          "profBonus": 2,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "rage-damage": "+2",
+            "rages": "3",
+            "weapon-mastery-count": "3"
+          }
+        },
+        "5": {
+          "profBonus": 3,
+          "features": [
+            "Extra Attack",
+            "Fast Movement"
+          ],
+          "tracks": {
+            "rage-damage": "+2",
+            "rages": "3",
+            "weapon-mastery-count": "3"
+          }
+        },
+        "6": {
+          "profBonus": 3,
+          "tracks": {
+            "rage-damage": "+2",
+            "rages": "4",
+            "weapon-mastery-count": "3"
+          }
+        },
+        "7": {
+          "profBonus": 3,
+          "features": [
+            "Feral Instinct",
+            "Instinctive Pounce"
+          ],
+          "tracks": {
+            "rage-damage": "+2",
+            "rages": "4",
+            "weapon-mastery-count": "3"
+          }
+        },
+        "8": {
+          "profBonus": 3,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "rage-damage": "+2",
+            "rages": "4",
+            "weapon-mastery-count": "3"
+          }
+        },
+        "9": {
+          "profBonus": 4,
+          "features": [
+            "Brutal Strike"
+          ],
+          "tracks": {
+            "rage-damage": "+3",
+            "rages": "4",
+            "weapon-mastery-count": "3"
+          }
+        },
+        "10": {
+          "profBonus": 4,
+          "tracks": {
+            "rage-damage": "+3",
+            "rages": "4",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "11": {
+          "profBonus": 4,
+          "features": [
+            "Relentless Rage"
+          ],
+          "tracks": {
+            "rage-damage": "+3",
+            "rages": "4",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "12": {
+          "profBonus": 4,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "rage-damage": "+3",
+            "rages": "5",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "13": {
+          "profBonus": 5,
+          "features": [
+            "Improved Brutal Strike"
+          ],
+          "tracks": {
+            "rage-damage": "+3",
+            "rages": "5",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "14": {
+          "profBonus": 5,
+          "tracks": {
+            "rage-damage": "+3",
+            "rages": "5",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "15": {
+          "profBonus": 5,
+          "features": [
+            "Persistent Rage"
+          ],
+          "tracks": {
+            "rage-damage": "+3",
+            "rages": "5",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "16": {
+          "profBonus": 5,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "rage-damage": "+4",
+            "rages": "5",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "17": {
+          "profBonus": 6,
+          "features": [
+            "Improved Brutal Strike (Enhanced)"
+          ],
+          "tracks": {
+            "rage-damage": "+4",
+            "rages": "6",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "18": {
+          "profBonus": 6,
+          "features": [
+            "Indomitable Might"
+          ],
+          "tracks": {
+            "rage-damage": "+4",
+            "rages": "6",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "19": {
+          "profBonus": 6,
+          "features": [
+            "Epic Boon"
+          ],
+          "tracks": {
+            "rage-damage": "+4",
+            "rages": "6",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "20": {
+          "profBonus": 6,
+          "features": [
+            "Primal Champion"
+          ],
+          "tracks": {
+            "rage-damage": "+4",
+            "rages": "6",
+            "weapon-mastery-count": "4"
+          }
+        }
+      }
+    },
+    "bard": {
+      "name": "Bard",
+      "hitDie": 8,
+      "saves": [
+        "cha",
+        "dex"
+      ],
+      "casterType": "full",
+      "subclasses": {
+        "college-of-lore": {
+          "name": "College of Lore",
+          "levels": {
+            "3": {
+              "features": [
+                "Bonus Proficiencies",
+                "Cutting Words"
+              ]
+            },
+            "6": {
+              "features": [
+                "Magical Discoveries"
+              ]
+            },
+            "14": {
+              "features": [
+                "Peerless Skill"
+              ]
+            }
+          }
+        }
+      },
+      "levels": {
+        "1": {
+          "profBonus": 2,
+          "slots": {
+            "1": 2
+          },
+          "features": [
+            "Bardic Inspiration",
+            "Spellcasting"
+          ],
+          "tracks": {
+            "bardic-die": "D6",
+            "cantrips": "2",
+            "prepared-spells": "4"
+          }
+        },
+        "2": {
+          "profBonus": 2,
+          "slots": {
+            "1": 3
+          },
+          "features": [
+            "Expertise",
+            "Jack of All Trades"
+          ],
+          "tracks": {
+            "bardic-die": "D6",
+            "cantrips": "2",
+            "prepared-spells": "5"
+          }
+        },
+        "3": {
+          "profBonus": 2,
+          "slots": {
+            "1": 4,
+            "2": 2
+          },
+          "tracks": {
+            "bardic-die": "D6",
+            "cantrips": "2",
+            "prepared-spells": "6"
+          }
+        },
+        "4": {
+          "profBonus": 2,
+          "slots": {
+            "1": 4,
+            "2": 3
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "bardic-die": "D6",
+            "cantrips": "3",
+            "prepared-spells": "7"
+          }
+        },
+        "5": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          },
+          "features": [
+            "Font of Inspiration"
+          ],
+          "tracks": {
+            "bardic-die": "D8",
+            "cantrips": "3",
+            "prepared-spells": "9"
+          }
+        },
+        "6": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          },
+          "tracks": {
+            "bardic-die": "D8",
+            "cantrips": "3",
+            "prepared-spells": "10"
+          }
+        },
+        "7": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          },
+          "features": [
+            "Countercharm"
+          ],
+          "tracks": {
+            "bardic-die": "D8",
+            "cantrips": "3",
+            "prepared-spells": "11"
+          }
+        },
+        "8": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "bardic-die": "D8",
+            "cantrips": "3",
+            "prepared-spells": "12"
+          }
+        },
+        "9": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          },
+          "tracks": {
+            "bardic-die": "D8",
+            "cantrips": "3",
+            "prepared-spells": "14"
+          }
+        },
+        "10": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          },
+          "features": [
+            "Magical Secrets"
+          ],
+          "tracks": {
+            "bardic-die": "D10",
+            "cantrips": "4",
+            "prepared-spells": "15"
+          }
+        },
+        "11": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          },
+          "tracks": {
+            "bardic-die": "D10",
+            "cantrips": "4",
+            "prepared-spells": "16"
+          }
+        },
+        "12": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "bardic-die": "D10",
+            "cantrips": "4",
+            "prepared-spells": "16"
+          }
+        },
+        "13": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          },
+          "tracks": {
+            "bardic-die": "D10",
+            "cantrips": "4",
+            "prepared-spells": "17"
+          }
+        },
+        "14": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          },
+          "tracks": {
+            "bardic-die": "D10",
+            "cantrips": "4",
+            "prepared-spells": "17"
+          }
+        },
+        "15": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "tracks": {
+            "bardic-die": "D12",
+            "cantrips": "4",
+            "prepared-spells": "18"
+          }
+        },
+        "16": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "bardic-die": "D12",
+            "cantrips": "4",
+            "prepared-spells": "18"
+          }
+        },
+        "17": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "tracks": {
+            "bardic-die": "D12",
+            "cantrips": "4",
+            "prepared-spells": "19"
+          }
+        },
+        "18": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Superior Inspiration"
+          ],
+          "tracks": {
+            "bardic-die": "D12",
+            "cantrips": "4",
+            "prepared-spells": "20"
+          }
+        },
+        "19": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Epic Boon"
+          ],
+          "tracks": {
+            "bardic-die": "D12",
+            "cantrips": "4",
+            "prepared-spells": "21"
+          }
+        },
+        "20": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Words of Creation"
+          ],
+          "tracks": {
+            "bardic-die": "D12",
+            "cantrips": "4",
+            "prepared-spells": "22"
+          }
+        }
+      }
+    },
+    "cleric": {
+      "name": "Cleric",
+      "hitDie": 8,
+      "saves": [
+        "cha",
+        "wis"
+      ],
+      "casterType": "full",
+      "subclasses": {
+        "life-domain": {
+          "name": "Life Domain",
+          "levels": {
+            "3": {
+              "features": [
+                "Disciple of Life",
+                "Life Domain Spells",
+                "Preserve Life"
+              ]
+            },
+            "6": {
+              "features": [
+                "Blessed Healer"
+              ]
+            },
+            "17": {
+              "features": [
+                "Supreme Healing"
+              ]
+            }
+          }
+        }
+      },
+      "levels": {
+        "1": {
+          "profBonus": 2,
+          "slots": {
+            "1": 2
+          },
+          "features": [
+            "Divine Order",
+            "Spellcasting"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "prepared-spells": "4"
+          }
+        },
+        "2": {
+          "profBonus": 2,
+          "slots": {
+            "1": 3
+          },
+          "features": [
+            "Channel Divinity"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "channel-divinity-uses": "2",
+            "prepared-spells": "5"
+          }
+        },
+        "3": {
+          "profBonus": 2,
+          "slots": {
+            "1": 4,
+            "2": 2
+          },
+          "features": [
+            "Cleric Subclasses"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "channel-divinity-uses": "2",
+            "prepared-spells": "6"
+          }
+        },
+        "4": {
+          "profBonus": 2,
+          "slots": {
+            "1": 4,
+            "2": 3
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "channel-divinity-uses": "2",
+            "prepared-spells": "7"
+          }
+        },
+        "5": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          },
+          "features": [
+            "Sear Undead"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "channel-divinity-uses": "2",
+            "prepared-spells": "9"
+          }
+        },
+        "6": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          },
+          "tracks": {
+            "cantrips": "4",
+            "channel-divinity-uses": "3",
+            "prepared-spells": "10"
+          }
+        },
+        "7": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          },
+          "features": [
+            "Blessed Strikes"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "channel-divinity-uses": "3",
+            "prepared-spells": "11"
+          }
+        },
+        "8": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "channel-divinity-uses": "3",
+            "prepared-spells": "12"
+          }
+        },
+        "9": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          },
+          "tracks": {
+            "cantrips": "4",
+            "channel-divinity-uses": "3",
+            "prepared-spells": "14"
+          }
+        },
+        "10": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          },
+          "features": [
+            "Divine Intervention"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "channel-divinity-uses": "3",
+            "prepared-spells": "15"
+          }
+        },
+        "11": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          },
+          "tracks": {
+            "cantrips": "5",
+            "channel-divinity-uses": "3",
+            "prepared-spells": "16"
+          }
+        },
+        "12": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "channel-divinity-uses": "3",
+            "prepared-spells": "16"
+          }
+        },
+        "13": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          },
+          "tracks": {
+            "cantrips": "5",
+            "channel-divinity-uses": "3",
+            "prepared-spells": "17"
+          }
+        },
+        "14": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          },
+          "features": [
+            "Improved Blessed Strikes"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "channel-divinity-uses": "3",
+            "prepared-spells": "17"
+          }
+        },
+        "15": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "tracks": {
+            "cantrips": "5",
+            "channel-divinity-uses": "3",
+            "prepared-spells": "18"
+          }
+        },
+        "16": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "channel-divinity-uses": "3",
+            "prepared-spells": "18"
+          }
+        },
+        "17": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "tracks": {
+            "cantrips": "5",
+            "channel-divinity-uses": "3",
+            "prepared-spells": "19"
+          }
+        },
+        "18": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "tracks": {
+            "cantrips": "5",
+            "channel-divinity-uses": "4",
+            "prepared-spells": "20"
+          }
+        },
+        "19": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Epic Boon"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "channel-divinity-uses": "4",
+            "prepared-spells": "21"
+          }
+        },
+        "20": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Greater Divine Intervention"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "channel-divinity-uses": "4",
+            "prepared-spells": "22"
+          }
+        }
+      }
+    },
+    "druid": {
+      "name": "Druid",
+      "hitDie": 8,
+      "saves": [
+        "int",
+        "wis"
+      ],
+      "casterType": "full",
+      "subclasses": {
+        "circle-of-the-land": {
+          "name": "Circle of the Land",
+          "levels": {
+            "3": {
+              "features": [
+                "Circle of the Land Spells",
+                "Land's Aid"
+              ]
+            },
+            "6": {
+              "features": [
+                "Natural Recovery"
+              ]
+            },
+            "10": {
+              "features": [
+                "Nature's Ward"
+              ]
+            },
+            "14": {
+              "features": [
+                "Nature's Sanctuary"
+              ]
+            }
+          }
+        }
+      },
+      "levels": {
+        "1": {
+          "profBonus": 2,
+          "slots": {
+            "1": 2
+          },
+          "features": [
+            "Druidic",
+            "Primal Order",
+            "Spellcasting"
+          ],
+          "tracks": {
+            "cantrips": "2",
+            "prepared-spells": "4"
+          }
+        },
+        "2": {
+          "profBonus": 2,
+          "slots": {
+            "1": 3
+          },
+          "features": [
+            "Wild Companion",
+            "Wild Shape"
+          ],
+          "tracks": {
+            "cantrips": "2",
+            "prepared-spells": "5",
+            "wild-shape-uses": "2"
+          }
+        },
+        "3": {
+          "profBonus": 2,
+          "slots": {
+            "1": 4,
+            "2": 2
+          },
+          "features": [
+            "Druid Subclass"
+          ],
+          "tracks": {
+            "cantrips": "2",
+            "prepared-spells": "6",
+            "wild-shape-uses": "2"
+          }
+        },
+        "4": {
+          "profBonus": 2,
+          "slots": {
+            "1": 4,
+            "2": 3
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "prepared-spells": "7",
+            "wild-shape-uses": "2"
+          }
+        },
+        "5": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          },
+          "features": [
+            "Wild Resurgence"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "prepared-spells": "9",
+            "wild-shape-uses": "2"
+          }
+        },
+        "6": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          },
+          "tracks": {
+            "cantrips": "3",
+            "prepared-spells": "10",
+            "wild-shape-uses": "3"
+          }
+        },
+        "7": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          },
+          "features": [
+            "Elemental Fury"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "prepared-spells": "11",
+            "wild-shape-uses": "3"
+          }
+        },
+        "8": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "prepared-spells": "12",
+            "wild-shape-uses": "3"
+          }
+        },
+        "9": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          },
+          "tracks": {
+            "cantrips": "3",
+            "prepared-spells": "14",
+            "wild-shape-uses": "3"
+          }
+        },
+        "10": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          },
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "15",
+            "wild-shape-uses": "3"
+          }
+        },
+        "11": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          },
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "16",
+            "wild-shape-uses": "3"
+          }
+        },
+        "12": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "16",
+            "wild-shape-uses": "3"
+          }
+        },
+        "13": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          },
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "17",
+            "wild-shape-uses": "3"
+          }
+        },
+        "14": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          },
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "17",
+            "wild-shape-uses": "3"
+          }
+        },
+        "15": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "features": [
+            "Improved Elemental Fury"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "18",
+            "wild-shape-uses": "3"
+          }
+        },
+        "16": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "18",
+            "wild-shape-uses": "3"
+          }
+        },
+        "17": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "19",
+            "wild-shape-uses": "4"
+          }
+        },
+        "18": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Beast Spells"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "20",
+            "wild-shape-uses": "4"
+          }
+        },
+        "19": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Epic Boon"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "21",
+            "wild-shape-uses": "4"
+          }
+        },
+        "20": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Archdruid"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "22",
+            "wild-shape-uses": "4"
+          }
+        }
+      }
+    },
+    "fighter": {
+      "name": "Fighter",
+      "hitDie": 10,
+      "saves": [
+        "dex",
+        "str"
+      ],
+      "casterType": "none",
+      "subclasses": {
+        "champion": {
+          "name": "Champion",
+          "levels": {
+            "3": {
+              "features": [
+                "Improved Critical",
+                "Remarkable Athlete"
+              ]
+            },
+            "7": {
+              "features": [
+                "Additional Fighting Style"
+              ]
+            },
+            "10": {
+              "features": [
+                "Heroic Warrior"
+              ]
+            },
+            "15": {
+              "features": [
+                "Superior Critical"
+              ]
+            },
+            "18": {
+              "features": [
+                "Survivor"
+              ]
+            }
+          }
+        }
+      },
+      "levels": {
+        "1": {
+          "profBonus": 2,
+          "features": [
+            "Fighting Style",
+            "Second Wind",
+            "Weapon Mastery"
+          ],
+          "tracks": {
+            "second-wind-uses": "2",
+            "weapon-mastery-count": "3"
+          }
+        },
+        "2": {
+          "profBonus": 2,
+          "features": [
+            "Action Surge",
+            "Tactical Mind"
+          ],
+          "tracks": {
+            "second-wind-uses": "2",
+            "weapon-mastery-count": "3"
+          }
+        },
+        "3": {
+          "profBonus": 2,
+          "features": [
+            "Fighter Subclass"
+          ],
+          "tracks": {
+            "second-wind-uses": "2",
+            "weapon-mastery-count": "3"
+          }
+        },
+        "4": {
+          "profBonus": 2,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "second-wind-uses": "3",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "5": {
+          "profBonus": 3,
+          "features": [
+            "Extra Attack",
+            "Tactical Shift"
+          ],
+          "tracks": {
+            "second-wind-uses": "3",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "6": {
+          "profBonus": 3,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "second-wind-uses": "3",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "7": {
+          "profBonus": 3,
+          "tracks": {
+            "second-wind-uses": "3",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "8": {
+          "profBonus": 3,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "second-wind-uses": "3",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "9": {
+          "profBonus": 4,
+          "features": [
+            "Indomitable",
+            "Tactical Master"
+          ],
+          "tracks": {
+            "second-wind-uses": "3",
+            "weapon-mastery-count": "4"
+          }
+        },
+        "10": {
+          "profBonus": 4,
+          "tracks": {
+            "second-wind-uses": "4",
+            "weapon-mastery-count": "5"
+          }
+        },
+        "11": {
+          "profBonus": 4,
+          "features": [
+            "Two Extra Attacks"
+          ],
+          "tracks": {
+            "second-wind-uses": "4",
+            "weapon-mastery-count": "5"
+          }
+        },
+        "12": {
+          "profBonus": 4,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "second-wind-uses": "4",
+            "weapon-mastery-count": "5"
+          }
+        },
+        "13": {
+          "profBonus": 5,
+          "features": [
+            "Indomitable",
+            "Studdied Attacks"
+          ],
+          "tracks": {
+            "second-wind-uses": "4",
+            "weapon-mastery-count": "5"
+          }
+        },
+        "14": {
+          "profBonus": 5,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "second-wind-uses": "4",
+            "weapon-mastery-count": "5"
+          }
+        },
+        "15": {
+          "profBonus": 5,
+          "tracks": {
+            "second-wind-uses": "4",
+            "weapon-mastery-count": "5"
+          }
+        },
+        "16": {
+          "profBonus": 5,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "second-wind-uses": "4",
+            "weapon-mastery-count": "6"
+          }
+        },
+        "17": {
+          "profBonus": 6,
+          "features": [
+            "Action Surge",
+            "Indomitable"
+          ],
+          "tracks": {
+            "second-wind-uses": "4",
+            "weapon-mastery-count": "6"
+          }
+        },
+        "18": {
+          "profBonus": 6,
+          "tracks": {
+            "second-wind-uses": "4",
+            "weapon-mastery-count": "6"
+          }
+        },
+        "19": {
+          "profBonus": 6,
+          "features": [
+            "Epic Boon"
+          ],
+          "tracks": {
+            "second-wind-uses": "4",
+            "weapon-mastery-count": "6"
+          }
+        },
+        "20": {
+          "profBonus": 6,
+          "features": [
+            "Three Extra Attacks"
+          ],
+          "tracks": {
+            "second-wind-uses": "4",
+            "weapon-mastery-count": "6"
+          }
+        }
+      }
+    },
+    "monk": {
+      "name": "Monk",
+      "hitDie": 8,
+      "saves": [
+        "dex",
+        "wis"
+      ],
+      "casterType": "none",
+      "subclasses": {
+        "warrior-of-the-open-hand": {
+          "name": "Warrior of the Open Hand",
+          "levels": {
+            "3": {
+              "features": [
+                "Open Hand Technique"
+              ]
+            },
+            "6": {
+              "features": [
+                "Wholeness of Body"
+              ]
+            },
+            "11": {
+              "features": [
+                "Fleet Step"
+              ]
+            },
+            "17": {
+              "features": [
+                "Quivering Palm"
+              ]
+            }
+          }
+        }
+      },
+      "levels": {
+        "1": {
+          "profBonus": 2,
+          "features": [
+            "Martial Arts",
+            "Unarmored Defense"
+          ],
+          "tracks": {
+            "martial-arts-dice": "1d6"
+          }
+        },
+        "2": {
+          "profBonus": 2,
+          "features": [
+            "Monk's Focus",
+            "Uncanny Metabolism"
+          ],
+          "tracks": {
+            "focus-points": "2",
+            "martial-arts-dice": "1d6",
+            "unarmored-movement": "+10 ft."
+          }
+        },
+        "3": {
+          "profBonus": 2,
+          "features": [
+            "Monk Subclass",
+            "Stunning Strike"
+          ],
+          "tracks": {
+            "focus-points": "3",
+            "martial-arts-dice": "1d6",
+            "unarmored-movement": "+10 ft."
+          }
+        },
+        "4": {
+          "profBonus": 2,
+          "features": [
+            "Ability Score Improvement",
+            "Slow Fall"
+          ],
+          "tracks": {
+            "focus-points": "4",
+            "martial-arts-dice": "1d6",
+            "unarmored-movement": "+10 ft."
+          }
+        },
+        "5": {
+          "profBonus": 3,
+          "features": [
+            "Extra Attack",
+            "Stunning Strike"
+          ],
+          "tracks": {
+            "focus-points": "5",
+            "martial-arts-dice": "1d8",
+            "unarmored-movement": "+10 ft."
+          }
+        },
+        "6": {
+          "profBonus": 3,
+          "features": [
+            "Empowered Strikes"
+          ],
+          "tracks": {
+            "focus-points": "6",
+            "martial-arts-dice": "1d8",
+            "unarmored-movement": "+15 ft."
+          }
+        },
+        "7": {
+          "profBonus": 3,
+          "features": [
+            "Evasion"
+          ],
+          "tracks": {
+            "focus-points": "7",
+            "martial-arts-dice": "1d8",
+            "unarmored-movement": "+15 ft."
+          }
+        },
+        "8": {
+          "profBonus": 3,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "focus-points": "8",
+            "martial-arts-dice": "1d8",
+            "unarmored-movement": "+15 ft."
+          }
+        },
+        "9": {
+          "profBonus": 4,
+          "features": [
+            "Acrobatic Movement"
+          ],
+          "tracks": {
+            "focus-points": "9",
+            "martial-arts-dice": "1d8",
+            "unarmored-movement": "+15 ft."
+          }
+        },
+        "10": {
+          "profBonus": 4,
+          "features": [
+            "Heightened Focus",
+            "Self-Restoration"
+          ],
+          "tracks": {
+            "focus-points": "10",
+            "martial-arts-dice": "1d8",
+            "unarmored-movement": "+20 ft."
+          }
+        },
+        "11": {
+          "profBonus": 4,
+          "tracks": {
+            "focus-points": "11",
+            "martial-arts-dice": "1d10",
+            "unarmored-movement": "+20 ft."
+          }
+        },
+        "12": {
+          "profBonus": 4,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "focus-points": "12",
+            "martial-arts-dice": "1d10",
+            "unarmored-movement": "+20 ft."
+          }
+        },
+        "13": {
+          "profBonus": 5,
+          "features": [
+            "Deflect Energy"
+          ],
+          "tracks": {
+            "focus-points": "13",
+            "martial-arts-dice": "1d10",
+            "unarmored-movement": "+20 ft."
+          }
+        },
+        "14": {
+          "profBonus": 5,
+          "features": [
+            "Disciplined Survivor"
+          ],
+          "tracks": {
+            "focus-points": "14",
+            "martial-arts-dice": "1d10",
+            "unarmored-movement": "+25 ft."
+          }
+        },
+        "15": {
+          "profBonus": 5,
+          "features": [
+            "Perfect Focus"
+          ],
+          "tracks": {
+            "focus-points": "15",
+            "martial-arts-dice": "1d10",
+            "unarmored-movement": "+25 ft."
+          }
+        },
+        "16": {
+          "profBonus": 5,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "focus-points": "16",
+            "martial-arts-dice": "1d10",
+            "unarmored-movement": "+25 ft."
+          }
+        },
+        "17": {
+          "profBonus": 6,
+          "tracks": {
+            "focus-points": "17",
+            "martial-arts-dice": "1d12",
+            "unarmored-movement": "+25 ft."
+          }
+        },
+        "18": {
+          "profBonus": 6,
+          "features": [
+            "Superior Defense"
+          ],
+          "tracks": {
+            "focus-points": "18",
+            "martial-arts-dice": "1d12",
+            "unarmored-movement": "+30 ft."
+          }
+        },
+        "19": {
+          "profBonus": 6,
+          "features": [
+            "Epic Boon"
+          ],
+          "tracks": {
+            "focus-points": "19",
+            "martial-arts-dice": "1d12",
+            "unarmored-movement": "+30 ft."
+          }
+        },
+        "20": {
+          "profBonus": 6,
+          "features": [
+            "Body and Mind"
+          ],
+          "tracks": {
+            "focus-points": "20",
+            "martial-arts-dice": "1d12",
+            "unarmored-movement": "+30 ft."
+          }
+        }
+      }
+    },
+    "paladin": {
+      "name": "Paladin",
+      "hitDie": 10,
+      "saves": [
+        "cha",
+        "wis"
+      ],
+      "casterType": "half",
+      "subclasses": {
+        "oath-of-devotion": {
+          "name": "Oath of Devotion",
+          "levels": {
+            "3": {
+              "features": [
+                "Oath of Devotion Spells",
+                "Sacred Weapon"
+              ]
+            },
+            "7": {
+              "features": [
+                "Aura of Devotion"
+              ]
+            },
+            "15": {
+              "features": [
+                "Smite of Protection"
+              ]
+            },
+            "20": {
+              "features": [
+                "Holy Nimbus"
+              ]
+            }
+          }
+        }
+      },
+      "levels": {
+        "1": {
+          "profBonus": 2,
+          "slots": {
+            "1": 2
+          },
+          "features": [
+            "Lay On Hands",
+            "Spellcasting",
+            "Weapon Mastery"
+          ],
+          "tracks": {
+            "prepared-spells": "2"
+          }
+        },
+        "2": {
+          "profBonus": 2,
+          "slots": {
+            "1": 2
+          },
+          "features": [
+            "Fighting Style",
+            "Paladin's Smite"
+          ],
+          "tracks": {
+            "prepared-spells": "3"
+          }
+        },
+        "3": {
+          "profBonus": 2,
+          "slots": {
+            "1": 3
+          },
+          "features": [
+            "Channel Divinity",
+            "Paladin Subclass"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "2",
+            "prepared-spells": "4"
+          }
+        },
+        "4": {
+          "profBonus": 2,
+          "slots": {
+            "1": 3
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "2",
+            "prepared-spells": "5"
+          }
+        },
+        "5": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 2
+          },
+          "features": [
+            "Extra Attack",
+            "Faithful Steed"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "2",
+            "prepared-spells": "6"
+          }
+        },
+        "6": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 2
+          },
+          "features": [
+            "Aura of Protection"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "2",
+            "prepared-spells": "6"
+          }
+        },
+        "7": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3
+          },
+          "tracks": {
+            "channel-divinity-uses": "2",
+            "prepared-spells": "7"
+          }
+        },
+        "8": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "2",
+            "prepared-spells": "7"
+          }
+        },
+        "9": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          },
+          "features": [
+            "Abjure Foes"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "2",
+            "prepared-spells": "9"
+          }
+        },
+        "10": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          },
+          "features": [
+            "Aura of Courage"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "2",
+            "prepared-spells": "9"
+          }
+        },
+        "11": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          },
+          "features": [
+            "Radiant Strikes"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "3",
+            "prepared-spells": "10"
+          }
+        },
+        "12": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "3",
+            "prepared-spells": "10"
+          }
+        },
+        "13": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          },
+          "tracks": {
+            "channel-divinity-uses": "3",
+            "prepared-spells": "11"
+          }
+        },
+        "14": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          },
+          "features": [
+            "Restoring Touch"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "3",
+            "prepared-spells": "11"
+          }
+        },
+        "15": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          },
+          "tracks": {
+            "channel-divinity-uses": "3",
+            "prepared-spells": "12"
+          }
+        },
+        "16": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "3",
+            "prepared-spells": "12"
+          }
+        },
+        "17": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          },
+          "tracks": {
+            "channel-divinity-uses": "3",
+            "prepared-spells": "14"
+          }
+        },
+        "18": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          },
+          "features": [
+            "Aura Expansion"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "3",
+            "prepared-spells": "14"
+          }
+        },
+        "19": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          },
+          "features": [
+            "Epic Boon"
+          ],
+          "tracks": {
+            "channel-divinity-uses": "3",
+            "prepared-spells": "15"
+          }
+        },
+        "20": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          },
+          "tracks": {
+            "channel-divinity-uses": "3",
+            "prepared-spells": "15"
+          }
+        }
+      }
+    },
+    "ranger": {
+      "name": "Ranger",
+      "hitDie": 10,
+      "saves": [
+        "dex",
+        "str"
+      ],
+      "casterType": "half",
+      "subclasses": {
+        "hunter": {
+          "name": "Hunter",
+          "levels": {
+            "3": {
+              "features": [
+                "Hunter's Lore",
+                "Hunter's Prey"
+              ]
+            },
+            "7": {
+              "features": [
+                "Defensive Tactics"
+              ]
+            },
+            "11": {
+              "features": [
+                "Superior Hunter's Prey"
+              ]
+            },
+            "15": {
+              "features": [
+                "Superior Hunter's Defense"
+              ]
+            }
+          }
+        }
+      },
+      "levels": {
+        "1": {
+          "profBonus": 2,
+          "slots": {
+            "1": 2
+          },
+          "features": [
+            "Favored Enemy",
+            "Spellcasting",
+            "Weapon Mastery"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "2",
+            "prepared-spells": "2"
+          }
+        },
+        "2": {
+          "profBonus": 2,
+          "slots": {
+            "1": 2
+          },
+          "features": [
+            "Deft Explorer",
+            "Fighting Style"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "2",
+            "prepared-spells": "3"
+          }
+        },
+        "3": {
+          "profBonus": 2,
+          "slots": {
+            "1": 3
+          },
+          "features": [
+            "Ranger Subclass"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "2",
+            "prepared-spells": "4"
+          }
+        },
+        "4": {
+          "profBonus": 2,
+          "slots": {
+            "1": 3
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "2",
+            "prepared-spells": "5"
+          }
+        },
+        "5": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 2
+          },
+          "features": [
+            "Extra Attack"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "3",
+            "prepared-spells": "6"
+          }
+        },
+        "6": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 2
+          },
+          "features": [
+            "Roving"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "3",
+            "prepared-spells": "6"
+          }
+        },
+        "7": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3
+          },
+          "tracks": {
+            "favored-enemy-uses": "3",
+            "prepared-spells": "7"
+          }
+        },
+        "8": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "3",
+            "prepared-spells": "7"
+          }
+        },
+        "9": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          },
+          "features": [
+            "Expertise"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "4",
+            "prepared-spells": "9"
+          }
+        },
+        "10": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          },
+          "features": [
+            "Tireless"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "4",
+            "prepared-spells": "9"
+          }
+        },
+        "11": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          },
+          "tracks": {
+            "favored-enemy-uses": "4",
+            "prepared-spells": "10"
+          }
+        },
+        "12": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "4",
+            "prepared-spells": "10"
+          }
+        },
+        "13": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          },
+          "features": [
+            "Relentless Hunter"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "5",
+            "prepared-spells": "11"
+          }
+        },
+        "14": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          },
+          "features": [
+            "Nature's Veil"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "5",
+            "prepared-spells": "11"
+          }
+        },
+        "15": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          },
+          "tracks": {
+            "favored-enemy-uses": "5",
+            "prepared-spells": "12"
+          }
+        },
+        "16": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "5",
+            "prepared-spells": "12"
+          }
+        },
+        "17": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          },
+          "features": [
+            "Precise Hunter"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "6",
+            "prepared-spells": "14"
+          }
+        },
+        "18": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          },
+          "features": [
+            "Feral Senses"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "6",
+            "prepared-spells": "14"
+          }
+        },
+        "19": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          },
+          "features": [
+            "Epic Boon"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "6",
+            "prepared-spells": "15"
+          }
+        },
+        "20": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          },
+          "features": [
+            "Foe Slayer"
+          ],
+          "tracks": {
+            "favored-enemy-uses": "6",
+            "prepared-spells": "15"
+          }
+        }
+      }
+    },
+    "rogue": {
+      "name": "Rogue",
+      "hitDie": 8,
+      "saves": [
+        "dex",
+        "int"
+      ],
+      "casterType": "none",
+      "subclasses": {
+        "thief": {
+          "name": "Thief",
+          "levels": {
+            "3": {
+              "features": [
+                "Fast Hands",
+                "Second-Story Work"
+              ]
+            },
+            "9": {
+              "features": [
+                "Supreme Sneak"
+              ]
+            },
+            "13": {
+              "features": [
+                "Use Magic Device"
+              ]
+            },
+            "17": {
+              "features": [
+                "Thief's Reflexes"
+              ]
+            }
+          }
+        }
+      },
+      "levels": {
+        "1": {
+          "profBonus": 2,
+          "features": [
+            "Expertise",
+            "Sneak Attack",
+            "Thieves' Cant",
+            "Weapon Mastery"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "1d6"
+          }
+        },
+        "2": {
+          "profBonus": 2,
+          "features": [
+            "Cunning Action"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "1d6"
+          }
+        },
+        "3": {
+          "profBonus": 2,
+          "features": [
+            "Rogue Subclass",
+            "Steady Aim"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "2d6"
+          }
+        },
+        "4": {
+          "profBonus": 2,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "2d6"
+          }
+        },
+        "5": {
+          "profBonus": 3,
+          "features": [
+            "Cunning Strike",
+            "Uncanny Dodge"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "3d6"
+          }
+        },
+        "6": {
+          "profBonus": 3,
+          "features": [
+            "Expertise"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "3d6"
+          }
+        },
+        "7": {
+          "profBonus": 3,
+          "features": [
+            "Evasion",
+            "Reliable Talent"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "4d6"
+          }
+        },
+        "8": {
+          "profBonus": 3,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "4d6"
+          }
+        },
+        "9": {
+          "profBonus": 4,
+          "tracks": {
+            "sneak-attack-column-data": "5d6"
+          }
+        },
+        "10": {
+          "profBonus": 4,
+          "tracks": {
+            "sneak-attack-column-data": "5d6"
+          }
+        },
+        "11": {
+          "profBonus": 4,
+          "features": [
+            "Improved Cunning Strike"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "6d6"
+          }
+        },
+        "12": {
+          "profBonus": 4,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "6d6"
+          }
+        },
+        "13": {
+          "profBonus": 5,
+          "tracks": {
+            "sneak-attack-column-data": "7d6"
+          }
+        },
+        "14": {
+          "profBonus": 5,
+          "features": [
+            "Devious Strikes"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "7d6"
+          }
+        },
+        "15": {
+          "profBonus": 5,
+          "features": [
+            "Slippery Mind"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "8d6"
+          }
+        },
+        "16": {
+          "profBonus": 5,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "8d6"
+          }
+        },
+        "17": {
+          "profBonus": 6,
+          "tracks": {
+            "sneak-attack-column-data": "9d6"
+          }
+        },
+        "18": {
+          "profBonus": 6,
+          "features": [
+            "Elusive"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "9d6"
+          }
+        },
+        "19": {
+          "profBonus": 6,
+          "features": [
+            "Epic Boon"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "10d6"
+          }
+        },
+        "20": {
+          "profBonus": 6,
+          "features": [
+            "Stroke of Luck"
+          ],
+          "tracks": {
+            "sneak-attack-column-data": "10d6"
+          }
+        }
+      }
+    },
+    "sorcerer": {
+      "name": "Sorcerer",
+      "hitDie": 6,
+      "saves": [
+        "cha",
+        "con"
+      ],
+      "casterType": "full",
+      "subclasses": {
+        "draconic-sorcery": {
+          "name": "Draconic Sorcery",
+          "levels": {
+            "3": {
+              "features": [
+                "Draconic Resilience",
+                "Draconic Spells"
+              ]
+            },
+            "6": {
+              "features": [
+                "Elemental Affinity"
+              ]
+            },
+            "14": {
+              "features": [
+                "Dragon Wings"
+              ]
+            },
+            "19": {
+              "features": [
+                "Dragon Companion"
+              ]
+            }
+          }
+        }
+      },
+      "levels": {
+        "1": {
+          "profBonus": 2,
+          "slots": {
+            "1": 2
+          },
+          "features": [
+            "Innate Sorcery",
+            "Spellcasting"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "2"
+          }
+        },
+        "2": {
+          "profBonus": 2,
+          "slots": {
+            "1": 3
+          },
+          "features": [
+            "Font of Magic",
+            "Metamagic"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "4",
+            "sorcery-points": "2"
+          }
+        },
+        "3": {
+          "profBonus": 2,
+          "slots": {
+            "1": 4,
+            "2": 2
+          },
+          "features": [
+            "Sorcerer Subclass"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "6",
+            "sorcery-points": "3"
+          }
+        },
+        "4": {
+          "profBonus": 2,
+          "slots": {
+            "1": 4,
+            "2": 3
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "7",
+            "sorcery-points": "4"
+          }
+        },
+        "5": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          },
+          "features": [
+            "Sorcerous Restoration"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "9",
+            "sorcery-points": "5"
+          }
+        },
+        "6": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          },
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "10",
+            "sorcery-points": "6"
+          }
+        },
+        "7": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          },
+          "features": [
+            "Sorcery Incarnate"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "11",
+            "sorcery-points": "7"
+          }
+        },
+        "8": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "12",
+            "sorcery-points": "8"
+          }
+        },
+        "9": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          },
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "14",
+            "sorcery-points": "9"
+          }
+        },
+        "10": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          },
+          "features": [
+            "Metamagic"
+          ],
+          "tracks": {
+            "cantrips": "6",
+            "prepared-spells": "15",
+            "sorcery-points": "10"
+          }
+        },
+        "11": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          },
+          "tracks": {
+            "cantrips": "6",
+            "prepared-spells": "16",
+            "sorcery-points": "11"
+          }
+        },
+        "12": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "6",
+            "prepared-spells": "16",
+            "sorcery-points": "12"
+          }
+        },
+        "13": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          },
+          "tracks": {
+            "cantrips": "6",
+            "prepared-spells": "17",
+            "sorcery-points": "13"
+          }
+        },
+        "14": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          },
+          "tracks": {
+            "cantrips": "6",
+            "prepared-spells": "17",
+            "sorcery-points": "14"
+          }
+        },
+        "15": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "tracks": {
+            "cantrips": "6",
+            "prepared-spells": "18",
+            "sorcery-points": "15"
+          }
+        },
+        "16": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "6",
+            "prepared-spells": "18",
+            "sorcery-points": "16"
+          }
+        },
+        "17": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "tracks": {
+            "cantrips": "6",
+            "prepared-spells": "19",
+            "sorcery-points": "17"
+          }
+        },
+        "18": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "tracks": {
+            "cantrips": "6",
+            "prepared-spells": "20",
+            "sorcery-points": "18"
+          }
+        },
+        "19": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Epic Boon"
+          ],
+          "tracks": {
+            "cantrips": "6",
+            "prepared-spells": "21",
+            "sorcery-points": "19"
+          }
+        },
+        "20": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Arcane Apotheosis"
+          ],
+          "tracks": {
+            "cantrips": "6",
+            "prepared-spells": "22",
+            "sorcery-points": "20"
+          }
+        }
+      }
+    },
+    "warlock": {
+      "name": "Warlock",
+      "hitDie": 8,
+      "saves": [
+        "cha",
+        "wis"
+      ],
+      "casterType": "pact",
+      "subclasses": {
+        "fiend-patron": {
+          "name": "Fiend Patron",
+          "levels": {
+            "3": {
+              "features": [
+                "Dark One's Blessing",
+                "Fiend Spells"
+              ]
+            },
+            "6": {
+              "features": [
+                "Dark One's Own Luck"
+              ]
+            },
+            "10": {
+              "features": [
+                "Fiendish Resilience"
+              ]
+            },
+            "14": {
+              "features": [
+                "Hurl Through Hell"
+              ]
+            }
+          }
+        }
+      },
+      "levels": {
+        "1": {
+          "profBonus": 2,
+          "pact": {
+            "slots": 1,
+            "level": "1st"
+          },
+          "features": [
+            "Eldritch Invocations",
+            "Pact Magic"
+          ],
+          "tracks": {
+            "cantrips": "2",
+            "eldritch-invocation-count": "1",
+            "prepared-spells": "2"
+          }
+        },
+        "2": {
+          "profBonus": 2,
+          "pact": {
+            "slots": 2,
+            "level": "1st"
+          },
+          "features": [
+            "Magic Cunning"
+          ],
+          "tracks": {
+            "cantrips": "2",
+            "eldritch-invocation-count": "3",
+            "prepared-spells": "3"
+          }
+        },
+        "3": {
+          "profBonus": 2,
+          "pact": {
+            "slots": 2,
+            "level": "2nd"
+          },
+          "features": [
+            "Warlock Subclass"
+          ],
+          "tracks": {
+            "cantrips": "2",
+            "eldritch-invocation-count": "3",
+            "prepared-spells": "4"
+          }
+        },
+        "4": {
+          "profBonus": 2,
+          "pact": {
+            "slots": 2,
+            "level": "2nd"
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "eldritch-invocation-count": "3",
+            "prepared-spells": "5"
+          }
+        },
+        "5": {
+          "profBonus": 3,
+          "pact": {
+            "slots": 2,
+            "level": "3rd"
+          },
+          "tracks": {
+            "cantrips": "3",
+            "eldritch-invocation-count": "5",
+            "prepared-spells": "6"
+          }
+        },
+        "6": {
+          "profBonus": 3,
+          "pact": {
+            "slots": 2,
+            "level": "3rd"
+          },
+          "tracks": {
+            "cantrips": "3",
+            "eldritch-invocation-count": "5",
+            "prepared-spells": "7"
+          }
+        },
+        "7": {
+          "profBonus": 3,
+          "pact": {
+            "slots": 2,
+            "level": "4th"
+          },
+          "tracks": {
+            "cantrips": "3",
+            "eldritch-invocation-count": "6",
+            "prepared-spells": "8"
+          }
+        },
+        "8": {
+          "profBonus": 3,
+          "pact": {
+            "slots": 2,
+            "level": "4th"
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "eldritch-invocation-count": "6",
+            "prepared-spells": "9"
+          }
+        },
+        "9": {
+          "profBonus": 4,
+          "pact": {
+            "slots": 2,
+            "level": "5th"
+          },
+          "features": [
+            "Contact Patron"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "eldritch-invocation-count": "7",
+            "prepared-spells": "10"
+          }
+        },
+        "10": {
+          "profBonus": 4,
+          "pact": {
+            "slots": 2,
+            "level": "5th"
+          },
+          "tracks": {
+            "cantrips": "4",
+            "eldritch-invocation-count": "7",
+            "prepared-spells": "10"
+          }
+        },
+        "11": {
+          "profBonus": 4,
+          "pact": {
+            "slots": 3,
+            "level": "5th"
+          },
+          "features": [
+            "Mystic Arcanum"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "eldritch-invocation-count": "7",
+            "prepared-spells": "11"
+          }
+        },
+        "12": {
+          "profBonus": 4,
+          "pact": {
+            "slots": 3,
+            "level": "5th"
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "eldritch-invocation-count": "8",
+            "prepared-spells": "11"
+          }
+        },
+        "13": {
+          "profBonus": 5,
+          "pact": {
+            "slots": 3,
+            "level": "5th"
+          },
+          "features": [
+            "Mystic Arcanum"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "eldritch-invocation-count": "8",
+            "prepared-spells": "12"
+          }
+        },
+        "14": {
+          "profBonus": 5,
+          "pact": {
+            "slots": 3,
+            "level": "5th"
+          },
+          "tracks": {
+            "cantrips": "4",
+            "eldritch-invocation-count": "8",
+            "prepared-spells": "12"
+          }
+        },
+        "15": {
+          "profBonus": 5,
+          "pact": {
+            "slots": 3,
+            "level": "5th"
+          },
+          "features": [
+            "Mystic Arcanum"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "eldritch-invocation-count": "9",
+            "prepared-spells": "13"
+          }
+        },
+        "16": {
+          "profBonus": 5,
+          "pact": {
+            "slots": 3,
+            "level": "5th"
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "eldritch-invocation-count": "9",
+            "prepared-spells": "13"
+          }
+        },
+        "17": {
+          "profBonus": 6,
+          "pact": {
+            "slots": 4,
+            "level": "5th"
+          },
+          "features": [
+            "Mystic Arcanum"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "eldritch-invocation-count": "9",
+            "prepared-spells": "14"
+          }
+        },
+        "18": {
+          "profBonus": 6,
+          "pact": {
+            "slots": 4,
+            "level": "5th"
+          },
+          "tracks": {
+            "cantrips": "4",
+            "eldritch-invocation-count": "10",
+            "prepared-spells": "14"
+          }
+        },
+        "19": {
+          "profBonus": 6,
+          "pact": {
+            "slots": 4,
+            "level": "5th"
+          },
+          "features": [
+            "Epic Boon"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "eldritch-invocation-count": "10",
+            "prepared-spells": "15"
+          }
+        },
+        "20": {
+          "profBonus": 6,
+          "pact": {
+            "slots": 4,
+            "level": "5th"
+          },
+          "features": [
+            "Eldritch Master"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "eldritch-invocation-count": "10",
+            "prepared-spells": "15"
+          }
+        }
+      }
+    },
+    "wizard": {
+      "name": "Wizard",
+      "hitDie": 6,
+      "saves": [
+        "int",
+        "wis"
+      ],
+      "casterType": "full",
+      "subclasses": {
+        "evoker": {
+          "name": "Evoker",
+          "levels": {
+            "3": {
+              "features": [
+                "Evocation Savant",
+                "Potent Cantrip"
+              ]
+            },
+            "6": {
+              "features": [
+                "Sculpt Spells"
+              ]
+            },
+            "10": {
+              "features": [
+                "Empowered Evocation"
+              ]
+            },
+            "14": {
+              "features": [
+                "Overchannel"
+              ]
+            }
+          }
+        }
+      },
+      "levels": {
+        "1": {
+          "profBonus": 2,
+          "slots": {
+            "1": 2
+          },
+          "features": [
+            "Arcane Recovery",
+            "Ritual Adept",
+            "Spellcasting"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "prepared-spells": "4"
+          }
+        },
+        "2": {
+          "profBonus": 2,
+          "slots": {
+            "1": 3
+          },
+          "features": [
+            "Scholar"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "prepared-spells": "5"
+          }
+        },
+        "3": {
+          "profBonus": 2,
+          "slots": {
+            "1": 4,
+            "2": 2
+          },
+          "features": [
+            "Wizard Subclass"
+          ],
+          "tracks": {
+            "cantrips": "3",
+            "prepared-spells": "6"
+          }
+        },
+        "4": {
+          "profBonus": 2,
+          "slots": {
+            "1": 4,
+            "2": 3
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "7"
+          }
+        },
+        "5": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          },
+          "features": [
+            "Memorize Spell"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "9"
+          }
+        },
+        "6": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          },
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "10"
+          }
+        },
+        "7": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          },
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "11"
+          }
+        },
+        "8": {
+          "profBonus": 3,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "12"
+          }
+        },
+        "9": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          },
+          "tracks": {
+            "cantrips": "4",
+            "prepared-spells": "14"
+          }
+        },
+        "10": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          },
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "15"
+          }
+        },
+        "11": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          },
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "16"
+          }
+        },
+        "12": {
+          "profBonus": 4,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "16"
+          }
+        },
+        "13": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          },
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "17"
+          }
+        },
+        "14": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          },
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "18"
+          }
+        },
+        "15": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "19"
+          }
+        },
+        "16": {
+          "profBonus": 5,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "21"
+          }
+        },
+        "17": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "22"
+          }
+        },
+        "18": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Spell Mastery"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "23"
+          }
+        },
+        "19": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Epic Boon"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "24"
+          }
+        },
+        "20": {
+          "profBonus": 6,
+          "slots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          },
+          "features": [
+            "Signature Spells"
+          ],
+          "tracks": {
+            "cantrips": "5",
+            "prepared-spells": "25"
+          }
+        }
+      }
+    }
+  }
+}

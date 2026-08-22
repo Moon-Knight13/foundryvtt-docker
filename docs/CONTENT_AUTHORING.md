@@ -601,6 +601,162 @@ counts `image` fields across all SRD monsters on `www.dnd5eapi.co`, probes one
 image for redirects, and emits a **disabled** `raster` block to paste into
 `art-map.json` if the numbers justify it.
 
+## Pregens: characters for the table with no D&D Beyond
+
+Every game until now assumed player characters arrive from D&D Beyond through
+ddb-importer. That covers the online table where everybody owns a DDB sheet and
+nothing else — an in-person oneshot where players bring nothing, a player with
+no account, running cold for strangers at a con. It also costs: a live session
+cookie in world settings, twelve **world-scoped** `world.ddb-*` packs that die
+with the world, and a full munch re-run as step 7 of every rebuild.
+
+A pregen has none of that. It is a compendium document, so a rebuild that
+restores the module restores the character.
+
+### What is derived and what is authored
+
+The split is the whole design, and it is not a matter of taste:
+
+| What | Comes from |
+| --- | --- |
+| Proficiency bonus, saves, all 18 skill totals, spell slots, save DC and attack bonus, cantrips, prepared spells, features by level | **Derived** from `content/reference/progression-{2014,2024}.json` |
+| Ability scores, skill proficiencies, armour class, speed, species, background | **Authored** in the note |
+
+The derived half is the half that produces silent, plausible errors when it is
+typed by hand. The authored half is choices — a generator inventing them would
+be inventing the character.
+
+Species and background are authored because Open5e publishes them as prose
+rather than data: a dwarf's increase is the *sentence* "Your Constitution score
+increases by 2." Parsing numbers back out of English is exactly the guessing
+`pregen-cache.mjs` refuses to do with class tables. State the final scores —
+which is what the sheet prints anyway — and everything else follows.
+
+> [!warning] The SRD is thin here
+> 2014 publishes **one** background (Acolyte). 2024 publishes **four** (Acolyte,
+> Criminal, Sage, Soldier). There is also one subclass per class, and from level
+> 3 the subclass *is* the character, so high-level pregens will be same-y. This
+> bounds pool variety, and it is a fact about the SRD rather than the pipeline.
+
+### The note
+
+```pregen
+name: Elf Wizard
+edition: '2014'
+class: wizard
+level: 1
+species: High Elf
+background: Sage
+abilities: { str: 10, dex: 15, con: 14, int: 16, wis: 12, cha: 8 }
+skills: [Arcana, History, Insight, Investigation, Perception]
+ac: 12
+speed: 30
+```
+
+`expertise:` doubles proficiency for the skills it names, and is refused without
+proficiency in them. `hp:` overrides the derived maximum; `hp_bonus_per_level:`
+covers a racial extra such as a hill dwarf's toughness.
+
+Do **not** put a player character in a ```statblock fence. Fantasy Statblocks
+would render it as a monster card, `verify()` against a published creature is
+meaningless for a PC, and the Dataview NPC roster would list it as a monster.
+
+### Two surfaces, one calculation
+
+```bash
+node scripts/content/compile-game.mjs "<vault>/03 Oneshots/<Game>" \
+  --pool "<vault>/01 Systems/dnd5e/Pregens" \
+  --sheets "<vault>/01 Systems/dnd5e/Pregens/templates/wotc-2014.pdf"
+```
+
+produces `Foundry/src/actors/pregen-<slug>.json` and `Pregens/<slug>.pdf`.
+Neither is transcribed from the other, so they cannot drift.
+
+Printing is opt-in because the blank sheets are publisher-issued and live in the
+vault; without `--sheets` the Foundry side still compiles. Field names live in
+`content/reference/sheet-templates.json`, pinned to each blank by checksum —
+adding a form is a registry entry, not a code change. Names are extracted, never
+retyped: several carry whitespace that looks like a typo and is not — `"Race "`,
+`"DEXmod "` and `"Stealth "` each end in a space, and `"SpellSaveDC  2"` has two
+in the middle.
+
+**One form prints both editions.** A template lists the editions it covers, and
+the WotC fillable sheet covers 2014 and 2024: a 2024 character writes the same
+values into the same boxes, verified by printing one. What actually changed
+between editions is the names of *table columns* — `cantrips-known` became
+`cantrips`, `ki-points` became `focus-points` — and those live in the
+progression cache, not on the paper. Two cosmetic gaps worth knowing: the box is
+labelled RACE where 2024 says Species, and there is no weapon-mastery box (that
+column is not printed for either edition).
+
+The sheet holds **three attack rows**. A fourth is a build error, not a
+truncation: a character arriving at a table missing an attack is worse than a
+build that stops. Spells are not the constraint — 100 lines, 9 slot tiers.
+
+### Seeding the pool from sheets you already have
+
+Pool notes do not have to be typed. `pool-from-sheets.mjs` reads filled
+character sheets and writes the notes:
+
+```bash
+node scripts/content/pool-from-sheets.mjs "<vault>/…/Pregens/"*.pdf \
+  --out "<vault>/01 Systems/dnd5e/Pregens"
+```
+
+Everything a note needs is already on a filled sheet — ability scores, which
+skills are ticked, AC, hit points — and the rest derives. Each note is checked
+against the sheet it came from before it is written, and a mismatch is refused
+rather than written: a pool pregen that disagrees with its own source is worse
+than not having it.
+
+Two things are deliberately not carried across: the **player name**, because a
+pool pregen is handed to a stranger and belongs to nobody; and anything
+**game-specific**, because a pool pregen is a generic chassis.
+
+### Drawing a party, and hooking it to the game
+
+A pool pregen is a generic chassis with **no game context at all**, which is what
+makes it reusable and what stops anything travelling between games. A game names
+the ones it wants in its own `Pregens.md`:
+
+```yaml
+---
+type: index
+edition: '2014'
+level: 1
+party: [elf-wizard, dwarf-cleric, halfling-rogue]
+hooks:
+  - background: Sage
+    at: POI 3 — Riddle
+    what: give them a nudge instead of a roll
+---
+```
+
+A game ships the handful it drew, never the whole pool.
+
+Hooks fire off **backgrounds**, never off characters — the format is the table
+already in `03 Oneshots/Unravelled Plans/GM Run Sheet.md`. They are additive
+prose appended to the biography and the sheet's backstory box, so **strip every
+hook and the character is still complete and playable**. That is asserted, not
+merely intended.
+
+Four things are build errors rather than warnings, because each would otherwise
+reach a table unnoticed:
+
+- a pregen drawn at a level the game does not run at,
+- a pregen from the wrong edition,
+- a hook whose background nobody has, which would read as "it just never came up",
+- a hook naming a character. The pool is a closed list of names, so this is an
+  exact check rather than a guess, and it is how #115's party-agnostic rule is
+  enforced rather than remembered.
+
+### Levelling
+
+Pregens take the fixed average for hit points, never a roll: rebuilding one has
+to produce the same character. Levelling a party is editing `level:` and
+recompiling — which is what replaces the "level them up alongside the party"
+chore in `02 Campaigns/Dragons of Stormwreck Isle/GM Prep.md`.
+
 ## Handout art: showable in Foundry
 
 Until now every journal page this pipeline produced was `type: "text"`, so art

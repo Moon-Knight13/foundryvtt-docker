@@ -27,6 +27,11 @@ costs a **full ddb-importer re-run**. That is acceptable — D&D Beyond is the
 source of truth — but it is a step, not a freebie, and it used to be missing
 from this page.
 
+A **pregen** avoids it entirely: it is a module compendium document, so it comes
+back with the module and costs nothing at step 7. That is the point of them, and
+the reason they are worth having even for a table that does use D&D Beyond — a
+player who turns up without a sheet is one import away from playing.
+
 Genuinely transient, and fine to lose: token positions, fog of war, the combat
 tracker, the active scene.
 
@@ -696,6 +701,9 @@ it runs.
    ticked (see `CONTENT_AUTHORING.md`, *Rules that bite* — without it, scene map
    pins render but open nothing).
 7. Re-run **ddb-importer**: its packs are world-scoped and did not survive.
+   Skippable for a table running on **pregens** — those are module compendium
+   documents, so they came back with step 6 and need nothing here. See
+   `CONTENT_AUTHORING.md`, *Pregens*.
 8. Run the SoSly bridge import to bring vault notes back as journals.
 
    **Steps 6 to 8 are conditional, and usually free.** They rebuild a world from
@@ -727,7 +735,9 @@ it runs.
    - *Foundry* — scenes carry walls and lights, actors carry real art rather
      than `mystery-man.svg`, and a GM map pin opens its journal page.
    - *In person* — every NPC note still renders a Fantasy Statblocks card with a
-     portrait, handouts show their art full-size, and the Player map prints.
+     portrait, handouts show their art full-size, the Player map prints, and
+     each pregen's `Pregens/<slug>.pdf` opens with its numbers filled in and no
+     player name on it.
 10. On success the rebuild **is** the new state. On failure,
     `foundry-base.mjs restore --yes`.
 
