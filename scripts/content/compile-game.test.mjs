@@ -204,3 +204,90 @@ test('a game with no Soundtrack.md still gets its cue text', async () => {
   assert.equal(audio.cue, 'as the chanting starts');
   assert.equal(audio.command, null);
 });
+
+const PREGEN_NOTE = `---
+type: pregen
+---
+
+\`\`\`pregen
+name: Elf Wizard
+edition: '2014'
+class: wizard
+level: 1
+species: High Elf
+background: Sage
+abilities: { str: 10, dex: 15, con: 14, int: 16, wis: 12, cha: 8 }
+skills: [Arcana, Investigation]
+ac: 12
+speed: 30
+\`\`\`
+`;
+
+test('a Pregens note compiles to a character actor', async () => {
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(path.join(gameDir, 'Pregens', 'Elf Wizard.md'), PREGEN_NOTE);
+
+  const report = await compileGame(gameDir);
+  assert.deepEqual(report.errors, []);
+  assert.equal(report.pregens.length, 1);
+
+  // The `pregen-` prefix keeps player characters out of the NPC namespace, in
+  // the compendium and in the Dataview roster query that lists NPCs.
+  const out = path.join(gameDir, 'Foundry', 'src', 'actors', 'pregen-elf-wizard.json');
+  const actor = JSON.parse(await readFile(out, 'utf8'));
+  assert.equal(actor.type, 'character');
+  assert.equal(actor.items[0].system.levels, 1);
+  assert.equal(actor.system.abilities.int.proficient, 1, 'wizards are proficient in INT saves');
+});
+
+test('pregens and NPCs compile in the same pass without colliding', async () => {
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(path.join(gameDir, 'Pregens', 'Elf Wizard.md'), PREGEN_NOTE);
+
+  const report = await compileGame(gameDir);
+  assert.equal(report.actors.length, 1, 'the goblin');
+  assert.equal(report.pregens.length, 1, 'the wizard');
+  const npc = JSON.parse(
+    await readFile(path.join(gameDir, 'Foundry', 'src', 'actors', 'gate-goblin.json'), 'utf8'),
+  );
+  assert.equal(npc.type, 'npc');
+});
+
+test('a prose note in Pregens/ is left alone', async () => {
+  // `Pregens.md`-style index notes live alongside the characters; a folder walk
+  // that compiled every file would fail on them.
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(path.join(gameDir, 'Pregens', 'README.md'), '# Pregens\n\nHand these out.\n');
+
+  const report = await compileGame(gameDir);
+  assert.deepEqual(report.errors, []);
+  assert.equal(report.pregens.length, 0);
+});
+
+test('a broken pregen is reported without abandoning the rest', async () => {
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(path.join(gameDir, 'Pregens', 'Elf Wizard.md'), PREGEN_NOTE);
+  await writeFile(
+    path.join(gameDir, 'Pregens', 'Broken.md'),
+    '```pregen\nclass: artificer\nlevel: 3\nabilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 }\n```\n',
+  );
+
+  const report = await compileGame(gameDir);
+  assert.equal(report.errors.length, 1);
+  assert.match(report.errors[0], /Unknown class "artificer"/);
+  assert.equal(report.pregens.length, 1, 'the good one still compiled');
+});
+
+test('an unchanged pregen note is not recompiled', async () => {
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(path.join(gameDir, 'Pregens', 'Elf Wizard.md'), PREGEN_NOTE);
+
+  await compileGame(gameDir);
+  const second = await compileGame(gameDir);
+  assert.equal(second.pregens[0].skipped, true);
+});

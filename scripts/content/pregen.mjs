@@ -39,6 +39,7 @@ import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
+import { slug } from './handout.mjs';
 import { abilityMod } from './statblock.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -299,6 +300,131 @@ export function derive(spec, progression) {
   };
 }
 
+/** Placeholder art, matching statblock.mjs so a pregen fails the same way. */
+export const PLACEHOLDER_IMG = 'icons/svg/mystery-man.svg';
+
+/**
+ * Turn a derived character into a dnd5e `character` actor.
+ *
+ * Two decisions here are not cosmetic.
+ *
+ * **The class Item is mandatory.** dnd5e does not store a character's level; it
+ * sums `system.levels` across owned class Items and derives from that. An actor
+ * with `items: []` therefore prepares at level 0, which yields a proficiency
+ * bonus of +1 and puts every save, skill and attack one or two points below the
+ * sheet that was printed from the same source. The wrongness is uniform and
+ * plausible, which is the worst kind. So a pregen always carries its class.
+ *
+ * **Spell slots are written as overrides.** dnd5e can derive slots from a class
+ * Item's spellcasting progression, but a hand-built class Item carries no such
+ * progression, and a silently empty slot row on a caster is the same failure as
+ * above. Writing the slots this pipeline derived — the ones already checked
+ * against an independent source and printed on the sheet — makes the actor and
+ * the paper agree by construction rather than by coincidence.
+ *
+ * `ac.calc: 'flat'` for the same reason: the character owns no armour Item, so
+ * `default` would derive 10 + Dex and quietly disagree with the printed AC.
+ */
+export function toCharacterActor(character, { img, biographyHtml = '' } = {}) {
+  const warnings = [];
+
+  const abilities = {};
+  for (const ability of ABILITIES) {
+    abilities[ability] = {
+      value: character.abilities[ability].score,
+      proficient: character.saves[ability].proficient ? 1 : 0,
+    };
+  }
+
+  const skills = {};
+  for (const [name, skill] of Object.entries(character.skills)) {
+    if (skill.multiplier > 0) skills[skill.key] = { value: skill.multiplier };
+  }
+
+  const items = [
+    {
+      name: character.className,
+      type: 'class',
+      system: {
+        identifier: character.classSlug,
+        levels: character.level,
+        hitDice: `d${character.hitDice.split('d')[1]}`,
+        hitDiceUsed: 0,
+      },
+    },
+  ];
+  if (character.subclass) {
+    items.push({
+      name: character.subclass,
+      type: 'subclass',
+      system: { identifier: slug(character.subclass), classIdentifier: character.classSlug },
+    });
+  }
+
+  const spells = {};
+  if (character.spellcasting) {
+    for (const [tier, count] of Object.entries(character.spellcasting.slots ?? {})) {
+      spells[`spell${tier}`] = { value: count, override: count };
+    }
+    if (character.spellcasting.pact) {
+      const level = Number(String(character.spellcasting.pact.level).replace(/\D/g, '')) || 1;
+      spells.pact = {
+        value: character.spellcasting.pact.slots,
+        override: character.spellcasting.pact.slots,
+        level,
+      };
+    }
+  }
+
+  if (!img) {
+    warnings.push(
+      `no art — falling back to ${PLACEHOLDER_IMG}. A pregen can pass the strict ` +
+        'art gate with a generic class token; point `image:` at one in the pool.',
+    );
+  }
+  if (character.ac === null) {
+    warnings.push('no `ac:` — a pregen handed to a player needs one, since nothing derives it.');
+  }
+
+  const actor = {
+    name: character.name,
+    type: 'character',
+    img: img ?? PLACEHOLDER_IMG,
+    items,
+    prototypeToken: {
+      name: character.name,
+      // Unlike an NPC, a player character's token is linked: damage taken on
+      // the map is damage to the sheet the player is holding.
+      actorLink: true,
+      displayName: 30,
+      disposition: 1,
+      texture: { src: img ?? PLACEHOLDER_IMG },
+    },
+    system: {
+      abilities,
+      attributes: {
+        ac: { calc: 'flat', flat: character.ac ?? 10 },
+        hp: { value: character.hitPoints.max, max: character.hitPoints.max },
+        movement: { walk: character.speed ?? 30, units: 'ft' },
+        ...(character.spellcasting ? { spellcasting: character.spellcasting.ability } : {}),
+      },
+      details: {
+        // Strings rather than Item links. Which one dnd5e 5.3.3 wants is one of
+        // the checks that needs a real Foundry; a string at least renders.
+        race: character.species ?? '',
+        background: character.background ?? '',
+        biography: { value: biographyHtml },
+        xp: { value: 0 },
+      },
+      traits: { size: 'med' },
+      ...(Object.keys(skills).length ? { skills } : {}),
+      ...(Object.keys(spells).length ? { spells } : {}),
+    },
+  };
+
+  return { actor, warnings };
+}
+
 /**
  * Compare a derived character against the numbers printed on a real sheet.
  *
@@ -334,6 +460,65 @@ export function compareToSheet(derived, printed) {
     cmp('spellAttack', signed(derived.spellcasting.attackBonus), printed.spellAttack);
   }
   return deltas;
+}
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+}
+
+/**
+ * The biography a player reads on the actor sheet.
+ *
+ * Deliberately the same prose the printed sheet carries, so the two surfaces
+ * say one thing. Game-specific hooks append here rather than replacing it,
+ * which is what keeps a pool pregen playable with every hook stripped out.
+ */
+export function biographyHtml(character, hooks = []) {
+  const line = [
+    character.species,
+    `${character.className}${character.subclass ? ` (${character.subclass})` : ''}`,
+    `level ${character.level}`,
+  ]
+    .filter(Boolean)
+    .join(' — ');
+
+  const parts = [`<p><strong>${escapeHtml(line)}</strong></p>`];
+  if (character.background) parts.push(`<p>Background: ${escapeHtml(character.background)}</p>`);
+  if (character.features.length) {
+    parts.push(
+      `<p><strong>Features</strong></p><ul>${character.features
+        .map(f => `<li>${escapeHtml(f)}</li>`)
+        .join('')}</ul>`,
+    );
+  }
+  for (const hook of hooks) {
+    parts.push(`<p><em>${escapeHtml(hook)}</em></p>`);
+  }
+  return parts.join('');
+}
+
+/**
+ * Compile one pregen note into a character actor.
+ *
+ * Mirrors statblock.mjs's compileNote so compile-game.mjs treats the two the
+ * same way: read the note, derive, hand back the actor plus anything a person
+ * should look at.
+ */
+export async function compilePregen(notePath, opts = {}) {
+  const markdown = await readFile(notePath, 'utf8');
+  const spec = parseFence(markdown);
+  if (!spec) throw new Error('no ```pregen fence');
+
+  const progression =
+    opts.progression ?? (await loadProgression(spec.edition ?? '2014', opts.reference));
+  const named = { ...spec, name: spec.name ?? path.basename(notePath, '.md') };
+  const character = derive(named, progression);
+  const hooks = Array.isArray(opts.hooks) ? opts.hooks : [];
+  const { actor, warnings } = toCharacterActor(character, {
+    img: spec.image,
+    biographyHtml: biographyHtml(character, hooks),
+  });
+  return { character, actor, warnings, hooks };
 }
 
 export async function loadProgression(edition, referenceDir) {

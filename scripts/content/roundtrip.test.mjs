@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { extractPack } from '@foundryvtt/foundryvtt-cli';
 import { main, docId } from './build.mjs';
 import { CUE_FLAG_SCOPE } from './cue.mjs';
+import { derive, toCharacterActor } from './pregen.mjs';
 
 const MODULE_ID = 'test-content';
 
@@ -229,4 +231,69 @@ test('image journal pages survive the build with src and ownership intact', asyn
   assert.equal(page.image.caption, 'Drawn in charcoal');
   assert.equal(page.ownership.default, 2, 'players can reopen it');
   assert.ok(page._id, 'build assigned a stable id');
+});
+
+test('a pregen survives the pack round trip with its class attached', async () => {
+  // This is issue #115's rebuild criterion, provable without a destructive
+  // drill: a pregen is a compendium document like any other, so a rebuild that
+  // restores the module restores the character.
+  //
+  // The class Item is what makes it worth asserting. dnd5e derives a
+  // character's level by summing `system.levels` across owned class Items, so
+  // if the embedding did not survive the round trip the actor would come back
+  // at level 0 — proficiency bonus +1, and every number a point or two under
+  // the sheet the player is holding.
+  const { work, srcRoot, distRoot, configPath } = await workspace('fvtt-pregen-');
+  const reference = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '..',
+    '..',
+    'content',
+    'reference',
+  );
+  const progression = JSON.parse(
+    await readFile(path.join(reference, 'progression-2014.json'), 'utf8'),
+  );
+  const character = derive(
+    {
+      name: 'Elf Wizard',
+      class: 'wizard',
+      level: 5,
+      species: 'High Elf',
+      background: 'Sage',
+      abilities: { str: 10, dex: 15, con: 14, int: 16, wis: 12, cha: 8 },
+      skills: ['Arcana', 'Investigation'],
+      ac: 12,
+      speed: 30,
+    },
+    progression,
+  );
+  const { actor } = toCharacterActor(character, { img: 'icons/svg/mystery-man.svg' });
+
+  await mkdir(path.join(srcRoot, 'actors'), { recursive: true });
+  await writeFile(path.join(srcRoot, 'actors', 'pregen-elf-wizard.json'), JSON.stringify(actor));
+
+  const { counts } = await main({ srcRoot, distRoot, configPath });
+  assert.equal(counts.actors, 1);
+
+  const outDir = path.join(work, 'unpacked');
+  await extractPack(path.join(distRoot, MODULE_ID, 'packs', 'actors'), outDir, { log: false });
+  const files = await readdir(outDir);
+  const doc = JSON.parse(await readFile(path.join(outDir, files[0]), 'utf8'));
+
+  assert.equal(doc.type, 'character', 'the pack layer needed no change to carry a PC');
+  assert.match(doc._id, /^[a-z0-9]{16}$/, 'stable across rebuilds, from the source path');
+
+  assert.equal(doc.items.length, 1);
+  const classItem = doc.items[0];
+  assert.equal(classItem.type, 'class');
+  assert.equal(classItem.system.levels, 5);
+  assert.ok(classItem._id, 'the owned Item was keyed');
+  assert.equal(classItem._key, `!actors.items!${doc._id}.${classItem._id}`);
+
+  // The numbers the sheet prints have to come back too.
+  assert.deepEqual(doc.system.attributes.ac, { calc: 'flat', flat: 12 });
+  assert.equal(doc.system.attributes.hp.max, character.hitPoints.max);
+  assert.deepEqual(doc.system.spells.spell3, { value: 2, override: 2 });
+  assert.equal(doc.system.abilities.int.proficient, 1);
 });
