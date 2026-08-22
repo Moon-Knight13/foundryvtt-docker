@@ -9,6 +9,7 @@
 // Usage:
 //   node scripts/content/compile-game.mjs "<vault>/03 Oneshots/<Game>" [--force]
 //     --force    recompile everything; default skips outputs newer than their note
+//     --pool     shared pregen pool the game's Pregens.md draws its party from
 //     --sheets   blank character sheet PDF; also prints each pregen onto it
 //     --template registry id for that blank (default: wotc-<edition>)
 //
@@ -27,14 +28,24 @@ import { compileHandout, parseFrontmatter, slug } from './handout.mjs';
 import { readGameAudio, resolveCue, stampCue } from './cue.mjs';
 import { compilePregen } from './pregen.mjs';
 import { writeSheet } from './sheet-write.mjs';
+import { PARTY_NOTE, partyIndexMarkdown, resolveParty } from './pregen-party.mjs';
 
-/** True when `out` is missing or older than `note`. */
-async function stale(note, out) {
+/**
+ * True when `out` is missing or older than any of its inputs.
+ *
+ * Several inputs rather than one because a pregen drawn from the shared pool
+ * has two: the pool note, and the game's own Pregens.md, which is where its
+ * hooks live. Checking only the note would let an edited hook table compile to
+ * nothing and read as up to date.
+ */
+async function stale(inputs, out) {
+  const sources = Array.isArray(inputs) ? inputs : [inputs];
   try {
-    const [n, o] = [await stat(note), await stat(out)];
-    return n.mtimeMs > o.mtimeMs;
+    const o = await stat(out);
+    const times = await Promise.all(sources.map(s => stat(s)));
+    return times.some(t => t.mtimeMs > o.mtimeMs);
   } catch {
-    return true; // No output yet.
+    return true; // No output yet, or an input that is not there to compare.
   }
 }
 
@@ -95,26 +106,47 @@ export async function compileGame(gameDir, opts = {}) {
   // different, `verify()` against a published creature is meaningless for a PC,
   // and the Dataview NPC roster would list pregens as monsters if they shared a
   // folder. The `pregen-` prefix keeps them apart in the compendium too.
+  //
+  // Two sources, in order. A game may draw a party out of the shared pool by
+  // naming it in Pregens.md, and it may also keep pregens of its own in
+  // Pregens/. The pool is the normal case: a game ships the handful it draws,
+  // never the whole pool.
+  const pregenNotes = [];
+  if (opts.pool) {
+    try {
+      const party = await resolveParty(gameDir, opts.pool);
+      for (const entry of party?.drawn ?? []) {
+        // The hook table is an input too, so editing it rebuilds the character
+        // it applies to.
+        pregenNotes.push({
+          note: entry.note,
+          sources: [entry.note, path.join(gameDir, PARTY_NOTE)],
+          slug: entry.slug,
+          hooks: entry.hooks,
+        });
+      }
+      if (party) report.party = party;
+    } catch (err) {
+      report.errors.push(err.message);
+    }
+  }
   for (const file of await noteFiles(path.join(gameDir, 'Pregens'))) {
     const note = path.join(gameDir, 'Pregens', file);
     const markdown = await readFile(note, 'utf8');
     if (!/```pregen/.test(markdown)) continue; // An index or prose note.
+    pregenNotes.push({ note, slug: slug(path.basename(file, '.md')), hooks: [] });
+  }
 
-    const out = path.join(
-      gameDir,
-      'Foundry',
-      'src',
-      'actors',
-      `pregen-${slug(path.basename(file, '.md'))}.json`,
-    );
-    if (!opts.force && !(await stale(note, out))) {
+  for (const { note, sources, slug: name, hooks } of pregenNotes) {
+    const out = path.join(gameDir, 'Foundry', 'src', 'actors', `pregen-${name}.json`);
+    if (!opts.force && !(await stale(sources ?? note, out))) {
       report.pregens.push({ note, out, skipped: true, warnings: [] });
       continue;
     }
     try {
       const { actor, character, warnings } = await compilePregen(note, {
         reference: opts.reference,
-        hooks: opts.hooks?.[slug(path.basename(file, '.md'))],
+        hooks,
       });
       await mkdir(path.dirname(out), { recursive: true });
       await writeFile(out, `${JSON.stringify(actor, null, 2)}\n`);
@@ -126,18 +158,33 @@ export async function compileGame(gameDir, opts = {}) {
       if (opts.sheets) {
         const { bytes } = await writeSheet(note, {
           reference: opts.reference,
-          hooks: opts.hooks?.[slug(path.basename(file, '.md'))],
+          hooks,
           blank: opts.sheets,
           template: opts.template,
         });
-        sheet = path.join(gameDir, 'Pregens', `${slug(path.basename(file, '.md'))}.pdf`);
+        sheet = path.join(gameDir, 'Pregens', `${name}.pdf`);
+        await mkdir(path.dirname(sheet), { recursive: true });
         await writeFile(sheet, bytes);
       }
 
-      report.pregens.push({ note, out, sheet, skipped: false, warnings, character });
+      report.pregens.push({ note, out, sheet, skipped: false, warnings, character, hooks });
     } catch (err) {
       report.errors.push(`${note}: ${err.message}`);
     }
+  }
+
+  // A roster of what was actually built, in the format Dragons of Stormwreck
+  // Isle keeps by hand. Written beside the sheets rather than into the game's
+  // own Pregens.md, which is an authored file holding the party declaration —
+  // generating over the top of it would eat the hooks it declares.
+  if (report.party?.drawn?.length) {
+    const index = path.join(gameDir, 'Pregens', 'index.md');
+    await mkdir(path.dirname(index), { recursive: true });
+    await writeFile(
+      index,
+      partyIndexMarkdown(report.party.drawn, { game: path.basename(gameDir) }),
+    );
+    report.partyIndex = index;
   }
 
   for (const file of await noteFiles(path.join(gameDir, 'Handouts'))) {
@@ -218,6 +265,7 @@ function parseArgs(argv) {
     if (argv[i] === '--force') opts.force = true;
     else if (argv[i] === '--vault') opts.vault = argv[++i];
     else if (argv[i] === '--sheets') opts.sheets = argv[++i];
+    else if (argv[i] === '--pool') opts.pool = argv[++i];
     else if (argv[i] === '--template') opts.template = argv[++i];
     else if (argv[i].startsWith('--')) throw new Error(`Unknown argument: ${argv[i]}`);
     else rest.push(argv[i]);

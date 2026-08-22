@@ -330,6 +330,83 @@ test('without a blank, the Foundry side still compiles', async () => {
   assert.ok(existsSync(report.pregens[0].out));
 });
 
+test('a party drawn from the pool arrives with its hooks attached', async () => {
+  // The whole two-stage design in one pass: a generic pool pregen plus the
+  // hooks this game declares, and the game ships only what it drew.
+  const { gameDir } = await gameFixture();
+  const pool = path.join(path.dirname(gameDir), 'pool');
+  await mkdir(pool, { recursive: true });
+  await writeFile(path.join(pool, 'Elf Wizard.md'), PREGEN_NOTE);
+  await writeFile(
+    path.join(pool, 'Spare Fighter.md'),
+    PREGEN_NOTE.replace('Elf Wizard', 'Spare Fighter').replace('class: wizard', 'class: fighter'),
+  );
+  await writeFile(
+    path.join(gameDir, 'Pregens.md'),
+    [
+      '---',
+      'type: index',
+      "edition: '2014'",
+      'level: 1',
+      'party: [elf-wizard]',
+      'hooks:',
+      '  - background: Sage',
+      '    at: the Riddle Door',
+      '    what: give them a nudge instead of a roll',
+      '---',
+      '',
+    ].join('\n'),
+  );
+
+  const report = await compileGame(gameDir, { pool });
+  assert.deepEqual(report.errors, []);
+  assert.equal(report.pregens.length, 1, 'the game ships what it drew, not the pool');
+
+  const actor = JSON.parse(await readFile(report.pregens[0].out, 'utf8'));
+  assert.match(actor.system.details.biography.value, /give them a nudge instead of a roll/);
+  // And the character is complete without it: the hook is appended colour.
+  assert.match(actor.system.details.biography.value, /High Elf — Wizard — level 1/);
+  assert.equal(actor.items[0].system.levels, 1);
+});
+
+test('editing the hook table rebuilds the character it applies to', async () => {
+  // The trap this avoids: hooks live in Pregens.md, not in the pool note, so a
+  // staleness check against the note alone would compile nothing and read as
+  // up to date.
+  const { gameDir } = await gameFixture();
+  const pool = path.join(path.dirname(gameDir), 'pool');
+  await mkdir(pool, { recursive: true });
+  await writeFile(path.join(pool, 'Elf Wizard.md'), PREGEN_NOTE);
+  const partyNote = path.join(gameDir, 'Pregens.md');
+  const front = hooks =>
+    [
+      '---',
+      'type: index',
+      "edition: '2014'",
+      'level: 1',
+      'party: [elf-wizard]',
+      'hooks:',
+      '  - background: Sage',
+      `    what: ${hooks}`,
+      '---',
+      '',
+    ].join('\n');
+
+  await writeFile(partyNote, front('the first hook'));
+  await compileGame(gameDir, { pool });
+
+  await writeFile(partyNote, front('the second hook'));
+  // Stamped forward rather than relying on how fast the test runs: two writes
+  // in the same millisecond would make this pass by luck.
+  const future = new Date(Date.now() + 5_000);
+  await utimes(partyNote, future, future);
+
+  const report = await compileGame(gameDir, { pool });
+  assert.equal(report.pregens[0].skipped, false, 'the edited hook table is an input');
+  const actor = JSON.parse(await readFile(report.pregens[0].out, 'utf8'));
+  assert.match(actor.system.details.biography.value, /the second hook/);
+});
+
 test('an unchanged pregen note is not recompiled', async () => {
   const { gameDir } = await gameFixture();
   await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
