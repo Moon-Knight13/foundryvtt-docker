@@ -347,7 +347,8 @@ Test against the real stack, with a data-dir snapshot as the undo path:
    has lost worlds over a backup that still has them.
 2. Install/enable the module, turn on Allow Write Operations, exercise it.
 3. Rollback if needed: disable/uninstall the module (worlds are unaffected by a
-   module removal) or `foundry-base.mjs restore --yes`.
+   module removal), `foundry-base.mjs restore --world <id>` for a single world,
+   or `foundry-base.mjs restore --yes` for the whole data directory.
 
 Do this between sessions rather than on game night — the stack is down while a
 restore runs.

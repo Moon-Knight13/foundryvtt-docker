@@ -25,6 +25,12 @@ import {
   syncExcludes,
   rsyncArgs,
   rotationPlan,
+  worldRestorePlan,
+  foundryIsRunning,
+  assertRestorableWorldId,
+  readWorldId,
+  listAssets,
+  missingAssets,
   linkDestFor,
   syncStage,
   snapshotKeep,
@@ -1767,3 +1773,341 @@ async function drillDirs({ source = [], backup = null, golden = null } = {}) {
   }
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// restore --world (#126)
+// ---------------------------------------------------------------------------
+
+test('worldRestorePlan stages outside the directory Foundry scans for worlds', () => {
+  // A half-copied world inside Data/worlds is a world Foundry will try to list.
+  const plan = worldRestorePlan('/var/FoundryVTT', '/var/FoundryVTT.backup', 'lure-of-the-lamia');
+  assert.equal(plan.from, '/var/FoundryVTT.backup/Data/worlds/lure-of-the-lamia');
+  assert.equal(plan.to, '/var/FoundryVTT/Data/worlds/lure-of-the-lamia');
+  assert.equal(plan.stage, '/var/FoundryVTT/Data/.restore-lure-of-the-lamia');
+  assert.ok(!plan.stage.includes('/Data/worlds/'));
+});
+
+test('assertRestorableWorldId rejects a path, not an unfashionable name', () => {
+  // new-world's `^[a-z0-9][a-z0-9-]*$` is a rule for worlds being created. A
+  // world that already exists in a snapshot has whatever name it has, and
+  // refusing to restore it on style would be absurd.
+  assert.equal(assertRestorableWorldId('Old_World.2019'), 'Old_World.2019');
+  assert.throws(() => assertRestorableWorldId(''), /needs a world id/);
+  assert.throws(() => assertRestorableWorldId(undefined), /needs a world id/);
+  assert.throws(() => assertRestorableWorldId('../../etc'), /not a world id/);
+  assert.throws(() => assertRestorableWorldId('a/b'), /not a world id/);
+  assert.throws(() => assertRestorableWorldId('/abs'), /not a world id/);
+});
+
+test('readWorldId refuses a directory that is not a world', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'fvtt-wid-'));
+  try {
+    await assert.rejects(() => readWorldId(dir), /is not a world/);
+    await writeFile(path.join(dir, 'world.json'), '{ broken');
+    await assert.rejects(() => readWorldId(dir), /is not a world/);
+    await writeFile(path.join(dir, 'world.json'), JSON.stringify({ id: 'ashwake' }));
+    assert.equal(await readWorldId(dir), 'ashwake');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('listAssets reports uploads by relative path, and copes with no uploads', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'fvtt-assets-'));
+  try {
+    assert.deepEqual(await listAssets(dir), []);
+    await mkdir(path.join(dir, 'Data', 'assets', 'maps'), { recursive: true });
+    await writeFile(path.join(dir, 'Data', 'assets', 'maps', 'crypt.webp'), 'x');
+    await writeFile(path.join(dir, 'Data', 'assets', 'token.png'), 'x');
+    assert.deepEqual(await listAssets(dir), ['maps/crypt.webp', 'token.png']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('missingAssets names uploads the restored world would come up without', () => {
+  // Uploads live outside the world folder, so a world restored onto a wiped
+  // install can reference art that is simply not there any more.
+  assert.deepEqual(missingAssets(['token.png'], ['token.png', 'maps/crypt.webp']), [
+    'maps/crypt.webp',
+  ]);
+  assert.deepEqual(missingAssets(['token.png'], ['token.png']), []);
+});
+
+test('foundryIsRunning finds nothing on a quiet install', async () => {
+  const { data } = await drillDirs({ source: ['ashwake'] });
+  try {
+    assert.deepEqual(await foundryIsRunning(data, { port: await aFreePort() }), []);
+  } finally {
+    await rm(path.dirname(data), { recursive: true, force: true });
+  }
+});
+
+test('foundryIsRunning sees a listener on the Foundry port', async () => {
+  // The LevelDB probe cannot see a Foundry sitting on the setup screen, nor one
+  // running against a data dir that has just been wiped — which is exactly when
+  // a world gets restored. The port is what catches that.
+  const { data } = await drillDirs({ source: ['ashwake'] });
+  const { server, port } = await aListener();
+  try {
+    const signals = await foundryIsRunning(data, { port });
+    assert.equal(signals.length, 1);
+    assert.match(signals[0], new RegExp(`listening on 127\\.0\\.0\\.1:${port}`));
+  } finally {
+    server.close();
+    await rm(path.dirname(data), { recursive: true, force: true });
+  }
+});
+
+test('foundryIsRunning sees a world database held open by another process', async () => {
+  const { ClassicLevel } = await import('classic-level');
+  const { data } = await drillDirs({ source: ['ashwake'] });
+  const dbPath = path.join(data, 'Data', 'worlds', 'ashwake', 'data', 'settings');
+  const holder = new ClassicLevel(dbPath, { valueEncoding: 'json' });
+  await holder.open();
+  try {
+    const signals = await foundryIsRunning(data, { port: await aFreePort() });
+    assert.equal(signals.length, 1);
+    assert.match(signals[0], /is locked/);
+    assert.ok(signals[0].includes(dbPath));
+  } finally {
+    await holder.close();
+    await rm(path.dirname(data), { recursive: true, force: true });
+  }
+});
+
+/** A port nothing is listening on: bind one, note it, give it back. */
+async function aFreePort() {
+  const { server, port } = await aListener();
+  await new Promise(resolve => server.close(resolve));
+  return port;
+}
+
+/** A listening socket on an ephemeral port, standing in for a running Foundry. */
+async function aListener() {
+  const net = await import('node:net');
+  const server = net.createServer();
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  return { server, port: server.address().port };
+}
+
+test('restore --world brings back one world and touches nothing else', async () => {
+  const { data, backup, port } = await restoreDirs({
+    live: ['ashwake'],
+    snapshot: { ashwake: 'stale', 'lure-of-the-lamia': 'restored' },
+  });
+  try {
+    await main(['restore', '--world', 'lure-of-the-lamia', '--data', data, '--port', String(port)]);
+
+    assert.equal(await marker(data, 'lure-of-the-lamia'), 'restored');
+    assert.equal(await marker(data, 'ashwake'), 'live', 'other worlds must be left alone');
+    assert.equal(
+      await readFile(path.join(data, 'Data', 'modules', 'dice-so-nice', 'module.json'), 'utf8'),
+      'pinned',
+      'the provisioned module set must survive a world restore',
+    );
+    await assert.rejects(
+      () => access(path.join(data, 'Data', '.restore-lure-of-the-lamia')),
+      'staging must not be left behind',
+    );
+  } finally {
+    await rm(path.dirname(data), { recursive: true, force: true });
+    void backup;
+  }
+});
+
+test('restore --world refuses to overwrite a world without --force', async () => {
+  const { data, port } = await restoreDirs({
+    live: ['ashwake'],
+    snapshot: { ashwake: 'older' },
+  });
+  try {
+    await assert.rejects(
+      () => main(['restore', '--world', 'ashwake', '--data', data, '--port', String(port)]),
+      /--force/,
+    );
+    assert.equal(await marker(data, 'ashwake'), 'live', 'the live world must be untouched');
+  } finally {
+    await rm(path.dirname(data), { recursive: true, force: true });
+  }
+});
+
+test('restore --world --force replaces the world rather than merging into it', async () => {
+  const { data, port } = await restoreDirs({
+    live: ['ashwake'],
+    snapshot: { ashwake: 'older' },
+  });
+  try {
+    await writeFile(path.join(data, 'Data', 'worlds', 'ashwake', 'leftover.txt'), 'x');
+    await main([
+      'restore',
+      '--world',
+      'ashwake',
+      '--data',
+      data,
+      '--force',
+      '--port',
+      String(port),
+    ]);
+    assert.equal(await marker(data, 'ashwake'), 'older');
+    await assert.rejects(
+      () => access(path.join(data, 'Data', 'worlds', 'ashwake', 'leftover.txt')),
+      'a replaced world must not keep files from the copy it replaced',
+    );
+  } finally {
+    await rm(path.dirname(data), { recursive: true, force: true });
+  }
+});
+
+test('restore --world refuses while a world database is held open', async () => {
+  const { ClassicLevel } = await import('classic-level');
+  const { data, port } = await restoreDirs({
+    live: ['ashwake'],
+    snapshot: { 'lure-of-the-lamia': 'restored' },
+  });
+  const holder = new ClassicLevel(
+    path.join(data, 'Data', 'worlds', 'ashwake', 'data', 'settings'),
+    { valueEncoding: 'json' },
+  );
+  await holder.open();
+  try {
+    await assert.rejects(
+      () =>
+        main(['restore', '--world', 'lure-of-the-lamia', '--data', data, '--port', String(port)]),
+      /docker compose stop foundry/,
+    );
+    await assert.rejects(
+      () => access(path.join(data, 'Data', 'worlds', 'lure-of-the-lamia')),
+      'nothing may be copied while Foundry holds the data dir',
+    );
+  } finally {
+    await holder.close();
+    await rm(path.dirname(data), { recursive: true, force: true });
+  }
+});
+
+test('restore --world refuses while something answers on the Foundry port', async () => {
+  const { data } = await restoreDirs({ live: [], snapshot: { ashwake: 'restored' } });
+  const { server, port } = await aListener();
+  try {
+    await assert.rejects(
+      () => main(['restore', '--world', 'ashwake', '--data', data, '--port', String(port)]),
+      /listening on 127\.0\.0\.1/,
+    );
+  } finally {
+    server.close();
+    await rm(path.dirname(data), { recursive: true, force: true });
+  }
+});
+
+test('restore --world names the worlds the snapshot actually holds', async () => {
+  const { data, port } = await restoreDirs({
+    live: [],
+    snapshot: { ashwake: 'a', 'lure-of-the-lamia': 'b' },
+  });
+  try {
+    await assert.rejects(
+      () => main(['restore', '--world', 'typo-world', '--data', data, '--port', String(port)]),
+      err => {
+        assert.match(err.message, /typo-world/);
+        assert.match(err.message, /ashwake/);
+        assert.match(err.message, /lure-of-the-lamia/);
+        return true;
+      },
+    );
+  } finally {
+    await rm(path.dirname(data), { recursive: true, force: true });
+  }
+});
+
+test('restore --golden --world is refused as the contradiction it is', async () => {
+  // A golden snapshot excludes Data/worlds/ — there is no world in it to restore.
+  const { data, port } = await restoreDirs({ live: [], snapshot: { ashwake: 'a' } });
+  try {
+    await assert.rejects(
+      () =>
+        main(['restore', '--golden', '--world', 'ashwake', '--data', data, '--port', String(port)]),
+      /golden/,
+    );
+  } finally {
+    await rm(path.dirname(data), { recursive: true, force: true });
+  }
+});
+
+test('restore --world --dry-run reports without copying', async () => {
+  const { data, port } = await restoreDirs({ live: [], snapshot: { ashwake: 'a' } });
+  try {
+    await main([
+      'restore',
+      '--world',
+      'ashwake',
+      '--data',
+      data,
+      '--dry-run',
+      '--port',
+      String(port),
+    ]);
+    await assert.rejects(() => access(path.join(data, 'Data', 'worlds', 'ashwake')));
+  } finally {
+    await rm(path.dirname(data), { recursive: true, force: true });
+  }
+});
+
+/** The marker file each fixture world carries, so a copy can be told apart. */
+function marker(root, world) {
+  return readFile(path.join(root, 'Data', 'worlds', world, 'which.txt'), 'utf8');
+}
+
+/**
+ * A live data dir with a provisioned module, plus a sibling `.backup` holding
+ * worlds. `live` worlds carry the marker "live"; snapshot worlds carry whatever
+ * the fixture says, so a restore is visible.
+ */
+async function restoreDirs({ live = [], snapshot = {} } = {}) {
+  const root = await mkdtemp(path.join(tmpdir(), 'fvtt-restore-'));
+  const data = path.join(root, 'FoundryVTT');
+  const backup = `${data}.backup`;
+  const world = async (dir, id, tag) => {
+    await mkdir(path.join(dir, 'Data', 'worlds', id, 'data'), { recursive: true });
+    await writeFile(
+      path.join(dir, 'Data', 'worlds', id, 'world.json'),
+      JSON.stringify({ id, title: id, system: 'dnd5e' }),
+    );
+    await writeFile(path.join(dir, 'Data', 'worlds', id, 'which.txt'), tag);
+  };
+  await mkdir(path.join(data, 'Data', 'worlds'), { recursive: true });
+  await mkdir(path.join(data, 'Data', 'modules', 'dice-so-nice'), { recursive: true });
+  await writeFile(path.join(data, 'Data', 'modules', 'dice-so-nice', 'module.json'), 'pinned');
+  for (const id of live) await world(data, id, 'live');
+  for (const [id, tag] of Object.entries(snapshot)) await world(backup, id, tag);
+  return { root, data, backup, port: await aFreePort() };
+}
+
+test('a failed --pull is reported as a failed rebuild, not a failed restore', async () => {
+  // The art gate can hard-fail long after the world is back on disk. Reading
+  // that as "the restore failed" sends you round the loop again for nothing.
+  const { data, port } = await restoreDirs({ live: [], snapshot: { ashwake: 'restored' } });
+  const vault = await mkdtemp(path.join(tmpdir(), 'vault-pull-'));
+  const previous = process.env.DND_VAULT_PATH;
+  process.env.DND_VAULT_PATH = vault;
+  try {
+    await writeFile(
+      path.join(vault, 'foundry-games.json'),
+      JSON.stringify([{ config: path.join(vault, 'no-such-game.json') }]),
+    );
+    await assert.rejects(
+      () =>
+        main(['restore', '--world', 'ashwake', '--data', data, '--pull', '--port', String(port)]),
+      err => {
+        assert.match(err.message, /the restore itself stands/);
+        return true;
+      },
+    );
+    assert.equal(await marker(data, 'ashwake'), 'restored', 'the world is back regardless');
+  } finally {
+    if (previous === undefined) delete process.env.DND_VAULT_PATH;
+    else process.env.DND_VAULT_PATH = previous;
+    await rm(vault, { recursive: true, force: true });
+    await rm(path.dirname(data), { recursive: true, force: true });
+  }
+});

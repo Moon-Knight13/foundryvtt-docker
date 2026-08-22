@@ -16,6 +16,7 @@
 //   node scripts/content/foundry-base.mjs update [id...]
 //   node scripts/content/foundry-base.mjs snapshot [--golden] [--to <path>] [--keep <n>]
 //   node scripts/content/foundry-base.mjs restore --yes [--golden] [--from <path>]
+//   node scripts/content/foundry-base.mjs restore --world <id> [--force] [--pull]
 //   node scripts/content/foundry-base.mjs pull-games
 //   node scripts/content/foundry-base.mjs verify [world]
 //   node scripts/content/foundry-base.mjs new-world <id> --title "<Title>"
@@ -30,12 +31,22 @@
 // must live outside the repo tree and is refused if it does not.
 import path from 'node:path';
 import os from 'node:os';
-import { readFile, writeFile, mkdir, access, readdir, rm, rename, stat } from 'node:fs/promises';
+import {
+  readFile,
+  writeFile,
+  mkdir,
+  access,
+  readdir,
+  rm,
+  rename,
+  stat,
+  cp,
+} from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { randomInt } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { explainLevelError } from './leveldb.mjs';
+import { explainLevelError, isLockError } from './leveldb.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
@@ -598,8 +609,13 @@ export function snapshotKeep(explicit) {
  * `mv` nothing had suggested.
  */
 export function worldsOnlyInBackup(sourceWorlds, backupWorlds) {
-  const present = new Set(sourceWorlds);
-  return [...backupWorlds].filter(w => !present.has(w)).sort();
+  return onlyIn(sourceWorlds, backupWorlds);
+}
+
+/** Sorted members of `candidates` that `have` does not contain. */
+function onlyIn(have, candidates) {
+  const present = new Set(have);
+  return [...candidates].filter(c => !present.has(c)).sort();
 }
 
 /** World ids in a data directory or a snapshot of one. Missing dir means none. */
@@ -611,6 +627,165 @@ export async function listWorlds(dir) {
     .filter(e => e.isDirectory())
     .map(e => e.name)
     .sort();
+}
+
+export const ASSETS_DIR = 'Data/assets';
+
+/** Uploads in a data directory or a snapshot of one, by path relative to `Data/assets`. */
+export async function listAssets(dir) {
+  const entries = await readdir(path.join(dir, ASSETS_DIR), {
+    recursive: true,
+    withFileTypes: true,
+  }).catch(() => []);
+  return entries
+    .filter(e => e.isFile())
+    .map(e => path.relative(path.join(dir, ASSETS_DIR), path.join(e.parentPath ?? e.path, e.name)))
+    .sort();
+}
+
+/**
+ * Uploads the snapshot has and the live install does not.
+ *
+ * File-picker uploads live in `Data/assets`, shared across worlds and outside
+ * the world folder — so a world restored onto a wiped install can reference art
+ * that is simply not there any more, and says nothing about it until a scene
+ * opens with holes in it.
+ */
+export function missingAssets(liveAssets, snapshotAssets) {
+  return onlyIn(liveAssets, snapshotAssets);
+}
+
+export const DEFAULT_FOUNDRY_PORT = 30000;
+
+/**
+ * Is something plausibly serving Foundry right now?
+ *
+ * Two signals, because neither is sufficient alone:
+ *
+ *   port    - catches a Foundry sitting on the setup screen with no world
+ *             launched, and one running against a data directory that was just
+ *             wiped. Both are ordinary states when a world is being restored.
+ *             It proves only that *something* answers there, hence the wording.
+ *   LevelDB - catches a launched world, and proves it is *this* data directory
+ *             that is held. LevelDB is single-process; a running Foundry holds
+ *             every world's settings database open.
+ *
+ * Returns one line per signal that fired, empty when none did.
+ */
+export async function foundryIsRunning(data, { world, port } = {}) {
+  const signals = [];
+  const target = Number(port ?? process.env.FOUNDRY_PORT ?? DEFAULT_FOUNDRY_PORT);
+  if (await portAnswers(target)) {
+    signals.push(`something is listening on 127.0.0.1:${target}`);
+  }
+  const worlds = await listWorlds(data);
+  // The target world first: if it is the one that is open, say so about it.
+  const order =
+    world && worlds.includes(world) ? [world, ...worlds.filter(w => w !== world)] : worlds;
+  for (const id of order) {
+    const db = path.join(data, WORLDS_DIR, id, 'data', 'settings');
+    if (await isLocked(db)) {
+      signals.push(`${db} is locked by another process`);
+      break;
+    }
+  }
+  return signals;
+}
+
+function portAnswers(port, timeout = 300) {
+  return new Promise(resolve => {
+    import('node:net').then(({ default: net }) => {
+      const socket = net
+        .connect({ port, host: '127.0.0.1' })
+        .setTimeout(timeout)
+        .on('connect', () => {
+          socket.destroy();
+          resolve(true);
+        })
+        .on('timeout', () => {
+          socket.destroy();
+          resolve(false);
+        })
+        .on('error', () => resolve(false));
+    });
+  });
+}
+
+/**
+ * True when a LevelDB directory refuses a second opener.
+ *
+ * Only ever called on a path that exists: opening a *missing* path makes
+ * LevelDB create an empty database there, which would both litter the data
+ * directory and produce the same "not open" error that means a lock.
+ */
+async function isLocked(db) {
+  const exists = await access(db).then(
+    () => true,
+    () => false,
+  );
+  if (!exists) return false;
+  const { ClassicLevel } = await import('classic-level');
+  const probe = new ClassicLevel(db, { valueEncoding: 'json' });
+  try {
+    await probe.open();
+    return false;
+  } catch (err) {
+    return isLockError(err);
+  } finally {
+    await probe.close().catch(() => {});
+  }
+}
+
+/**
+ * Where one world comes from, where it lands, and where it is assembled first.
+ *
+ * The staging directory is deliberately outside `Data/worlds`: Foundry
+ * enumerates that directory, and a half-copied world sitting in it is a world
+ * Foundry will try to read.
+ */
+export function worldRestorePlan(data, source, id) {
+  return {
+    from: path.join(source, WORLDS_DIR, id),
+    to: path.join(data, WORLDS_DIR, id),
+    stage: path.join(data, path.dirname(WORLDS_DIR), `.restore-${id}`),
+  };
+}
+
+/**
+ * Guard a world id that is about to be used as a path segment.
+ *
+ * Deliberately not `assertValidWorldId`, which enforces the naming rules for a
+ * world being *created*. A world that already exists in a snapshot has whatever
+ * name it has, and refusing to restore it on style would be absurd. What must
+ * be refused is a path: `..`, a separator, or an absolute path would write
+ * outside `Data/worlds` entirely.
+ */
+export function assertRestorableWorldId(id) {
+  if (!id) throw new Error('restore --world needs a world id, e.g. `--world lure-of-the-lamia`');
+  const segments = id.split(/[\\/]/);
+  if (path.isAbsolute(id) || segments.length > 1 || segments.includes('..')) {
+    throw new Error(`"${id}" is not a world id — it is a path. Pass the directory name alone.`);
+  }
+  return id;
+}
+
+/**
+ * The id Foundry will actually use for a world directory.
+ *
+ * Foundry keys documents off the id inside `world.json`, not off the directory
+ * name. They are normally the same; when they are not, a restore looks fine and
+ * behaves wrong, so the caller compares them. A directory with no readable
+ * `world.json` is not a world at all.
+ */
+export async function readWorldId(dir) {
+  const file = path.join(dir, 'world.json');
+  try {
+    const world = JSON.parse(await readFile(file, 'utf8'));
+    if (!world?.id) throw new Error('no id');
+    return world.id;
+  } catch (err) {
+    throw new Error(`${dir} is not a world: cannot read ${file} (${err.message})`);
+  }
 }
 
 /**
@@ -774,6 +949,9 @@ export function parseArgs(argv) {
     else if (a === '--yes') opts.yes = true;
     else if (a === '--golden') opts.golden = true;
     else if (a === '--force') opts.force = true;
+    else if (a === '--world') opts.world = argv[++i];
+    else if (a === '--pull') opts.pull = true;
+    else if (a === '--port') opts.port = argv[++i];
     else if (a === '--keep') opts.keep = argv[++i];
     else if (a === '--title') opts.title = argv[++i];
     else if (a === '--description') opts.description = argv[++i];
@@ -799,6 +977,7 @@ export const USAGE = `Usage:
   foundry-base.mjs snapshot --golden [--to <path>]   copy it without worlds, as a clean slate
   foundry-base.mjs restore --yes [--from <path>]     recreate the data dir from a snapshot
   foundry-base.mjs restore --golden --yes            reset the instance, leaving worlds alone
+  foundry-base.mjs restore --world <id> [--force] [--pull]  bring back one world, nothing else
   foundry-base.mjs pull-games                        rebuild + sync every game in the manifest
   foundry-base.mjs verify [world]                     check the install against the pins; exits 1 on failure
   foundry-base.mjs new-world <id> --title "<T>"       create a world from the captured template`;
@@ -1151,7 +1330,127 @@ async function cmdSnapshot(opts) {
   );
 }
 
+/**
+ * Bring back a single world, leaving the install around it alone.
+ *
+ * The drill's own documentation used to route around the tool here — `cp -a`
+ * the world folder — because a full `restore` after a rebuild drags the
+ * pre-wipe module set back over the freshly provisioned one, undoing the
+ * rebuild it was meant to finish. Restoring one world is also the common case;
+ * wholesale restore is the rare emergency.
+ */
+async function cmdRestoreWorld(opts) {
+  const id = assertRestorableWorldId(opts.world);
+  if (opts.golden) {
+    throw new Error(
+      'restore --golden --world is a contradiction: a golden snapshot excludes ' +
+        'Data/worlds/, so there is no world in it to restore. Drop --golden to ' +
+        'read from the full backup.',
+    );
+  }
+  const data = dataDir(opts.data);
+  const source = snapshotPath(data, opts.from);
+  await access(source).catch(() => {
+    throw new Error(`No snapshot at ${source}. Nothing to restore from.`);
+  });
+
+  const plan = worldRestorePlan(data, source, id);
+  const held = await listWorlds(source);
+  if (!held.includes(id)) {
+    throw new Error(
+      `No world "${id}" in ${source}.\n\nThat snapshot holds:\n` +
+        (held.length
+          ? held.map(w => `  ${w}`).join('\n')
+          : '  (nothing — a golden snapshot carries no worlds)'),
+    );
+  }
+  const declared = await readWorldId(plan.from);
+
+  const signals = await foundryIsRunning(data, { world: id, port: opts.port });
+  if (signals.length) {
+    throw new Error(
+      'Refusing to restore: FoundryVTT appears to be running.\n\n' +
+        signals.map(sig => `  ${sig}`).join('\n') +
+        '\n\nLevelDB allows a single process at a time, and a world copied in' +
+        '\nunderneath a live server diverges from what that server has open —' +
+        '\nwhich surfaces later as something that reads like corruption. Stop it:' +
+        '\n\n  docker compose stop foundry' +
+        '\n  ...rerun this...' +
+        '\n  docker compose up -d',
+    );
+  }
+
+  const replacing = await access(plan.to).then(
+    () => true,
+    () => false,
+  );
+  if (replacing && !opts.force) {
+    throw new Error(
+      `${plan.to} already exists. Restoring over it would discard whatever has ` +
+        `been played since.\n\nIf that is what you want, say so: rerun with --force.`,
+    );
+  }
+
+  console.log(
+    `Restore world '${id}'${replacing ? ' (replacing)' : ''}: ${plan.from} -> ${plan.to}`,
+  );
+  if (declared !== id) {
+    console.log(
+      `\nNote: that directory's world.json declares id '${declared}', not '${id}'.` +
+        '\nFoundry keys documents off the declared id, so check it before playing.',
+    );
+  }
+  if (opts.dryRun) return;
+
+  // Assemble outside Data/worlds, swap in with renames, drop the old copy last:
+  // at no point is a half-copied world sitting where Foundry enumerates worlds,
+  // and a failure leaves the world that was there intact.
+  const displaced = `${plan.stage}.replaced`;
+  await rm(plan.stage, { recursive: true, force: true });
+  await cp(plan.from, plan.stage, { recursive: true, preserveTimestamps: true });
+  if (replacing) await rename(plan.to, displaced);
+  await rename(plan.stage, plan.to);
+  if (replacing) await rm(displaced, { recursive: true, force: true });
+  console.log(`Restored ${plan.to}`);
+
+  const gaps = missingAssets(await listAssets(data), await listAssets(source));
+  if (gaps.length) {
+    console.log(
+      `\nHeads up: the snapshot's ${ASSETS_DIR} holds ${gaps.length} file(s) this install does not.` +
+        '\nUploads live outside the world folder, so a scene that used one comes up' +
+        '\nwith missing art. The golden image carries assets:' +
+        '\n\n  node scripts/content/foundry-base.mjs restore --golden --yes' +
+        `\n\nMissing, first few: ${gaps.slice(0, 5).join(', ')}${gaps.length > 5 ? ', ...' : ''}`,
+    );
+  }
+
+  const pullCommand = 'node scripts/content/foundry-base.mjs pull-games';
+  if (opts.pull) {
+    console.log(
+      `\nRunning pull-games — it rebuilds every game in the registry, not just this one.`,
+    );
+    try {
+      await cmdPullGames(opts);
+    } catch (err) {
+      throw new Error(
+        `The world was restored to ${plan.to}. Rebuilding its content module failed:` +
+          `\n  ${err.message}\n\nFix that and rerun \`${pullCommand}\`; the restore itself stands.`,
+      );
+    }
+  } else {
+    console.log(
+      "\nNOT DONE YET - the world's content module lives in Data/modules, not inside" +
+        '\nthe world folder. Until it is rebuilt the world boots with its own module' +
+        '\nenabled but missing:' +
+        `\n\n  ${pullCommand}` +
+        '\n\n(or rerun this with --pull to chain it)' +
+        `\n\nThen check it: node scripts/content/foundry-base.mjs verify ${id}`,
+    );
+  }
+}
+
 async function cmdRestore(opts) {
+  if (opts.world) return cmdRestoreWorld(opts);
   const golden = Boolean(opts.golden);
   const data = dataDir(opts.data);
   const source = snapshotPath(data, opts.from, { golden });
