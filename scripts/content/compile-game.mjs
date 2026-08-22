@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Compile a whole game's vault notes in one pass: every NPCs/*.md with a
-// ```statblock fence becomes an actor JSON, every Handouts/*.md with image
-// embeds becomes an image journal, and every Scenes/*.md carrying an ambience
-// cue stamps that cue onto its scene. This replaces the most manual step in the
+// ```statblock fence becomes an actor JSON, every Pregens/*.md with a ```pregen
+// fence becomes a player-character actor, every Handouts/*.md with image embeds
+// becomes an image journal, and every Scenes/*.md carrying an ambience cue
+// stamps that cue onto its scene. This replaces the most manual step in the
 // loop — one statblock.mjs / handout.mjs invocation per note.
 //
 // Usage:
@@ -19,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { compileNote } from './statblock.mjs';
 import { compileHandout, parseFrontmatter, slug } from './handout.mjs';
 import { readGameAudio, resolveCue, stampCue } from './cue.mjs';
+import { compilePregen } from './pregen.mjs';
 
 /** True when `out` is missing or older than `note`. */
 async function stale(note, out) {
@@ -39,16 +41,16 @@ async function noteFiles(dir) {
 }
 
 /**
- * Compile every stale statblock and handout note under `gameDir`, and stamp
- * every scene note's ambience cue onto the scene it belongs to.
- * Returns { actors, handouts, cues, errors }; entries carry { note, out,
- * skipped, warnings, deltas }. Errors are per-note strings, never thrown, so
- * one bad note cannot hide the state of the others.
+ * Compile every stale statblock, pregen and handout note under `gameDir`, and
+ * stamp every scene note's ambience cue onto the scene it belongs to.
+ * Returns { actors, pregens, handouts, cues, errors }; entries carry { note,
+ * out, skipped, warnings, deltas }. Errors are per-note strings, never thrown,
+ * so one bad note cannot hide the state of the others.
  */
 export async function compileGame(gameDir, opts = {}) {
   // <vault>/<section>/<game> — the vault root anchors handout image paths.
   const vault = opts.vault ?? path.dirname(path.dirname(path.resolve(gameDir)));
-  const report = { actors: [], handouts: [], cues: [], errors: [] };
+  const report = { actors: [], pregens: [], handouts: [], cues: [], errors: [] };
 
   for (const file of await noteFiles(path.join(gameDir, 'NPCs'))) {
     const note = path.join(gameDir, 'NPCs', file);
@@ -77,6 +79,40 @@ export async function compileGame(gameDir, opts = {}) {
       await mkdir(path.dirname(out), { recursive: true });
       await writeFile(out, `${JSON.stringify(actor, null, 2)}\n`);
       report.actors.push({ note, out, skipped: false, warnings, deltas, base });
+    } catch (err) {
+      report.errors.push(`${note}: ${err.message}`);
+    }
+  }
+
+  // Pregens. A third walk rather than a variant of the NPC one, because a
+  // player character and a monster are different documents: the fence is
+  // different, `verify()` against a published creature is meaningless for a PC,
+  // and the Dataview NPC roster would list pregens as monsters if they shared a
+  // folder. The `pregen-` prefix keeps them apart in the compendium too.
+  for (const file of await noteFiles(path.join(gameDir, 'Pregens'))) {
+    const note = path.join(gameDir, 'Pregens', file);
+    const markdown = await readFile(note, 'utf8');
+    if (!/```pregen/.test(markdown)) continue; // An index or prose note.
+
+    const out = path.join(
+      gameDir,
+      'Foundry',
+      'src',
+      'actors',
+      `pregen-${slug(path.basename(file, '.md'))}.json`,
+    );
+    if (!opts.force && !(await stale(note, out))) {
+      report.pregens.push({ note, out, skipped: true, warnings: [] });
+      continue;
+    }
+    try {
+      const { actor, character, warnings } = await compilePregen(note, {
+        reference: opts.reference,
+        hooks: opts.hooks?.[slug(path.basename(file, '.md'))],
+      });
+      await mkdir(path.dirname(out), { recursive: true });
+      await writeFile(out, `${JSON.stringify(actor, null, 2)}\n`);
+      report.pregens.push({ note, out, skipped: false, warnings, character });
     } catch (err) {
       report.errors.push(`${note}: ${err.message}`);
     }
@@ -178,6 +214,11 @@ async function main() {
     for (const d of a.deltas) {
       console.warn(`  delta vs SRD ${a.base}: ${d.field} authored ${d.authored}, SRD ${d.srd}`);
     }
+  }
+  for (const p of report.pregens) {
+    const who = p.character ? ` (${p.character.className} ${p.character.level})` : '';
+    console.log(`${p.skipped ? 'fresh ' : 'pregen'} ${path.relative(opts.gameDir, p.out)}${who}`);
+    for (const w of p.warnings) console.warn(`  warning: ${w}`);
   }
   for (const h of report.handouts) {
     console.log(`${h.skipped ? 'fresh ' : 'journal'} ${path.relative(opts.gameDir, h.out)}`);

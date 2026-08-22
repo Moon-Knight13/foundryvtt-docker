@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fieldMap } from './sheet-fields.mjs';
 import {
+  biographyHtml,
   classProgress,
   compareToSheet,
   derive,
@@ -14,6 +15,7 @@ import {
   parseFence,
   signed,
   skillKey,
+  toCharacterActor,
 } from './pregen.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -325,4 +327,109 @@ test('the oracle actually checked something', { skip }, async () => {
   // And it must be able to fail: break one number and the comparison sees it.
   const broken = { ...printed, skills: { ...printed.skills, athletics: '+99' } };
   assert.equal(compareToSheet(character, broken).length, 1);
+});
+
+// --------------------------------------------------------------------------
+// The Foundry actor
+// --------------------------------------------------------------------------
+
+test('a pregen always carries its class as an owned Item', async () => {
+  // dnd5e does not store a level. It sums `system.levels` across owned class
+  // Items, so an actor with none prepares at level 0: proficiency bonus +1, and
+  // every save, skill and attack one or two points below the sheet printed from
+  // the same source. Uniform and plausible, which is the worst kind of wrong.
+  const character = derive({ ...SPEC, level: 5 }, await progression('2014'));
+  const { actor } = toCharacterActor(character);
+  const classItem = actor.items.find(i => i.type === 'class');
+  assert.ok(classItem, 'no class Item means level 0');
+  assert.equal(classItem.system.levels, 5);
+  assert.equal(classItem.system.identifier, 'cleric');
+  assert.equal(classItem.system.hitDice, 'd8');
+});
+
+test('a subclass rides along as its own Item', async () => {
+  const character = derive(
+    { ...SPEC, class: 'wizard', subclass: 'school-of-evocation', level: 3 },
+    await progression('2014'),
+  );
+  const { actor } = toCharacterActor(character);
+  const subclass = actor.items.find(i => i.type === 'subclass');
+  assert.equal(subclass.name, 'School of Evocation');
+  assert.equal(subclass.system.classIdentifier, 'wizard');
+});
+
+test('the actor is a character, and its token is linked', async () => {
+  // A player's token is linked: damage taken on the map is damage to the sheet
+  // they are holding. An NPC's is not.
+  const { actor } = toCharacterActor(derive(SPEC, await progression('2014')));
+  assert.equal(actor.type, 'character');
+  assert.equal(actor.prototypeToken.actorLink, true);
+  assert.equal(actor.prototypeToken.disposition, 1);
+});
+
+test('armour class is flat, because the character owns no armour', async () => {
+  // `calc: "default"` would derive 10 + Dex and quietly disagree with the AC
+  // printed on the sheet the player is holding.
+  const { actor } = toCharacterActor(derive(SPEC, await progression('2014')));
+  assert.deepEqual(actor.system.attributes.ac, { calc: 'flat', flat: 18 });
+});
+
+test('proficiencies land where dnd5e reads them', async () => {
+  const { actor } = toCharacterActor(derive(SPEC, await progression('2014')));
+  assert.equal(actor.system.abilities.wis.proficient, 1, 'cleric WIS save');
+  assert.equal(actor.system.abilities.str.proficient, 0);
+  assert.deepEqual(actor.system.skills.med, { value: 1 });
+  assert.equal(actor.system.skills.acr, undefined, 'unproficient skills are not written');
+});
+
+test('spell slots are written as overrides so paper and Foundry agree', async () => {
+  // A hand-built class Item carries no spellcasting progression, so dnd5e would
+  // derive an empty slot row. Writing the slots this pipeline derived — already
+  // checked against an independent source — makes the two agree by construction.
+  const character = derive({ ...SPEC, level: 5 }, await progression('2014'));
+  const { actor } = toCharacterActor(character);
+  assert.deepEqual(actor.system.spells.spell1, { value: 4, override: 4 });
+  assert.deepEqual(actor.system.spells.spell3, { value: 2, override: 2 });
+  assert.equal(actor.system.attributes.spellcasting, 'wis');
+});
+
+test('a warlock gets a pact row rather than tiers', async () => {
+  const character = derive({ ...SPEC, class: 'warlock', level: 5 }, await progression('2014'));
+  const { actor } = toCharacterActor(character);
+  assert.deepEqual(actor.system.spells.pact, { value: 2, override: 2, level: 3 });
+});
+
+test('a non-caster carries no spells block at all', async () => {
+  const character = derive({ ...SPEC, class: 'fighter' }, await progression('2014'));
+  const { actor } = toCharacterActor(character);
+  assert.equal(actor.system.spells, undefined);
+  assert.equal(actor.system.attributes.spellcasting, undefined);
+});
+
+test('missing art warns rather than shipping a silhouette silently', async () => {
+  const { warnings } = toCharacterActor(derive(SPEC, await progression('2014')));
+  assert.ok(warnings.some(w => /no art/.test(w)));
+  const withArt = toCharacterActor(derive(SPEC, await progression('2014')), {
+    img: 'DnD/06 Assets/Tokens/generic/cleric.svg',
+  });
+  assert.deepEqual(withArt.warnings, []);
+});
+
+test('the biography survives having every hook stripped out', async () => {
+  // The rule the hook layer exists to guarantee: a game may add colour, and the
+  // character stays complete and playable without any of it.
+  const character = derive(SPEC, await progression('2014'));
+  const bare = biographyHtml(character, []);
+  const hooked = biographyHtml(character, ['The Guard Captain knows your name.']);
+  assert.ok(bare.includes('Hill Dwarf'));
+  assert.ok(bare.includes('level 1'));
+  assert.ok(hooked.startsWith(bare), 'hooks append, never replace');
+  assert.ok(hooked.includes('Guard Captain'));
+});
+
+test('a hook cannot inject markup into the sheet', async () => {
+  const character = derive(SPEC, await progression('2014'));
+  const html = biographyHtml(character, ['<script>alert(1)</script>']);
+  assert.ok(!html.includes('<script>'));
+  assert.ok(html.includes('&lt;script&gt;'));
 });
