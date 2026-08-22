@@ -25,6 +25,10 @@ import {
   syncExcludes,
   rsyncArgs,
   rotationPlan,
+  updateTargets,
+  checkUrlFor,
+  checkPins,
+  pinReport,
   worldRestorePlan,
   foundryIsRunning,
   assertRestorableWorldId,
@@ -2111,3 +2115,245 @@ test('a failed --pull is reported as a failed rebuild, not a failed restore', as
     await rm(path.dirname(data), { recursive: true, force: true });
   }
 });
+
+// ---------------------------------------------------------------------------
+// pin freshness (#120)
+// ---------------------------------------------------------------------------
+
+const FRESH = {
+  system: { id: 'dnd5e', version: '5.3.3', manifest: 'https://example.invalid/system.json' },
+  core: [
+    { id: 'lib-wrapper', version: '1.13.5', manifest: 'https://example.invalid/lw.json' },
+    {
+      id: 'foundry-mcp-bridge',
+      version: '0.8.2',
+      manifest: 'https://example.invalid/v0.8.2/mcp.json',
+      check: 'https://example.invalid/mcp-latest.json',
+      coupled: 'moves with MCP_VERSION in scripts/setup-mcp.sh',
+    },
+  ],
+};
+
+test('updateTargets holds coupled pins out of the batch and says why', () => {
+  // The bridge module and the MCP server are one fact; dnd5e migrates world
+  // data on first launch. Sweeping either along with fifteen module bumps is
+  // how a batch PR breaks a stack quietly.
+  const { entries, deferred } = updateTargets(FRESH);
+  assert.deepEqual(
+    entries.map(e => e.id),
+    ['dnd5e', 'lib-wrapper'],
+  );
+  assert.equal(deferred.length, 1);
+  assert.equal(deferred[0].id, 'foundry-mcp-bridge');
+  assert.match(deferred[0].reason, /MCP_VERSION/);
+});
+
+test('updateTargets moves a coupled pin only when it is named outright', () => {
+  const { entries, deferred } = updateTargets(FRESH, ['foundry-mcp-bridge']);
+  assert.deepEqual(
+    entries.map(e => e.id),
+    ['foundry-mcp-bridge'],
+  );
+  assert.deepEqual(deferred, []);
+});
+
+test('checkUrlFor reads the floating URL, not the locked one', () => {
+  // A version-locked manifest URL serves its own version forever, so checking
+  // it can only ever report "current". The check URL is what keeps a locked
+  // pin visible to the watcher.
+  assert.equal(checkUrlFor(FRESH.core[1]), 'https://example.invalid/mcp-latest.json');
+  assert.equal(checkUrlFor(FRESH.core[0]), 'https://example.invalid/lw.json');
+});
+
+test('checkPins separates a bump from a URL that no longer resolves', async () => {
+  // An unreachable manifest is rot, not staleness: the rebuild is already
+  // broken and nothing has said so yet.
+  const versions = {
+    'https://example.invalid/system.json': { ok: true, version: '5.3.3' },
+    'https://example.invalid/lw.json': { ok: true, version: '1.14.0' },
+    'https://example.invalid/mcp-latest.json': { ok: false, status: 404 },
+  };
+  const result = await checkPins([FRESH.system, ...FRESH.core], {
+    fetchImpl: async url => {
+      const row = versions[url];
+      return {
+        ok: row.ok,
+        status: row.status ?? 200,
+        json: async () => ({ version: row.version }),
+      };
+    },
+  });
+  assert.deepEqual(result.bumps, [{ id: 'lib-wrapper', from: '1.13.5', to: '1.14.0' }]);
+  assert.deepEqual(
+    result.current.map(c => c.id),
+    ['dnd5e'],
+  );
+  assert.equal(result.unreachable.length, 1);
+  assert.equal(result.unreachable[0].id, 'foundry-mcp-bridge');
+  assert.match(result.unreachable[0].reason, /404/);
+});
+
+test('checkPins reports a pin with no URL as unpinned rather than current', async () => {
+  const result = await checkPins([{ id: 'todo-module', version: '0.0.0', manifest: 'TODO' }], {
+    fetchImpl: async () => {
+      throw new Error('must not fetch a placeholder');
+    },
+  });
+  assert.deepEqual(result.bumps, []);
+  assert.deepEqual(
+    result.unpinned.map(u => u.id),
+    ['todo-module'],
+  );
+});
+
+test('pinReport is the same text for the terminal and a PR body', () => {
+  const report = pinReport({
+    bumps: [{ id: 'lib-wrapper', from: '1.13.5', to: '1.14.0' }],
+    current: [{ id: 'dnd5e', version: '5.3.3' }],
+    unreachable: [],
+    unpinned: [],
+    deferred: [{ id: 'foundry-mcp-bridge', reason: 'moves with MCP_VERSION' }],
+  });
+  assert.match(report, /lib-wrapper 1\.13\.5 -> 1\.14\.0/);
+  assert.match(report, /foundry-mcp-bridge/);
+  assert.match(report, /MCP_VERSION/);
+  assert.ok(!report.includes('dnd5e'), 'a pin that did not move is not news');
+});
+
+test('pinReport says plainly when nothing moved', () => {
+  const report = pinReport({ bumps: [], current: [{ id: 'dnd5e', version: '5.3.3' }] });
+  assert.match(report, /No pins moved/);
+});
+
+test('update --dry-run reports what would move and writes nothing', async () => {
+  const { file, before } = await aManifest();
+  try {
+    await main(['update', '--manifest', file, '--dry-run'], {
+      fetchImpl: servingVersions({ 'https://example.invalid/lw.json': '1.14.0' }),
+    });
+    assert.equal(await readFile(file, 'utf8'), before, 'a dry run must not touch the manifest');
+  } finally {
+    await rm(file, { force: true });
+  }
+});
+
+test('update without --dry-run writes the bump it just reported', async () => {
+  const { file } = await aManifest();
+  try {
+    await main(['update', '--manifest', file], {
+      fetchImpl: servingVersions({ 'https://example.invalid/lw.json': '1.14.0' }),
+    });
+    const written = JSON.parse(await readFile(file, 'utf8'));
+    assert.equal(written.core.find(e => e.id === 'lib-wrapper').version, '1.14.0');
+  } finally {
+    await rm(file, { force: true });
+  }
+});
+
+test('update leaves a coupled pin alone and names it', async () => {
+  const { file } = await aManifest();
+  try {
+    await main(['update', '--manifest', file], {
+      fetchImpl: servingVersions({
+        'https://example.invalid/lw.json': '1.13.5',
+        'https://example.invalid/mcp-latest.json': '0.9.0',
+      }),
+    });
+    const written = JSON.parse(await readFile(file, 'utf8'));
+    assert.equal(
+      written.core.find(e => e.id === 'foundry-mcp-bridge').version,
+      '0.8.2',
+      'a coupled pin must not ride along in a batch',
+    );
+  } finally {
+    await rm(file, { force: true });
+  }
+});
+
+test('update moves a coupled pin when it is the one you asked for', async () => {
+  const { file } = await aManifest();
+  try {
+    await main(['update', 'foundry-mcp-bridge', '--manifest', file], {
+      fetchImpl: servingVersions({ 'https://example.invalid/mcp-latest.json': '0.9.0' }),
+    });
+    const written = JSON.parse(await readFile(file, 'utf8'));
+    assert.equal(written.core.find(e => e.id === 'foundry-mcp-bridge').version, '0.9.0');
+  } finally {
+    await rm(file, { force: true });
+  }
+});
+
+test('update exits non-zero on a URL that no longer resolves', async () => {
+  // Staleness is routine and gets a PR. Rot means the rebuild is broken now,
+  // and a watcher that reports it as "nothing moved" is worse than none.
+  const { file } = await aManifest();
+  try {
+    await assert.rejects(
+      () =>
+        main(['update', '--manifest', file, '--dry-run'], {
+          fetchImpl: servingVersions({ 'https://example.invalid/lw.json': null }),
+        }),
+      /rot, not staleness/,
+    );
+  } finally {
+    await rm(file, { force: true });
+  }
+});
+
+test('a bump found alongside rot is still written, then the run fails', async () => {
+  const { file } = await aManifest();
+  try {
+    await assert.rejects(
+      () =>
+        main(['update', '--manifest', file], {
+          fetchImpl: servingVersions({
+            'https://example.invalid/lw.json': '1.14.0',
+            'https://example.invalid/system.json': null,
+          }),
+        }),
+      /rot, not staleness/,
+    );
+    const written = JSON.parse(await readFile(file, 'utf8'));
+    assert.equal(
+      written.core.find(e => e.id === 'lib-wrapper').version,
+      '1.14.0',
+      'a real bump must not be discarded because another pin rotted',
+    );
+  } finally {
+    await rm(file, { force: true });
+  }
+});
+
+/** A manifest on disk with one ordinary pin, one coupled pin, and a system. */
+async function aManifest() {
+  const file = path.join(await mkdtemp(path.join(tmpdir(), 'fvtt-pins-')), 'foundry-base.json');
+  const manifest = {
+    core: [
+      { id: 'lib-wrapper', manifest: 'https://example.invalid/lw.json', version: '1.13.5' },
+      {
+        check: 'https://example.invalid/mcp-latest.json',
+        coupled: 'moves with MCP_VERSION in scripts/setup-mcp.sh',
+        id: 'foundry-mcp-bridge',
+        manifest: 'https://example.invalid/v0.8.2/mcp.json',
+        version: '0.8.2',
+      },
+    ],
+    system: {
+      id: 'dnd5e',
+      manifest: 'https://example.invalid/system.json',
+      version: '5.3.3',
+    },
+  };
+  await writeFile(file, JSON.stringify(manifest, null, 2));
+  return { file, before: await readFile(file, 'utf8') };
+}
+
+/** A fetch that serves the versions named, 404s where the version is null. */
+function servingVersions(versions) {
+  return async url => {
+    if (!(url in versions)) return { ok: true, status: 200, json: async () => ({ version: null }) };
+    const version = versions[url];
+    if (version === null) return { ok: false, status: 404 };
+    return { ok: true, status: 200, json: async () => ({ version }) };
+  };
+}

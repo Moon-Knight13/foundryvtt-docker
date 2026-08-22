@@ -242,7 +242,10 @@ Requirements and gotchas:
   0.8.2 and installed 0.8.3 — a module ahead of its server with nothing saying
   so. Move this pin by editing the tag in both URLs, the `version`, and
   `MCP_VERSION` in `scripts/setup-mcp.sh` **together**, then re-run that script.
-  `update` will report the pin current forever, by design.
+  The pin now carries `"coupled"`, so the monthly pin-freshness PR holds it back
+  and names it rather than sweeping it along with ordinary module bumps. Give it
+  a `check` URL and `update foundry-mcp-bridge` will report when it has moved;
+  without one, a version-locked manifest reports the pin current forever.
 - In the devcontainer, port 31415 is forwarded (see devcontainer.json) so the
   GM browser on the host reaches the backend inside the container.
 

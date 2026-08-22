@@ -1,0 +1,128 @@
+---
+name: pin-freshness
+
+# Watch the golden base for staleness, monthly, and open a PR when pins move.
+#
+# Why this exists: foundry-base.json records exact versions, and locking a
+# manifest URL is what makes that record binding on a rebuild. But a locked pin
+# goes stale in silence -- six months on, a rebuild installs a module set nobody
+# chose -- and a URL can rot outright (GitLab expires the CI job artifact
+# settings-extender resolves through; a deleted release 404s). Locking without
+# watching trades one failure for another, so this is the watching half.
+#
+# It NEVER merges anything. "Always latest" is the hazard the manifest exists to
+# prevent, and an auto-merging watcher would reintroduce it wearing a badge.
+# Every version change stays a human decision in a reviewable commit.
+#
+# Runs here rather than on the host because GitHub runners have open egress: the
+# devcontainer firewall allows an allowlist that does not include gitlab.com, so
+# four pins can never be resolved from inside it.
+#
+# Uses the runner's bundled Node and the gh CLI rather than adding a third-party
+# action, matching content-tests.yml; every action stays SHA-pinned.
+
+"on":
+  schedule:
+    # 07:00 UTC on the 1st. Monthly, not weekly: a pin bump ends in a host-side
+    # ritual (provision, verify, a fresh golden snapshot), and a PR that arrives
+    # faster than anyone can apply it is noise.
+    - cron: 0 7 1 * *
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pin-freshness
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      # Both needed to push the branch and open the PR. Nothing here merges.
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      # Report first, write nothing. A non-zero exit here means a manifest URL
+      # no longer resolves -- rot, not staleness -- and the job should fail
+      # loudly rather than open a cheerful "nothing moved" PR over the top of a
+      # rebuild that is already broken.
+      - name: Check pins for staleness
+        run: |
+          # pipefail matters here: without it `tee` swallows the non-zero exit
+          # that means a manifest URL no longer resolves, and the job goes green
+          # over a rebuild that is already broken.
+          set -o pipefail
+          node scripts/content/foundry-base.mjs update --dry-run | tee pin-report.txt
+
+      - name: Decide whether anything moved
+        id: moved
+        run: |
+          if grep -q '^No pins moved\.' pin-report.txt; then
+            echo "any=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "any=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply the bumps
+        if: steps.moved.outputs.any == 'true'
+        run: node scripts/content/foundry-base.mjs update
+
+      - name: Open or refresh the pins PR
+        if: steps.moved.outputs.any == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch="pins/monthly"
+          moved=$(grep -c '^  [a-z_-].* -> ' pin-report.txt || true)
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Fetch the branch first so --force-with-lease has something to compare
+          # against: the branch is this workflow's own, rewritten each run, but a
+          # lease still refuses to clobber a push that arrived since.
+          git fetch origin "$branch" || true
+          git checkout -B "$branch"
+          git add foundry-base.json
+          git commit -m "chore(foundry-base): pins moved: ${moved} module(s)"
+          git push --force-with-lease origin "$branch"
+
+          # Body from a file, never from an interpolated string: the version
+          # strings in it come from third-party manifests fetched over the wire.
+          {
+            echo "Pins moved since the last run. **Do not merge on game day.**"
+            echo
+            echo '```text'
+            cat pin-report.txt
+            echo '```'
+            echo
+            echo "Applying this is a ritual, and the last step is the one that gets forgotten:"
+            echo
+            echo "1. Between sessions, never on game day."
+            echo "2. Merge this, then \`git pull\` on the host."
+            echo "3. \`foundry-base.mjs provision\` — exits non-zero if a URL served"
+            echo "   something other than the pin."
+            echo "4. \`foundry-base.mjs verify\` — the gate."
+            echo "5. \`foundry-base.mjs snapshot --golden\` **again**. The golden image is"
+            echo "   stale the moment pins move, and a golden restore would otherwise put"
+            echo "   the old modules back."
+            echo
+            echo "Coupled pins are held out of this PR on purpose and are listed above;"
+            echo "they move in their own change, with their other half. \`FOUNDRY_VERSION\`"
+            echo "in \`.env\` is invisible to this workflow and stays manual."
+          } > pr-body.md
+
+          if gh pr view "$branch" --json number >/dev/null 2>&1; then
+            gh pr edit "$branch" --body-file pr-body.md \
+              --title "chore(foundry-base): pins moved: ${moved} module(s)"
+          else
+            gh pr create --base main --head "$branch" --body-file pr-body.md \
+              --title "chore(foundry-base): pins moved: ${moved} module(s)" \
+              --label "dependencies :game_die:"
+          fi

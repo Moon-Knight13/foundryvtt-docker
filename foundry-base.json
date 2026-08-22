@@ -13,10 +13,19 @@
     "",
     "manifest URLs were filled from the capture files via:",
     "  node scripts/content/foundry-base.mjs promote foundry-capture-<world>.json",
-    "A pin without a manifest URL is reported by `provision`, never guessed at."
+    "A pin without a manifest URL is reported by `provision`, never guessed at.",
+    "",
+    "Two fields carry behaviour beyond the version:",
+    "  coupled - this pin is half of a fact that lives in two places, so `update`",
+    "            holds it out of a batch and names it. Move it by asking for it by",
+    "            id, together with its other half, in its own change.",
+    "  check   - a deliberately floating URL, used ONLY to ask what is current. A",
+    "            version-locked manifest URL serves its own version forever, so a",
+    "            locked pin without a check URL is invisible to the watcher."
   ],
   "core": [
     {
+      "coupled": "MCP_VERSION in scripts/setup-mcp.sh is the other half. The module and the server are one fact, and a batch bump would move one of them.",
       "download": "https://github.com/adambdooley/foundry-vtt-mcp/releases/download/v0.8.2/foundry-vtt-mcp.zip",
       "id": "foundry-mcp-bridge",
       "manifest": "https://raw.githubusercontent.com/adambdooley/foundry-vtt-mcp/v0.8.2/packages/foundry-module/module.json",
@@ -183,6 +192,7 @@
   },
   "games": [],
   "system": {
+    "coupled": "A system bump migrates world data on first launch and downgrades are unsupported. It gets its own change, its own snapshot taken first, and its own game-free evening.",
     "id": "dnd5e",
     "manifest": "https://github.com/foundryvtt/dnd5e/releases/latest/download/system.json",
     "title": "D&D Fifth Edition",
