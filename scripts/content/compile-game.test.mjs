@@ -1,10 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { mkdtemp, mkdir, writeFile, readFile, stat, utimes } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import os, { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { compileGame } from './compile-game.mjs';
 import { CUE_FLAG_SCOPE } from './cue.mjs';
+import { fieldMap } from './sheet-fields.mjs';
 
 const GOBLIN_NOTE = `---
 type: npc
@@ -280,6 +283,51 @@ test('a broken pregen is reported without abandoning the rest', async () => {
   assert.equal(report.errors.length, 1);
   assert.match(report.errors[0], /Unknown class "artificer"/);
   assert.equal(report.pregens.length, 1, 'the good one still compiled');
+});
+
+const VAULT_BLANK = [
+  process.env.DND_VAULT_PATH,
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'DnD'),
+  path.join(os.homedir(), 'DnD'),
+]
+  .filter(Boolean)
+  .map(v => path.join(v, '01 Systems', 'dnd5e', 'Pregens', 'templates', 'wotc-2014.pdf'))
+  .find(p => existsSync(p));
+
+test(
+  'one pass produces both surfaces from one source',
+  { skip: VAULT_BLANK ? false : 'no blank sheet in the vault' },
+  async () => {
+    // The two-surface claim, end to end: the compendium actor a rebuild
+    // restores, and the paper a player is handed, out of the same note.
+    const { gameDir } = await gameFixture();
+    await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+    await writeFile(path.join(gameDir, 'Pregens', 'Elf Wizard.md'), PREGEN_NOTE);
+
+    const report = await compileGame(gameDir, { sheets: VAULT_BLANK });
+    assert.deepEqual(report.errors, []);
+    assert.ok(report.pregens[0].sheet, 'a sheet was printed');
+
+    const actor = JSON.parse(await readFile(report.pregens[0].out, 'utf8'));
+    const printed = fieldMap(await readFile(report.pregens[0].sheet));
+    assert.equal(printed.CharacterName, actor.name);
+    assert.equal(printed.AC, String(actor.system.attributes.ac.flat));
+    assert.equal(printed.HPMax, String(actor.system.attributes.hp.max));
+    assert.equal(printed['SlotsTotal 19'], String(actor.system.spells.spell1.value));
+  },
+);
+
+test('without a blank, the Foundry side still compiles', async () => {
+  // The blanks are publisher-issued and live in the vault. A checkout without
+  // them must not lose the compendium half.
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(path.join(gameDir, 'Pregens', 'Elf Wizard.md'), PREGEN_NOTE);
+
+  const report = await compileGame(gameDir);
+  assert.deepEqual(report.errors, []);
+  assert.equal(report.pregens[0].sheet, null);
+  assert.ok(existsSync(report.pregens[0].out));
 });
 
 test('an unchanged pregen note is not recompiled', async () => {

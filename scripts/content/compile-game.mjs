@@ -8,7 +8,12 @@
 //
 // Usage:
 //   node scripts/content/compile-game.mjs "<vault>/03 Oneshots/<Game>" [--force]
-//     --force  recompile everything; default skips outputs newer than their note
+//     --force    recompile everything; default skips outputs newer than their note
+//     --sheets   blank character sheet PDF; also prints each pregen onto it
+//     --template registry id for that blank (default: wotc-<edition>)
+//
+// Printing sheets is opt-in because the blanks are publisher-issued and live in
+// the vault. Without --sheets a checkout still compiles the Foundry side.
 //
 // Only stale notes compile (note mtime > output mtime), so a re-run after
 // editing one NPC touches one file. One broken note is reported and does not
@@ -21,6 +26,7 @@ import { compileNote } from './statblock.mjs';
 import { compileHandout, parseFrontmatter, slug } from './handout.mjs';
 import { readGameAudio, resolveCue, stampCue } from './cue.mjs';
 import { compilePregen } from './pregen.mjs';
+import { writeSheet } from './sheet-write.mjs';
 
 /** True when `out` is missing or older than `note`. */
 async function stale(note, out) {
@@ -112,7 +118,23 @@ export async function compileGame(gameDir, opts = {}) {
       });
       await mkdir(path.dirname(out), { recursive: true });
       await writeFile(out, `${JSON.stringify(actor, null, 2)}\n`);
-      report.pregens.push({ note, out, skipped: false, warnings, character });
+
+      // The printable half, and opt-in: the blank sheets are publisher-issued
+      // and live in the vault, so a checkout without them still compiles the
+      // Foundry side rather than failing on a missing template.
+      let sheet = null;
+      if (opts.sheets) {
+        const { bytes } = await writeSheet(note, {
+          reference: opts.reference,
+          hooks: opts.hooks?.[slug(path.basename(file, '.md'))],
+          blank: opts.sheets,
+          template: opts.template,
+        });
+        sheet = path.join(gameDir, 'Pregens', `${slug(path.basename(file, '.md'))}.pdf`);
+        await writeFile(sheet, bytes);
+      }
+
+      report.pregens.push({ note, out, sheet, skipped: false, warnings, character });
     } catch (err) {
       report.errors.push(`${note}: ${err.message}`);
     }
@@ -195,6 +217,8 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--force') opts.force = true;
     else if (argv[i] === '--vault') opts.vault = argv[++i];
+    else if (argv[i] === '--sheets') opts.sheets = argv[++i];
+    else if (argv[i] === '--template') opts.template = argv[++i];
     else if (argv[i].startsWith('--')) throw new Error(`Unknown argument: ${argv[i]}`);
     else rest.push(argv[i]);
   }
@@ -218,6 +242,7 @@ async function main() {
   for (const p of report.pregens) {
     const who = p.character ? ` (${p.character.className} ${p.character.level})` : '';
     console.log(`${p.skipped ? 'fresh ' : 'pregen'} ${path.relative(opts.gameDir, p.out)}${who}`);
+    if (p.sheet) console.log(`        ${path.relative(opts.gameDir, p.sheet)}`);
     for (const w of p.warnings) console.warn(`  warning: ${w}`);
   }
   for (const h of report.handouts) {

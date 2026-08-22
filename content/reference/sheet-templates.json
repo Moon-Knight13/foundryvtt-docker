@@ -1,0 +1,122 @@
+{
+  "$comment": [
+    "Field maps for the fillable character sheets a pregen can be printed onto.",
+    "",
+    "Edition and template are independent axes. The edition decides what a",
+    "level-5 wizard IS; the template decides what the boxes are CALLED. The WotC",
+    "official 2014 sheet has 334 fields and the D&D Beyond export of the same",
+    "2014 character has 775, sharing only 65 names. So each template carries its",
+    "own map, and adding a form is adding an entry here rather than editing the",
+    "generator.",
+    "",
+    "The `sha256` pins the blank PDF. If a publisher reissues the sheet with",
+    "renamed boxes, the build fails instead of silently producing sheets with",
+    "empty spaces where the renamed fields used to be.",
+    "",
+    "The names were extracted from the template, never retyped. Several carry",
+    "whitespace that looks like a typo and is not: `Race `, `DEXmod `,",
+    "`Deception `, `Wpn3 AtkBonus  ` (two trailing), `SpellSaveDC  2` (two",
+    "internal). Read them with scripts/content/sheet-fields.mjs --names.",
+    "",
+    "The blanks themselves live in the vault, never in this repo:",
+    "DnD/01 Systems/dnd5e/Pregens/templates/."
+  ],
+  "templates": {
+    "wotc-2014": {
+      "label": "WotC official fillable character sheet (2014)",
+      "edition": "2014",
+      "file": "DnD/01 Systems/dnd5e/Pregens/templates/wotc-2014.pdf",
+      "sha256": "37e63eb0e4d2b58b28f4aea1b1465eb77567ebb72ee64deb8d96c0cdfc13f605",
+      "fieldCount": 334,
+      "attackRows": 3,
+      "identityFields": ["PlayerName", "CharacterName 2", "FactionName"],
+      "fields": {
+        "characterName": "CharacterName",
+        "classLevel": "ClassLevel",
+        "background": "Background",
+        "race": "Race ",
+        "alignment": "Alignment",
+        "xp": "XP",
+        "profBonus": "ProfBonus",
+        "ac": "AC",
+        "initiative": "Initiative",
+        "speed": "Speed",
+        "hpMax": "HPMax",
+        "hpCurrent": "HPCurrent",
+        "hitDiceTotal": "HDTotal",
+        "hitDice": "HD",
+        "passivePerception": "Passive",
+        "features": "Features and Traits",
+        "featuresOverflow": "Feat+Traits",
+        "backstory": "Backstory",
+        "equipment": "Equipment",
+        "proficiencies": "ProficienciesLang",
+        "attacksAndSpellcasting": "AttacksSpellcasting",
+        "spellcastingClass": "Spellcasting Class 2",
+        "spellcastingAbility": "SpellcastingAbility 2",
+        "spellSaveDc": "SpellSaveDC  2",
+        "spellAttackBonus": "SpellAtkBonus 2"
+      },
+      "abilityScore": {
+        "str": "STR",
+        "dex": "DEX",
+        "con": "CON",
+        "int": "INT",
+        "wis": "WIS",
+        "cha": "CHA"
+      },
+      "abilityMod": {
+        "str": "STRmod",
+        "dex": "DEXmod ",
+        "con": "CONmod",
+        "int": "INTmod",
+        "wis": "WISmod",
+        "cha": "CHamod"
+      },
+      "save": {
+        "str": "ST Strength",
+        "dex": "ST Dexterity",
+        "con": "ST Constitution",
+        "int": "ST Intelligence",
+        "wis": "ST Wisdom",
+        "cha": "ST Charisma"
+      },
+      "skill": {
+        "acrobatics": "Acrobatics",
+        "animal_handling": "Animal",
+        "arcana": "Arcana",
+        "athletics": "Athletics",
+        "deception": "Deception ",
+        "history": "History ",
+        "insight": "Insight",
+        "intimidation": "Intimidation",
+        "investigation": "Investigation ",
+        "medicine": "Medicine",
+        "nature": "Nature",
+        "perception": "Perception ",
+        "performance": "Performance",
+        "persuasion": "Persuasion",
+        "religion": "Religion",
+        "sleight_of_hand": "SleightofHand",
+        "stealth": "Stealth ",
+        "survival": "Survival"
+      },
+      "slotsTotal": {
+        "1": "SlotsTotal 19",
+        "2": "SlotsTotal 20",
+        "3": "SlotsTotal 21",
+        "4": "SlotsTotal 22",
+        "5": "SlotsTotal 23",
+        "6": "SlotsTotal 24",
+        "7": "SlotsTotal 25",
+        "8": "SlotsTotal 26",
+        "9": "SlotsTotal 27"
+      },
+      "attacks": [
+        { "name": "Wpn Name", "bonus": "Wpn1 AtkBonus", "damage": "Wpn1 Damage" },
+        { "name": "Wpn Name 2", "bonus": "Wpn2 AtkBonus ", "damage": "Wpn2 Damage " },
+        { "name": "Wpn Name 3", "bonus": "Wpn3 AtkBonus  ", "damage": "Wpn3 Damage " }
+      ]
+    }
+  }
+}
