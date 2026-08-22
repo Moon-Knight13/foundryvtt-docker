@@ -3,8 +3,8 @@ services:
   foundry:
     image: ghcr.io/felddy/foundryvtt:release
     hostname: ${FOUNDRY_HOSTNAME:-my_foundry_host}
-    
-    #GPU Support - uncomment these lines to enable GPU
+
+    # GPU Support - uncomment these lines to enable GPU
     # NOTE: the FoundryVTT server is headless Node.js and does not use the GPU;
     # rendering happens in each player's browser. Leave this commented out.
     # deploy:
@@ -14,7 +14,7 @@ services:
     #         - driver: nvidia
     #           count: 1
     #           capabilities: [gpu]
-    
+
     volumes:
       - type: bind
         source: ${FOUNDRY_DATA_PATH:-${HOME}/.local/share/FoundryVTT}
@@ -38,24 +38,30 @@ services:
       - FOUNDRY_TELEMETRY=${FOUNDRY_TELEMETRY:-false}
 
       # Performance: compress static assets and websocket traffic
-      # (maps to compressStatic/compressSocket in options.json, regenerated on each start)
+      # (compressStatic/compressSocket in options.json, rewritten on each start)
       - FOUNDRY_MINIFY_STATIC_FILES=${FOUNDRY_MINIFY_STATIC_FILES:-true}
       - FOUNDRY_COMPRESS_WEBSOCKET=${FOUNDRY_COMPRESS_WEBSOCKET:-true}
-      
+
       # Version & URLs
-      - FOUNDRY_VERSION=${FOUNDRY_VERSION:-14.363}
+      # Required, not defaulted, and deliberately: a default here is a second
+      # place the pinned version is written, and the two drifted (this said
+      # 14.363 while .env.example said 14.364). A missing version must fail
+      # loudly rather than quietly start a Foundry a build behind the one the
+      # worlds were migrated on -- migrations run on first launch and
+      # downgrades are unsupported. Same reason FOUNDRY_ADMIN_KEY above is :?.
+      - FOUNDRY_VERSION=${FOUNDRY_VERSION:?set it in .env - see .env.example}
       - FOUNDRY_RELEASE_URL=${FOUNDRY_RELEASE_URL:-}
-      
+
       # Hostname Configuration
       - FOUNDRY_HOSTNAME=${FOUNDRY_HOSTNAME:-}
       - FOUNDRY_LOCAL_HOSTNAME=${FOUNDRY_LOCAL_HOSTNAME:-}
       - FOUNDRY_PROXY_PORT=${FOUNDRY_PROXY_PORT:-}
-      
+
       # SSL/HTTPS (optional)
       - FOUNDRY_SSL_CERT=${FOUNDRY_SSL_CERT:-}
       - FOUNDRY_SSL_KEY=${FOUNDRY_SSL_KEY:-}
       - FOUNDRY_PROTOCOL=${FOUNDRY_PROTOCOL:-}
-      
+
       # Container Optimization
       - CONTAINER_CACHE=${CONTAINER_CACHE:-/data/container_cache}
       - CONTAINER_CACHE_SIZE=${CONTAINER_CACHE_SIZE:-}
@@ -64,13 +70,13 @@ services:
       # set — even to "false" or empty. To debug, add it in a
       # compose.override.yml: environment: ["CONTAINER_VERBOSE=true"]
       - CONTAINER_UMASK=${CONTAINER_UMASK:-}
-    
+
     ports:
       - target: 30000
         published: ${FOUNDRY_PORT:-30000}
         protocol: tcp
         mode: host
-  
+
   # Remote access: Cloudflare Tunnel — no inbound ports, TLS at the edge.
   # The cloudflared service lives in the compose.cloudflare.yml overlay:
   #   docker compose -f compose.yml -f compose.cloudflare.yml up -d
@@ -80,9 +86,12 @@ services:
   # Netdata: per-container CPU/memory/network/disk graphs at http://localhost:19999
   netdata:
     image: netdata/netdata:stable
-    profiles: ["monitoring"]
+    profiles:
+      - monitoring
     ports:
       # operator-only dashboard (docker socket mounted) — keep off the LAN
+      # A port mapping stays quoted; that is the compose convention.
+      # yamllint disable-line rule:quoted-strings
       - "127.0.0.1:19999:19999"
     cap_add:
       - SYS_PTRACE
@@ -96,9 +105,12 @@ services:
   # Dozzle: live container logs in the browser at http://localhost:8080
   dozzle:
     image: amir20/dozzle:latest
-    profiles: ["monitoring"]
+    profiles:
+      - monitoring
     ports:
       # serves all container logs unauthenticated — keep off the LAN
+      # A port mapping stays quoted; that is the compose convention.
+      # yamllint disable-line rule:quoted-strings
       - "127.0.0.1:8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro

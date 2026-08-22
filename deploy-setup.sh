@@ -94,6 +94,24 @@ ensure_foundry_admin_key() {
   fi
 }
 
+# compose.yml requires FOUNDRY_VERSION rather than defaulting it, so that .env
+# is the only place the pinned version is written. An .env created before that
+# change can be missing the line entirely, and the failure would arrive as a
+# compose interpolation error at `up` time. Catch it here instead, and offer the
+# template's pin as the default.
+ensure_foundry_version() {
+  local version template_version
+
+  version=$(get_env_value "FOUNDRY_VERSION")
+  [ -n "$version" ] && return 0
+
+  template_version=$(grep -E '^FOUNDRY_VERSION=' .env.example | head -1 | cut -d= -f2)
+  echo "⚠️  FOUNDRY_VERSION is missing — compose will refuse to start without it."
+  echo "    A version bump migrates world data on first launch and downgrades are"
+  echo "    unsupported, so this is pinned deliberately rather than defaulted."
+  prompt_env "FOUNDRY_VERSION" "Pinned Foundry version" false "$template_version"
+}
+
 echo "🚀 FoundryVTT Docker Deployment Setup"
 echo "======================================"
 echo ""
@@ -151,6 +169,7 @@ echo "⚡ Validating required Foundry settings"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 ensure_foundry_auth
 ensure_foundry_admin_key
+ensure_foundry_version
 echo ""
 
 # Check Docker

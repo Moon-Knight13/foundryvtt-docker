@@ -561,7 +561,11 @@ rebuild. It was **not** chosen, because it puts a Foundry account password in
 run with nobody watching, that is the trade to revisit — deliberately, not by
 drifting into it.
 
-Either way, keep `FOUNDRY_VERSION` **pinned** (`.env.example` ships `14.363`).
+Either way, keep `FOUNDRY_VERSION` **pinned**. `.env` is the only place it is
+written: `compose.yml` requires the variable rather than defaulting it, so an
+unset version stops the stack instead of quietly starting an older Foundry, and
+no document repeats the number — read `.env.example` for the current pin, since
+a version quoted in prose is a copy that goes stale without anyone noticing.
 The image tag `:release` floating is fine — that is the container's own tooling,
 not Foundry. Foundry's version is not: a bump migrates world data on first
 launch and downgrades are unsupported (see `DEPLOYMENT.md`), so it moves when
