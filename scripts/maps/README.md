@@ -190,6 +190,37 @@ not.
 Nothing stops you adding `features` on top of a background, but usually the art
 already has them: keep those specs to `background` + `keys`.
 
+#### AI-generated art goes through here, not through `generate-map`
+
+The `foundry-mcp` bridge ships a `generate-map` tool (with `check-map-status` /
+`cancel-map-job`). It is a single-pass SDXL text-to-image job against a local
+ComfyUI, and it is **not** the route for AI art in this pipeline. Reviewed at
+v0.8.2, what it returns is a square PNG plus a scene document whose wall list is
+the literal `walls: []` — the job stage it reports as *"Detecting walls and
+structures"* detects nothing. No walls, no lights, no doors, no keys, no
+`.dd2vtt`. It also wants a GPU with 8 GB of VRAM and a ~7 GB checkpoint, its
+installer is Windows/Mac only, and the image it produces lands in Foundry's data
+directory — the transient container — rather than in the vault.
+
+So it replaces the one part this tool already does well and supplies none of the
+parts that cost effort. The useful direction is the opposite one: **their pixels,
+our structure.** Generate the art in any web UI, save it under the game's
+`Assets/Maps/`, and key it with a `background` spec — the walls, lights, numbered
+keys and legend are then ours, and a spec that declares geometry still emits the
+`.dd2vtt`.
+
+Two things to expect when the art came out of a diffusion model rather than a
+cartographer. Its scale is arbitrary — there is no pixels-per-square to read off,
+and the generator is explicitly told to suppress drawn grids — so `ppg` and
+`grid` are fitted by eye against something in the image of known size. And its
+architecture rarely closes: walls that do not meet, doors opening onto nothing.
+The `walls` list has to paper over that, which is easier to do well on a plan
+that was drawn deliberately.
+
+Revisit this if upstream ever ships real wall detection. It is in no release
+through v0.8.3. Disclosure obligations for generated art are separate and
+unchanged — see the vault's `00 Index/AI disclosure.md`.
+
 ### `keys`
 
 `{"n": <int>, "at": [x,y], "label": "...", "note": "..."}` — draws a numbered

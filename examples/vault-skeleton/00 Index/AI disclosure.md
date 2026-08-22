@@ -49,3 +49,8 @@ not work with the bridge as installed here, and nothing in this repo calls it.
 If it is ever made to work, a generated map needs the same disclosure a
 hand-generated one does, and the row above changes from *if I ever use one*
 to a statement of fact.
+
+It is also not the way to get AI art onto a map even if it did run: it returns
+a picture and an empty wall list. Generated art belongs in the game's
+`Assets/Maps/`, keyed by a `background` spec so the walls and lights stay ours
+— see `scripts/maps/README.md`.
