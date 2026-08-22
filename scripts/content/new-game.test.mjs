@@ -212,10 +212,21 @@ test('the generated advert carries the AI disclosure inside the paste block', as
       'utf8',
     );
     const block = advert.split('```')[1] ?? '';
-    assert.match(block, /\*\*AI:\*\*/, 'expected an AI heading in the pasted block');
-    assert.match(block, /token art/i, 'expected the token-art disclosure');
+    assert.match(block, /\*\*AI disclosure:\*\*/, 'expected an AI heading in the pasted block');
+    assert.match(block, /portrait tokens are AI-drawn/i, 'expected the token-art disclosure');
     assert.match(block, /not\s+AI-generated/i, 'expected maps called out as not AI-generated');
-    assert.match(block, /play NPCs/i, 'expected the no-AI-at-the-table line');
+    assert.match(block, /no AI runs the game/i, 'expected the no-AI-at-the-table line');
+
+    // The three objections players actually raise. Stating that a model was
+    // involved without answering these reads as a technicality, so each one is
+    // load-bearing: training provenance, displaced artists, and an opt-out.
+    assert.match(block, /not an image generator/i, 'expected the training-provenance answer');
+    assert.match(
+      block,
+      /never instead of paying an artist/i,
+      'expected the displaced-artist answer',
+    );
+    assert.match(block, /plain tokens/i, 'expected the opt-out offer');
   } finally {
     await rm(vault, { recursive: true, force: true });
   }
@@ -230,7 +241,7 @@ test('the advert template and the scaffolded advert make the same AI claim', asy
     'utf8',
   );
   const script = await readFile(SCRIPT, 'utf8');
-  const claim = /Some NPC token art in this game is AI-generated/;
+  const claim = /A few NPC portrait tokens are AI-drawn/;
   assert.match(template, claim, 'advert template is missing the AI disclosure');
   assert.match(script, claim, 'new-game.sh is missing the AI disclosure');
 });

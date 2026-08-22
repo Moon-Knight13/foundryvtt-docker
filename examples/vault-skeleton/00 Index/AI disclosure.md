@@ -17,18 +17,55 @@ standing line rather than a per-game judgement call.
 
 ## The pin (paste once, per server)
 
-> Some NPC token art in my games is AI-generated — flat-vector portraits drawn
-> by Claude from my own written notes on the character, saved into the game's
-> assets. Painted battlemaps, if I ever use one, come from a map builder or an
-> image generator and I will say which. Everything else is not AI imagery:
-> maps are rendered by a script from a layout spec I wrote, and creature art
-> is licensed SRD/system art matched by hand.
+> **AI in my games — the short version.** A few NPC portrait tokens are
+> AI-drawn. Nothing else is, no AI runs the game, and if you would rather not
+> have it at your table, say so and you get plain tokens instead. No hard
+> feelings, no questions asked.
 >
-> No AI plays the game. NPCs are voiced and run by me, dice are yours, and
-> nothing at the table is decided by a model.
+> **What is AI.** Some named NPCs have a portrait token that was drawn by
+> Claude from my own written notes on that character — the same description I
+> wrote for myself about what people notice first when they meet them. The
+> output is flat vector art, a few kilobytes of shapes: a coloured rim, a bust,
+> the one or two details that matter. It is deliberately simple and is not
+> pretending to be a painting.
+>
+> **It is not an image generator sampling other people's paintings.** No
+> diffusion model is involved, nothing is traced or copied, and I never prompt
+> for another artist's name or style. What comes out is drawn from my prose, not
+> assembled out of anyone's portfolio.
+>
+> **It has not taken work from an artist.** These tokens only appear where the
+> alternative was a blank grey placeholder — the choice was portrait or nothing,
+> never portrait or commission. Where art already exists I use that first:
+> creature art from the system's own licensed set, and icons from game-icons.net
+> under CC-BY-3.0, with a file in the assets folder naming every artist and the
+> licence. If I ever commission or buy art, that is what goes in.
+>
+> **The maps are not AI.** They are rendered by a script from a layout I wrote
+> square by square — the same input always produces the same map. If I ever use
+> a painted map that came out of an image generator, I will say so for that map.
+>
+> **Nothing at the table is AI.** NPCs are voiced and played by me, improvisation
+> is mine, dice are yours, and no model decides what happens to your character.
+>
+> Ask me anything about this — including which tokens, and I will show you.
 
-The advert paste block carries a short version of the first paragraph — see
-[[Advert Template]]. The pin is where the detail lives.
+The advert paste block carries a shorter version — see [[Advert Template]]. The
+pin is where the detail lives.
+
+### Why it is written this way
+
+The objection players actually raise is not *"was a model involved"*, it is
+*"was someone robbed, and is a machine going to run my game"*. A disclosure that
+only answers the first question reads as a technicality. So the pin answers the
+real ones — training, displaced artists, and the table itself — in that order,
+and ends with an offer rather than a defence. The opt-out is genuine and cheap:
+swapping a token back to system art is one line in a note.
+
+Do not soften it into something unfalsifiable. Every claim above is one a player
+could check if they asked: the tokens are in the game's `Assets/Tokens/`, the
+attribution file is beside the icons, and the map spec is a JSON file I can show
+them.
 
 ## What counts
 
