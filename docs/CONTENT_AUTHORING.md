@@ -817,6 +817,12 @@ obviously incomplete one.
 
 ### Drawing a party
 
+`new-game.sh` scaffolds a `Pregens.md` for every new game, and `ship-game.sh`
+passes the pool automatically — it defaults to
+`<vault>/01 Systems/dnd5e/Pregens` and can be overridden with `--pool`. A game
+that leaves `party:` empty ships no pregens and is unaffected; a missing pool is
+a note on stderr, not a failure.
+
 The simplest form is a party and nothing else:
 
 ```yaml

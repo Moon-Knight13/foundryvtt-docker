@@ -271,7 +271,7 @@ export function hookText(hook) {
  * character is a pile of choices no class table decides. So the build stops and
  * names the file to go and make.
  */
-export function missingFromPool(pool, name, level) {
+export function missingFromPool(pool, name, level, poolDir = null) {
   const character = baseSlug(name);
   const levels = [...pool.values()]
     .filter(entry => entry.character === character)
@@ -284,17 +284,17 @@ export function missingFromPool(pool, name, level) {
   if (levels.length && level !== null) {
     return (
       `${character} is in the pool at level ${levels.join(', ')}, but this game runs at ` +
-      `level ${level}. Build it at level ${level} in D&D Beyond, export the PDF to the ` +
-      `pool, and re-read the pool with pool-from-sheets.mjs.`
+      `level ${level}. Build it at level ${level} in D&D Beyond and export the PDF to ` +
+      `${poolDir ?? 'the pool'} as ${character.replace(/-/g, '_')}_lv${level}.pdf.`
     );
   }
   return (
-    `"${name}" is not in the pool. Build the character in D&D Beyond, export the PDF ` +
-    `to the pool, and re-read it with pool-from-sheets.mjs. Pool holds: ${held}`
+    `"${name}" is not in the pool. Build the character in D&D Beyond and export the PDF ` +
+    `to ${poolDir ?? 'the pool'}. Pool holds: ${held}`
   );
 }
 
-export function validateParty(party, pool) {
+export function validateParty(party, pool, { poolDir } = {}) {
   const problems = [];
 
   const drawn = [];
@@ -304,7 +304,7 @@ export function validateParty(party, pool) {
       // A pool gap is not a mistake in the party list — it is work that has not
       // been done yet, and the build knows exactly what that work is. Saying so
       // costs nothing and saves the author working it out from "not in the pool".
-      problems.push(missingFromPool(pool, name, party.level));
+      problems.push(missingFromPool(pool, name, party.level, poolDir));
       continue;
     }
     drawn.push({ slug: name, ...entry });
@@ -368,7 +368,7 @@ export async function resolveParty(gameDir, poolDir, { vault } = {}) {
   if (!party) return null;
 
   const pool = await readPool(poolDir, { vault });
-  const { drawn, problems } = validateParty(party, pool);
+  const { drawn, problems } = validateParty(party, pool, { poolDir });
   if (problems.length) {
     throw new Error(`${path.join(gameDir, PARTY_NOTE)}:\n  ${problems.join('\n  ')}`);
   }

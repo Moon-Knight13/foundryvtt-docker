@@ -11,6 +11,13 @@
 #   scripts/content/ship-game.sh "<vault>/03 Oneshots/<Game>" [--force] [--no-restart]
 #     --force       recompile every note, not just stale ones
 #     --no-restart  skip the Foundry container restart at the end
+#     --pool <dir>  pregen pool to draw the game's party from
+#                   (default: <vault>/01 Systems/dnd5e/Pregens)
+#
+# The pool is passed whenever it exists, so a game that declares a party in its
+# Pregens.md ships with it and one that does not is unaffected. Without this the
+# party silently never compiles, which looks exactly like a game having no
+# pregens.
 #
 # The art gate runs --strict BETWEEN compile and build: a game with a blank
 # named NPC stops here, before anything reaches Foundry.
@@ -22,11 +29,16 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GAME_DIR=""
 FORCE=""
 RESTART=1
+POOL=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --force) FORCE="--force" ;;
     --no-restart) RESTART=0 ;;
+    --pool)
+      POOL="$2"
+      shift
+      ;;
     --*)
       echo "Unknown argument: $1" >&2
       exit 1
@@ -37,7 +49,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z $GAME_DIR ]]; then
-  echo 'Usage: ship-game.sh "<vault>/03 Oneshots/<Game>" [--force] [--no-restart]' >&2
+  echo 'Usage: ship-game.sh "<vault>/03 Oneshots/<Game>" [--force] [--no-restart] [--pool <dir>]' >&2
   exit 1
 fi
 if [[ ! -d $GAME_DIR ]]; then
@@ -65,8 +77,18 @@ SRC="$GAME_DIR/Foundry/src"
 # The vault root anchors art paths; derive it from the game dir when unset.
 export DND_VAULT_PATH="${DND_VAULT_PATH:-$(cd "$GAME_DIR/../.." && pwd)}"
 
+# The shared pregen pool. Passed when it exists so a game declaring a party in
+# its Pregens.md ships with it; a game that declares none is unaffected.
+POOL="${POOL:-$DND_VAULT_PATH/01 Systems/dnd5e/Pregens}"
+POOL_ARGS=()
+if [[ -d $POOL ]]; then
+  POOL_ARGS=(--pool "$POOL")
+else
+  echo "No pregen pool at $POOL — shipping without one." >&2
+fi
+
 echo "=== compile   $GAME_DIR"
-node "$SCRIPT_DIR/compile-game.mjs" "$GAME_DIR" $FORCE
+node "$SCRIPT_DIR/compile-game.mjs" "$GAME_DIR" $FORCE --vault "$DND_VAULT_PATH" "${POOL_ARGS[@]}"
 
 echo "=== art gate  $CONFIG"
 node "$SCRIPT_DIR/art-coverage.mjs" --config "$CONFIG" --src "$SRC" --strict
