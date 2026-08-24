@@ -47,8 +47,8 @@ This page is a landing pad. Anything past "how do I start it" lives in
   bridge.
 - **Content pipeline** (`scripts/content/`) — vault notes compile into a
   per-game Foundry module: `compile-game.mjs` builds statblocks from SRD
-  fences, **pregen player characters** derive from cached class tables and print
-  onto a real fillable character sheet so an in-person table needs no D&D Beyond,
+  fences, **pregen player characters** are read from a pool of D&D Beyond
+  exports and handed out as those same sheets with a game's hooks written on,
   token art resolves through a curated map with an **art-coverage
   gate** that proves no blank tokens, `build.mjs` packages the module, and
   `ship-game.sh` runs compile → gate → build → sync → Foundry restart in one

@@ -1,20 +1,17 @@
 #!/usr/bin/env node
-// Read the AcroForm fields out of a fillable character sheet PDF, so a pregen
-// can be checked against — and later written onto — the sheet a player is
-// actually handed.
+// Read the AcroForm fields out of a character sheet PDF. This is where a pregen
+// comes from: the pool is a folder of D&D Beyond exports, and reading one is
+// how a character enters the pipeline at all.
 //
-// This is the read half of the pair, and it exists before the write half on
-// purpose:
+// It is also the correctness oracle. A character is derived from the class
+// tables and compared against what its own sheet prints, so every later stage
+// is graded against a character somebody actually built, rather than against a
+// fixture invented alongside the code it is meant to check.
 //
-//   sheet-fields.mjs (this file)  "what does this form call its boxes, and
-//                                  what is in them?"
-//   the writer (Story 5)          "put these derived numbers in those boxes"
-//
-// Reading first buys a correctness oracle for free. The vault already holds
-// five finished level-1 characters as filled PDFs (Dragons of Stormwreck Isle,
-// `Pregens/`). Once they can be parsed, every later stage can be graded against
-// real characters somebody actually played, instead of against a fixture
-// invented alongside the code it is meant to check.
+// Paired with sheet-annotate.mjs, which writes a game's hooks onto a copy of
+// one of these sheets. Note what that module documents and this one does not
+// have to care about: a D&D Beyond export carries no /AcroForm at all. The
+// parser below scans objects, so it reads such a file regardless.
 //
 // Two facts about sheet PDFs drive the design, both measured rather than
 // assumed (2026-08-22):

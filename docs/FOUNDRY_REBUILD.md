@@ -736,8 +736,8 @@ it runs.
      than `mystery-man.svg`, and a GM map pin opens its journal page.
    - *In person* — every NPC note still renders a Fantasy Statblocks card with a
      portrait, handouts show their art full-size, the Player map prints, and
-     each pregen's `Pregens/<slug>.pdf` opens with its numbers filled in and no
-     player name on it.
+     each pregen's `Pregens/<slug>.pdf` opens as its pool sheet with this
+     game's hooks written into a box the export left empty.
 10. On success the rebuild **is** the new state. On failure,
     `foundry-base.mjs restore --yes`.
 

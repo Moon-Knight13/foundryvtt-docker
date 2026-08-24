@@ -125,8 +125,8 @@ export function pickBox(form, boxes = NOTE_BOXES) {
 /**
  * Write values onto a copy of a sheet and return the new bytes.
  *
- * `values` is a flat name -> text object, matching sheetValues() in
- * sheet-write.mjs so the two can be compared field for field.
+ * `values` is a flat name -> text object, so what lands on paper can be
+ * asserted without a PDF in the way.
  */
 export async function annotate(sheetBytes, values) {
   const pdf = await PDFDocument.load(sheetBytes);
