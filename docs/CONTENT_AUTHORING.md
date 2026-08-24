@@ -773,6 +773,37 @@ built.
 Keyed by level because the bonus can depend on it: Alert grants the proficiency
 bonus, which is +2 at level 1 and +3 at level 5.
 
+### What the actor carries
+
+A pregen imports as a furnished character, not a stat block. dnd5e's own
+Starter Heroes carry around 47 Items; the pool's Dwarf Cleric carries 45 and the
+Human Fighter 25.
+
+| On the sheet | In Foundry |
+| --- | --- |
+| species, background | a `race` and a `background` Item |
+| class features, species traits, feats | `feat` Items, filed under the type dnd5e sorts the sheet by |
+| attack rows | `weapon` Items, equipped, carrying the 2024 mastery their owner chose |
+| carried equipment | `loot` Items with quantity and weight |
+| spells | `spell` Items at the level of the heading above them, rituals flagged |
+| coins, size, languages, armour/weapon/tool proficiencies | written onto the actor |
+
+Those last ones matter more than they look. **Packed documents skip dnd5e's
+`_preCreate`**, so anything this pipeline does not write keeps the bare schema
+default forever — that is how Large NPCs once packed as 1x1 tokens. A Small
+character is Small because we wrote it, not because dnd5e worked it out.
+
+The Items are **self-contained**, built from the sheet's own text rather than
+referenced into `dnd5e.spells24` and friends. A reference would be richer, but
+`compilePack` writes raw documents into LevelDB and runs no lifecycle hook, so
+nothing hydrates one afterwards; copying the compendium's data in instead would
+mean reading a live Foundry at build time, which CI does not have.
+
+And nothing guesses. A weapon's damage and properties are the ones printed
+beside it. Carried gear is typed `loot` rather than inferred to be armour from
+its name — a pregen carrying a subtly wrong sword is worse than one carrying an
+obviously incomplete one.
+
 ### Drawing a party, and hooking it to the game
 
 A pool pregen is a generic chassis with **no game context at all**, which is what
