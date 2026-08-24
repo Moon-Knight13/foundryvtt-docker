@@ -295,7 +295,7 @@ const POOL_SHEET = [
   .find(p => existsSync(p));
 
 /** A game drawing one real pool character. */
-async function poolFixture() {
+async function poolFixture({ hooks = true } = {}) {
   const { gameDir } = await gameFixture();
   const poolDir = await mkdtemp(path.join(tmpdir(), 'pregen-pool-'));
 
@@ -312,10 +312,14 @@ async function poolFixture() {
       "edition: '2024'",
       'level: 1',
       'party: [human-fighter]',
-      'hooks:',
-      '  - background: Soldier',
-      '    at: the gate',
-      '    what: the Guard Captain knows your regiment',
+      ...(hooks
+        ? [
+            'hooks:',
+            '  - background: Soldier',
+            '    at: the gate',
+            '    what: the Guard Captain knows your regiment',
+          ]
+        : []),
       '---',
       '',
       '# Pregens',
@@ -454,3 +458,34 @@ test('an unchanged pregen note is not recompiled', async () => {
   const second = await compileGame(gameDir);
   assert.equal(second.pregens[0].skipped, true);
 });
+
+test(
+  'a party with no hooks hands out the pool sheet byte for byte',
+  { skip: POOL_SHEET ? false : 'no pool sheet in the vault' },
+  async () => {
+    // Simple pregens: a game draws characters and adds nothing to them. The
+    // sheet a player is handed is then not a copy that happens to match, it is
+    // the same file — which is the strongest form of "we did not touch it".
+    const { gameDir, poolDir } = await poolFixture({ hooks: false });
+
+    const report = await compileGame(gameDir, { pool: poolDir });
+    assert.deepEqual(report.errors, []);
+
+    const handed = await readFile(report.pregens[0].sheet);
+    const pool = await readFile(path.join(poolDir, 'human_fighter_lv1.pdf'));
+    assert.deepEqual(handed, pool);
+  },
+);
+
+test(
+  'a hook-free party still compiles its actor',
+  { skip: POOL_SHEET ? false : 'no pool sheet in the vault' },
+  async () => {
+    const { gameDir, poolDir } = await poolFixture({ hooks: false });
+    const report = await compileGame(gameDir, { pool: poolDir });
+
+    const actor = JSON.parse(await readFile(report.pregens[0].out, 'utf8'));
+    assert.equal(actor.name, 'Human Fighter');
+    assert.ok(actor.items.length > 20, 'the character is still fully furnished');
+  },
+);

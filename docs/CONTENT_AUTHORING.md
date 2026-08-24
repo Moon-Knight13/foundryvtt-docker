@@ -815,7 +815,24 @@ beside it. Carried gear is typed `loot` rather than inferred to be armour from
 its name — a pregen carrying a subtly wrong sword is worse than one carrying an
 obviously incomplete one.
 
-### Drawing a party, and hooking it to the game
+### Drawing a party
+
+The simplest form is a party and nothing else:
+
+```yaml
+---
+type: index
+edition: '2024'
+level: 1
+party: [dwarf-cleric, elf-wizard, goliath-barbarian, halfling-rogue, human-fighter]
+---
+```
+
+With no hooks the sheet a player is handed is **byte for byte the pool sheet** —
+not a copy that happens to match, the same file. Hooks below are optional, and a
+game that wants plain pregens simply omits them.
+
+### Hooks, when a game wants them
 
 A pool pregen is a generic chassis with **no game context at all**, which is what
 makes it reusable and what stops anything travelling between games. A game names
