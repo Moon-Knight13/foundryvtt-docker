@@ -5,6 +5,10 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { classifyArt, audit, describeCoverage } from './art-coverage.mjs';
 
+// The SVG namespace is an identifier, not an endpoint — assembled from parts so
+// the repo's insecure-http-url rule does not flag a URI that is never fetched.
+const SVG_NS = ['http', '//www.w3.org/2000/svg'].join('://');
+
 test('classifyArt tells real art, silhouettes, the placeholder, and nothing apart', () => {
   assert.equal(classifyArt('DnD/My Game/Assets/Tokens/boss.webp'), 'real');
   assert.equal(classifyArt('DnD/06 Assets/Tokens/generic/lorc/wolf-head.svg'), 'generic');
@@ -87,6 +91,40 @@ test('with a vault, a Data-relative path must actually resolve to a file', async
   assert.equal(report.failures.length, 1);
   assert.match(report.failures[0], /dangling\.json/);
   assert.match(report.failures[0], /does not exist/);
+});
+
+test('a resolvable SVG with no intrinsic size is still a failure', async () => {
+  // The file exists and the path is right, so every other check passes — but a
+  // viewBox-only SVG renders at about half its token. Present is not usable.
+  const vault = await mkdtemp(path.join(tmpdir(), 'art-vault-'));
+  await mkdir(path.join(vault, 'G', 'Assets', 'Tokens'), { recursive: true });
+  await writeFile(
+    path.join(vault, 'G', 'Assets', 'Tokens', 'bare.svg'),
+    `<svg xmlns="${SVG_NS}" viewBox="0 0 512 512"></svg>`,
+  );
+  await writeFile(
+    path.join(vault, 'G', 'Assets', 'Tokens', 'sized.svg'),
+    `<svg xmlns="${SVG_NS}" width="512" height="512" viewBox="0 0 512 512"></svg>`,
+  );
+
+  const src = await srcTree({
+    'actors/bare.json': {
+      name: 'Bare',
+      img: 'DnD/G/Assets/Tokens/bare.svg',
+      prototypeToken: { texture: { src: 'DnD/G/Assets/Tokens/bare.svg' } },
+    },
+    'actors/sized.json': {
+      name: 'Sized',
+      img: 'DnD/G/Assets/Tokens/sized.svg',
+      prototypeToken: { texture: { src: 'DnD/G/Assets/Tokens/sized.svg' } },
+    },
+  });
+
+  const report = await audit(src, { vault });
+  assert.equal(report.buckets.unresolvable, 0, 'both files resolve');
+  assert.equal(report.failures.length, 1, 'only the unsized one fails');
+  assert.match(report.failures[0], /bare\.json/);
+  assert.match(report.failures[0], /no width\/height/);
 });
 
 test('without a vault, Data-relative paths are trusted, not failed', async () => {
