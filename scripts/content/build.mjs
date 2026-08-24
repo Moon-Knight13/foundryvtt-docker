@@ -15,6 +15,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compilePack } from '@foundryvtt/foundryvtt-cli';
+import { tokenSquares } from './statblock.mjs';
 
 // Scaffolded by the foundry-gm Claude Code plugin; bump on breaking tooling
 // changes so the skill can detect stale consumer copies.
@@ -90,8 +91,23 @@ function assignKeys(doc, collection, sublevelPrefix, idPrefix, seed) {
   }
 }
 
+// Size an actor's token from its dnd5e size trait, unless the source says
+// otherwise. Foundry would normally do this in Actor5e._preCreate, but that
+// hook does not run for a packed document — so a Large NPC authored without an
+// explicit width/height packs as a 1x1 token and covers one 5 ft square on the
+// map instead of four. An author who writes width/height by hand outranks us.
+export function sizeToken(doc) {
+  const size = doc.system?.traits?.size;
+  if (!size) return doc;
+  const token = (doc.prototypeToken ??= {});
+  if (token.width === undefined) token.width = tokenSquares(size);
+  if (token.height === undefined) token.height = tokenSquares(size);
+  return doc;
+}
+
 export function prepareDoc(doc, type, relPath) {
   const out = structuredClone(doc);
+  if (type === 'actors') sizeToken(out);
   assignKeys(out, COLLECTIONS[type].key, '', '', relPath);
   return out;
 }

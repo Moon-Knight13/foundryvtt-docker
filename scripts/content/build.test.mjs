@@ -53,6 +53,39 @@ test('prepareDoc injects _id and _key', () => {
   assert.equal(out._key, `!actors!${out._id}`);
 });
 
+test('prepareDoc sizes an actor token from its dnd5e size trait', () => {
+  // Hand-authored and older generated sources predate the token-size fix, so
+  // the backfill has to happen at build time too — otherwise a Large NPC packs
+  // as a 1x1 token and shows up on the map covering a single 5 ft square.
+  const out = prepareDoc(
+    { name: 'Giant Scorpion', type: 'npc', system: { traits: { size: 'lg' } } },
+    'actors',
+    'actors/giant-scorpion.json',
+  );
+  assert.equal(out.prototypeToken.width, 2);
+  assert.equal(out.prototypeToken.height, 2);
+});
+
+test('prepareDoc leaves an explicitly authored token size alone', () => {
+  const out = prepareDoc(
+    {
+      name: 'Swarm',
+      type: 'npc',
+      system: { traits: { size: 'lg' } },
+      prototypeToken: { width: 1, height: 1 },
+    },
+    'actors',
+    'actors/swarm.json',
+  );
+  assert.equal(out.prototypeToken.width, 1, 'author override wins');
+  assert.equal(out.prototypeToken.height, 1);
+});
+
+test('prepareDoc leaves non-actor documents untouched by token sizing', () => {
+  const out = prepareDoc({ name: 'Q', pages: [] }, 'journals', 'journals/q.json');
+  assert.equal(out.prototypeToken, undefined);
+});
+
 test('prepareDoc gives journal pages stable embedded ids', () => {
   const doc = { name: 'Q', pages: [{ name: 'P1', type: 'text' }] };
   const out = prepareDoc(doc, 'journals', 'journals/q.json');

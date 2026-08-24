@@ -69,6 +69,21 @@ const SIZES = {
   gargantuan: 'grg',
 };
 
+// A creature's grid footprint, in squares, keyed by its dnd5e size. Mirrors
+// CONFIG.DND5E.actorSizes[...].token.
+//
+// dnd5e applies this itself in Actor5e._preCreate — but that hook never runs
+// for a document we pack: compilePack writes straight to LevelDB, and dnd5e
+// skips the backfill for compendium-sourced creates anyway. Without an explicit
+// width/height the TokenDocument schema default of 1 sticks, so a Large
+// creature lands on the map covering a single 5 ft square.
+export const TOKEN_SQUARES = { tiny: 0.5, sm: 1, med: 1, lg: 2, huge: 3, grg: 4 };
+
+/** Grid footprint for a dnd5e size key; unknown sizes fall back to one square. */
+export function tokenSquares(size) {
+  return TOKEN_SQUARES[size] ?? 1;
+}
+
 /** "1/8" -> 0.125. Stat blocks write CR as a fraction; YAML yields a string. */
 export function parseCR(cr) {
   if (typeof cr === 'number') return cr;
@@ -369,6 +384,8 @@ export function toActor(fence, { name, disposition = -1, biographyIntro = '', im
   }
 
   const hp = Number(fence.hp ?? 0);
+  const size = SIZES[String(fence.size ?? 'medium').toLowerCase()] ?? 'med';
+  const squares = tokenSquares(size);
   const actor = {
     name,
     type: 'npc',
@@ -379,6 +396,8 @@ export function toActor(fence, { name, disposition = -1, biographyIntro = '', im
       actorLink: false,
       displayName: 20,
       disposition,
+      width: squares,
+      height: squares,
       // The placeholder lands on the token too — without it the sheet showed
       // the silhouette while the map showed nothing at all.
       texture: { src: img ?? PLACEHOLDER_IMG },
@@ -398,7 +417,7 @@ export function toActor(fence, { name, disposition = -1, biographyIntro = '', im
         biography: { value: biographyHtml(fence, biographyIntro) },
       },
       traits: {
-        size: SIZES[String(fence.size ?? 'medium').toLowerCase()] ?? 'med',
+        size,
         languages: parseLanguages(fence.languages),
       },
       ...(Object.keys(skills).length ? { skills } : {}),
