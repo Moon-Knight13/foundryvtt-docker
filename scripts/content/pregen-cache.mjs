@@ -286,10 +286,20 @@ export function distillProgression({ characterClasses, classFeatures, classFeatu
       subclasses[other.slug] = { name: other.name, levels: levelIndex(other) };
     }
 
+    // The document a class came from is in its own pk — `srd-2024_fighter`.
+    const document = String(owner.pk).split('_')[0];
+    const override = SAVE_OVERRIDES[document]?.[owner.slug];
+    if (override && override.join() !== owner.saves.join()) {
+      repairs.push(
+        `${owner.pk}: saving throws ${JSON.stringify(owner.saves)} -> ` +
+          `${JSON.stringify(override)} (Open5e carries the primary abilities here)`,
+      );
+    }
+
     out[owner.slug] = {
       name: owner.name,
       hitDie: owner.hitDie,
-      saves: owner.saves,
+      saves: override ?? owner.saves,
       casterType: derived,
       subclasses: sortKeys(subclasses),
       levels: levelIndex(owner),
@@ -365,6 +375,30 @@ export async function fetchSource(dir, file, fetchImpl = fetch) {
 }
 
 /** Fetch one edition's three files and reduce them. */
+/**
+ * Saving throw proficiencies Open5e gets wrong, pinned to what the rules say.
+ *
+ * Two 2024 classes carry their PRIMARY abilities in `saving_throws`. The same
+ * document contradicts itself and can be read to prove it: the fighter's
+ * `core-traits` description reads
+ * `|Saving Throw Proficiencies|Strength and Constitution|` while the field says
+ * `["dex","str"]`, which is the fighter's `|Primary Ability|Strength or
+ * Dexterity|`. The monk fails the same way.
+ *
+ * Pinned rather than parsed out of the prose table, because a silent
+ * re-derivation from free text is how the wrong pair got in there to begin
+ * with. Keyed by class slug; anything absent is taken from Open5e unchanged.
+ *
+ * Found 2026-08-24 by auditing all 24 class rows in both editions against the
+ * published rules. srd-2014 has no mismatches.
+ */
+export const SAVE_OVERRIDES = {
+  'srd-2024': {
+    fighter: ['con', 'str'],
+    monk: ['dex', 'str'],
+  },
+};
+
 export async function buildEdition(dir, fetchImpl = fetch) {
   const [characterClasses, classFeatures, classFeatureItems] = await Promise.all(
     SOURCE_FILES.map(file => fetchSource(dir, file, fetchImpl)),

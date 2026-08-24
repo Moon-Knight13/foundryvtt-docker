@@ -4,6 +4,8 @@
   "source": "open5e-api/data/v2/wizards-of-the-coast/srd-2024",
   "licence": "CC-BY-4.0",
   "repairs": [
+    "srd-2024_fighter: saving throws [\"dex\",\"str\"] -> [\"con\",\"str\"] (Open5e carries the primary abilities here)",
+    "srd-2024_monk: saving throws [\"dex\",\"wis\"] -> [\"dex\",\"str\"] (Open5e carries the primary abilities here)",
     "srd-2024_monk_unarmored-movement L2: dropped a blank duplicate"
   ],
   "classes": {
@@ -1416,7 +1418,7 @@
       "name": "Fighter",
       "hitDie": 10,
       "saves": [
-        "dex",
+        "con",
         "str"
       ],
       "casterType": "none",
@@ -1656,7 +1658,7 @@
       "hitDie": 8,
       "saves": [
         "dex",
-        "wis"
+        "str"
       ],
       "casterType": "none",
       "subclasses": {

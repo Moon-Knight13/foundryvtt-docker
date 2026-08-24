@@ -6,7 +6,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compareToSheet, derive, parseFence } from './pregen.mjs';
-import { fieldReader, noteName, poolNote, specFromSheet } from './pool-from-sheets.mjs';
+import {
+  baseSlug,
+  fieldReader,
+  noteName,
+  poolNote,
+  slugLevel,
+  specFromSheet,
+} from './pool-from-sheets.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REFERENCE = path.resolve(SCRIPT_DIR, '..', '..', 'content', 'reference');
@@ -97,8 +104,66 @@ test('expertise survives into the note', () => {
   assert.deepEqual(parseFence(note).expertise, ['stealth']);
 });
 
-test('the filename is the character name, so a party list reads naturally', () => {
-  assert.equal(noteName({ name: 'Elf Wizard' }), 'Elf Wizard.md');
+test('the filename carries the level, because the pool holds one entry per level', () => {
+  assert.equal(noteName({ name: 'Elf Wizard', level: 1 }), 'Elf Wizard lv1.md');
+  assert.equal(noteName({ name: 'Elf Wizard', level: 4 }), 'Elf Wizard lv4.md');
+});
+
+test('a character at two levels does not collide', () => {
+  assert.notEqual(
+    noteName({ name: 'Dwarf Cleric', level: 1 }),
+    noteName({ name: 'Dwarf Cleric', level: 4 }),
+  );
+});
+
+test('baseSlug strips the level so a party list stays level-free', () => {
+  assert.equal(baseSlug('dwarf-cleric-lv4'), 'dwarf-cleric');
+  assert.equal(baseSlug('dwarf-cleric'), 'dwarf-cleric');
+  assert.equal(baseSlug('elf-wizard-lv12'), 'elf-wizard');
+});
+
+test('slugLevel reads the level back, or null when there is none', () => {
+  assert.equal(slugLevel('dwarf-cleric-lv4'), 4);
+  assert.equal(slugLevel('dwarf-cleric-lv12'), 12);
+  assert.equal(slugLevel('dwarf-cleric'), null);
+});
+
+test('the note pins the sheet it was read from', () => {
+  const note = poolNote(
+    {
+      name: 'Elf Wizard',
+      edition: '2024',
+      class: 'wizard',
+      level: 1,
+      species: 'Elf',
+      background: 'Sage',
+      abilities: { str: 10, dex: 14, con: 12, int: 16, wis: 12, cha: 8 },
+      skills: ['arcana'],
+      ac: 12,
+      hp: 8,
+    },
+    { source: 'elf_wizard_lv1.pdf', sha256: 'abc123' },
+  );
+  const spec = parseFence(note);
+  assert.equal(spec.sheet, 'elf_wizard_lv1.pdf');
+  assert.equal(spec.sheet_sha256, 'abc123');
+});
+
+test('adjustments reach the fence when a character has any', () => {
+  const note = poolNote({
+    name: 'Halfling Rogue',
+    edition: '2024',
+    class: 'rogue',
+    level: 1,
+    species: 'Halfling',
+    background: 'Criminal',
+    abilities: { str: 8, dex: 15, con: 14, int: 12, wis: 12, cha: 10 },
+    skills: ['stealth'],
+    ac: 14,
+    hp: 10,
+    adjustments: { initiative: 2 },
+  });
+  assert.equal(parseFence(note).adjustments.initiative, 2);
 });
 
 // --------------------------------------------------------------------------

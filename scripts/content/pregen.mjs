@@ -247,6 +247,12 @@ export function derive(spec, progression) {
     expert.add(key);
   }
 
+  // Effects the class tables cannot know about: a feat, a species trait, a
+  // class feature whose numbers Open5e publishes only as prose. They are
+  // authored per character and named, never inferred from a mismatch — see
+  // content/reference/pregen-adjustments.json.
+  const adjustments = spec.adjustments ?? {};
+
   const skills = {};
   for (const [name, { key, ability }] of Object.entries(SKILLS)) {
     const multiplier = expert.has(name) ? 2 : proficient.has(name) ? 1 : 0;
@@ -254,7 +260,7 @@ export function derive(spec, progression) {
       key,
       ability,
       multiplier,
-      total: mods[ability] + multiplier * pb,
+      total: mods[ability] + multiplier * pb + (Number(adjustments[`skill.${name}`]) || 0),
     };
   }
 
@@ -291,12 +297,13 @@ export function derive(spec, progression) {
     hitPoints: { max: spec.hp !== undefined ? Number(spec.hp) : derivedHp, derived: derivedHp },
     hitDice: `${level}d${progress.hitDie}`,
     ac: spec.ac !== undefined ? Number(spec.ac) : null,
-    initiative: mods.dex,
+    initiative: mods.dex + (Number(adjustments.initiative) || 0),
     speed: spec.speed !== undefined ? Number(spec.speed) : null,
     passivePerception: 10 + skills.perception.total,
     spellcasting,
     features: [...new Set(progress.features)].sort(),
     tracks: progress.tracks,
+    adjustments,
   };
 }
 

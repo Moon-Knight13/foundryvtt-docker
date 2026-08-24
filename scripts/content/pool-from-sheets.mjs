@@ -27,10 +27,15 @@
 //   node scripts/content/pool-from-sheets.mjs <sheet.pdf>... --out <pool dir>
 //     [--edition 2014] [--reference <dir>] [--dry-run]
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { slug } from './handout.mjs';
 import { fieldMap } from './sheet-fields.mjs';
 import { compareToSheet, derive, loadProgression } from './pregen.mjs';
+
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
 
 /**
  * How the D&D Beyond export names each skill's total and its tick box.
@@ -151,10 +156,27 @@ export function specFromSheet(bytes, { edition = '2014' } = {}) {
   };
 }
 
+/**
+ * Load the curated adjustments — numbers a sheet prints that the class tables
+ * cannot derive. Keyed by pool slug, so a character at two levels can carry
+ * different values; Alert grants the proficiency bonus, not a constant.
+ */
+export async function loadAdjustments(referenceDir) {
+  const dir = referenceDir ?? path.join(REPO_ROOT, 'content', 'reference');
+  const file = path.join(dir, 'pregen-adjustments.json');
+  try {
+    const parsed = JSON.parse(await readFile(file, 'utf8'));
+    return parsed.adjustments ?? {};
+  } catch (err) {
+    if (err.code === 'ENOENT') return {};
+    throw err;
+  }
+}
+
 const yamlList = values => `[${values.join(', ')}]`;
 
 /** The pool note. Frontmatter for Obsidian, a `pregen` fence for the compiler. */
-export function poolNote(spec, { source } = {}) {
+export function poolNote(spec, { source, sha256 } = {}) {
   const abilities = Object.entries(spec.abilities)
     .map(([k, v]) => `${k}: ${v}`)
     .join(', ');
@@ -192,6 +214,15 @@ export function poolNote(spec, { source } = {}) {
     `ac: ${spec.ac}`,
     ...(spec.speed ? [`speed: ${spec.speed}`] : []),
     `hp: ${spec.hp}`,
+    // The sheet this note was read from, pinned by content. The note is a
+    // generated index of that PDF, not an authored file; if either side moves,
+    // the character described here matches neither and the build must stop
+    // rather than ship a pregen nobody wrote.
+    ...(source ? [`sheet: ${source}`] : []),
+    ...(sha256 ? [`sheet_sha256: ${sha256}`] : []),
+    ...(spec.adjustments && Object.keys(spec.adjustments).length
+      ? ['adjustments:', ...Object.entries(spec.adjustments).map(([k, v]) => `  ${k}: ${v}`)]
+      : []),
     '```',
     '',
     '## Sheet',
@@ -213,9 +244,31 @@ export function poolNote(spec, { source } = {}) {
   return lines.join('\n');
 }
 
-/** Slug used for the note filename and therefore for the party list. */
+/**
+ * The note filename, and therefore the pool slug.
+ *
+ * The level is part of the name because the pool holds one entry per character
+ * PER LEVEL, each read from its own D&D Beyond export. A level 1 and a level 4
+ * Dwarf Cleric are two independent truths, neither derived from the other, and
+ * a shared filename would mean the second silently overwrote the first.
+ *
+ * A game still draws by the character's name alone — see baseSlug() and the
+ * level match in pregen-party.mjs — so a party list does not change when a game
+ * runs at a different level.
+ */
 export function noteName(spec) {
-  return `${spec.name}.md`;
+  return `${spec.name} lv${spec.level}.md`;
+}
+
+/** The character behind a pool slug, with the level suffix stripped. */
+export function baseSlug(poolSlug) {
+  return String(poolSlug).replace(/-lv\d+$/, '');
+}
+
+/** The level a pool slug names, or null when it carries none. */
+export function slugLevel(poolSlug) {
+  const match = /-lv(\d+)$/.exec(String(poolSlug));
+  return match ? Number(match[1]) : null;
 }
 
 export function parseArgs(argv) {
@@ -238,11 +291,16 @@ export function parseArgs(argv) {
 export async function main(argv = process.argv.slice(2)) {
   const opts = parseArgs(argv);
   const progression = await loadProgression(opts.edition, opts.reference);
+  const adjustments = await loadAdjustments(opts.reference);
   if (!opts.dryRun) await mkdir(opts.out, { recursive: true });
 
   let failed = 0;
   for (const sheet of opts.sheets) {
-    const { spec, printed } = specFromSheet(await readFile(sheet), { edition: opts.edition });
+    const bytes = await readFile(sheet);
+    const { spec, printed } = specFromSheet(bytes, { edition: opts.edition });
+    // Curated, named, and keyed by the slug this note will be written under.
+    const entry = adjustments[slug(noteName(spec).replace(/\.md$/, ''))];
+    if (entry?.values) spec.adjustments = entry.values;
     const character = derive(spec, progression);
     const deltas = compareToSheet(character, printed);
 
@@ -256,7 +314,10 @@ export async function main(argv = process.argv.slice(2)) {
     }
 
     const out = path.join(opts.out ?? '.', noteName(spec));
-    const body = poolNote(spec, { source: path.basename(sheet) });
+    const body = poolNote(spec, {
+      source: path.basename(sheet),
+      sha256: createHash('sha256').update(bytes).digest('hex'),
+    });
     if (!opts.dryRun) await writeFile(out, body);
     const skills = spec.skills.length;
     console.log(
