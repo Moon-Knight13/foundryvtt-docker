@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import os from 'node:os';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import {
   findInPool,
   hookText,
@@ -237,4 +240,57 @@ test('the generated index says what was actually built', () => {
   );
   assert.match(markdown, /fires off a \*\*background\*\*/);
   assert.match(markdown, /nothing\n> breaks/, 'the party-agnostic promise stays on the page');
+});
+
+// --------------------------------------------------------------------------
+// The pool is a folder of D&D Beyond exports. Reading them directly is what
+// removes the second copy of the same facts — there is no note to regenerate
+// and none to fall out of step.
+// --------------------------------------------------------------------------
+
+const POOL_DIR = [
+  process.env.DND_VAULT_PATH,
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'DnD'),
+  path.join(os.homedir(), 'DnD'),
+]
+  .filter(Boolean)
+  .map(v => path.join(v, '01 Systems', 'dnd5e', 'Pregens'))
+  .find(p => existsSync(path.join(p, 'human_fighter_lv1.pdf')));
+
+const poolSkip = POOL_DIR ? false : 'vault not mounted';
+
+test('a PDF is a pool entry with no note beside it', { skip: poolSkip }, async () => {
+  const pool = await readPool(POOL_DIR);
+
+  const fighter = pool.get('human-fighter-lv1');
+  assert.equal(fighter.name, 'Human Fighter');
+  assert.equal(fighter.level, 1);
+  assert.equal(fighter.note, null, 'nothing generated, nothing to keep in step');
+  assert.match(fighter.sheet, /human_fighter_lv1\.pdf$/);
+});
+
+test('the edition is read off the sheet, not configured', { skip: poolSkip }, async () => {
+  const pool = await readPool(POOL_DIR);
+  assert.equal(pool.get('human-fighter-lv1').spec.edition, '2024');
+});
+
+test('a blank template in the pool folder is not a character', { skip: poolSkip }, async () => {
+  // The folder holds sheets and, in a subfolder, the publisher blanks. Neither
+  // an unreadable PDF nor a subfolder may cost the pool its characters.
+  const pool = await readPool(POOL_DIR);
+  assert.ok(pool.size >= 5);
+  for (const entry of pool.values()) assert.ok(entry.name, 'every entry is a named character');
+});
+
+test('curated adjustments reach a pool entry read from its sheet', { skip: poolSkip }, async () => {
+  const pool = await readPool(POOL_DIR);
+  assert.equal(pool.get('halfling-rogue-lv1').spec.adjustments.initiative, 2);
+});
+
+test('two sources for one character is an error, not a precedence rule', async () => {
+  const poolDir = await mkdtemp(path.join(tmpdir(), 'pregen-pool-dupe-'));
+  await writeFile(path.join(poolDir, 'Elf Wizard.md'), poolNote({ name: 'Elf Wizard' }));
+  await writeFile(path.join(poolDir, 'elf wizard.md'), poolNote({ name: 'Elf Wizard' }));
+
+  await assert.rejects(readPool(poolDir), /Two sources for "elf-wizard"/);
 });

@@ -27,7 +27,7 @@ import { fileURLToPath } from 'node:url';
 import { compileNote } from './statblock.mjs';
 import { compileHandout, parseFrontmatter, slug } from './handout.mjs';
 import { readGameAudio, resolveCue, stampCue } from './cue.mjs';
-import { compilePregen, parseFence } from './pregen.mjs';
+import { compilePregen, compileSpec, parseFence } from './pregen.mjs';
 import { annotateSheet } from './sheet-annotate.mjs';
 import { PARTY_NOTE, partyIndexMarkdown, resolveParty } from './pregen-party.mjs';
 
@@ -159,7 +159,12 @@ export async function compileGame(gameDir, opts = {}) {
         // it applies to.
         pregenNotes.push({
           note: entry.note,
-          sources: [entry.note, path.join(gameDir, PARTY_NOTE)],
+          sheet: entry.sheet,
+          spec: entry.spec,
+          name: entry.name,
+          // The hook table is an input too, so editing it rebuilds the
+          // character it applies to.
+          sources: [entry.source, path.join(gameDir, PARTY_NOTE)],
           slug: entry.slug,
           hooks: entry.hooks,
         });
@@ -176,17 +181,24 @@ export async function compileGame(gameDir, opts = {}) {
     pregenNotes.push({ note, slug: slug(path.basename(file, '.md')), hooks: [] });
   }
 
-  for (const { note, sources, slug: name, hooks } of pregenNotes) {
+  for (const {
+    note,
+    sheet: poolSheetPath,
+    spec,
+    name: label,
+    sources,
+    slug: name,
+    hooks,
+  } of pregenNotes) {
     const out = path.join(gameDir, 'Foundry', 'src', 'actors', `pregen-${name}.json`);
     if (!opts.force && !(await stale(sources ?? note, out))) {
       report.pregens.push({ note, out, skipped: true, warnings: [] });
       continue;
     }
     try {
-      const { actor, character, warnings } = await compilePregen(note, {
-        reference: opts.reference,
-        hooks,
-      });
+      const { actor, character, warnings } = spec
+        ? await compileSpec(spec, { reference: opts.reference, hooks, name: label })
+        : await compilePregen(note, { reference: opts.reference, hooks });
       await mkdir(path.dirname(out), { recursive: true });
       await writeFile(out, `${JSON.stringify(actor, null, 2)}\n`);
 
@@ -200,7 +212,9 @@ export async function compileGame(gameDir, opts = {}) {
       // Skipped silently when the pool note names no sheet, so a game whose
       // pregens are authored rather than drawn still compiles.
       let sheet = null;
-      const poolSheet = await poolSheetFor(note, parseFence(await readFile(note, 'utf8')));
+      const poolSheet = poolSheetPath
+        ? { bytes: await readFile(poolSheetPath) }
+        : await poolSheetFor(note, parseFence(await readFile(note, 'utf8')));
       if (poolSheet) {
         const { bytes } = await annotateSheet(poolSheet.bytes, hooks, {
           game: path.basename(gameDir),

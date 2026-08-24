@@ -7,9 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileGame } from './compile-game.mjs';
 import { CUE_FLAG_SCOPE } from './cue.mjs';
-import { createHash } from 'node:crypto';
 import { fieldMap } from './sheet-fields.mjs';
-import { noteName, poolNote, specFromSheet } from './pool-from-sheets.mjs';
 
 const GOBLIN_NOTE = `---
 type: npc
@@ -296,28 +294,14 @@ const POOL_SHEET = [
   .map(v => path.join(v, '01 Systems', 'dnd5e', 'Pregens', 'human_fighter_lv1.pdf'))
   .find(p => existsSync(p));
 
-/**
- * A game drawing one real pool character.
- *
- * The pool sheet is COPIED into the fixture rather than referenced in place,
- * because a note resolves its sheet relative to itself — which is how the pool
- * works in the vault, where note and PDF sit side by side.
- */
+/** A game drawing one real pool character. */
 async function poolFixture() {
   const { gameDir } = await gameFixture();
   const poolDir = await mkdtemp(path.join(tmpdir(), 'pregen-pool-'));
 
-  const bytes = await readFile(POOL_SHEET);
-  await writeFile(path.join(poolDir, 'human_fighter_lv1.pdf'), bytes);
-
-  const { spec } = specFromSheet(bytes, { edition: '2024' });
-  await writeFile(
-    path.join(poolDir, noteName(spec)),
-    poolNote(spec, {
-      source: 'human_fighter_lv1.pdf',
-      sha256: createHash('sha256').update(bytes).digest('hex'),
-    }),
-  );
+  // The pool is the PDF and nothing else. No note to generate, none to keep in
+  // step with it.
+  await writeFile(path.join(poolDir, 'human_fighter_lv1.pdf'), await readFile(POOL_SHEET));
 
   await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
   await writeFile(

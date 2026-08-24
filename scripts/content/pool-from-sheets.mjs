@@ -96,6 +96,22 @@ export function fieldReader(fields) {
   };
 }
 
+/**
+ * Which edition a D&D Beyond export was built under.
+ *
+ * Read off the page references the export prints beside every feature —
+ * `* Second Wind • PHB-2024 91`. Extracted rather than configured: the pool is
+ * a folder of sheets with nothing declaring an edition, and getting this wrong
+ * silently picks the other edition's class tables.
+ */
+export function editionOfSheet(fields) {
+  const text = Object.values(fields)
+    .filter(v => typeof v === 'string')
+    .join('\n');
+  if (/PHB-2024/.test(text)) return '2024';
+  return null;
+}
+
 /** Read one exported sheet into a pregen spec plus the numbers it prints. */
 export function specFromSheet(bytes, { edition = '2014' } = {}) {
   const at = fieldReader(fieldMap(bytes));

@@ -52,7 +52,14 @@ import path from 'node:path';
 import { readdir, readFile } from 'node:fs/promises';
 import { parseFrontmatter, slug } from './handout.mjs';
 import { parseFence } from './pregen.mjs';
-import { baseSlug, slugLevel } from './pool-from-sheets.mjs';
+import { fieldMap } from './sheet-fields.mjs';
+import {
+  baseSlug,
+  editionOfSheet,
+  loadAdjustments,
+  slugLevel,
+  specFromSheet,
+} from './pool-from-sheets.mjs';
 
 /** Where a game declares which pregens it draws. */
 export const PARTY_NOTE = 'Pregens.md';
@@ -78,8 +85,21 @@ export async function readParty(gameDir) {
   };
 }
 
-/** Every pregen note in the pool, keyed by slug. */
-export async function readPool(poolDir) {
+/**
+ * Every character in the pool, keyed by slug.
+ *
+ * The pool is a folder of D&D Beyond exports. Reading the PDFs directly is the
+ * whole point: the sheet is root truth, and a generated note beside it would be
+ * a second copy of the same facts that can fall out of step with the first.
+ * There is nothing to regenerate and nothing to keep in sync — drop a PDF in
+ * and it is in the pool.
+ *
+ * A hand-written `.md` note still counts, for a pool entry with no export
+ * behind it. A note whose slug collides with a sheet is an error rather than a
+ * precedence rule: two sources for one character is exactly the drift reading
+ * the PDFs avoids.
+ */
+export async function readPool(poolDir, { reference } = {}) {
   const pool = new Map();
   let files;
   try {
@@ -89,22 +109,65 @@ export async function readPool(poolDir) {
       `No pregen pool at ${poolDir}. It holds the shared characters a game draws from.`,
     );
   }
+
+  const adjustments = await loadAdjustments(reference);
+  const add = (poolSlug, entry) => {
+    const already = pool.get(poolSlug);
+    if (already) {
+      throw new Error(
+        `Two sources for "${poolSlug}" in the pool: ${path.basename(already.source)} and ` +
+          `${path.basename(entry.source)}. Delete one — a character with two definitions ` +
+          'is the drift that reading the sheets directly is meant to avoid.',
+      );
+    }
+    pool.set(poolSlug, entry);
+  };
+
+  for (const file of files.filter(f => f.toLowerCase().endsWith('.pdf')).sort()) {
+    const sheetPath = path.join(poolDir, file);
+    const bytes = await readFile(sheetPath);
+
+    let spec;
+    try {
+      ({ spec } = specFromSheet(bytes, { edition: editionOfSheet(fieldMap(bytes)) ?? '2014' }));
+    } catch (err) {
+      // A blank template, or a PDF that is not a character sheet at all. The
+      // pool folder holds both, and one unreadable file must not cost the pool.
+      continue;
+    }
+
+    const poolSlug = slug(path.basename(file, path.extname(file)));
+    const entry = adjustments[poolSlug];
+    if (entry?.values) spec.adjustments = entry.values;
+
+    add(poolSlug, {
+      source: sheetPath,
+      sheet: sheetPath,
+      note: null,
+      spec,
+      name: spec?.name ?? null,
+      character: baseSlug(poolSlug),
+      level: Number(spec?.level) || null,
+    });
+  }
+
   for (const file of files.filter(f => f.endsWith('.md')).sort()) {
     const notePath = path.join(poolDir, file);
     const markdown = await readFile(notePath, 'utf8');
     if (!/```pregen/.test(markdown)) continue; // An index or prose note.
     const spec = parseFence(markdown);
     const poolSlug = slug(path.basename(file, '.md'));
-    pool.set(poolSlug, {
+    add(poolSlug, {
+      source: notePath,
+      sheet: null,
       note: notePath,
       spec,
       name: spec?.name ?? null,
-      // A pool entry is a character AT A LEVEL. The character is what a game
-      // names; the level is what the game runs at.
       character: baseSlug(poolSlug),
       level: Number(spec?.level ?? slugLevel(poolSlug)) || null,
     });
   }
+
   return pool;
 }
 

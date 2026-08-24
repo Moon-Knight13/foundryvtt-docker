@@ -511,14 +511,19 @@ export function biographyHtml(character, hooks = []) {
  * same way: read the note, derive, hand back the actor plus anything a person
  * should look at.
  */
-export async function compilePregen(notePath, opts = {}) {
-  const markdown = await readFile(notePath, 'utf8');
-  const spec = parseFence(markdown);
-  if (!spec) throw new Error('no ```pregen fence');
+/**
+ * Derive a character and its actor from a spec, wherever the spec came from.
+ *
+ * Split out of compilePregen because a pool entry is now read from a D&D
+ * Beyond export rather than a note on disk, and both routes must produce the
+ * same character — there is one calculation, not one per source.
+ */
+export async function compileSpec(spec, opts = {}) {
+  if (!spec) throw new Error('no pregen spec');
 
   const progression =
     opts.progression ?? (await loadProgression(spec.edition ?? '2014', opts.reference));
-  const named = { ...spec, name: spec.name ?? path.basename(notePath, '.md') };
+  const named = { ...spec, name: spec.name ?? opts.name ?? null };
   const character = derive(named, progression);
   const hooks = Array.isArray(opts.hooks) ? opts.hooks : [];
   const { actor, warnings } = toCharacterActor(character, {
@@ -526,6 +531,13 @@ export async function compilePregen(notePath, opts = {}) {
     biographyHtml: biographyHtml(character, hooks),
   });
   return { character, actor, warnings, hooks };
+}
+
+export async function compilePregen(notePath, opts = {}) {
+  const markdown = await readFile(notePath, 'utf8');
+  const spec = parseFence(markdown);
+  if (!spec) throw new Error('no ```pregen fence');
+  return compileSpec(spec, { ...opts, name: path.basename(notePath, '.md') });
 }
 
 export async function loadProgression(edition, referenceDir) {

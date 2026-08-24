@@ -687,11 +687,6 @@ finished.
 
 So the pool sheet is read-only, always. Nothing in this repo writes one.
 
-Each pool note pins its sheet by SHA-256, and the build checks it. The note is a
-generated index of that PDF rather than an authored file, so if either side
-moves, the character the note describes matches neither. That is a stop, not a
-warning — re-read the pool and the note describes the sheet again.
-
 Hooks land in the first free box of `Backstory`, `AdditionalNotes1`,
 `AdditionalNotes2`, `AlliesOrganizations`. A box the source sheet already filled
 is never overwritten: that prose was authored by hand, and silently replacing it
@@ -714,36 +709,44 @@ does not fail on an unknown argument.
 
 ### The pool is a folder of PDFs
 
-The pool holds one D&D Beyond export **per character per level**:
+One D&D Beyond export **per character per level**:
 
 ```text
 01 Systems/dnd5e/Pregens/
   dwarf_cleric_lv1.pdf
   dwarf_cleric_lv4.pdf
   human_fighter_lv1.pdf
+  templates/            <- publisher blanks, not characters
 ```
 
-You build them in D&D Beyond and copy them in. A level 1 and a level 4 Dwarf
-Cleric are two independent truths, neither derived from the other. There is no
-levelling code, and that is deliberate: above about level 4 the equipment and
-loadout stop being rules-derivable, and the choices a level 5 character has made
-are not something a class table decides.
+You build them in D&D Beyond and copy them in. **That is the whole workflow** —
+there is nothing to generate and no command to remember. A level 1 and a level 4
+Dwarf Cleric are two independent truths, neither derived from the other.
 
-`pool-from-sheets.mjs` reads each PDF and writes the note beside it:
+The pipeline reads the PDFs directly. A generated note beside each sheet would be
+a second copy of the same facts, able to fall out of step with the first, and the
+pool lives in the vault where a diff would not catch it. The edition is read off
+the page references the export prints (`PHB-2024`), not configured.
+
+A hand-written `.md` note still counts, for a pool entry with no export behind
+it. A note whose slug collides with a sheet is an error rather than a precedence
+rule: two definitions of one character is the drift that reading the sheets
+avoids.
+
+There is deliberately **no levelling code**. Above about level 4 the equipment
+and loadout stop being rules-derivable, and the choices a level 5 character has
+made are not something a class table decides.
+
+`pool-from-sheets.mjs` remains as a **checker**. It derives each character and
+compares it against what its own sheet prints, refusing anything that disagrees:
 
 ```bash
-node scripts/content/pool-from-sheets.mjs "<vault>/01
-Systems/dnd5e/Pregens/"*.pdf \
-  --out "<vault>/01 Systems/dnd5e/Pregens" --edition 2024
+node scripts/content/pool-from-sheets.mjs "<vault>/01 Systems/dnd5e/Pregens/"*.pdf \
+  --dry-run --edition 2024
 ```
 
-Each note is derived and checked against the sheet it came from before it is
-written, and a mismatch is refused: a pool pregen that disagrees with its own
-source is worse than not having it. The note filename carries the level, so
-nothing collides.
-
-Two things are deliberately not carried across: the **player name**, because a
-pool pregen is handed to a stranger and belongs to nobody; and anything
+Two things are deliberately not carried across from a sheet: the **player name**,
+because a pool pregen is handed to a stranger and belongs to nobody; and anything
 **game-specific**, because a pool pregen is a generic chassis.
 
 #### When the sheet and the tables disagree
@@ -763,9 +766,9 @@ and quoted, keyed by pool slug:
 Curated rather than inferred. A tool that absorbs any disagreement also
 absorbs a defect in our own data — which is exactly how the 2024 fighter's
 saving throws stayed wrong. Open5e carries the **primary** abilities in
-`saving_throws` for the
-2024 fighter and monk; those are pinned in `SAVE_OVERRIDES` in `pregen-cache.mjs`
-and reported as repairs when the cache is built.
+`saving_throws` for the 2024 fighter and monk; those are pinned in
+`SAVE_OVERRIDES` in `pregen-cache.mjs` and reported as repairs when the cache is
+built.
 
 Keyed by level because the bonus can depend on it: Alert grants the proficiency
 bonus, which is +2 at level 1 and +3 at level 5.
