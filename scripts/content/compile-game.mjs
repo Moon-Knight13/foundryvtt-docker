@@ -10,24 +10,25 @@
 //   node scripts/content/compile-game.mjs "<vault>/03 Oneshots/<Game>" [--force]
 //     --force    recompile everything; default skips outputs newer than their note
 //     --pool     shared pregen pool the game's Pregens.md draws its party from
-//     --sheets   blank character sheet PDF; also prints each pregen onto it
-//     --template registry id for that blank (default: wotc-<edition>)
+//     --pool     shared pregen pool a game's Pregens.md draws from
 //
-// Printing sheets is opt-in because the blanks are publisher-issued and live in
-// the vault. Without --sheets a checkout still compiles the Foundry side.
+// A drawn pregen's printed sheet is a copy of the pool sheet with this game's
+// hooks written onto it. The pool lives in the vault, so a checkout without it
+// still compiles everything else.
 //
 // Only stale notes compile (note mtime > output mtime), so a re-run after
 // editing one NPC touches one file. One broken note is reported and does not
 // abandon the rest — the per-note error surfaces in the summary and the exit
 // code, the same accumulate-then-fail shape as build.mjs.
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { compileNote } from './statblock.mjs';
 import { compileHandout, parseFrontmatter, slug } from './handout.mjs';
 import { readGameAudio, resolveCue, stampCue } from './cue.mjs';
-import { compilePregen } from './pregen.mjs';
-import { writeSheet } from './sheet-write.mjs';
+import { compilePregen, parseFence } from './pregen.mjs';
+import { annotateSheet } from './sheet-annotate.mjs';
 import { PARTY_NOTE, partyIndexMarkdown, resolveParty } from './pregen-party.mjs';
 
 /**
@@ -64,6 +65,44 @@ async function noteFiles(dir) {
  * out, skipped, warnings, deltas }. Errors are per-note strings, never thrown,
  * so one bad note cannot hide the state of the others.
  */
+/**
+ * The pool sheet a note was read from, and a check that it has not moved.
+ *
+ * The note is a generated index of that PDF, so the two have to agree. If
+ * either side changes, the character described by the note matches neither, and
+ * a pregen nobody wrote is worse than no pregen.
+ *
+ * Returns null when the note names no sheet — a game may author its own pregens
+ * rather than draw from the pool, and those have nothing to copy.
+ */
+export async function poolSheetFor(notePath, spec) {
+  if (!spec?.sheet) return null;
+
+  const sheetPath = path.resolve(path.dirname(notePath), spec.sheet);
+  let bytes;
+  try {
+    bytes = await readFile(sheetPath);
+  } catch {
+    throw new Error(
+      `${path.basename(notePath)} was read from ${spec.sheet}, which is not at ${sheetPath}. ` +
+        'Pool sheets are root truth and live in the vault; nothing here can rebuild one.',
+    );
+  }
+
+  if (spec.sheet_sha256) {
+    const actual = createHash('sha256').update(bytes).digest('hex');
+    if (actual !== spec.sheet_sha256) {
+      throw new Error(
+        `${path.basename(notePath)} does not match ${spec.sheet} any more ` +
+          `(pinned ${spec.sheet_sha256.slice(0, 12)}, found ${actual.slice(0, 12)}). ` +
+          'Re-read the pool with pool-from-sheets.mjs so the note describes the sheet again.',
+      );
+    }
+  }
+
+  return { path: sheetPath, bytes };
+}
+
 export async function compileGame(gameDir, opts = {}) {
   // <vault>/<section>/<game> — the vault root anchors handout image paths.
   const vault = opts.vault ?? path.dirname(path.dirname(path.resolve(gameDir)));
@@ -151,16 +190,20 @@ export async function compileGame(gameDir, opts = {}) {
       await mkdir(path.dirname(out), { recursive: true });
       await writeFile(out, `${JSON.stringify(actor, null, 2)}\n`);
 
-      // The printable half, and opt-in: the blank sheets are publisher-issued
-      // and live in the vault, so a checkout without them still compiles the
-      // Foundry side rather than failing on a missing template.
+      // The printable half. The pool sheet IS the printable character — it was
+      // built by hand in D&D Beyond at the level it is for — so a game takes a
+      // copy and writes its own hooks onto it. Nothing is regenerated: printing
+      // the character afresh would mean reproducing 775 fields in order to add
+      // one, and every field missed would be a gap on a sheet that looks
+      // finished.
+      //
+      // Skipped silently when the pool note names no sheet, so a game whose
+      // pregens are authored rather than drawn still compiles.
       let sheet = null;
-      if (opts.sheets) {
-        const { bytes } = await writeSheet(note, {
-          reference: opts.reference,
-          hooks,
-          blank: opts.sheets,
-          template: opts.template,
+      const poolSheet = await poolSheetFor(note, parseFence(await readFile(note, 'utf8')));
+      if (poolSheet) {
+        const { bytes } = await annotateSheet(poolSheet.bytes, hooks, {
+          game: path.basename(gameDir),
         });
         sheet = path.join(gameDir, 'Pregens', `${name}.pdf`);
         await mkdir(path.dirname(sheet), { recursive: true });
@@ -264,9 +307,12 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--force') opts.force = true;
     else if (argv[i] === '--vault') opts.vault = argv[++i];
-    else if (argv[i] === '--sheets') opts.sheets = argv[++i];
+    // Accepted and ignored: a pregen's sheet is now a copy of its pool sheet
+    // rather than a fresh print onto a publisher blank. Kept so an existing
+    // invocation does not fail on an unknown argument.
+    else if (argv[i] === '--sheets') argv[++i];
     else if (argv[i] === '--pool') opts.pool = argv[++i];
-    else if (argv[i] === '--template') opts.template = argv[++i];
+    else if (argv[i] === '--template') argv[++i];
     else if (argv[i].startsWith('--')) throw new Error(`Unknown argument: ${argv[i]}`);
     else rest.push(argv[i]);
   }

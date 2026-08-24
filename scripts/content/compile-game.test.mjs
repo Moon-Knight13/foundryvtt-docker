@@ -7,7 +7,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileGame } from './compile-game.mjs';
 import { CUE_FLAG_SCOPE } from './cue.mjs';
+import { createHash } from 'node:crypto';
 import { fieldMap } from './sheet-fields.mjs';
+import { noteName, poolNote, specFromSheet } from './pool-from-sheets.mjs';
 
 const GOBLIN_NOTE = `---
 type: npc
@@ -285,35 +287,87 @@ test('a broken pregen is reported without abandoning the rest', async () => {
   assert.equal(report.pregens.length, 1, 'the good one still compiled');
 });
 
-const VAULT_BLANK = [
+const POOL_SHEET = [
   process.env.DND_VAULT_PATH,
   path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'DnD'),
   path.join(os.homedir(), 'DnD'),
 ]
   .filter(Boolean)
-  .map(v => path.join(v, '01 Systems', 'dnd5e', 'Pregens', 'templates', 'wotc-2014.pdf'))
+  .map(v => path.join(v, '01 Systems', 'dnd5e', 'Pregens', 'human_fighter_lv1.pdf'))
   .find(p => existsSync(p));
 
+/**
+ * A game drawing one real pool character.
+ *
+ * The pool sheet is COPIED into the fixture rather than referenced in place,
+ * because a note resolves its sheet relative to itself — which is how the pool
+ * works in the vault, where note and PDF sit side by side.
+ */
+async function poolFixture() {
+  const { gameDir } = await gameFixture();
+  const poolDir = await mkdtemp(path.join(tmpdir(), 'pregen-pool-'));
+
+  const bytes = await readFile(POOL_SHEET);
+  await writeFile(path.join(poolDir, 'human_fighter_lv1.pdf'), bytes);
+
+  const { spec } = specFromSheet(bytes, { edition: '2024' });
+  await writeFile(
+    path.join(poolDir, noteName(spec)),
+    poolNote(spec, {
+      source: 'human_fighter_lv1.pdf',
+      sha256: createHash('sha256').update(bytes).digest('hex'),
+    }),
+  );
+
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(
+    path.join(gameDir, 'Pregens.md'),
+    [
+      '---',
+      'type: index',
+      "edition: '2024'",
+      'level: 1',
+      'party: [human-fighter]',
+      'hooks:',
+      '  - background: Soldier',
+      '    at: the gate',
+      '    what: the Guard Captain knows your regiment',
+      '---',
+      '',
+      '# Pregens',
+      '',
+    ].join('\n'),
+  );
+
+  return { gameDir, poolDir };
+}
+
 test(
-  'one pass produces both surfaces from one source',
-  { skip: VAULT_BLANK ? false : 'no blank sheet in the vault' },
+  'one pass produces both surfaces, and the paper is the pool sheet plus this game',
+  { skip: POOL_SHEET ? false : 'no pool sheet in the vault' },
   async () => {
     // The two-surface claim, end to end: the compendium actor a rebuild
-    // restores, and the paper a player is handed, out of the same note.
-    const { gameDir } = await gameFixture();
-    await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
-    await writeFile(path.join(gameDir, 'Pregens', 'Elf Wizard.md'), PREGEN_NOTE);
+    // restores, and the paper a player is handed. The paper is NOT reprinted —
+    // it is the sheet built by hand in D&D Beyond, with this game's hooks
+    // written into a box it left empty.
+    const { gameDir, poolDir } = await poolFixture();
 
-    const report = await compileGame(gameDir, { sheets: VAULT_BLANK });
+    const report = await compileGame(gameDir, { pool: poolDir });
     assert.deepEqual(report.errors, []);
-    assert.ok(report.pregens[0].sheet, 'a sheet was printed');
+    assert.ok(report.pregens[0].sheet, 'a sheet was produced');
 
     const actor = JSON.parse(await readFile(report.pregens[0].out, 'utf8'));
     const printed = fieldMap(await readFile(report.pregens[0].sheet));
+    const source = fieldMap(await readFile(path.join(poolDir, 'human_fighter_lv1.pdf')));
+
     assert.equal(printed.CharacterName, actor.name);
     assert.equal(printed.AC, String(actor.system.attributes.ac.flat));
-    assert.equal(printed.HPMax, String(actor.system.attributes.hp.max));
-    assert.equal(printed['SlotsTotal 19'], String(actor.system.spells.spell1.value));
+    assert.equal(printed.MaxHP, String(actor.system.attributes.hp.max));
+
+    // Everything the pool sheet said, the game's copy still says.
+    const changed = Object.keys(source).filter(name => source[name] !== printed[name]);
+    assert.deepEqual(changed, ['Backstory'], 'only the hook box was written');
+    assert.match(printed.Backstory, /Guard Captain/);
   },
 );
 
