@@ -192,18 +192,33 @@ It is no longer allowed to decide anything. Its six known defects are recorded
 above rather than patched, because nothing now depends on them being right —
 except the checks, which the sheet arbitrates.
 
-## Risk to test before anything depends on it
+## The annotation risk, now measured
 
-Annotating a copy should avoid the print defects entirely, because it writes two
-boxes rather than regenerating 334. But `pdf-lib`'s `form.updateFieldAppearances()`
-regenerates every field's appearance, and that is the mechanism behind the 66-point
-text measured on the first pass: the form's default appearance is `/Helv 0 Tf`
-(auto-size), no field carries its own `/DA`, and short strings are scaled to fill
-their box.
+The spec first flagged that `pdf-lib`'s `form.updateFieldAppearances()`
+regenerates every field's appearance, and that this is the mechanism behind the
+66-point text seen on the first pass. Tested against
+`human_fighter_lv1.pdf`, and the answer is better than feared.
 
-If that call touches D&D Beyond's 770 filled boxes it corrupts a working sheet.
-This is testable in isolation and must be tested before the annotation path is
-built.
+**The D&D Beyond export has no `/AcroForm` entry in its catalog.** All 775 fields
+exist only as widget annotations on the four pages. `pdf-lib`'s form API sees
+**zero** fields; `sheet-fields.mjs` reads all 775 because it falls back to
+scanning objects when the AcroForm is absent or damaged.
+
+The path that works: collect the widget refs off every page, register a minimal
+AcroForm pointing at them, then drive the ordinary field API. Measured on a
+single-box write — 775 fields before, 775 after, exactly one value changed.
+
+The annotation renders. D&D Beyond writes an explicit per-field default
+appearance, `0 g /Helvetica 7 Tf`, and sets the multiline flag; `Backstory` is a
+161 x 364 pt box. The generated appearance stream carries `Helvetica @ 7pt`.
+
+So the 66-point defect is a property of the WotC blank — form-level `/Helv 0 Tf`,
+meaning auto-size, with no field carrying its own `/DA` — and not of these
+sheets. Two rules follow, and both are load-bearing:
+
+- synthesize the AcroForm from the widget annotations before using the form API
+- never call `form.updateFieldAppearances()`; let each written field generate its
+  own appearance from the `/DA` the publisher already set
 
 ## Modules
 
