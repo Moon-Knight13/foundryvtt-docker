@@ -4,8 +4,10 @@ import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
+  findInPool,
   hookText,
   hooksFor,
+  missingFromPool,
   partyIndexMarkdown,
   readParty,
   readPool,
@@ -151,7 +153,42 @@ test('a pregen from the wrong edition is refused', async () => {
 
 test('a party naming somebody who is not in the pool says who is', async () => {
   const { poolDir, gameDir } = await fixture({ party: ['tiefling-bard'] });
-  await assert.rejects(resolveParty(gameDir, poolDir), /Available: dwarf-cleric, elf-wizard/);
+  await assert.rejects(resolveParty(gameDir, poolDir), /Pool holds: dwarf-cleric, elf-wizard/);
+});
+
+test('a missing character says what to go and make, not just that it is missing', async () => {
+  const { poolDir, gameDir } = await fixture({ party: ['tiefling-bard'] });
+  await assert.rejects(resolveParty(gameDir, poolDir), /Build the character in D&D Beyond/);
+});
+
+test('a character the pool holds at another level names the levels it does hold', () => {
+  const pool = new Map([
+    ['dwarf-cleric-lv1', { character: 'dwarf-cleric', level: 1, spec: { level: 1 } }],
+    ['dwarf-cleric-lv4', { character: 'dwarf-cleric', level: 4, spec: { level: 4 } }],
+  ]);
+  const message = missingFromPool(pool, 'dwarf-cleric', 7);
+
+  assert.match(message, /in the pool at level 1, 4/);
+  assert.match(message, /this game runs at level 7/);
+  assert.match(message, /Build it at level 7 in D&D Beyond/);
+});
+
+test('a game draws a character by name and gets the level it runs at', () => {
+  const pool = new Map([
+    ['dwarf-cleric-lv1', { character: 'dwarf-cleric', level: 1, spec: { level: 1 } }],
+    ['dwarf-cleric-lv4', { character: 'dwarf-cleric', level: 4, spec: { level: 4 } }],
+  ]);
+
+  assert.equal(findInPool(pool, 'dwarf-cleric', 4).level, 4);
+  assert.equal(findInPool(pool, 'dwarf-cleric', 1).level, 1);
+  assert.equal(findInPool(pool, 'dwarf-cleric', 7), null);
+});
+
+test('naming a pool entry outright still works', () => {
+  const pool = new Map([
+    ['dwarf-cleric-lv4', { character: 'dwarf-cleric', level: 4, spec: { level: 4 } }],
+  ]);
+  assert.equal(findInPool(pool, 'dwarf-cleric-lv4', 4).level, 4);
 });
 
 test('a hook that can never fire is a build error', async () => {

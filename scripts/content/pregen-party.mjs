@@ -52,6 +52,7 @@ import path from 'node:path';
 import { readdir, readFile } from 'node:fs/promises';
 import { parseFrontmatter, slug } from './handout.mjs';
 import { parseFence } from './pregen.mjs';
+import { baseSlug, slugLevel } from './pool-from-sheets.mjs';
 
 /** Where a game declares which pregens it draws. */
 export const PARTY_NOTE = 'Pregens.md';
@@ -93,9 +94,38 @@ export async function readPool(poolDir) {
     const markdown = await readFile(notePath, 'utf8');
     if (!/```pregen/.test(markdown)) continue; // An index or prose note.
     const spec = parseFence(markdown);
-    pool.set(slug(path.basename(file, '.md')), { note: notePath, spec, name: spec?.name ?? null });
+    const poolSlug = slug(path.basename(file, '.md'));
+    pool.set(poolSlug, {
+      note: notePath,
+      spec,
+      name: spec?.name ?? null,
+      // A pool entry is a character AT A LEVEL. The character is what a game
+      // names; the level is what the game runs at.
+      character: baseSlug(poolSlug),
+      level: Number(spec?.level ?? slugLevel(poolSlug)) || null,
+    });
   }
   return pool;
+}
+
+/**
+ * Find the one pool entry a game means: this character, at the level this game
+ * runs at.
+ *
+ * A game names characters, never levels — `party: [dwarf-cleric]` reads the
+ * same whether the game runs at 1 or at 5, so raising a game's level does not
+ * mean editing its party list. Naming a pool entry outright still works, for a
+ * game that wants one specific sheet.
+ */
+export function findInPool(pool, name, level) {
+  const exact = pool.get(name);
+  if (exact) return exact;
+
+  const wanted = baseSlug(name);
+  const forCharacter = [...pool.values()].filter(entry => entry.character === wanted);
+  if (!forCharacter.length) return null;
+  if (level === null || level === undefined) return forCharacter[0];
+  return forCharacter.find(entry => entry.level === level) ?? null;
 }
 
 /**
@@ -127,14 +157,48 @@ export function hookText(hook) {
  * drawn at the wrong level, a hook that can never fire, or a hook that names
  * somebody's character from a previous game.
  */
+/**
+ * What to do about a character the pool does not hold at this level.
+ *
+ * Nothing in this repo can build one. A pool entry is a D&D Beyond export made
+ * by hand, at a level someone chose, and that is the whole point — levelling a
+ * character is a pile of choices no class table decides. So the build stops and
+ * names the file to go and make.
+ */
+export function missingFromPool(pool, name, level) {
+  const character = baseSlug(name);
+  const levels = [...pool.values()]
+    .filter(entry => entry.character === character)
+    .map(entry => entry.level)
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b);
+
+  const held = pool.size ? [...pool.keys()].join(', ') : 'nothing yet';
+
+  if (levels.length && level !== null) {
+    return (
+      `${character} is in the pool at level ${levels.join(', ')}, but this game runs at ` +
+      `level ${level}. Build it at level ${level} in D&D Beyond, export the PDF to the ` +
+      `pool, and re-read the pool with pool-from-sheets.mjs.`
+    );
+  }
+  return (
+    `"${name}" is not in the pool. Build the character in D&D Beyond, export the PDF ` +
+    `to the pool, and re-read it with pool-from-sheets.mjs. Pool holds: ${held}`
+  );
+}
+
 export function validateParty(party, pool) {
   const problems = [];
 
   const drawn = [];
   for (const name of party.party) {
-    const entry = pool.get(name);
+    const entry = findInPool(pool, name, party.level);
     if (!entry) {
-      problems.push(`"${name}" is not in the pool. Available: ${[...pool.keys()].join(', ')}`);
+      // A pool gap is not a mistake in the party list — it is work that has not
+      // been done yet, and the build knows exactly what that work is. Saying so
+      // costs nothing and saves the author working it out from "not in the pool".
+      problems.push(missingFromPool(pool, name, party.level));
       continue;
     }
     drawn.push({ slug: name, ...entry });
