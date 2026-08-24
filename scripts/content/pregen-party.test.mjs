@@ -7,6 +7,7 @@ import os from 'node:os';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import {
+  artBeside,
   findInPool,
   hookText,
   hooksFor,
@@ -293,4 +294,48 @@ test('two sources for one character is an error, not a precedence rule', async (
   await writeFile(path.join(poolDir, 'elf wizard.md'), poolNote({ name: 'Elf Wizard' }));
 
   await assert.rejects(readPool(poolDir), /Two sources for "elf-wizard"/);
+});
+
+// --------------------------------------------------------------------------
+// Art. Without it a pregen wears the placeholder, and ship-game.sh stops at
+// the strict art gate before anything reaches Foundry.
+// --------------------------------------------------------------------------
+
+test('art is found by character name, not by sheet name', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'pregen-art-'));
+  await writeFile(path.join(dir, 'dwarf_cleric.webp'), 'img');
+
+  const found = await artBeside(dir, 'dwarf_cleric_lv4', { vault: dir });
+  assert.equal(found, 'dwarf_cleric.webp', 'art does not change when a character levels');
+});
+
+test('art named after the sheet wins over art named after the character', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'pregen-art-'));
+  await writeFile(path.join(dir, 'dwarf_cleric.webp'), 'generic');
+  await writeFile(path.join(dir, 'dwarf_cleric_lv4.webp'), 'specific');
+
+  assert.equal(await artBeside(dir, 'dwarf_cleric_lv4', { vault: dir }), 'dwarf_cleric_lv4.webp');
+});
+
+test('webp is preferred over the format it was converted from', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'pregen-art-'));
+  await writeFile(path.join(dir, 'elf_wizard.jpeg'), 'before');
+  await writeFile(path.join(dir, 'elf_wizard.webp'), 'after');
+
+  assert.equal(await artBeside(dir, 'elf_wizard_lv1', { vault: dir }), 'elf_wizard.webp');
+});
+
+test('a sheet with no art beside it gets none, rather than a wrong guess', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'pregen-art-'));
+  await writeFile(path.join(dir, 'someone_else.webp'), 'img');
+
+  assert.equal(await artBeside(dir, 'dwarf_cleric_lv1', { vault: dir }), null);
+});
+
+test('the pool carries its art through to the spec', { skip: poolSkip }, async () => {
+  const pool = await readPool(POOL_DIR);
+  const cleric = pool.get('dwarf-cleric-lv1');
+
+  assert.match(cleric.spec.image, /Pregens\/dwarf_cleric\.webp$/);
+  assert.ok(cleric.spec.image.startsWith('DnD/'), 'Foundry sees the vault under DnD/');
 });

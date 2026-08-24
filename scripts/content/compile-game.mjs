@@ -153,7 +153,7 @@ export async function compileGame(gameDir, opts = {}) {
   const pregenNotes = [];
   if (opts.pool) {
     try {
-      const party = await resolveParty(gameDir, opts.pool);
+      const party = await resolveParty(gameDir, opts.pool, { vault: opts.vault });
       for (const entry of party?.drawn ?? []) {
         // The hook table is an input too, so editing it rebuilds the character
         // it applies to.

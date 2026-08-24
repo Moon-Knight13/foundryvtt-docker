@@ -715,9 +715,20 @@ One D&D Beyond export **per character per level**:
 01 Systems/dnd5e/Pregens/
   dwarf_cleric_lv1.pdf
   dwarf_cleric_lv4.pdf
+  dwarf_cleric.webp     <- token art, per CHARACTER not per level
   human_fighter_lv1.pdf
   templates/            <- publisher blanks, not characters
 ```
+
+Token art sits beside the sheet and is named after the **character**, so it
+survives a level change rather than needing a copy per level. A file named after
+the sheet (`dwarf_cleric_lv4.webp`) wins if one exists, for a character who
+really does look different later. `.webp` is preferred, then `.png`, `.jpg`,
+`.jpeg`.
+
+Without art a pregen wears `icons/svg/mystery-man.svg`, which the strict art
+gate classifies as a placeholder — so `ship-game.sh` stops before build. That is
+the gate working: a blank player token reaches the table as visibly wrong.
 
 You build them in D&D Beyond and copy them in. **That is the whole workflow** —
 there is nothing to generate and no command to remember. A level 1 and a level 4

@@ -49,7 +49,7 @@
 //       what: give them a nudge instead of a roll
 //   ---
 import path from 'node:path';
-import { readdir, readFile } from 'node:fs/promises';
+import { access, readdir, readFile } from 'node:fs/promises';
 import { parseFrontmatter, slug } from './handout.mjs';
 import { parseFence } from './pregen.mjs';
 import { fieldMap } from './sheet-fields.mjs';
@@ -86,6 +86,41 @@ export async function readParty(gameDir) {
   };
 }
 
+/** Image extensions a pool sheet's art may use, best first. */
+const ART_EXTS = ['.webp', '.png', '.jpg', '.jpeg'];
+
+/**
+ * The token art sitting beside a pool sheet, as Foundry will see it.
+ *
+ * Named after the CHARACTER rather than the sheet — `dwarf_cleric.webp` beside
+ * `dwarf_cleric_lv1.pdf` — because art does not change when a character gains a
+ * level, and making it per-level would mean five copies of the same picture.
+ * A file named after the sheet still wins if one exists, for a character that
+ * really does look different at level 10.
+ *
+ * Returns a vault-relative path, which normalizeArtPath turns into the `DnD/`
+ * mount Foundry resolves. Without art a pregen falls back to the placeholder
+ * and fails the strict art gate, so this is what lets a pool character ship.
+ */
+export async function artBeside(poolDir, base, { vault } = {}) {
+  const stems = [base, base.replace(/_lv\d+$/i, '')];
+  for (const stem of [...new Set(stems)]) {
+    for (const ext of ART_EXTS) {
+      const file = path.join(poolDir, `${stem}${ext}`);
+      try {
+        await access(file);
+      } catch {
+        continue;
+      }
+      // Everything under the vault root is what Foundry sees under DnD/.
+      const root = vault ?? poolDir.split(`${path.sep}DnD${path.sep}`)[0];
+      const relative = path.relative(root, file);
+      return relative.startsWith('..') ? file : relative;
+    }
+  }
+  return null;
+}
+
 /**
  * Every character in the pool, keyed by slug.
  *
@@ -100,7 +135,7 @@ export async function readParty(gameDir) {
  * precedence rule: two sources for one character is exactly the drift reading
  * the PDFs avoids.
  */
-export async function readPool(poolDir, { reference } = {}) {
+export async function readPool(poolDir, { reference, vault } = {}) {
   const pool = new Map();
   let files;
   try {
@@ -137,9 +172,13 @@ export async function readPool(poolDir, { reference } = {}) {
       continue;
     }
 
-    const poolSlug = slug(path.basename(file, path.extname(file)));
+    const base = path.basename(file, path.extname(file));
+    const poolSlug = slug(base);
     const entry = adjustments[poolSlug];
     if (entry?.values) spec.adjustments = entry.values;
+
+    const art = await artBeside(poolDir, base, { vault });
+    if (art) spec.image = art;
 
     add(poolSlug, {
       source: sheetPath,
@@ -324,11 +363,11 @@ export function validateParty(party, pool) {
  * Returns the drawn entries with their hook lines attached, ready for
  * compilePregen to fold into the biography and the printed sheet.
  */
-export async function resolveParty(gameDir, poolDir) {
+export async function resolveParty(gameDir, poolDir, { vault } = {}) {
   const party = await readParty(gameDir);
   if (!party) return null;
 
-  const pool = await readPool(poolDir);
+  const pool = await readPool(poolDir, { vault });
   const { drawn, problems } = validateParty(party, pool);
   if (problems.length) {
     throw new Error(`${path.join(gameDir, PARTY_NOTE)}:\n  ${problems.join('\n  ')}`);
