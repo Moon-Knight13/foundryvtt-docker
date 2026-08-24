@@ -26,6 +26,17 @@ import { fileURLToPath } from 'node:url';
 import { COLLECTIONS, loadConfig, resolveSrcRoot } from './build.mjs';
 import { GENERIC_ART_DIR } from './art-resolve.mjs';
 import { PLACEHOLDER_IMG } from './statblock.mjs';
+import { hasIntrinsicSize } from './svg-size.mjs';
+
+/** Is this SVG sized? An unreadable file counts as sized so the caller reports
+ * the read failure once, rather than as a bogus sizing complaint. */
+async function isSized(abs) {
+  try {
+    return hasIntrinsicSize(await readFile(abs, 'utf8'));
+  } catch {
+    return true;
+  }
+}
 
 /** One art slot's honest state. Core icons other than the placeholder are
  * deliberate choices (map pins use icons/svg/book.svg), so they count real. */
@@ -91,12 +102,28 @@ export async function audit(srcRoot, { vault } = {}) {
         if (kind === 'real' || kind === 'generic') {
           if (src.startsWith('DnD/')) {
             if (vault) {
+              const abs = path.join(vault, src.slice('DnD/'.length));
+              let exists = true;
               try {
-                await access(path.join(vault, src.slice('DnD/'.length)));
-                buckets[kind]++;
+                await access(abs);
               } catch {
+                exists = false;
+              }
+              if (!exists) {
                 buckets.unresolvable++;
                 problems.push(`${what} "${src}" does not exist in the vault`);
+              } else {
+                buckets[kind]++;
+                // A resolvable file is not yet a usable one. An SVG with no
+                // intrinsic size renders at roughly half the token it belongs
+                // in — art that is present, correct, and still wrong on the
+                // map, which is the class of failure this gate exists to catch.
+                if (src.toLowerCase().endsWith('.svg') && !(await isSized(abs))) {
+                  problems.push(
+                    `${what} "${src}" has no width/height on its <svg> tag — it will ` +
+                      'render at about half its token (fix: svg-size.mjs --apply)',
+                  );
+                }
               }
             } else {
               buckets[kind]++;

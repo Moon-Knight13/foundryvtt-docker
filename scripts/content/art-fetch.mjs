@@ -21,6 +21,7 @@
 // the map was curated against, never to a moving branch.
 import path from 'node:path';
 import { mkdir, writeFile, access } from 'node:fs/promises';
+import { stampSvgSize } from './svg-size.mjs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
@@ -86,7 +87,11 @@ export async function fetchIcons(map, destDir, { fetchFn = fetch } = {}) {
       const res = await fetchFn(rawUrl(map.source, icon));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       await mkdir(path.dirname(dest), { recursive: true });
-      await writeFile(dest, Buffer.from(await res.arrayBuffer()));
+      // game-icons.net serves its SVGs viewBox-only. Stamp the intrinsic size
+      // on the way in: without it a renderer has to guess one, and Foundry ends
+      // up drawing the icon at about half the token it belongs in.
+      const svg = new TextDecoder().decode(await res.arrayBuffer());
+      await writeFile(dest, stampSvgSize(svg), 'utf8');
       stats.fetched++;
     } catch (err) {
       stats.failed.push(`${icon}: ${err.message}`);

@@ -93,3 +93,21 @@ test('attribution names every artist, the licence, and the pinned source', () =>
   // One line per artist, not one per icon — 108 icon lines would drown the point.
   assert.equal((text.match(/Caro Asercion/g) ?? []).length, 1);
 });
+
+test('fetchIcons stamps intrinsic size on what it downloads', async () => {
+  // game-icons.net serves viewBox-only SVGs. Unstamped, they render at about
+  // half the token they belong in, so the fix has to land at fetch time —
+  // nothing downstream reads the file again to correct it.
+  const dest = await mkdtemp(path.join(tmpdir(), 'art-fetch-size-'));
+  const fetchFn = async () => ({
+    ok: true,
+    arrayBuffer: async () =>
+      new TextEncoder().encode('<svg viewBox="0 0 512 512"><path d="M0 0h1v1H0z"/></svg>').buffer,
+  });
+
+  await fetchIcons(MAP, dest, { fetchFn });
+  const written = await readFile(path.join(dest, 'lorc', 'wolf-head.svg'), 'utf8');
+  assert.match(written, /<svg width="512" height="512"/);
+  assert.ok(written.includes('viewBox="0 0 512 512"'), 'viewBox survives');
+  assert.ok(written.includes('<path d="M0 0h1v1H0z"/>'), 'artwork untouched');
+});
