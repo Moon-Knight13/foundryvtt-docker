@@ -24,7 +24,8 @@ module; set it (`dnd5e` for the games here) to bind packs to a system.
 ## Pipeline
 
 ```text
-<game>/Foundry/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Data/modules/  --import-->  world
+<game>/Foundry/src/*.json --build--> content/dist/<module-id>/ --sync (host)-->
+Data/modules/ --import--> world
 ```
 
 1. **Author** (Claude, in the devcontainer): the `foundry-content` skill —
@@ -112,7 +113,8 @@ beside the notes, omits `srcDir` entirely, and is built with `--src`.
 
 ```bash
 node scripts/content/build.mjs    --config content/<slug>.config.json
-./scripts/content/sync-content.sh --config content/<slug>.config.json   # on the host
+./scripts/content/sync-content.sh --config content/<slug>.config.json # on the
+host
 ```
 
 The demo game ships the vault-hosted shape in miniature:
@@ -619,8 +621,14 @@ The split is the whole design, and it is not a matter of taste:
 
 | What | Comes from |
 | --- | --- |
-| Proficiency bonus, saves, all 18 skill totals, spell slots, save DC and attack bonus, cantrips, prepared spells, features by level | **Derived** from `content/reference/progression-{2014,2024}.json` |
-| Ability scores, skill proficiencies, armour class, speed, species, background | **Authored** in the note |
+| Everything the character is | **Read** from the pool sheet, which is root truth |
+| Proficiency bonus, saves, all 18 skill totals, spell slots, save DC and attack bonus, cantrips, prepared spells, features by level | **Derived** from `content/reference/progression-{2014,2024}.json`, and compared against the sheet |
+| Ability scores, skill proficiencies, armour class, speed, species, background | **Authored** — in D&D Beyond, then read back |
+
+Open5e is a **checker**, not a decider. It derives the arithmetic a sheet prints
+so the two can be compared, and a disagreement fails the build. It is not allowed
+to decide anything, because it is not reliable enough to: see the defects
+recorded in `docs/superpowers/specs/2026-08-24-pregen-pool-from-pdf-design.md`.
 
 The derived half is the half that produces silent, plausible errors when it is
 typed by hand. The authored half is choices — a generator inventing them would
@@ -665,53 +673,102 @@ meaningless for a PC, and the Dataview NPC roster would list it as a monster.
 
 ```bash
 node scripts/content/compile-game.mjs "<vault>/03 Oneshots/<Game>" \
-  --pool "<vault>/01 Systems/dnd5e/Pregens" \
-  --sheets "<vault>/01 Systems/dnd5e/Pregens/templates/wotc-2014.pdf"
+  --pool "<vault>/01 Systems/dnd5e/Pregens"
 ```
 
 produces `Foundry/src/actors/pregen-<slug>.json` and `Pregens/<slug>.pdf`.
-Neither is transcribed from the other, so they cannot drift.
 
-Printing is opt-in because the blank sheets are publisher-issued and live in the
-vault; without `--sheets` the Foundry side still compiles. Field names live in
-`content/reference/sheet-templates.json`, pinned to each blank by checksum —
-adding a form is a registry entry, not a code change. Names are extracted, never
-retyped: several carry whitespace that looks like a typo and is not — `"Race "`,
-`"DEXmod "` and `"Stealth "` each end in a space, and `"SpellSaveDC  2"` has two
-in the middle.
+**The printed sheet is not printed.** It is a copy of the pool sheet — the PDF
+built by hand in D&D Beyond, at the level it is for — with this game's hooks
+written into a box the export left empty. The character already exists on paper,
+complete; reproducing it onto a publisher blank would mean rebuilding 775 fields
+in order to add one, and every field missed would be a gap on a sheet that looks
+finished.
 
-**One form prints both editions.** A template lists the editions it covers, and
-the WotC fillable sheet covers 2014 and 2024: a 2024 character writes the same
-values into the same boxes, verified by printing one. What actually changed
-between editions is the names of *table columns* — `cantrips-known` became
-`cantrips`, `ki-points` became `focus-points` — and those live in the
-progression cache, not on the paper. Two cosmetic gaps worth knowing: the box is
-labelled RACE where 2024 says Species, and there is no weapon-mastery box (that
-column is not printed for either edition).
+So the pool sheet is read-only, always. Nothing in this repo writes one.
 
-The sheet holds **three attack rows**. A fourth is a build error, not a
-truncation: a character arriving at a table missing an attack is worse than a
-build that stops. Spells are not the constraint — 100 lines, 9 slot tiers.
+Each pool note pins its sheet by SHA-256, and the build checks it. The note is a
+generated index of that PDF rather than an authored file, so if either side
+moves, the character the note describes matches neither. That is a stop, not a
+warning — re-read the pool and the note describes the sheet again.
 
-### Seeding the pool from sheets you already have
+Hooks land in the first free box of `Backstory`, `AdditionalNotes1`,
+`AdditionalNotes2`, `AlliesOrganizations`. A box the source sheet already filled
+is never overwritten: that prose was authored by hand, and silently replacing it
+would look like the tool had eaten it.
 
-Pool notes do not have to be typed. `pool-from-sheets.mjs` reads filled
-character sheets and writes the notes:
+> [!note] Why a D&D Beyond export needs handling of its own
+> It carries **no `/AcroForm`** in its catalog at all — its 775 fields exist
+> only as widget annotations, so `pdf-lib` sees none of them until one is
+> synthesized from those widgets. `sheet-fields.mjs` reads them regardless,
+> because it scans objects rather than trusting the form.
+>
+> Never call `form.updateFieldAppearances()`: it regenerates every field on the
+> sheet. Writing one field regenerates only that field, from the `/DA` the
+> publisher already set. That per-field `/DA` (`0 g /Helvetica 7 Tf`) is also
+> why text lands at 7pt here — a form-level `/Helv 0 Tf` means auto-size, and a
+> short string in a tall box then renders enormous.
 
-```bash
-node scripts/content/pool-from-sheets.mjs "<vault>/…/Pregens/"*.pdf \
-  --out "<vault>/01 Systems/dnd5e/Pregens"
+`--sheets` and `--template` are accepted and ignored, so an older invocation
+does not fail on an unknown argument.
+
+### The pool is a folder of PDFs
+
+The pool holds one D&D Beyond export **per character per level**:
+
+```text
+01 Systems/dnd5e/Pregens/
+  dwarf_cleric_lv1.pdf
+  dwarf_cleric_lv4.pdf
+  human_fighter_lv1.pdf
 ```
 
-Everything a note needs is already on a filled sheet — ability scores, which
-skills are ticked, AC, hit points — and the rest derives. Each note is checked
-against the sheet it came from before it is written, and a mismatch is refused
-rather than written: a pool pregen that disagrees with its own source is worse
-than not having it.
+You build them in D&D Beyond and copy them in. A level 1 and a level 4 Dwarf
+Cleric are two independent truths, neither derived from the other. There is no
+levelling code, and that is deliberate: above about level 4 the equipment and
+loadout stop being rules-derivable, and the choices a level 5 character has made
+are not something a class table decides.
+
+`pool-from-sheets.mjs` reads each PDF and writes the note beside it:
+
+```bash
+node scripts/content/pool-from-sheets.mjs "<vault>/01
+Systems/dnd5e/Pregens/"*.pdf \
+  --out "<vault>/01 Systems/dnd5e/Pregens" --edition 2024
+```
+
+Each note is derived and checked against the sheet it came from before it is
+written, and a mismatch is refused: a pool pregen that disagrees with its own
+source is worse than not having it. The note filename carries the level, so
+nothing collides.
 
 Two things are deliberately not carried across: the **player name**, because a
 pool pregen is handed to a stranger and belongs to nobody; and anything
 **game-specific**, because a pool pregen is a generic chassis.
+
+#### When the sheet and the tables disagree
+
+The sheet is right. Where a number it prints cannot be derived from the class
+tables, the difference is a feat, a species trait, or a feature the SRD publishes
+only as prose. Those live in `content/reference/pregen-adjustments.json`, named
+and quoted, keyed by pool slug:
+
+```json
+"halfling-rogue-lv1": {
+  "why": "Alert (PHB-2024 200), from the Criminal background's origin feat…",
+  "values": { "initiative": 2 }
+}
+```
+
+Curated rather than inferred. A tool that absorbs any disagreement also
+absorbs a defect in our own data — which is exactly how the 2024 fighter's
+saving throws stayed wrong. Open5e carries the **primary** abilities in
+`saving_throws` for the
+2024 fighter and monk; those are pinned in `SAVE_OVERRIDES` in `pregen-cache.mjs`
+and reported as repairs when the cache is built.
+
+Keyed by level because the bonus can depend on it: Alert grants the proficiency
+bonus, which is +2 at level 1 and +3 at level 5.
 
 ### Drawing a party, and hooking it to the game
 
@@ -734,11 +791,17 @@ hooks:
 
 A game ships the handful it drew, never the whole pool.
 
+A party names **characters, never levels**. `party: [dwarf-cleric]` reads the
+same whether the game runs at 1 or at 5, so raising a game's level does not mean
+editing its party list — the resolver picks the pool entry at the game's declared
+`level:`. Naming a pool entry outright (`dwarf-cleric-lv4`) still works for a
+game that wants one specific sheet.
+
 Hooks fire off **backgrounds**, never off characters — the format is the table
 already in `03 Oneshots/Unravelled Plans/GM Run Sheet.md`. They are additive
-prose appended to the biography and the sheet's backstory box, so **strip every
-hook and the character is still complete and playable**. That is asserted, not
-merely intended.
+prose appended to the biography and written onto the game's copy of the sheet, so
+**strip every hook and the character is still complete and playable**. That is
+asserted, not merely intended.
 
 Four things are build errors rather than warnings, because each would otherwise
 reach a table unnoticed:
@@ -752,10 +815,18 @@ reach a table unnoticed:
 
 ### Levelling
 
-Pregens take the fixed average for hit points, never a roll: rebuilding one has
-to produce the same character. Levelling a party is editing `level:` and
-recompiling — which is what replaces the "level them up alongside the party"
-chore in `02 Campaigns/Dragons of Stormwreck Isle/GM Prep.md`.
+There is none, in code. A game that needs a level the pool does not hold stops
+and says what to go and make:
+
+```text
+dwarf-cleric is in the pool at level 1, but this game runs at level 4.
+Build it at level 4 in D&D Beyond, export the PDF to the pool, and re-read
+the pool with pool-from-sheets.mjs.
+```
+
+A pool gap is not a mistake in the party list; it is work that has not been done
+yet, and the build knows exactly what that work is. Saying so costs nothing and
+saves the author deducing it from "not in the pool".
 
 ## Handout art: showable in Foundry
 
