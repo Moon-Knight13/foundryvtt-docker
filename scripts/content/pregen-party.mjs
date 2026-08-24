@@ -53,6 +53,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { parseFrontmatter, slug } from './handout.mjs';
 import { parseFence } from './pregen.mjs';
 import { fieldMap } from './sheet-fields.mjs';
+import { contentFromSheet } from './sheet-content.mjs';
 import {
   baseSlug,
   editionOfSheet,
@@ -144,6 +145,9 @@ export async function readPool(poolDir, { reference } = {}) {
       source: sheetPath,
       sheet: sheetPath,
       note: null,
+      // Everything the sheet lists beyond the numbers: gear, spells, feats,
+      // proficiencies. Without it a pregen imports as a bare stat block.
+      content: contentFromSheet(bytes),
       spec,
       name: spec?.name ?? null,
       character: baseSlug(poolSlug),

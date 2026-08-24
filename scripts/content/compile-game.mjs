@@ -161,6 +161,7 @@ export async function compileGame(gameDir, opts = {}) {
           note: entry.note,
           sheet: entry.sheet,
           spec: entry.spec,
+          content: entry.content,
           name: entry.name,
           // The hook table is an input too, so editing it rebuilds the
           // character it applies to.
@@ -185,6 +186,7 @@ export async function compileGame(gameDir, opts = {}) {
     note,
     sheet: poolSheetPath,
     spec,
+    content,
     name: label,
     sources,
     slug: name,
@@ -197,7 +199,7 @@ export async function compileGame(gameDir, opts = {}) {
     }
     try {
       const { actor, character, warnings } = spec
-        ? await compileSpec(spec, { reference: opts.reference, hooks, name: label })
+        ? await compileSpec(spec, { reference: opts.reference, hooks, name: label, content })
         : await compilePregen(note, { reference: opts.reference, hooks });
       await mkdir(path.dirname(out), { recursive: true });
       await writeFile(out, `${JSON.stringify(actor, null, 2)}\n`);

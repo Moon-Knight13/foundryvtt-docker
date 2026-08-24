@@ -40,6 +40,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 import { slug } from './handout.mjs';
+import { itemsFromContent, traitsFromContent } from './pregen-items.mjs';
 import { abilityMod } from './statblock.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -332,7 +333,7 @@ export const PLACEHOLDER_IMG = 'icons/svg/mystery-man.svg';
  * `ac.calc: 'flat'` for the same reason: the character owns no armour Item, so
  * `default` would derive 10 + Dex and quietly disagree with the printed AC.
  */
-export function toCharacterActor(character, { img, biographyHtml = '' } = {}) {
+export function toCharacterActor(character, { img, biographyHtml = '', content = null } = {}) {
   const warnings = [];
 
   const abilities = {};
@@ -367,6 +368,16 @@ export function toCharacterActor(character, { img, biographyHtml = '' } = {}) {
       system: { identifier: slug(character.subclass), classIdentifier: character.classSlug },
     });
   }
+
+  // Everything the sheet listed. The class and subclass above come from the
+  // derived character; these come from the paper, and without them a pregen
+  // imports as a stat block with no gear, no spells and no feats.
+  items.push(
+    ...itemsFromContent(content, {
+      species: character.species,
+      background: character.background,
+    }),
+  );
 
   const spells = {};
   if (character.spellcasting) {
@@ -423,7 +434,11 @@ export function toCharacterActor(character, { img, biographyHtml = '' } = {}) {
         biography: { value: biographyHtml },
         xp: { value: 0 },
       },
-      traits: { size: 'med' },
+      // Packed documents skip dnd5e's _preCreate, so nothing here is filled in
+      // later: size, languages and the proficiency lists are written by this
+      // pipeline or they keep the bare schema default forever.
+      traits: { size: 'med', ...traitsFromContent(content) },
+      ...(content?.coins ? { currency: content.coins } : {}),
       ...(Object.keys(skills).length ? { skills } : {}),
       ...(Object.keys(spells).length ? { spells } : {}),
     },
@@ -529,6 +544,7 @@ export async function compileSpec(spec, opts = {}) {
   const { actor, warnings } = toCharacterActor(character, {
     img: spec.image,
     biographyHtml: biographyHtml(character, hooks),
+    content: opts.content ?? spec.content ?? null,
   });
   return { character, actor, warnings, hooks };
 }
