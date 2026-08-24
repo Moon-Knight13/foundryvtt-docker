@@ -165,6 +165,35 @@ test('toActor produces the dnd5e npc shape the build already consumes', () => {
   assert.equal(actor.prototypeToken.actorLink, false);
 });
 
+test('toActor sizes the token from the creature size', () => {
+  // dnd5e derives prototypeToken width/height from `traits.size` in
+  // Actor5e._preCreate, but that hook never runs for a compendium-packed
+  // document — compilePack writes the doc straight to LevelDB. A Large
+  // creature that ships without explicit width/height lands on the map as a
+  // 1x1 token: one 5 ft square instead of four.
+  const { actor } = toActor(LAMIA_NPC, { name: 'Vashti' });
+  assert.equal(actor.system.traits.size, 'lg');
+  assert.equal(actor.prototypeToken.width, 2);
+  assert.equal(actor.prototypeToken.height, 2);
+});
+
+test('toActor gives every dnd5e size its token footprint', () => {
+  const expected = {
+    Tiny: ['tiny', 0.5],
+    Small: ['sm', 1],
+    Medium: ['med', 1],
+    Large: ['lg', 2],
+    Huge: ['huge', 3],
+    Gargantuan: ['grg', 4],
+  };
+  for (const [stated, [key, squares]] of Object.entries(expected)) {
+    const { actor } = toActor({ ...LAMIA_NPC, size: stated }, { name: 'Vashti' });
+    assert.equal(actor.system.traits.size, key, stated);
+    assert.equal(actor.prototypeToken.width, squares, `${stated} width`);
+    assert.equal(actor.prototypeToken.height, squares, `${stated} height`);
+  }
+});
+
 test('toActor derives expertise rather than trusting a flat multiplier', () => {
   const { actor, warnings } = toActor(LAMIA_NPC, { name: 'Vashti' });
   assert.deepEqual(actor.system.skills.dec, { value: 2 }, 'Deception +7 is expertise');
