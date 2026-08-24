@@ -446,3 +446,33 @@ test('a hook cannot inject markup into the sheet', async () => {
     'it survives as text, which is the point',
   );
 });
+
+// --------------------------------------------------------------------------
+// Packed documents skip dnd5e's _preCreate, so a field this pipeline does not
+// write keeps the bare schema default forever. That already cost the NPC path
+// once: Large creatures packed as 1x1 tokens and covered one square instead of
+// four. The pregen path had the same hole.
+// --------------------------------------------------------------------------
+
+test('a token carries the footprint its size implies', async () => {
+  const rules = await progression('2024');
+  const character = derive({ ...SPEC, class: 'rogue', edition: '2024' }, rules);
+
+  const small = toCharacterActor(character, { content: { size: 'Small' } }).actor;
+  assert.equal(small.system.traits.size, 'sm');
+  assert.equal(small.prototypeToken.width, 1);
+  assert.equal(small.prototypeToken.texture.scaleX, 0.8);
+
+  const large = toCharacterActor(character, { content: { size: 'Large' } }).actor;
+  assert.equal(large.prototypeToken.width, 2, 'a Large token covers four squares');
+  assert.equal(large.prototypeToken.height, 2);
+  assert.equal(large.prototypeToken.texture.scaleX, 1);
+});
+
+test('a character with no content read is Medium and one square', async () => {
+  const rules = await progression('2024');
+  const { actor } = toCharacterActor(derive({ ...SPEC, edition: '2024' }, rules), {});
+
+  assert.equal(actor.system.traits.size, 'med');
+  assert.equal(actor.prototypeToken.width, 1);
+});

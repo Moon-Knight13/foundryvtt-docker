@@ -40,7 +40,8 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 import { slug } from './handout.mjs';
-import { itemsFromContent, traitsFromContent } from './pregen-items.mjs';
+import { itemsFromContent, sizeKey, tokenScale, traitsFromContent } from './pregen-items.mjs';
+import { tokenSquares } from './statblock.mjs';
 import { abilityMod } from './statblock.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -335,6 +336,7 @@ export const PLACEHOLDER_IMG = 'icons/svg/mystery-man.svg';
  */
 export function toCharacterActor(character, { img, biographyHtml = '', content = null } = {}) {
   const warnings = [];
+  const size = sizeKey(content?.size);
 
   const abilities = {};
   for (const ability of ABILITIES) {
@@ -416,7 +418,14 @@ export function toCharacterActor(character, { img, biographyHtml = '', content =
       actorLink: true,
       displayName: 30,
       disposition: 1,
-      texture: { src: img ?? PLACEHOLDER_IMG },
+      // Written here for the same reason the NPC path writes it: packed
+      // documents skip dnd5e's _preCreate, so a token whose footprint is not
+      // set keeps the 1x1 default forever. That is invisible in the JSON and
+      // in the build, and shows up on the map as a Small halfling drawn at the
+      // size of a Medium human.
+      width: tokenSquares(size),
+      height: tokenSquares(size),
+      texture: { src: img ?? PLACEHOLDER_IMG, scaleX: tokenScale(size), scaleY: tokenScale(size) },
     },
     system: {
       abilities,
@@ -437,7 +446,7 @@ export function toCharacterActor(character, { img, biographyHtml = '', content =
       // Packed documents skip dnd5e's _preCreate, so nothing here is filled in
       // later: size, languages and the proficiency lists are written by this
       // pipeline or they keep the bare schema default forever.
-      traits: { size: 'med', ...traitsFromContent(content) },
+      traits: { size, ...traitsFromContent(content) },
       ...(content?.coins ? { currency: content.coins } : {}),
       ...(Object.keys(skills).length ? { skills } : {}),
       ...(Object.keys(spells).length ? { spells } : {}),

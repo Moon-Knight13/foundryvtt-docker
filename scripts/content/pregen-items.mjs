@@ -61,6 +61,19 @@ export function sizeKey(word) {
   );
 }
 
+/**
+ * How much of its square a token of this size fills.
+ *
+ * Only Small differs, and only visually: it occupies one square like a Medium
+ * creature but is drawn smaller inside it. Taken from ddb-importer's size
+ * dictionary (MIT), which is the table dnd5e's own importer works from.
+ */
+const TOKEN_SCALES = { sm: 0.8 };
+
+export function tokenScale(size) {
+  return TOKEN_SCALES[size] ?? 1;
+}
+
 /** `2d6+2 Slashing` -> `{ formula: '2d6+2', type: 'slashing' }`. */
 export function parseDamage(printed) {
   const match = /^\s*(\S+)\s+(\w+)\s*$/.exec(String(printed ?? ''));

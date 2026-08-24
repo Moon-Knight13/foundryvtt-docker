@@ -13,6 +13,7 @@ import {
   itemsFromContent,
   parseDamage,
   sizeKey,
+  tokenScale,
   spellItem,
   splitWeaponNotes,
   traitsFromContent,
@@ -185,4 +186,14 @@ test('every pool character produces a materially furnished actor', { skip }, asy
       `${name} produced a nameless or typeless item`,
     );
   }
+});
+
+test('a Small token is drawn smaller inside the one square it occupies', () => {
+  // The footprint and the scale are different facts: a Small creature takes one
+  // square like a Medium one, and is drawn at 80% inside it. Both come from
+  // ddb-importer's size table, which dnd5e's own importer works from.
+  assert.equal(tokenScale('sm'), 0.8);
+  assert.equal(tokenScale('med'), 1);
+  assert.equal(tokenScale('lg'), 1);
+  assert.equal(tokenScale(undefined), 1);
 });
