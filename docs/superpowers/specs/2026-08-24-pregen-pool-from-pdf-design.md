@@ -220,6 +220,55 @@ sheets. Two rules follow, and both are load-bearing:
 - never call `form.updateFieldAppearances()`; let each written field generate its
   own appearance from the `/DA` the publisher already set
 
+## What ddb-importer settled
+
+`MrPrimate/ddb-importer` (MIT, 248 stars, actively pushed) builds the same
+dnd5e character actor from D&D Beyond's JSON API. Its input is nothing like
+ours — a live session and `ddb-proxy`, which is what this subsystem exists to
+avoid — but its **output** is exactly what we are trying to produce, so it is
+the authority on three questions CI cannot answer.
+
+**Token size — a real defect, now fixed.** `src/parser/character/size.ts` writes
+`traits.size`, `prototypeToken.width`, `prototypeToken.height`,
+`texture.scaleX` and `texture.scaleY`. We wrote only the first. The NPC path had
+the same hole and it was fixed in PR #143; the pregen path never was. Its size
+table gives the values:
+
+| Size | `value` | squares | scale |
+| --- | --- | --- | --- |
+| Tiny | `tiny` | 0.5 | 1 |
+| Small | `sm` | 1 | 0.8 |
+| Medium | `med` | 1 | 1 |
+| Large | `lg` | 2 | 1 |
+
+Footprint and scale are different facts: a Small creature occupies a full square
+and is drawn at 80% inside it. The Halfling Rogue is the character this shows on.
+
+**`hp.max` is writable, and ddb-importer deliberately leaves it null.**
+`src/parser/character/hp.ts` sets `max` to a number only when the character has
+an explicit override or rolled HP; otherwise `null`, letting dnd5e derive the
+maximum from the class Item and Constitution.
+
+We write it, and should keep writing it. Their derivation works because their
+class Items carry advancement, so dnd5e knows about a dwarf's extra hit point
+per level. Ours do not, and our number comes off a sheet that already counts it.
+
+**`details.race` is a document field, not a string.** Their code reads
+`actor.system.details.race?.name`, and one compatibility helper reads
+`details.race.name ?? details.race` — so a plain string is tolerated but is the
+legacy shape.
+
+This is the one question their code cannot finish answering for us, and the
+reason is instructive: ddb-importer never assigns `details.race` at all. It
+creates the race Item and lets dnd5e make the link during document creation —
+the `_preCreate` step `compilePack` skips. So the automatic link is not
+available to packed content, and the choice is between a string that renders
+and an Item `_id` that would link properly if the field takes one.
+
+We keep the string. Verifying costs one import and a glance at the sheet's
+Race field: a name means the string is fine, a blank or a hex id means it wants
+the Item's `_id` and `build.mjs`'s `docId()` can supply a stable one.
+
 ## Modules
 
 | Module | Change |
