@@ -810,6 +810,42 @@ built.
 Keyed by level because the bonus can depend on it: Alert grants the proficiency
 bonus, which is +2 at level 1 and +3 at level 5.
 
+### An NPC's attacks are rollable
+
+An NPC used to import carrying no Items at all — its attacks, traits and
+reactions were biography prose, so running one meant reading a paragraph and
+rolling by hand while players waited.
+
+Each entry in `actions:`, `traits:`, `reactions:` and `legendary_actions:`
+becomes an Item. An action whose text reads as an attack becomes an equipped
+`weapon`; everything else becomes a `feat` typed `monster`, carrying the same
+prose it always did. Nothing is dropped — a Multiattack is not rollable and is
+still the first thing a GM reads.
+
+Both editions' phrasing parses:
+
+```text
+Melee Weapon Attack: +5 to hit, reach 5 ft. Hit: 14 (2d10 + 3) slashing damage.
+Melee Attack Roll: +5, reach 5 ft. Hit: 14 (2d10 + 3) Slashing damage.
+```
+
+The statblock's printed bonus is used **as-is** (`attack.flat`), never derived
+from abilities and proficiency — otherwise Foundry would print a different
+number from the card the GM is reading.
+
+> [!warning] A packed attack needs its activity written
+> dnd5e builds an Item's activities in `_onCreate`, and `compilePack` runs no
+> document lifecycle hook. An attack with no activity written by this pipeline
+> is an attack that **cannot be rolled**. The schema is copied from dnd5e's own
+> SRD pack sources (`foundryvtt/dnd5e`, MIT, `packs/_source/actors24`), not
+> inferred.
+
+What is deliberately **not** parsed: rider clauses. "and the target is grappled
+(escape DC 12)", "taking 22 (4d10) poison damage on a failed save" — these stay
+in the description. Guessing a saving-throw activity out of prose would roll
+something subtly different from what the statblock says, which is worse at the
+table than prose a GM reads.
+
 ### The pack arrives foldered
 
 A compendium reaches Foundry as one flat list, which is fine for six NPCs and

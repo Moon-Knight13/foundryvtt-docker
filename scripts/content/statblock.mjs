@@ -21,6 +21,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 import { resolveArt, normalizeArtPath } from './art-resolve.mjs';
+import { itemsFromStatblock } from './statblock-actions.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
@@ -398,7 +399,10 @@ export function toActor(fence, { name, disposition = -1, biographyIntro = '', im
     name,
     type: 'npc',
     img: img ?? PLACEHOLDER_IMG,
-    items: [],
+    // Attacks as rollable weapons, everything else as features carrying the
+    // prose they always did. Without these an NPC imports as a card a GM reads
+    // and rolls by hand.
+    items: itemsFromStatblock(fence),
     prototypeToken: {
       name,
       actorLink: false,
