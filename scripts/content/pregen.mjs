@@ -354,10 +354,22 @@ export function toCharacterActor(character, { img, biographyHtml = '', content =
   // rebinds every proficient skill to Dex: measured in a live world, where the
   // cleric's Insight, Medicine, Perception and Religion all came back
   // `ability: "dex"` while the fourteen skills we did not write kept theirs.
+  // A skill is written when it is proficient OR when something outside the
+  // class tables adds to it. The bonus has to travel as `bonuses.check`: the
+  // actor carries a proficiency MULTIPLIER and dnd5e recomputes the total from
+  // ability and proficiency, so a bonus folded into our derived total is simply
+  // lost. The cleric's Divine Order read +4 Arcana on paper and +1 in Foundry
+  // until this was written.
+  const adjustments = character.adjustments ?? {};
   const skills = {};
   for (const [name, skill] of Object.entries(character.skills)) {
-    if (skill.multiplier > 0)
-      skills[skill.key] = { value: skill.multiplier, ability: skill.ability };
+    const bonus = Number(adjustments[`skill.${name}`]) || 0;
+    if (skill.multiplier === 0 && !bonus) continue;
+    skills[skill.key] = {
+      value: skill.multiplier,
+      ability: skill.ability,
+      ...(bonus ? { bonuses: { check: String(bonus) } } : {}),
+    };
   }
 
   const items = [
@@ -442,6 +454,11 @@ export function toCharacterActor(character, { img, biographyHtml = '', content =
         ac: { calc: 'flat', flat: character.ac ?? 10 },
         hp: { value: character.hitPoints.max, max: character.hitPoints.max },
         movement: { walk: character.speed ?? 30, units: 'ft' },
+        // Alert and its like add to initiative. dnd5e derives initiative from
+        // Dexterity, so the bonus travels as its own field or it is lost.
+        ...(Number(adjustments.initiative)
+          ? { init: { bonus: String(Number(adjustments.initiative)) } }
+          : {}),
         ...(character.spellcasting ? { spellcasting: character.spellcasting.ability } : {}),
       },
       details: {

@@ -536,3 +536,53 @@ test('every written skill names an ability', async () => {
     assert.ok(skill.ability, `${key} has no ability and will be read as Dexterity`);
   }
 });
+
+test('an adjustment reaches the actor as a bonus, not a folded-in total', async () => {
+  // The actor carries a proficiency MULTIPLIER and dnd5e recomputes each skill
+  // from ability and proficiency. A bonus folded into our derived total is
+  // therefore lost on import — the cleric read +4 Arcana on paper and +1 in
+  // Foundry until this travelled as bonuses.check.
+  const rules = await progression('2024');
+  const character = derive(
+    { ...SPEC, edition: '2024', adjustments: { 'skill.arcana': 3, 'skill.religion': 3 } },
+    rules,
+  );
+  const { actor } = toCharacterActor(character, {});
+
+  assert.deepEqual(actor.system.skills.arc, {
+    value: 0,
+    ability: 'int',
+    bonuses: { check: '3' },
+  });
+  assert.equal(actor.system.skills.rel.bonuses.check, '3');
+});
+
+test('a skill with a bonus is written even when it is not proficient', async () => {
+  // Arcana is nobody's proficiency here. Skipping it because the multiplier is
+  // zero is how the bonus went missing.
+  const rules = await progression('2024');
+  const { actor } = toCharacterActor(
+    derive({ ...SPEC, edition: '2024', skills: [], adjustments: { 'skill.arcana': 3 } }, rules),
+    {},
+  );
+
+  assert.ok(actor.system.skills.arc, 'a bonus alone is reason enough to write the skill');
+  assert.equal(actor.system.skills.arc.value, 0);
+});
+
+test('an initiative adjustment travels as its own field', async () => {
+  const rules = await progression('2024');
+  const { actor } = toCharacterActor(
+    derive({ ...SPEC, edition: '2024', adjustments: { initiative: 2 } }, rules),
+    {},
+  );
+
+  assert.deepEqual(actor.system.attributes.init, { bonus: '2' });
+});
+
+test('a character with no adjustments carries no initiative override', async () => {
+  const rules = await progression('2024');
+  const { actor } = toCharacterActor(derive({ ...SPEC, edition: '2024' }, rules), {});
+
+  assert.equal(actor.system.attributes.init, undefined);
+});
