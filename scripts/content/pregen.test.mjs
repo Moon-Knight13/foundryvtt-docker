@@ -379,7 +379,7 @@ test('proficiencies land where dnd5e reads them', async () => {
   const { actor } = toCharacterActor(derive(SPEC, await progression('2014')));
   assert.equal(actor.system.abilities.wis.proficient, 1, 'cleric WIS save');
   assert.equal(actor.system.abilities.str.proficient, 0);
-  assert.deepEqual(actor.system.skills.med, { value: 1 });
+  assert.deepEqual(actor.system.skills.med, { value: 1, ability: 'wis' });
   assert.equal(actor.system.skills.acr, undefined, 'unproficient skills are not written');
 });
 
@@ -509,5 +509,30 @@ test('a path Foundry already resolves is left alone', async () => {
       { progression: await progression('2024') },
     );
     assert.equal(actor.img, src);
+  }
+});
+
+test('a proficient skill carries its ability, or dnd5e rebinds it to Dexterity', async () => {
+  // Packed documents skip _preCreate, so a partial skill entry is filled from
+  // the FIELD default rather than the per-skill one. Writing only `value` came
+  // back from a live world as ability "dex" on every skill we wrote, which
+  // silently computes Religion off Dex instead of Intelligence.
+  const rules = await progression('2024');
+  const { actor } = toCharacterActor(
+    derive({ ...SPEC, edition: '2024', skills: ['Religion', 'Perception'] }, rules),
+    {},
+  );
+
+  assert.equal(actor.system.skills.rel.ability, 'int');
+  assert.equal(actor.system.skills.prc.ability, 'wis');
+  assert.equal(actor.system.skills.rel.value, 1);
+});
+
+test('every written skill names an ability', async () => {
+  const rules = await progression('2024');
+  const { actor } = toCharacterActor(derive({ ...SPEC, edition: '2024' }, rules), {});
+
+  for (const [key, skill] of Object.entries(actor.system.skills ?? {})) {
+    assert.ok(skill.ability, `${key} has no ability and will be read as Dexterity`);
   }
 });

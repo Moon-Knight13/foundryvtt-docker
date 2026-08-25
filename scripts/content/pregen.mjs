@@ -347,9 +347,17 @@ export function toCharacterActor(character, { img, biographyHtml = '', content =
     };
   }
 
+  // The ability is written alongside the multiplier, and it is not optional.
+  // dnd5e's skill schema carries a per-skill default ability, but a packed
+  // document skips _preCreate and the DataModel fills a partial entry from the
+  // FIELD default instead — which is Dexterity. Writing only `value` therefore
+  // rebinds every proficient skill to Dex: measured in a live world, where the
+  // cleric's Insight, Medicine, Perception and Religion all came back
+  // `ability: "dex"` while the fourteen skills we did not write kept theirs.
   const skills = {};
   for (const [name, skill] of Object.entries(character.skills)) {
-    if (skill.multiplier > 0) skills[skill.key] = { value: skill.multiplier };
+    if (skill.multiplier > 0)
+      skills[skill.key] = { value: skill.multiplier, ability: skill.ability };
   }
 
   const items = [

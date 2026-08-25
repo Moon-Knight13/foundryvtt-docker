@@ -355,7 +355,15 @@ export function toActor(fence, { name, disposition = -1, biographyIntro = '', im
       abilityMod(abilities[abilityFor].value),
       pb,
     );
-    skills[key] = flat ? { value, bonuses: { check: String(flat) } } : { value };
+    // `ability` is written, not left to default. dnd5e's skill schema carries a
+    // per-skill default, but a packed document skips _preCreate and the
+    // DataModel fills a partial entry from the FIELD default — which is
+    // Dexterity. Writing only `value` silently rebinds every proficient skill
+    // to Dex: measured in a live world, where an NPC's Deception, Insight,
+    // Investigation, Perception and Persuasion all came back `ability: "dex"`.
+    skills[key] = flat
+      ? { value, ability: abilityFor, bonuses: { check: String(flat) } }
+      : { value, ability: abilityFor };
     if (note) warnings.push(`skill ${label}: ${note}`);
   }
 
