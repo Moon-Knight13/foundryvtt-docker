@@ -114,7 +114,8 @@ $SYSTEM_LINE
   "version": "1.0.0",
   "packLabelPrefix": "$TITLE",
   "compatibility": { "minimum": "12", "verified": "14" },
-  "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+  "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" },
+  "folders": { "actors": ["PCs"] }
 }
 EOF
 
@@ -186,7 +187,8 @@ $SYSTEM_LINE
   "version": "1.0.0",
   "packLabelPrefix": "$TITLE",
   "compatibility": { "minimum": "12", "verified": "14" },
-  "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+  "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" },
+  "folders": { "actors": ["PCs"] }
 }
 EOF
 

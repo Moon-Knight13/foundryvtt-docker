@@ -132,6 +132,9 @@ export async function compileGame(gameDir, opts = {}) {
       if (exact && deltas.length) {
         throw new Error(`exact: true, but ${deltas.length} field(s) diverge from SRD ${base}`);
       }
+      // Foldered so a pack does not arrive as one flat list. NPCs and the
+      // party are different kinds of thing to a GM mid-session.
+      actor.folder = 'NPCs';
       await mkdir(path.dirname(out), { recursive: true });
       await writeFile(out, `${JSON.stringify(actor, null, 2)}\n`);
       report.actors.push({ note, out, skipped: false, warnings, deltas, base });
@@ -203,6 +206,7 @@ export async function compileGame(gameDir, opts = {}) {
       const { actor, character, warnings } = spec
         ? await compileSpec(spec, { reference: opts.reference, hooks, name: label, content })
         : await compilePregen(note, { reference: opts.reference, hooks });
+      actor.folder = 'Pregens';
 
       // Grade the character against the sheet it was read from. Every other
       // number here comes OFF that sheet, so it agrees with itself by

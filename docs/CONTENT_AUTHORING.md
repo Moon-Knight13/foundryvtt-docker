@@ -810,6 +810,30 @@ built.
 Keyed by level because the bonus can depend on it: Alert grants the proficiency
 bonus, which is +2 at level 1 and +3 at level 5.
 
+### The pack arrives foldered
+
+A compendium reaches Foundry as one flat list, which is fine for six NPCs and
+unusable once a game also ships a party. Actors are filed on the way in:
+
+| Folder | Holds |
+| --- | --- |
+| `NPCs` | everything compiled from a `statblock` fence |
+| `Pregens` | the party drawn from the pool |
+| `PCs` | nothing — the table fills it with what players bring |
+
+A document asks for a folder by **name** (`"folder": "Pregens"`) and `build.mjs`
+turns those names into the folder documents Foundry needs, rewriting each doc to
+point at the id. Folders a game wants but nothing fills are declared in its
+module config, which is how `PCs` exists at all:
+
+```json
+"folders": { "actors": ["PCs"] }
+```
+
+`new-game.sh` scaffolds that line. Folder ids are derived from the pack and the
+folder name, so a rebuild puts everything back where it was rather than
+orphaning what a GM had filed by hand.
+
 ### What the actor carries
 
 A pregen imports as a furnished character, not a stat block. dnd5e's own
