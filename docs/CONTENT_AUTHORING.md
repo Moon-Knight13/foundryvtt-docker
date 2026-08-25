@@ -24,7 +24,8 @@ module; set it (`dnd5e` for the games here) to bind packs to a system.
 ## Pipeline
 
 ```text
-<game>/Foundry/src/*.json  --build-->  content/dist/<module-id>/  --sync (host)-->  Data/modules/  --import-->  world
+<game>/Foundry/src/*.json --build--> content/dist/<module-id>/ --sync (host)-->
+Data/modules/ --import--> world
 ```
 
 1. **Author** (Claude, in the devcontainer): the `foundry-content` skill —
@@ -112,7 +113,8 @@ beside the notes, omits `srcDir` entirely, and is built with `--src`.
 
 ```bash
 node scripts/content/build.mjs    --config content/<slug>.config.json
-./scripts/content/sync-content.sh --config content/<slug>.config.json   # on the host
+./scripts/content/sync-content.sh --config content/<slug>.config.json # on the
+host
 ```
 
 The demo game ships the vault-hosted shape in miniature:
@@ -600,6 +602,385 @@ node scripts/content/measure-dnd5eapi.mjs --out /tmp/raster.json
 counts `image` fields across all SRD monsters on `www.dnd5eapi.co`, probes one
 image for redirects, and emits a **disabled** `raster` block to paste into
 `art-map.json` if the numbers justify it.
+
+## Pregens: characters for the table with no D&D Beyond
+
+Every game until now assumed player characters arrive from D&D Beyond through
+ddb-importer. That covers the online table where everybody owns a DDB sheet and
+nothing else — an in-person oneshot where players bring nothing, a player with
+no account, running cold for strangers at a con. It also costs: a live session
+cookie in world settings, twelve **world-scoped** `world.ddb-*` packs that die
+with the world, and a full munch re-run as step 7 of every rebuild.
+
+A pregen has none of that. It is a compendium document, so a rebuild that
+restores the module restores the character.
+
+### What is derived and what is authored
+
+The split is the whole design, and it is not a matter of taste:
+
+| What | Comes from |
+| --- | --- |
+| Everything the character is | **Read** from the pool sheet, which is root truth |
+| Proficiency bonus, saves, all 18 skill totals, spell slots, save DC and attack bonus, cantrips, prepared spells, features by level | **Derived** from `content/reference/progression-{2014,2024}.json`, and compared against the sheet |
+| Ability scores, skill proficiencies, armour class, speed, species, background | **Authored** — in D&D Beyond, then read back |
+
+Open5e is a **checker**, not a decider. It derives the arithmetic a sheet prints
+so the two can be compared, and a disagreement fails the build. It is not allowed
+to decide anything, because it is not reliable enough to: see the defects
+recorded in `docs/superpowers/specs/2026-08-24-pregen-pool-from-pdf-design.md`.
+
+The derived half is the half that produces silent, plausible errors when it is
+typed by hand. The authored half is choices — a generator inventing them would
+be inventing the character.
+
+Species and background are authored because Open5e publishes them as prose
+rather than data: a dwarf's increase is the *sentence* "Your Constitution score
+increases by 2." Parsing numbers back out of English is exactly the guessing
+`pregen-cache.mjs` refuses to do with class tables. State the final scores —
+which is what the sheet prints anyway — and everything else follows.
+
+> [!warning] The SRD is thin here
+> 2014 publishes **one** background (Acolyte). 2024 publishes **four** (Acolyte,
+> Criminal, Sage, Soldier). There is also one subclass per class, and from level
+> 3 the subclass *is* the character, so high-level pregens will be same-y. This
+> bounds pool variety, and it is a fact about the SRD rather than the pipeline.
+
+### The note
+
+```pregen
+name: Elf Wizard
+edition: '2014'
+class: wizard
+level: 1
+species: High Elf
+background: Sage
+abilities: { str: 10, dex: 15, con: 14, int: 16, wis: 12, cha: 8 }
+skills: [Arcana, History, Insight, Investigation, Perception]
+ac: 12
+speed: 30
+```
+
+`expertise:` doubles proficiency for the skills it names, and is refused without
+proficiency in them. `hp:` overrides the derived maximum; `hp_bonus_per_level:`
+covers a racial extra such as a hill dwarf's toughness.
+
+Do **not** put a player character in a ```statblock fence. Fantasy Statblocks
+would render it as a monster card, `verify()` against a published creature is
+meaningless for a PC, and the Dataview NPC roster would list it as a monster.
+
+### Two surfaces, one calculation
+
+```bash
+node scripts/content/compile-game.mjs "<vault>/03 Oneshots/<Game>" \
+  --pool "<vault>/01 Systems/dnd5e/Pregens"
+```
+
+produces `Foundry/src/actors/pregen-<slug>.json` and `Pregens/<slug>.pdf`.
+
+**The printed sheet is not printed.** It is a copy of the pool sheet — the PDF
+built by hand in D&D Beyond, at the level it is for — with this game's hooks
+written into a box the export left empty. The character already exists on paper,
+complete; reproducing it onto a publisher blank would mean rebuilding 775 fields
+in order to add one, and every field missed would be a gap on a sheet that looks
+finished.
+
+So the pool sheet is read-only, always. Nothing in this repo writes one.
+
+Hooks land in the first free box of `Backstory`, `AdditionalNotes1`,
+`AdditionalNotes2`, `AlliesOrganizations`. A box the source sheet already filled
+is never overwritten: that prose was authored by hand, and silently replacing it
+would look like the tool had eaten it.
+
+> [!note] Why a D&D Beyond export needs handling of its own
+> It carries **no `/AcroForm`** in its catalog at all — its 775 fields exist
+> only as widget annotations, so `pdf-lib` sees none of them until one is
+> synthesized from those widgets. `sheet-fields.mjs` reads them regardless,
+> because it scans objects rather than trusting the form.
+>
+> Never call `form.updateFieldAppearances()`: it regenerates every field on the
+> sheet. Writing one field regenerates only that field, from the `/DA` the
+> publisher already set. That per-field `/DA` (`0 g /Helvetica 7 Tf`) is also
+> why text lands at 7pt here — a form-level `/Helv 0 Tf` means auto-size, and a
+> short string in a tall box then renders enormous.
+
+`--sheets` and `--template` are accepted and ignored, so an older invocation
+does not fail on an unknown argument.
+
+### The pool is a folder of PDFs
+
+One D&D Beyond export **per character per level**:
+
+```text
+01 Systems/dnd5e/Pregens/
+  dwarf_cleric_lv1.pdf
+  dwarf_cleric_lv4.pdf
+  dwarf_cleric.webp     <- token art, per CHARACTER not per level
+  human_fighter_lv1.pdf
+  templates/            <- publisher blanks, not characters
+```
+
+Token art sits beside the sheet and is named after the **character**, so it
+survives a level change rather than needing a copy per level. A file named after
+the sheet (`dwarf_cleric_lv4.webp`) wins if one exists, for a character who
+really does look different later. `.webp` is preferred, then `.png`, `.jpg`,
+`.jpeg`.
+
+Without art a pregen wears `icons/svg/mystery-man.svg`, which the strict art
+gate classifies as a placeholder — so `ship-game.sh` stops before build. That is
+the gate working: a blank player token reaches the table as visibly wrong.
+
+You build them in D&D Beyond and copy them in. **That is the whole workflow** —
+there is nothing to generate and no command to remember. A level 1 and a level 4
+Dwarf Cleric are two independent truths, neither derived from the other.
+
+The pipeline reads the PDFs directly. A generated note beside each sheet would be
+a second copy of the same facts, able to fall out of step with the first, and the
+pool lives in the vault where a diff would not catch it. The edition is read off
+the page references the export prints (`PHB-2024`), not configured.
+
+A hand-written `.md` note still counts, for a pool entry with no export behind
+it. A note whose slug collides with a sheet is an error rather than a precedence
+rule: two definitions of one character is the drift that reading the sheets
+avoids.
+
+There is deliberately **no levelling code**. Above about level 4 the equipment
+and loadout stop being rules-derivable, and the choices a level 5 character has
+made are not something a class table decides.
+
+`pool-from-sheets.mjs` remains as a **checker**. It derives each character and
+compares it against what its own sheet prints, refusing anything that disagrees:
+
+```bash
+node scripts/content/pool-from-sheets.mjs "<vault>/01 Systems/dnd5e/Pregens/"*.pdf \
+  --dry-run --edition 2024
+```
+
+Two things are deliberately not carried across from a sheet: the **player name**,
+because a pool pregen is handed to a stranger and belongs to nobody; and anything
+**game-specific**, because a pool pregen is a generic chassis.
+
+#### The sheet is graded at build time
+
+Every drawn pregen is derived from the class tables and compared against what
+its own sheet prints. A disagreement stops the build:
+
+```text
+FAIL .../dwarf_cleric_lv4.pdf: disagrees with its own sheet:
+hitDice derived 4d8, sheet 2d8. Re-export it from D&D Beyond —
+its PDF export lags an edit by 5 to 10 minutes.
+```
+
+This is the only check that can tell you a sheet is wrong. Every other number
+on a pregen is READ from that sheet, so it agrees with itself by construction.
+Hit dice are the level stated a second way — a single-class character has one
+die per level — which is what catches a header claiming one level over content
+describing another.
+
+> [!warning] D&D Beyond's PDF export lags
+> Editing or levelling a character takes **5 to 10 minutes** to reach the PDF
+> export. Export sooner and you get the new level printed over the old
+> features, hit dice and spell slots: one file describing two different
+> characters. Measured across twelve sheets on 2026-08-25.
+>
+> Level the character, wait, then export. The build will tell you if you were
+> too quick.
+
+#### When the sheet and the tables disagree
+
+The sheet is right. Where a number it prints cannot be derived from the class
+tables, the difference is a feat, a species trait, or a feature the SRD publishes
+only as prose. Those live in `content/reference/pregen-adjustments.json`, named
+and quoted, keyed by pool slug:
+
+```json
+"halfling-rogue-lv1": {
+  "why": "Alert (PHB-2024 200), from the Criminal background's origin feat…",
+  "values": { "initiative": 2 }
+}
+```
+
+Curated rather than inferred. A tool that absorbs any disagreement also
+absorbs a defect in our own data — which is exactly how the 2024 fighter's
+saving throws stayed wrong. Open5e carries the **primary** abilities in
+`saving_throws` for the 2024 fighter and monk; those are pinned in
+`SAVE_OVERRIDES` in `pregen-cache.mjs` and reported as repairs when the cache is
+built.
+
+Keyed by level because the bonus can depend on it: Alert grants the proficiency
+bonus, which is +2 at level 1 and +3 at level 5.
+
+### An NPC's attacks are rollable
+
+An NPC used to import carrying no Items at all — its attacks, traits and
+reactions were biography prose, so running one meant reading a paragraph and
+rolling by hand while players waited.
+
+Each entry in `actions:`, `traits:`, `reactions:` and `legendary_actions:`
+becomes an Item. An action whose text reads as an attack becomes an equipped
+`weapon`; everything else becomes a `feat` typed `monster`, carrying the same
+prose it always did. Nothing is dropped — a Multiattack is not rollable and is
+still the first thing a GM reads.
+
+Both editions' phrasing parses:
+
+```text
+Melee Weapon Attack: +5 to hit, reach 5 ft. Hit: 14 (2d10 + 3) slashing damage.
+Melee Attack Roll: +5, reach 5 ft. Hit: 14 (2d10 + 3) Slashing damage.
+```
+
+The statblock's printed bonus is used **as-is** (`attack.flat`), never derived
+from abilities and proficiency — otherwise Foundry would print a different
+number from the card the GM is reading.
+
+> [!warning] A packed attack needs its activity written
+> dnd5e builds an Item's activities in `_onCreate`, and `compilePack` runs no
+> document lifecycle hook. An attack with no activity written by this pipeline
+> is an attack that **cannot be rolled**. The schema is copied from dnd5e's own
+> SRD pack sources (`foundryvtt/dnd5e`, MIT, `packs/_source/actors24`), not
+> inferred.
+
+What is deliberately **not** parsed: rider clauses. "and the target is grappled
+(escape DC 12)", "taking 22 (4d10) poison damage on a failed save" — these stay
+in the description. Guessing a saving-throw activity out of prose would roll
+something subtly different from what the statblock says, which is worse at the
+table than prose a GM reads.
+
+### The pack arrives foldered
+
+A compendium reaches Foundry as one flat list, which is fine for six NPCs and
+unusable once a game also ships a party. Actors are filed on the way in:
+
+| Folder | Holds |
+| --- | --- |
+| `NPCs` | everything compiled from a `statblock` fence |
+| `Pregens` | the party drawn from the pool |
+| `PCs` | nothing — the table fills it with what players bring |
+
+A document asks for a folder by **name** (`"folder": "Pregens"`) and `build.mjs`
+turns those names into the folder documents Foundry needs, rewriting each doc to
+point at the id. Folders a game wants but nothing fills are declared in its
+module config, which is how `PCs` exists at all:
+
+```json
+"folders": { "actors": ["PCs"] }
+```
+
+`new-game.sh` scaffolds that line. Folder ids are derived from the pack and the
+folder name, so a rebuild puts everything back where it was rather than
+orphaning what a GM had filed by hand.
+
+### What the actor carries
+
+A pregen imports as a furnished character, not a stat block. dnd5e's own
+Starter Heroes carry around 47 Items; the pool's Dwarf Cleric carries 45 and the
+Human Fighter 25.
+
+| On the sheet | In Foundry |
+| --- | --- |
+| species, background | a `race` and a `background` Item |
+| class features, species traits, feats | `feat` Items, filed under the type dnd5e sorts the sheet by |
+| attack rows | `weapon` Items, equipped, carrying the 2024 mastery their owner chose |
+| carried equipment | `loot` Items with quantity and weight |
+| spells | `spell` Items at the level of the heading above them, rituals flagged |
+| coins, size, languages, armour/weapon/tool proficiencies | written onto the actor |
+
+Those last ones matter more than they look. **Packed documents skip dnd5e's
+`_preCreate`**, so anything this pipeline does not write keeps the bare schema
+default forever — that is how Large NPCs once packed as 1x1 tokens. A Small
+character is Small because we wrote it, not because dnd5e worked it out.
+
+The Items are **self-contained**, built from the sheet's own text rather than
+referenced into `dnd5e.spells24` and friends. A reference would be richer, but
+`compilePack` writes raw documents into LevelDB and runs no lifecycle hook, so
+nothing hydrates one afterwards; copying the compendium's data in instead would
+mean reading a live Foundry at build time, which CI does not have.
+
+And nothing guesses. A weapon's damage and properties are the ones printed
+beside it. Carried gear is typed `loot` rather than inferred to be armour from
+its name — a pregen carrying a subtly wrong sword is worse than one carrying an
+obviously incomplete one.
+
+### Drawing a party
+
+`new-game.sh` scaffolds a `Pregens.md` for every new game, and `ship-game.sh`
+passes the pool automatically — it defaults to
+`<vault>/01 Systems/dnd5e/Pregens` and can be overridden with `--pool`. A game
+that leaves `party:` empty ships no pregens and is unaffected; a missing pool is
+a note on stderr, not a failure.
+
+The simplest form is a party and nothing else:
+
+```yaml
+---
+type: index
+edition: '2024'
+level: 1
+party: [dwarf-cleric, elf-wizard, goliath-barbarian, halfling-rogue, human-fighter]
+---
+```
+
+With no hooks the sheet a player is handed is **byte for byte the pool sheet** —
+not a copy that happens to match, the same file. Hooks below are optional, and a
+game that wants plain pregens simply omits them.
+
+### Hooks, when a game wants them
+
+A pool pregen is a generic chassis with **no game context at all**, which is what
+makes it reusable and what stops anything travelling between games. A game names
+the ones it wants in its own `Pregens.md`:
+
+```yaml
+---
+type: index
+edition: '2014'
+level: 1
+party: [elf-wizard, dwarf-cleric, halfling-rogue]
+hooks:
+  - background: Sage
+    at: POI 3 — Riddle
+    what: give them a nudge instead of a roll
+---
+```
+
+A game ships the handful it drew, never the whole pool.
+
+A party names **characters, never levels**. `party: [dwarf-cleric]` reads the
+same whether the game runs at 1 or at 5, so raising a game's level does not mean
+editing its party list — the resolver picks the pool entry at the game's declared
+`level:`. Naming a pool entry outright (`dwarf-cleric-lv4`) still works for a
+game that wants one specific sheet.
+
+Hooks fire off **backgrounds**, never off characters — the format is the table
+already in `03 Oneshots/Unravelled Plans/GM Run Sheet.md`. They are additive
+prose appended to the biography and written onto the game's copy of the sheet, so
+**strip every hook and the character is still complete and playable**. That is
+asserted, not merely intended.
+
+Four things are build errors rather than warnings, because each would otherwise
+reach a table unnoticed:
+
+- a pregen drawn at a level the game does not run at,
+- a pregen from the wrong edition,
+- a hook whose background nobody has, which would read as "it just never came up",
+- a hook naming a character. The pool is a closed list of names, so this is an
+  exact check rather than a guess, and it is how #115's party-agnostic rule is
+  enforced rather than remembered.
+
+### Levelling
+
+There is none, in code. A game that needs a level the pool does not hold stops
+and says what to go and make:
+
+```text
+dwarf-cleric is in the pool at level 1, but this game runs at level 4.
+Build it at level 4 in D&D Beyond, export the PDF to the pool, and re-read
+the pool with pool-from-sheets.mjs.
+```
+
+A pool gap is not a mistake in the party list; it is work that has not been done
+yet, and the build knows exactly what that work is. Saying so costs nothing and
+saves the author deducing it from "not in the pool".
 
 ## Handout art: showable in Foundry
 

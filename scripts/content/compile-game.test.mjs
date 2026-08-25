@@ -1,10 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { mkdtemp, mkdir, writeFile, readFile, stat, utimes } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import os, { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { compileGame } from './compile-game.mjs';
 import { CUE_FLAG_SCOPE } from './cue.mjs';
+import { fieldMap } from './sheet-fields.mjs';
+import { annotate } from './sheet-annotate.mjs';
 
 const GOBLIN_NOTE = `---
 type: npc
@@ -204,3 +208,322 @@ test('a game with no Soundtrack.md still gets its cue text', async () => {
   assert.equal(audio.cue, 'as the chanting starts');
   assert.equal(audio.command, null);
 });
+
+const PREGEN_NOTE = `---
+type: pregen
+---
+
+\`\`\`pregen
+name: Elf Wizard
+edition: '2014'
+class: wizard
+level: 1
+species: High Elf
+background: Sage
+abilities: { str: 10, dex: 15, con: 14, int: 16, wis: 12, cha: 8 }
+skills: [Arcana, Investigation]
+ac: 12
+speed: 30
+\`\`\`
+`;
+
+test('a Pregens note compiles to a character actor', async () => {
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(path.join(gameDir, 'Pregens', 'Elf Wizard.md'), PREGEN_NOTE);
+
+  const report = await compileGame(gameDir);
+  assert.deepEqual(report.errors, []);
+  assert.equal(report.pregens.length, 1);
+
+  // The `pregen-` prefix keeps player characters out of the NPC namespace, in
+  // the compendium and in the Dataview roster query that lists NPCs.
+  const out = path.join(gameDir, 'Foundry', 'src', 'actors', 'pregen-elf-wizard.json');
+  const actor = JSON.parse(await readFile(out, 'utf8'));
+  assert.equal(actor.type, 'character');
+  assert.equal(actor.items[0].system.levels, 1);
+  assert.equal(actor.system.abilities.int.proficient, 1, 'wizards are proficient in INT saves');
+});
+
+test('pregens and NPCs compile in the same pass without colliding', async () => {
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(path.join(gameDir, 'Pregens', 'Elf Wizard.md'), PREGEN_NOTE);
+
+  const report = await compileGame(gameDir);
+  assert.equal(report.actors.length, 1, 'the goblin');
+  assert.equal(report.pregens.length, 1, 'the wizard');
+  const npc = JSON.parse(
+    await readFile(path.join(gameDir, 'Foundry', 'src', 'actors', 'gate-goblin.json'), 'utf8'),
+  );
+  assert.equal(npc.type, 'npc');
+});
+
+test('a prose note in Pregens/ is left alone', async () => {
+  // `Pregens.md`-style index notes live alongside the characters; a folder walk
+  // that compiled every file would fail on them.
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(path.join(gameDir, 'Pregens', 'README.md'), '# Pregens\n\nHand these out.\n');
+
+  const report = await compileGame(gameDir);
+  assert.deepEqual(report.errors, []);
+  assert.equal(report.pregens.length, 0);
+});
+
+test('a broken pregen is reported without abandoning the rest', async () => {
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(path.join(gameDir, 'Pregens', 'Elf Wizard.md'), PREGEN_NOTE);
+  await writeFile(
+    path.join(gameDir, 'Pregens', 'Broken.md'),
+    '```pregen\nclass: artificer\nlevel: 3\nabilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 }\n```\n',
+  );
+
+  const report = await compileGame(gameDir);
+  assert.equal(report.errors.length, 1);
+  assert.match(report.errors[0], /Unknown class "artificer"/);
+  assert.equal(report.pregens.length, 1, 'the good one still compiled');
+});
+
+const POOL_SHEET = [
+  process.env.DND_VAULT_PATH,
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'DnD'),
+  path.join(os.homedir(), 'DnD'),
+]
+  .filter(Boolean)
+  .map(v =>
+    path.join(v, '01 Systems', 'dnd5e', 'Pregens', 'human_fighter', 'human_fighter_lv1.pdf'),
+  )
+  .find(p => existsSync(p));
+
+/** A game drawing one real pool character. */
+async function poolFixture({ hooks = true } = {}) {
+  const { gameDir } = await gameFixture();
+  const poolDir = await mkdtemp(path.join(tmpdir(), 'pregen-pool-'));
+
+  // The pool is the PDF and nothing else. No note to generate, none to keep in
+  // step with it.
+  await writeFile(path.join(poolDir, 'human_fighter_lv1.pdf'), await readFile(POOL_SHEET));
+
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(
+    path.join(gameDir, 'Pregens.md'),
+    [
+      '---',
+      'type: index',
+      "edition: '2024'",
+      'level: 1',
+      'party: [human-fighter]',
+      ...(hooks
+        ? [
+            'hooks:',
+            '  - background: Soldier',
+            '    at: the gate',
+            '    what: the Guard Captain knows your regiment',
+          ]
+        : []),
+      '---',
+      '',
+      '# Pregens',
+      '',
+    ].join('\n'),
+  );
+
+  return { gameDir, poolDir };
+}
+
+test(
+  'one pass produces both surfaces, and the paper is the pool sheet plus this game',
+  { skip: POOL_SHEET ? false : 'no pool sheet in the vault' },
+  async () => {
+    // The two-surface claim, end to end: the compendium actor a rebuild
+    // restores, and the paper a player is handed. The paper is NOT reprinted —
+    // it is the sheet built by hand in D&D Beyond, with this game's hooks
+    // written into a box it left empty.
+    const { gameDir, poolDir } = await poolFixture();
+
+    const report = await compileGame(gameDir, { pool: poolDir });
+    assert.deepEqual(report.errors, []);
+    assert.ok(report.pregens[0].sheet, 'a sheet was produced');
+
+    const actor = JSON.parse(await readFile(report.pregens[0].out, 'utf8'));
+    const printed = fieldMap(await readFile(report.pregens[0].sheet));
+    const source = fieldMap(await readFile(path.join(poolDir, 'human_fighter_lv1.pdf')));
+
+    assert.equal(printed.CharacterName, actor.name);
+    assert.equal(printed.AC, String(actor.system.attributes.ac.flat));
+    assert.equal(printed.MaxHP, String(actor.system.attributes.hp.max));
+
+    // Everything the pool sheet said, the game's copy still says.
+    const changed = Object.keys(source).filter(name => source[name] !== printed[name]);
+    assert.deepEqual(changed, ['Backstory'], 'only the hook box was written');
+    assert.match(printed.Backstory, /Guard Captain/);
+  },
+);
+
+test('without a blank, the Foundry side still compiles', async () => {
+  // The blanks are publisher-issued and live in the vault. A checkout without
+  // them must not lose the compendium half.
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(path.join(gameDir, 'Pregens', 'Elf Wizard.md'), PREGEN_NOTE);
+
+  const report = await compileGame(gameDir);
+  assert.deepEqual(report.errors, []);
+  assert.equal(report.pregens[0].sheet, null);
+  assert.ok(existsSync(report.pregens[0].out));
+});
+
+test('a party drawn from the pool arrives with its hooks attached', async () => {
+  // The whole two-stage design in one pass: a generic pool pregen plus the
+  // hooks this game declares, and the game ships only what it drew.
+  const { gameDir } = await gameFixture();
+  const pool = path.join(path.dirname(gameDir), 'pool');
+  await mkdir(pool, { recursive: true });
+  await writeFile(path.join(pool, 'Elf Wizard.md'), PREGEN_NOTE);
+  await writeFile(
+    path.join(pool, 'Spare Fighter.md'),
+    PREGEN_NOTE.replace('Elf Wizard', 'Spare Fighter').replace('class: wizard', 'class: fighter'),
+  );
+  await writeFile(
+    path.join(gameDir, 'Pregens.md'),
+    [
+      '---',
+      'type: index',
+      "edition: '2014'",
+      'level: 1',
+      'party: [elf-wizard]',
+      'hooks:',
+      '  - background: Sage',
+      '    at: the Riddle Door',
+      '    what: give them a nudge instead of a roll',
+      '---',
+      '',
+    ].join('\n'),
+  );
+
+  const report = await compileGame(gameDir, { pool });
+  assert.deepEqual(report.errors, []);
+  assert.equal(report.pregens.length, 1, 'the game ships what it drew, not the pool');
+
+  const actor = JSON.parse(await readFile(report.pregens[0].out, 'utf8'));
+  assert.match(actor.system.details.biography.value, /give them a nudge instead of a roll/);
+  // And the character is complete without it: the hook is appended colour.
+  assert.match(actor.system.details.biography.value, /High Elf — Wizard — level 1/);
+  assert.equal(actor.items[0].system.levels, 1);
+});
+
+test('editing the hook table rebuilds the character it applies to', async () => {
+  // The trap this avoids: hooks live in Pregens.md, not in the pool note, so a
+  // staleness check against the note alone would compile nothing and read as
+  // up to date.
+  const { gameDir } = await gameFixture();
+  const pool = path.join(path.dirname(gameDir), 'pool');
+  await mkdir(pool, { recursive: true });
+  await writeFile(path.join(pool, 'Elf Wizard.md'), PREGEN_NOTE);
+  const partyNote = path.join(gameDir, 'Pregens.md');
+  const front = hooks =>
+    [
+      '---',
+      'type: index',
+      "edition: '2014'",
+      'level: 1',
+      'party: [elf-wizard]',
+      'hooks:',
+      '  - background: Sage',
+      `    what: ${hooks}`,
+      '---',
+      '',
+    ].join('\n');
+
+  await writeFile(partyNote, front('the first hook'));
+  await compileGame(gameDir, { pool });
+
+  await writeFile(partyNote, front('the second hook'));
+  // Stamped forward rather than relying on how fast the test runs: two writes
+  // in the same millisecond would make this pass by luck.
+  const future = new Date(Date.now() + 5_000);
+  await utimes(partyNote, future, future);
+
+  const report = await compileGame(gameDir, { pool });
+  assert.equal(report.pregens[0].skipped, false, 'the edited hook table is an input');
+  const actor = JSON.parse(await readFile(report.pregens[0].out, 'utf8'));
+  assert.match(actor.system.details.biography.value, /the second hook/);
+});
+
+test('an unchanged pregen note is not recompiled', async () => {
+  const { gameDir } = await gameFixture();
+  await mkdir(path.join(gameDir, 'Pregens'), { recursive: true });
+  await writeFile(path.join(gameDir, 'Pregens', 'Elf Wizard.md'), PREGEN_NOTE);
+
+  await compileGame(gameDir);
+  const second = await compileGame(gameDir);
+  assert.equal(second.pregens[0].skipped, true);
+});
+
+test(
+  'a party with no hooks hands out the pool sheet byte for byte',
+  { skip: POOL_SHEET ? false : 'no pool sheet in the vault' },
+  async () => {
+    // Simple pregens: a game draws characters and adds nothing to them. The
+    // sheet a player is handed is then not a copy that happens to match, it is
+    // the same file — which is the strongest form of "we did not touch it".
+    const { gameDir, poolDir } = await poolFixture({ hooks: false });
+
+    const report = await compileGame(gameDir, { pool: poolDir });
+    assert.deepEqual(report.errors, []);
+
+    const handed = await readFile(report.pregens[0].sheet);
+    const pool = await readFile(path.join(poolDir, 'human_fighter_lv1.pdf'));
+    assert.deepEqual(handed, pool);
+  },
+);
+
+test(
+  'a hook-free party still compiles its actor',
+  { skip: POOL_SHEET ? false : 'no pool sheet in the vault' },
+  async () => {
+    const { gameDir, poolDir } = await poolFixture({ hooks: false });
+    const report = await compileGame(gameDir, { pool: poolDir });
+
+    const actor = JSON.parse(await readFile(report.pregens[0].out, 'utf8'));
+    assert.equal(actor.name, 'Human Fighter');
+    assert.ok(actor.items.length > 20, 'the character is still fully furnished');
+  },
+);
+
+test(
+  'a sheet that disagrees with its own class tables stops the build',
+  { skip: POOL_SHEET ? false : 'no pool sheet in the vault' },
+  async () => {
+    // D&D Beyond's PDF export lags a character edit by several minutes and
+    // renders the new level over the old features, so this is the shape of a
+    // real hazard rather than a hypothetical one: page 1 says level 4 while
+    // the hit dice, features and slots are still level 1.
+    const { gameDir, poolDir } = await poolFixture({ hooks: false });
+    const sheet = path.join(poolDir, 'human_fighter_lv1.pdf');
+    await writeFile(sheet, await annotate(await readFile(sheet), { 'CLASS  LEVEL': 'Fighter 4' }));
+
+    await writeFile(
+      path.join(gameDir, 'Pregens.md'),
+      [
+        '---',
+        'type: index',
+        "edition: '2024'",
+        'level: 4',
+        'party: [human-fighter]',
+        '---',
+        '',
+      ].join('\n'),
+    );
+
+    const report = await compileGame(gameDir, { pool: poolDir });
+
+    assert.equal(report.errors.length, 1);
+    assert.match(report.errors[0], /disagrees with its own sheet/);
+    assert.match(report.errors[0], /hitDice derived 4d10, sheet 1d10/);
+    assert.match(report.errors[0], /human_fighter_lv1\.pdf/, 'names the sheet, not "null"');
+    assert.equal(report.pregens.length, 0, 'nothing was written');
+  },
+);

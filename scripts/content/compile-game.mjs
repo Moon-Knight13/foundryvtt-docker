@@ -1,32 +1,52 @@
 #!/usr/bin/env node
 // Compile a whole game's vault notes in one pass: every NPCs/*.md with a
-// ```statblock fence becomes an actor JSON, every Handouts/*.md with image
-// embeds becomes an image journal, and every Scenes/*.md carrying an ambience
-// cue stamps that cue onto its scene. This replaces the most manual step in the
+// ```statblock fence becomes an actor JSON, every Pregens/*.md with a ```pregen
+// fence becomes a player-character actor, every Handouts/*.md with image embeds
+// becomes an image journal, and every Scenes/*.md carrying an ambience cue
+// stamps that cue onto its scene. This replaces the most manual step in the
 // loop — one statblock.mjs / handout.mjs invocation per note.
 //
 // Usage:
 //   node scripts/content/compile-game.mjs "<vault>/03 Oneshots/<Game>" [--force]
-//     --force  recompile everything; default skips outputs newer than their note
+//     --force    recompile everything; default skips outputs newer than their note
+//     --pool     shared pregen pool the game's Pregens.md draws its party from
+//     --pool     shared pregen pool a game's Pregens.md draws from
+//
+// A drawn pregen's printed sheet is a copy of the pool sheet with this game's
+// hooks written onto it. The pool lives in the vault, so a checkout without it
+// still compiles everything else.
 //
 // Only stale notes compile (note mtime > output mtime), so a re-run after
 // editing one NPC touches one file. One broken note is reported and does not
 // abandon the rest — the per-note error surfaces in the summary and the exit
 // code, the same accumulate-then-fail shape as build.mjs.
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { compileNote } from './statblock.mjs';
 import { compileHandout, parseFrontmatter, slug } from './handout.mjs';
 import { readGameAudio, resolveCue, stampCue } from './cue.mjs';
+import { compareToSheet, compilePregen, compileSpec, parseFence } from './pregen.mjs';
+import { annotateSheet } from './sheet-annotate.mjs';
+import { PARTY_NOTE, partyIndexMarkdown, resolveParty } from './pregen-party.mjs';
 
-/** True when `out` is missing or older than `note`. */
-async function stale(note, out) {
+/**
+ * True when `out` is missing or older than any of its inputs.
+ *
+ * Several inputs rather than one because a pregen drawn from the shared pool
+ * has two: the pool note, and the game's own Pregens.md, which is where its
+ * hooks live. Checking only the note would let an edited hook table compile to
+ * nothing and read as up to date.
+ */
+async function stale(inputs, out) {
+  const sources = Array.isArray(inputs) ? inputs : [inputs];
   try {
-    const [n, o] = [await stat(note), await stat(out)];
-    return n.mtimeMs > o.mtimeMs;
+    const o = await stat(out);
+    const times = await Promise.all(sources.map(s => stat(s)));
+    return times.some(t => t.mtimeMs > o.mtimeMs);
   } catch {
-    return true; // No output yet.
+    return true; // No output yet, or an input that is not there to compare.
   }
 }
 
@@ -39,16 +59,54 @@ async function noteFiles(dir) {
 }
 
 /**
- * Compile every stale statblock and handout note under `gameDir`, and stamp
- * every scene note's ambience cue onto the scene it belongs to.
- * Returns { actors, handouts, cues, errors }; entries carry { note, out,
- * skipped, warnings, deltas }. Errors are per-note strings, never thrown, so
- * one bad note cannot hide the state of the others.
+ * Compile every stale statblock, pregen and handout note under `gameDir`, and
+ * stamp every scene note's ambience cue onto the scene it belongs to.
+ * Returns { actors, pregens, handouts, cues, errors }; entries carry { note,
+ * out, skipped, warnings, deltas }. Errors are per-note strings, never thrown,
+ * so one bad note cannot hide the state of the others.
  */
+/**
+ * The pool sheet a note was read from, and a check that it has not moved.
+ *
+ * The note is a generated index of that PDF, so the two have to agree. If
+ * either side changes, the character described by the note matches neither, and
+ * a pregen nobody wrote is worse than no pregen.
+ *
+ * Returns null when the note names no sheet — a game may author its own pregens
+ * rather than draw from the pool, and those have nothing to copy.
+ */
+export async function poolSheetFor(notePath, spec) {
+  if (!spec?.sheet) return null;
+
+  const sheetPath = path.resolve(path.dirname(notePath), spec.sheet);
+  let bytes;
+  try {
+    bytes = await readFile(sheetPath);
+  } catch {
+    throw new Error(
+      `${path.basename(notePath)} was read from ${spec.sheet}, which is not at ${sheetPath}. ` +
+        'Pool sheets are root truth and live in the vault; nothing here can rebuild one.',
+    );
+  }
+
+  if (spec.sheet_sha256) {
+    const actual = createHash('sha256').update(bytes).digest('hex');
+    if (actual !== spec.sheet_sha256) {
+      throw new Error(
+        `${path.basename(notePath)} does not match ${spec.sheet} any more ` +
+          `(pinned ${spec.sheet_sha256.slice(0, 12)}, found ${actual.slice(0, 12)}). ` +
+          'Re-read the pool with pool-from-sheets.mjs so the note describes the sheet again.',
+      );
+    }
+  }
+
+  return { path: sheetPath, bytes };
+}
+
 export async function compileGame(gameDir, opts = {}) {
   // <vault>/<section>/<game> — the vault root anchors handout image paths.
   const vault = opts.vault ?? path.dirname(path.dirname(path.resolve(gameDir)));
-  const report = { actors: [], handouts: [], cues: [], errors: [] };
+  const report = { actors: [], pregens: [], handouts: [], cues: [], errors: [] };
 
   for (const file of await noteFiles(path.join(gameDir, 'NPCs'))) {
     const note = path.join(gameDir, 'NPCs', file);
@@ -74,12 +132,143 @@ export async function compileGame(gameDir, opts = {}) {
       if (exact && deltas.length) {
         throw new Error(`exact: true, but ${deltas.length} field(s) diverge from SRD ${base}`);
       }
+      // Foldered so a pack does not arrive as one flat list. NPCs and the
+      // party are different kinds of thing to a GM mid-session.
+      actor.folder = 'NPCs';
       await mkdir(path.dirname(out), { recursive: true });
       await writeFile(out, `${JSON.stringify(actor, null, 2)}\n`);
       report.actors.push({ note, out, skipped: false, warnings, deltas, base });
     } catch (err) {
       report.errors.push(`${note}: ${err.message}`);
     }
+  }
+
+  // Pregens. A third walk rather than a variant of the NPC one, because a
+  // player character and a monster are different documents: the fence is
+  // different, `verify()` against a published creature is meaningless for a PC,
+  // and the Dataview NPC roster would list pregens as monsters if they shared a
+  // folder. The `pregen-` prefix keeps them apart in the compendium too.
+  //
+  // Two sources, in order. A game may draw a party out of the shared pool by
+  // naming it in Pregens.md, and it may also keep pregens of its own in
+  // Pregens/. The pool is the normal case: a game ships the handful it draws,
+  // never the whole pool.
+  const pregenNotes = [];
+  if (opts.pool) {
+    try {
+      const party = await resolveParty(gameDir, opts.pool, { vault: opts.vault });
+      for (const entry of party?.drawn ?? []) {
+        // The hook table is an input too, so editing it rebuilds the character
+        // it applies to.
+        pregenNotes.push({
+          note: entry.note,
+          sheet: entry.sheet,
+          spec: entry.spec,
+          content: entry.content,
+          printed: entry.printed,
+          name: entry.name,
+          // The hook table is an input too, so editing it rebuilds the
+          // character it applies to.
+          sources: [entry.source, path.join(gameDir, PARTY_NOTE)],
+          slug: entry.slug,
+          hooks: entry.hooks,
+        });
+      }
+      if (party) report.party = party;
+    } catch (err) {
+      report.errors.push(err.message);
+    }
+  }
+  for (const file of await noteFiles(path.join(gameDir, 'Pregens'))) {
+    const note = path.join(gameDir, 'Pregens', file);
+    const markdown = await readFile(note, 'utf8');
+    if (!/```pregen/.test(markdown)) continue; // An index or prose note.
+    pregenNotes.push({ note, slug: slug(path.basename(file, '.md')), hooks: [] });
+  }
+
+  for (const {
+    note,
+    sheet: poolSheetPath,
+    spec,
+    content,
+    printed,
+    name: label,
+    sources,
+    slug: name,
+    hooks,
+  } of pregenNotes) {
+    const out = path.join(gameDir, 'Foundry', 'src', 'actors', `pregen-${name}.json`);
+    if (!opts.force && !(await stale(sources ?? note, out))) {
+      report.pregens.push({ note, out, skipped: true, warnings: [] });
+      continue;
+    }
+    try {
+      const { actor, character, warnings } = spec
+        ? await compileSpec(spec, { reference: opts.reference, hooks, name: label, content })
+        : await compilePregen(note, { reference: opts.reference, hooks });
+      actor.folder = 'Pregens';
+
+      // Grade the character against the sheet it was read from. Every other
+      // number here comes OFF that sheet, so it agrees with itself by
+      // construction; this is the one check that can tell you the sheet is
+      // wrong. D&D Beyond's PDF export lags a character edit by several
+      // minutes and renders the new level over the old features, so a sheet
+      // that disagrees with its own class tables is a live hazard rather than
+      // a hypothetical one.
+      const deltas = printed ? compareToSheet(character, printed) : [];
+      if (deltas.length) {
+        throw new Error(
+          `disagrees with its own sheet: ` +
+            deltas.map(d => `${d.field} derived ${d.derived}, sheet ${d.sheet}`).join('; ') +
+            `. Re-export it from D&D Beyond — its PDF export lags an edit by 5 to 10 minutes.`,
+        );
+      }
+      await mkdir(path.dirname(out), { recursive: true });
+      await writeFile(out, `${JSON.stringify(actor, null, 2)}\n`);
+
+      // The printable half. The pool sheet IS the printable character — it was
+      // built by hand in D&D Beyond at the level it is for — so a game takes a
+      // copy and writes its own hooks onto it. Nothing is regenerated: printing
+      // the character afresh would mean reproducing 775 fields in order to add
+      // one, and every field missed would be a gap on a sheet that looks
+      // finished.
+      //
+      // Skipped silently when the pool note names no sheet, so a game whose
+      // pregens are authored rather than drawn still compiles.
+      let sheet = null;
+      const poolSheet = poolSheetPath
+        ? { bytes: await readFile(poolSheetPath) }
+        : await poolSheetFor(note, parseFence(await readFile(note, 'utf8')));
+      if (poolSheet) {
+        const { bytes } = await annotateSheet(poolSheet.bytes, hooks, {
+          game: path.basename(gameDir),
+        });
+        sheet = path.join(gameDir, 'Pregens', `${name}.pdf`);
+        await mkdir(path.dirname(sheet), { recursive: true });
+        await writeFile(sheet, bytes);
+      }
+
+      report.pregens.push({ note, out, sheet, skipped: false, warnings, character, hooks });
+    } catch (err) {
+      // Label with whatever this pregen actually came from: a note on disk, or
+      // the sheet it was read out of. `note` is null for a pool entry, and
+      // "FAIL null" tells the author nothing about which character broke.
+      report.errors.push(`${note ?? poolSheetPath ?? name}: ${err.message}`);
+    }
+  }
+
+  // A roster of what was actually built, in the format Dragons of Stormwreck
+  // Isle keeps by hand. Written beside the sheets rather than into the game's
+  // own Pregens.md, which is an authored file holding the party declaration —
+  // generating over the top of it would eat the hooks it declares.
+  if (report.party?.drawn?.length) {
+    const index = path.join(gameDir, 'Pregens', 'index.md');
+    await mkdir(path.dirname(index), { recursive: true });
+    await writeFile(
+      index,
+      partyIndexMarkdown(report.party.drawn, { game: path.basename(gameDir) }),
+    );
+    report.partyIndex = index;
   }
 
   for (const file of await noteFiles(path.join(gameDir, 'Handouts'))) {
@@ -159,6 +348,12 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--force') opts.force = true;
     else if (argv[i] === '--vault') opts.vault = argv[++i];
+    // Accepted and ignored: a pregen's sheet is now a copy of its pool sheet
+    // rather than a fresh print onto a publisher blank. Kept so an existing
+    // invocation does not fail on an unknown argument.
+    else if (argv[i] === '--sheets') argv[++i];
+    else if (argv[i] === '--pool') opts.pool = argv[++i];
+    else if (argv[i] === '--template') argv[++i];
     else if (argv[i].startsWith('--')) throw new Error(`Unknown argument: ${argv[i]}`);
     else rest.push(argv[i]);
   }
@@ -178,6 +373,12 @@ async function main() {
     for (const d of a.deltas) {
       console.warn(`  delta vs SRD ${a.base}: ${d.field} authored ${d.authored}, SRD ${d.srd}`);
     }
+  }
+  for (const p of report.pregens) {
+    const who = p.character ? ` (${p.character.className} ${p.character.level})` : '';
+    console.log(`${p.skipped ? 'fresh ' : 'pregen'} ${path.relative(opts.gameDir, p.out)}${who}`);
+    if (p.sheet) console.log(`        ${path.relative(opts.gameDir, p.sheet)}`);
+    for (const w of p.warnings) console.warn(`  warning: ${w}`);
   }
   for (const h of report.handouts) {
     console.log(`${h.skipped ? 'fresh ' : 'journal'} ${path.relative(opts.gameDir, h.out)}`);

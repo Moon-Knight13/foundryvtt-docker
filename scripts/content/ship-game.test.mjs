@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -41,4 +41,19 @@ test('ship-game.sh demands exactly one module config', async () => {
 
 test('ship-game.sh rejects an unknown flag', async () => {
   assert.throws(() => run(['--frobnicate']), stderrMatches(/Unknown argument/));
+});
+
+test('ship-game passes the pool to compile-game when one exists', async () => {
+  // Without this a game's party silently never compiles, which looks exactly
+  // like the game having no pregens.
+  const script = await readFile(new URL('./ship-game.sh', import.meta.url), 'utf8');
+
+  assert.match(script, /--pool/, 'the flag exists');
+  assert.match(script, /POOL_ARGS=\(--pool "\$POOL"\)/);
+  assert.match(script, /01 Systems\/dnd5e\/Pregens/, 'defaults to the shared pool');
+});
+
+test('a missing pool is a note, not a failure', async () => {
+  const script = await readFile(new URL('./ship-game.sh', import.meta.url), 'utf8');
+  assert.match(script, /shipping without one/);
 });
