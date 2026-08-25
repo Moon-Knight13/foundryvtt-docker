@@ -81,13 +81,23 @@ test('a fighter carries its armour, bow and lantern', { skip }, async () => {
 });
 
 test('a weapon carries the mastery property its owner chose', { skip }, async () => {
+  // Asserts SHAPE, not the character's choices. The pool is rebuilt in D&D
+  // Beyond whenever its owner wants; a test that pins an attack bonus fails on
+  // a legitimate edit and says nothing about the reader.
   const { weapons } = contentFromSheet(await sheet('human_fighter_lv1'));
   const greatsword = weapons.find(w => w.name === 'Greatsword');
 
-  assert.equal(greatsword.attackBonus, '+4');
-  assert.equal(greatsword.damage, '2d6+2 Slashing');
-  assert.ok(greatsword.properties.includes('Graze'), 'the 2024 mastery choice is here or nowhere');
+  assert.ok(greatsword, 'the fighter carries a greatsword');
+  assert.match(greatsword.attackBonus, /^[+-]\d+$/);
+  assert.match(greatsword.damage, /^\d+d\d+([+-]\d+)? \w+$/);
+  assert.ok(
+    greatsword.properties.some(p => MASTERIES.has(p.toLowerCase())),
+    'the 2024 mastery choice is on this row or nowhere',
+  );
 });
+
+/** The eight 2024 mastery properties. A weapon row carries at most one. */
+const MASTERIES = new Set(['cleave', 'graze', 'nick', 'push', 'sap', 'slow', 'topple', 'vex']);
 
 test('the first attack row reads, despite carrying no row number', { skip }, async () => {
   // `Wpn Name`, then `Wpn Name 2`. Retyping either is how a row goes missing.
@@ -97,11 +107,24 @@ test('the first attack row reads, despite carrying no row number', { skip }, asy
 });
 
 test('spells land at the level of the heading above them', { skip }, async () => {
+  // Which spells a cleric prepares is its owner's business and changes on
+  // every rebuild. What must hold is that every spell lands under a heading,
+  // that cantrips are level 0, and that nothing is left level-less.
   const { spells } = contentFromSheet(await sheet('dwarf_cleric_lv1'));
-  const cantrips = spells.filter(s => s.level === 0).map(s => s.name);
 
-  assert.deepEqual(cantrips, ['Light', 'Sacred Flame', 'Thaumaturgy', 'Toll the Dead']);
-  assert.equal(spells.filter(s => s.level === 1).length, 15);
+  assert.ok(spells.length > 0, 'a cleric has spells');
+  assert.ok(
+    spells.every(s => Number.isInteger(s.level)),
+    'a spell with no heading above it would be level null',
+  );
+  assert.ok(
+    spells.some(s => s.level === 0),
+    'cantrips are level 0',
+  );
+  assert.ok(
+    spells.some(s => s.level >= 1),
+    'and levelled spells are not',
+  );
 });
 
 test('a ritual is flagged, and its name does not keep the marker', { skip }, async () => {

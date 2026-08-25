@@ -148,14 +148,23 @@ test('a fighter arrives carrying what its sheet lists', { skip }, async () => {
 });
 
 test('a cleric arrives with its spells at the right levels', { skip }, async () => {
+  // Counts and names belong to whoever built the character. What this asserts
+  // is that every spell on the sheet became an Item at the level it was
+  // printed under, which is the part the pipeline is responsible for.
   const content = contentFromSheet(await sheet('dwarf_cleric_lv1'));
   const items = itemsFromContent(content, { species: 'Dwarf', background: 'Acolyte' });
   const spells = items.filter(i => i.type === 'spell');
 
-  assert.equal(spells.length, 19);
-  assert.equal(spells.filter(s => s.system.level === 0).length, 4);
-  assert.equal(spells.find(s => s.name === 'Sacred Flame').system.level, 0);
-  assert.equal(spells.find(s => s.name === 'Bless').system.level, 1);
+  assert.equal(spells.length, content.spells.length, 'every spell became an Item');
+  for (const spell of content.spells) {
+    const item = spells.find(s => s.name === spell.name);
+    assert.ok(item, `${spell.name} is missing`);
+    assert.equal(item.system.level, spell.level, `${spell.name} landed at the wrong level`);
+  }
+  assert.ok(
+    spells.some(s => s.system.level === 0),
+    'cantrips came through as level 0',
+  );
 });
 
 test('a small character is small, since nothing will derive it later', { skip }, async () => {
