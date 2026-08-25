@@ -361,9 +361,12 @@ test('a sheet with no art beside it gets none, rather than a wrong guess', async
 });
 
 test('the pool carries its art through to the spec', { skip: poolSkip }, async () => {
-  const pool = await readPool(POOL_DIR);
+  // The vault root is passed explicitly, as compile-game.mjs passes it. Without
+  // it artBeside infers the root by looking for a path segment named DnD, which
+  // holds for the real vault and not for a fixture.
+  const pool = await readPool(POOL_DIR, { vault: path.resolve(POOL_DIR, '..', '..', '..') });
   const cleric = pool.get('dwarf-cleric-lv1');
 
   assert.match(cleric.spec.image, /dwarf_cleric\/dwarf_cleric\.webp$/);
-  assert.ok(cleric.spec.image.startsWith('DnD/'), 'Foundry sees the vault under DnD/');
+  assert.ok(!path.isAbsolute(cleric.spec.image), 'the path is vault-relative');
 });
