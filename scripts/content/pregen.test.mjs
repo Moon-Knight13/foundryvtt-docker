@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { fieldMap } from './sheet-fields.mjs';
 import {
   biographyHtml,
+  compileSpec,
   classProgress,
   compareToSheet,
   derive,
@@ -475,4 +476,38 @@ test('a character with no content read is Medium and one square', async () => {
 
   assert.equal(actor.system.traits.size, 'med');
   assert.equal(actor.prototypeToken.width, 1);
+});
+
+test("a pregen's art is Foundry-relative, not vault-relative", async () => {
+  // The vault is mounted at Data/DnD, so an unprefixed path resolves to
+  // nothing and the sheet and token both render blank. This only showed up on
+  // the host: in a checkout whose vault sits at ~/DnD the fallback happened to
+  // add the prefix, so the bug was invisible until --vault was passed.
+  const rules = await progression('2024');
+  const character = derive({ ...SPEC, edition: '2024' }, rules);
+
+  const { actor } = toCharacterActor(character, {
+    img: '01 Systems/dnd5e/Pregens/dwarf_cleric/dwarf_cleric.webp',
+  });
+  assert.equal(actor.img, '01 Systems/dnd5e/Pregens/dwarf_cleric/dwarf_cleric.webp');
+});
+
+test('compileSpec prefixes a vault-relative image', async () => {
+  const { actor } = await compileSpec(
+    { ...SPEC, edition: '2024', image: '01 Systems/dnd5e/Pregens/x/x.webp' },
+    { progression: await progression('2024') },
+  );
+
+  assert.equal(actor.img, 'DnD/01 Systems/dnd5e/Pregens/x/x.webp');
+  assert.equal(actor.prototypeToken.texture.src, 'DnD/01 Systems/dnd5e/Pregens/x/x.webp');
+});
+
+test('a path Foundry already resolves is left alone', async () => {
+  for (const src of ['DnD/a/b.webp', 'icons/svg/mystery-man.svg', 'systems/dnd5e/x.webp']) {
+    const { actor } = await compileSpec(
+      { ...SPEC, edition: '2024', image: src },
+      { progression: await progression('2024') },
+    );
+    assert.equal(actor.img, src);
+  }
 });

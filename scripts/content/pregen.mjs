@@ -41,6 +41,7 @@ import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 import { slug } from './handout.mjs';
 import { itemsFromContent, sizeKey, tokenScale, traitsFromContent } from './pregen-items.mjs';
+import { normalizeArtPath } from './art-resolve.mjs';
 import { tokenSquares } from './statblock.mjs';
 import { abilityMod } from './statblock.mjs';
 
@@ -557,7 +558,10 @@ export async function compileSpec(spec, opts = {}) {
   const character = derive(named, progression);
   const hooks = Array.isArray(opts.hooks) ? opts.hooks : [];
   const { actor, warnings } = toCharacterActor(character, {
-    img: spec.image,
+    // Vault-relative on the way in, Foundry Data-relative on the way out — the
+    // vault is mounted at Data/DnD, so an unprefixed path resolves to nothing
+    // and the token renders blank. Same helper the NPC path uses.
+    img: normalizeArtPath(spec.image),
     biographyHtml: biographyHtml(character, hooks),
     content: opts.content ?? spec.content ?? null,
   });
