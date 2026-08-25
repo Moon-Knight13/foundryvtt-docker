@@ -314,7 +314,18 @@ export async function main(argv = process.argv.slice(2)) {
   let failed = 0;
   for (const sheet of opts.sheets) {
     const bytes = await readFile(sheet);
-    const { spec, printed } = specFromSheet(bytes, { edition: opts.edition });
+
+    let spec;
+    let printed;
+    try {
+      ({ spec, printed } = specFromSheet(bytes, { edition: opts.edition }));
+    } catch (err) {
+      // A publisher blank, or a PDF that is not a character sheet. The pool
+      // folder holds both, and checking the pool with a glob should report
+      // that rather than stopping on it.
+      console.log(`skip ${path.basename(sheet)} — not a character sheet (${err.message})`);
+      continue;
+    }
     // Curated, named, and keyed by the slug this note will be written under.
     const entry = adjustments[slug(noteName(spec).replace(/\.md$/, ''))];
     if (entry?.values) spec.adjustments = entry.values;

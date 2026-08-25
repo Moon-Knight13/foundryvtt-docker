@@ -69,6 +69,12 @@
       "values": {
         "initiative": 2
       }
+    },
+    "human-fighter-lv4": {
+      "why": "Alert (PHB-2024 200), taken as the level 4 feat instead of an ability increase: 'Initiative Proficiency. When you roll Initiative, add your Proficiency Bonus to the roll.' Levels 1 to 3 have no such bonus; proficiency is +2 at level 4 and becomes +3 at level 5.",
+      "values": {
+        "initiative": 2
+      }
     }
   }
 }
