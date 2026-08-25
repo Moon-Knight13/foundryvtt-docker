@@ -19,28 +19,28 @@
   ],
   "adjustments": {
     "dwarf-cleric-lv1": {
-      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'You know one extra cantrip from the Cleric spell list. You also have a +2 bonus to your Arcana and Religion checks.' The bonus equals the Wisdom modifier, minimum +1; this cleric has Wisdom 15.",
+      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. This cleric has Wisdom 16 at every level from 1 to 4, so the bonus is +3 throughout.",
       "values": {
-        "skill.arcana": 2,
-        "skill.religion": 2
+        "skill.arcana": 3,
+        "skill.religion": 3
       }
     },
     "dwarf-cleric-lv2": {
-      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. Wisdom is 16 from level 2, so the bonus is +3 rather than the +2 it is at level 1.",
+      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. This cleric has Wisdom 16 at every level from 1 to 4, so the bonus is +3 throughout.",
       "values": {
         "skill.arcana": 3,
         "skill.religion": 3
       }
     },
     "dwarf-cleric-lv3": {
-      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. Wisdom is 16 from level 2, so the bonus is +3 rather than the +2 it is at level 1.",
+      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. This cleric has Wisdom 16 at every level from 1 to 4, so the bonus is +3 throughout.",
       "values": {
         "skill.arcana": 3,
         "skill.religion": 3
       }
     },
     "dwarf-cleric-lv4": {
-      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. Wisdom is 16 from level 2, so the bonus is +3 rather than the +2 it is at level 1.",
+      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. This cleric has Wisdom 16 at every level from 1 to 4, so the bonus is +3 throughout.",
       "values": {
         "skill.arcana": 3,
         "skill.religion": 3
