@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { compileGame } from './compile-game.mjs';
 import { CUE_FLAG_SCOPE } from './cue.mjs';
 import { fieldMap } from './sheet-fields.mjs';
+import { annotate } from './sheet-annotate.mjs';
 
 const GOBLIN_NOTE = `---
 type: npc
@@ -489,5 +490,40 @@ test(
     const actor = JSON.parse(await readFile(report.pregens[0].out, 'utf8'));
     assert.equal(actor.name, 'Human Fighter');
     assert.ok(actor.items.length > 20, 'the character is still fully furnished');
+  },
+);
+
+test(
+  'a sheet that disagrees with its own class tables stops the build',
+  { skip: POOL_SHEET ? false : 'no pool sheet in the vault' },
+  async () => {
+    // D&D Beyond's PDF export lags a character edit by several minutes and
+    // renders the new level over the old features, so this is the shape of a
+    // real hazard rather than a hypothetical one: page 1 says level 4 while
+    // the hit dice, features and slots are still level 1.
+    const { gameDir, poolDir } = await poolFixture({ hooks: false });
+    const sheet = path.join(poolDir, 'human_fighter_lv1.pdf');
+    await writeFile(sheet, await annotate(await readFile(sheet), { 'CLASS  LEVEL': 'Fighter 4' }));
+
+    await writeFile(
+      path.join(gameDir, 'Pregens.md'),
+      [
+        '---',
+        'type: index',
+        "edition: '2024'",
+        'level: 4',
+        'party: [human-fighter]',
+        '---',
+        '',
+      ].join('\n'),
+    );
+
+    const report = await compileGame(gameDir, { pool: poolDir });
+
+    assert.equal(report.errors.length, 1);
+    assert.match(report.errors[0], /disagrees with its own sheet/);
+    assert.match(report.errors[0], /hitDice derived 4d10, sheet 1d10/);
+    assert.match(report.errors[0], /human_fighter_lv1\.pdf/, 'names the sheet, not "null"');
+    assert.equal(report.pregens.length, 0, 'nothing was written');
   },
 );

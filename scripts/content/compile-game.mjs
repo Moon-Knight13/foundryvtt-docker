@@ -27,7 +27,7 @@ import { fileURLToPath } from 'node:url';
 import { compileNote } from './statblock.mjs';
 import { compileHandout, parseFrontmatter, slug } from './handout.mjs';
 import { readGameAudio, resolveCue, stampCue } from './cue.mjs';
-import { compilePregen, compileSpec, parseFence } from './pregen.mjs';
+import { compareToSheet, compilePregen, compileSpec, parseFence } from './pregen.mjs';
 import { annotateSheet } from './sheet-annotate.mjs';
 import { PARTY_NOTE, partyIndexMarkdown, resolveParty } from './pregen-party.mjs';
 
@@ -162,6 +162,7 @@ export async function compileGame(gameDir, opts = {}) {
           sheet: entry.sheet,
           spec: entry.spec,
           content: entry.content,
+          printed: entry.printed,
           name: entry.name,
           // The hook table is an input too, so editing it rebuilds the
           // character it applies to.
@@ -187,6 +188,7 @@ export async function compileGame(gameDir, opts = {}) {
     sheet: poolSheetPath,
     spec,
     content,
+    printed,
     name: label,
     sources,
     slug: name,
@@ -201,6 +203,22 @@ export async function compileGame(gameDir, opts = {}) {
       const { actor, character, warnings } = spec
         ? await compileSpec(spec, { reference: opts.reference, hooks, name: label, content })
         : await compilePregen(note, { reference: opts.reference, hooks });
+
+      // Grade the character against the sheet it was read from. Every other
+      // number here comes OFF that sheet, so it agrees with itself by
+      // construction; this is the one check that can tell you the sheet is
+      // wrong. D&D Beyond's PDF export lags a character edit by several
+      // minutes and renders the new level over the old features, so a sheet
+      // that disagrees with its own class tables is a live hazard rather than
+      // a hypothetical one.
+      const deltas = printed ? compareToSheet(character, printed) : [];
+      if (deltas.length) {
+        throw new Error(
+          `disagrees with its own sheet: ` +
+            deltas.map(d => `${d.field} derived ${d.derived}, sheet ${d.sheet}`).join('; ') +
+            `. Re-export it from D&D Beyond — its PDF export lags an edit by 5 to 10 minutes.`,
+        );
+      }
       await mkdir(path.dirname(out), { recursive: true });
       await writeFile(out, `${JSON.stringify(actor, null, 2)}\n`);
 
@@ -228,7 +246,10 @@ export async function compileGame(gameDir, opts = {}) {
 
       report.pregens.push({ note, out, sheet, skipped: false, warnings, character, hooks });
     } catch (err) {
-      report.errors.push(`${note}: ${err.message}`);
+      // Label with whatever this pregen actually came from: a note on disk, or
+      // the sheet it was read out of. `note` is null for a pool entry, and
+      // "FAIL null" tells the author nothing about which character broke.
+      report.errors.push(`${note ?? poolSheetPath ?? name}: ${err.message}`);
     }
   }
 

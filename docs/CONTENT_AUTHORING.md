@@ -760,6 +760,32 @@ Two things are deliberately not carried across from a sheet: the **player name**
 because a pool pregen is handed to a stranger and belongs to nobody; and anything
 **game-specific**, because a pool pregen is a generic chassis.
 
+#### The sheet is graded at build time
+
+Every drawn pregen is derived from the class tables and compared against what
+its own sheet prints. A disagreement stops the build:
+
+```text
+FAIL .../dwarf_cleric_lv4.pdf: disagrees with its own sheet:
+hitDice derived 4d8, sheet 2d8. Re-export it from D&D Beyond —
+its PDF export lags an edit by 5 to 10 minutes.
+```
+
+This is the only check that can tell you a sheet is wrong. Every other number
+on a pregen is READ from that sheet, so it agrees with itself by construction.
+Hit dice are the level stated a second way — a single-class character has one
+die per level — which is what catches a header claiming one level over content
+describing another.
+
+> [!warning] D&D Beyond's PDF export lags
+> Editing or levelling a character takes **5 to 10 minutes** to reach the PDF
+> export. Export sooner and you get the new level printed over the old
+> features, hit dice and spell slots: one file describing two different
+> characters. Measured across twelve sheets on 2026-08-25.
+>
+> Level the character, wait, then export. The build will tell you if you were
+> too quick.
+
 #### When the sheet and the tables disagree
 
 The sheet is right. Where a number it prints cannot be derived from the class

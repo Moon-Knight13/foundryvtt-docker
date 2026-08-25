@@ -216,8 +216,11 @@ export async function readPool(poolDir, { reference, vault } = {}) {
     const bytes = await readFile(sheetPath);
 
     let spec;
+    let printed;
     try {
-      ({ spec } = specFromSheet(bytes, { edition: editionOfSheet(fieldMap(bytes)) ?? '2014' }));
+      ({ spec, printed } = specFromSheet(bytes, {
+        edition: editionOfSheet(fieldMap(bytes)) ?? '2014',
+      }));
     } catch {
       // A blank template, or a PDF that is not a character sheet at all. The
       // pool folder holds both, and one unreadable file must not cost the pool.
@@ -240,6 +243,9 @@ export async function readPool(poolDir, { reference, vault } = {}) {
       // Everything the sheet lists beyond the numbers: gear, spells, feats,
       // proficiencies. Without it a pregen imports as a bare stat block.
       content: contentFromSheet(bytes),
+      // What the sheet actually prints, kept so the build can grade the
+      // derivation against it rather than trusting the file.
+      printed,
       spec,
       name: spec?.name ?? null,
       character: baseSlug(poolSlug),
