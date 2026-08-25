@@ -296,6 +296,34 @@ test('two sources for one character is an error, not a precedence rule', async (
   await assert.rejects(readPool(poolDir), /Two sources for "elf-wizard"/);
 });
 
+test('a collision across folders names the folder, not just the file', async () => {
+  // The common collision now is a sheet left behind at the pool root after the
+  // character moved into its own folder. Both sides share a filename, so the
+  // message has to carry the folder or it reads as a file colliding with itself.
+  const poolDir = await mkdtemp(path.join(tmpdir(), 'pregen-pool-folder-dupe-'));
+  await mkdir(path.join(poolDir, 'elf_wizard'), { recursive: true });
+  await writeFile(path.join(poolDir, 'elf_wizard.md'), poolNote({ name: 'Elf Wizard' }));
+  await writeFile(
+    path.join(poolDir, 'elf_wizard', 'elf_wizard.md'),
+    poolNote({ name: 'Elf Wizard' }),
+  );
+
+  await assert.rejects(readPool(poolDir), err => {
+    // Order follows the folder walk, which is not the point being made here.
+    assert.match(
+      err.message,
+      /elf_wizard[/\\]elf_wizard\.md/,
+      'the nested side carries its folder',
+    );
+    assert.match(
+      err.message,
+      /: elf_wizard\.md | and elf_wizard\.md\b/,
+      'the root side stays bare',
+    );
+    return true;
+  });
+});
+
 // --------------------------------------------------------------------------
 // Art. Without it a pregen wears the placeholder, and ship-game.sh stops at
 // the strict art gate before anything reaches Foundry.
