@@ -28,9 +28,11 @@ const POOL = [
 ]
   .filter(Boolean)
   .map(v => path.join(v, '01 Systems', 'dnd5e', 'Pregens'))
-  .find(p => existsSync(path.join(p, 'human_fighter_lv1.pdf')));
+  .find(p => existsSync(path.join(p, 'human_fighter', 'human_fighter_lv1.pdf')));
 const skip = POOL ? false : 'vault not mounted';
-const sheet = name => readFile(path.join(POOL, `${name}.pdf`));
+// A pool sheet lives in a folder named after its character:
+//   Pregens/human_fighter/human_fighter_lv1.pdf
+const sheet = name => readFile(path.join(POOL, name.replace(/_lv\d+$/, ''), `${name}.pdf`));
 
 test('sizeKey maps the printed word to what dnd5e stores', () => {
   assert.equal(sizeKey('Small'), 'sm');

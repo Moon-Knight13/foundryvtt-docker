@@ -256,7 +256,7 @@ const POOL_DIR = [
 ]
   .filter(Boolean)
   .map(v => path.join(v, '01 Systems', 'dnd5e', 'Pregens'))
-  .find(p => existsSync(path.join(p, 'human_fighter_lv1.pdf')));
+  .find(p => existsSync(path.join(p, 'human_fighter', 'human_fighter_lv1.pdf')));
 
 const poolSkip = POOL_DIR ? false : 'vault not mounted';
 
@@ -336,6 +336,6 @@ test('the pool carries its art through to the spec', { skip: poolSkip }, async (
   const pool = await readPool(POOL_DIR);
   const cleric = pool.get('dwarf-cleric-lv1');
 
-  assert.match(cleric.spec.image, /Pregens\/dwarf_cleric\.webp$/);
+  assert.match(cleric.spec.image, /dwarf_cleric\/dwarf_cleric\.webp$/);
   assert.ok(cleric.spec.image.startsWith('DnD/'), 'Foundry sees the vault under DnD/');
 });

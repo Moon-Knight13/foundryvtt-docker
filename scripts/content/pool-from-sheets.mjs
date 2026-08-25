@@ -163,6 +163,7 @@ export function specFromSheet(bytes, { edition = '2014' } = {}) {
       abilityMods,
       saves,
       skills,
+      hitDice: (at('Total') ?? '').trim() || undefined,
       profBonus: at('ProfBonus'),
       ac: Number(at('AC')),
       hp: Number(at('MaxHP')),

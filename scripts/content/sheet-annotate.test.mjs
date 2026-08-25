@@ -26,7 +26,7 @@ const VAULT =
   ) ||
   null;
 const POOL = VAULT && path.join(VAULT, '01 Systems', 'dnd5e', 'Pregens');
-const SHEET = POOL && path.join(POOL, 'human_fighter_lv1.pdf');
+const SHEET = POOL && path.join(POOL, 'human_fighter', 'human_fighter_lv1.pdf');
 const skip = SHEET && existsSync(SHEET) ? false : 'vault not mounted';
 
 // --------------------------------------------------------------------------

@@ -291,7 +291,9 @@ const POOL_SHEET = [
   path.join(os.homedir(), 'DnD'),
 ]
   .filter(Boolean)
-  .map(v => path.join(v, '01 Systems', 'dnd5e', 'Pregens', 'human_fighter_lv1.pdf'))
+  .map(v =>
+    path.join(v, '01 Systems', 'dnd5e', 'Pregens', 'human_fighter', 'human_fighter_lv1.pdf'),
+  )
   .find(p => existsSync(p));
 
 /** A game drawing one real pool character. */

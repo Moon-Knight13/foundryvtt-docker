@@ -18,13 +18,57 @@
     "as SKILLS in pregen.mjs."
   ],
   "adjustments": {
-    "halfling-rogue-lv1": {
-      "why": "Alert (PHB-2024 200), from the Criminal background's origin feat: 'Initiative Proficiency. When you roll Initiative, add +2 to the roll.' The +2 is the proficiency bonus and rises with level.",
-      "values": { "initiative": 2 }
-    },
     "dwarf-cleric-lv1": {
       "why": "Divine Order — Thaumaturge (PHB-2024 70): 'You know one extra cantrip from the Cleric spell list. You also have a +2 bonus to your Arcana and Religion checks.' The bonus equals the Wisdom modifier, minimum +1; this cleric has Wisdom 15.",
-      "values": { "skill.arcana": 2, "skill.religion": 2 }
+      "values": {
+        "skill.arcana": 2,
+        "skill.religion": 2
+      }
+    },
+    "dwarf-cleric-lv2": {
+      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. Wisdom is 16 from level 2, so the bonus is +3 rather than the +2 it is at level 1.",
+      "values": {
+        "skill.arcana": 3,
+        "skill.religion": 3
+      }
+    },
+    "dwarf-cleric-lv3": {
+      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. Wisdom is 16 from level 2, so the bonus is +3 rather than the +2 it is at level 1.",
+      "values": {
+        "skill.arcana": 3,
+        "skill.religion": 3
+      }
+    },
+    "dwarf-cleric-lv4": {
+      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. Wisdom is 16 from level 2, so the bonus is +3 rather than the +2 it is at level 1.",
+      "values": {
+        "skill.arcana": 3,
+        "skill.religion": 3
+      }
+    },
+    "halfling-rogue-lv1": {
+      "why": "Alert (PHB-2024 200), from the Criminal background's origin feat: 'Initiative Proficiency. When you roll Initiative, add your Proficiency Bonus to the roll.' Proficiency is +2 at level 1.",
+      "values": {
+        "initiative": 2
+      }
+    },
+    "halfling-rogue-lv2": {
+      "why": "Alert (PHB-2024 200), from the Criminal background's origin feat: 'Initiative Proficiency. When you roll Initiative, add your Proficiency Bonus to the roll.' Proficiency is +2 through level 4 and becomes +3 at level 5.",
+      "values": {
+        "initiative": 2
+      }
+    },
+    "halfling-rogue-lv3": {
+      "why": "Alert (PHB-2024 200), from the Criminal background's origin feat: 'Initiative Proficiency. When you roll Initiative, add your Proficiency Bonus to the roll.' Proficiency is +2 through level 4 and becomes +3 at level 5.",
+      "values": {
+        "initiative": 2
+      }
+    },
+    "halfling-rogue-lv4": {
+      "why": "Alert (PHB-2024 200), from the Criminal background's origin feat: 'Initiative Proficiency. When you roll Initiative, add your Proficiency Bonus to the roll.' Proficiency is +2 through level 4 and becomes +3 at level 5.",
+      "values": {
+        "initiative": 2
+      }
     }
   }
 }

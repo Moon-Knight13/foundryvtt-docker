@@ -135,16 +135,64 @@ export async function artBeside(poolDir, base, { vault } = {}) {
  * precedence rule: two sources for one character is exactly the drift reading
  * the PDFs avoids.
  */
-export async function readPool(poolDir, { reference, vault } = {}) {
-  const pool = new Map();
-  let files;
+/**
+ * Every file in the pool, one level of subfolders deep.
+ *
+ * A character with four levels is four sheets plus its art, so the pool is
+ * kept as a folder per character rather than twenty files in one directory.
+ * Both layouts read the same: the folder is presentation, and what makes a
+ * pool entry is the sheet's own filename.
+ *
+ * One level, not arbitrary depth — `templates/` holds publisher blanks and is
+ * skipped by name, and a deeper walk would start finding whatever else the
+ * vault keeps nearby.
+ */
+async function poolFiles(poolDir) {
+  let entries;
   try {
-    files = await readdir(poolDir);
+    entries = await readdir(poolDir, { withFileTypes: true });
   } catch {
     throw new Error(
       `No pregen pool at ${poolDir}. It holds the shared characters a game draws from.`,
     );
   }
+
+  const files = [];
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    if (entry.isFile()) {
+      files.push(path.join(poolDir, entry.name));
+      continue;
+    }
+    if (!entry.isDirectory() || entry.name === TEMPLATES_DIR) continue;
+    const dir = path.join(poolDir, entry.name);
+    const inner = await readdir(dir, { withFileTypes: true });
+    for (const child of inner.sort((a, b) => a.name.localeCompare(b.name))) {
+      if (child.isFile()) files.push(path.join(dir, child.name));
+    }
+  }
+  return files;
+}
+
+/** Publisher blanks live here. They are forms, not characters. */
+const TEMPLATES_DIR = 'templates';
+
+/**
+ * Every character in the pool, keyed by slug.
+ *
+ * The pool is a folder of D&D Beyond exports. Reading the PDFs directly is the
+ * whole point: the sheet is root truth, and a generated note beside it would be
+ * a second copy of the same facts that can fall out of step with the first.
+ * There is nothing to regenerate and nothing to keep in sync — drop a PDF in
+ * and it is in the pool.
+ *
+ * A hand-written `.md` note still counts, for a pool entry with no export
+ * behind it. A note whose slug collides with a sheet is an error rather than a
+ * precedence rule: two sources for one character is exactly the drift reading
+ * the PDFs avoids.
+ */
+export async function readPool(poolDir, { reference, vault } = {}) {
+  const pool = new Map();
+  const files = await poolFiles(poolDir);
 
   const adjustments = await loadAdjustments(reference);
   const add = (poolSlug, entry) => {
@@ -159,25 +207,25 @@ export async function readPool(poolDir, { reference, vault } = {}) {
     pool.set(poolSlug, entry);
   };
 
-  for (const file of files.filter(f => f.toLowerCase().endsWith('.pdf')).sort()) {
-    const sheetPath = path.join(poolDir, file);
+  for (const sheetPath of files.filter(f => f.toLowerCase().endsWith('.pdf'))) {
     const bytes = await readFile(sheetPath);
 
     let spec;
     try {
       ({ spec } = specFromSheet(bytes, { edition: editionOfSheet(fieldMap(bytes)) ?? '2014' }));
-    } catch (err) {
+    } catch {
       // A blank template, or a PDF that is not a character sheet at all. The
       // pool folder holds both, and one unreadable file must not cost the pool.
       continue;
     }
 
-    const base = path.basename(file, path.extname(file));
+    const base = path.basename(sheetPath, path.extname(sheetPath));
     const poolSlug = slug(base);
     const entry = adjustments[poolSlug];
     if (entry?.values) spec.adjustments = entry.values;
 
-    const art = await artBeside(poolDir, base, { vault });
+    // Art sits beside the sheet, whichever folder that is.
+    const art = await artBeside(path.dirname(sheetPath), base, { vault });
     if (art) spec.image = art;
 
     add(poolSlug, {
@@ -194,12 +242,11 @@ export async function readPool(poolDir, { reference, vault } = {}) {
     });
   }
 
-  for (const file of files.filter(f => f.endsWith('.md')).sort()) {
-    const notePath = path.join(poolDir, file);
+  for (const notePath of files.filter(f => f.endsWith('.md'))) {
     const markdown = await readFile(notePath, 'utf8');
     if (!/```pregen/.test(markdown)) continue; // An index or prose note.
     const spec = parseFence(markdown);
-    const poolSlug = slug(path.basename(file, '.md'));
+    const poolSlug = slug(path.basename(notePath, '.md'));
     add(poolSlug, {
       source: notePath,
       sheet: null,

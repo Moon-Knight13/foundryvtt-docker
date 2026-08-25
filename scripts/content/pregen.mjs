@@ -481,6 +481,12 @@ export function compareToSheet(derived, printed) {
   for (const [name, skill] of Object.entries(derived.skills)) {
     cmp(`skill.${name}`, signed(skill.total), printed.skills?.[name]);
   }
+  // Hit dice are the level, stated a second way. A single-class character has
+  // one die per level, so this catches a sheet whose header says one level
+  // while the rest of it describes another — which no other check here would
+  // notice, because every other number is READ from that same sheet and so
+  // agrees with itself by construction.
+  cmp('hitDice', derived.hitDice, printed.hitDice);
   cmp('profBonus', signed(derived.profBonus), printed.profBonus);
   cmp('hp', derived.hitPoints.max, printed.hp);
   cmp('ac', derived.ac, printed.ac);
