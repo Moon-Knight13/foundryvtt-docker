@@ -195,12 +195,17 @@ export async function readPool(poolDir, { reference, vault } = {}) {
   const files = await poolFiles(poolDir);
 
   const adjustments = await loadAdjustments(reference);
+  // Paths are relative to the pool, not basenames: now that a character lives in
+  // its own folder, the two sides of a collision usually share a filename and
+  // differ only in the folder above it. Printing basenames rendered that as the
+  // same name twice, which reads like a file colliding with itself.
+  const where = source => path.relative(poolDir, source) || path.basename(source);
   const add = (poolSlug, entry) => {
     const already = pool.get(poolSlug);
     if (already) {
       throw new Error(
-        `Two sources for "${poolSlug}" in the pool: ${path.basename(already.source)} and ` +
-          `${path.basename(entry.source)}. Delete one — a character with two definitions ` +
+        `Two sources for "${poolSlug}" in the pool: ${where(already.source)} and ` +
+          `${where(entry.source)}. Delete one — a character with two definitions ` +
           'is the drift that reading the sheets directly is meant to avoid.',
       );
     }
