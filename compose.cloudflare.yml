@@ -31,5 +31,12 @@ services:
     environment:
       TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN:?set CF_TUNNEL_TOKEN in .env}
     restart: unless-stopped
+    # YAML anchors don't cross compose files, so the log cap from
+    # compose.yml's x-logging is repeated inline here.
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     depends_on:
       - foundry

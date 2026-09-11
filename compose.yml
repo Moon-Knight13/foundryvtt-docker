@@ -1,8 +1,25 @@
 ---
+# Cap every container's json-file log — without this Docker keeps one
+# unbounded log per container, which slowly eats the disk on long-running
+# services (the host has no daemon.json log defaults).
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
 services:
   foundry:
     image: ghcr.io/felddy/foundryvtt:release
     hostname: ${FOUNDRY_HOSTNAME:-my_foundry_host}
+    logging: *default-logging
+    # Backstop, not a target: Foundry normally sits well under 1 GiB. If a
+    # leaky module balloons the server it gets OOM-killed and restarted
+    # (restart policy below) instead of dragging the whole host into swap
+    # mid-session. World data lives on the /data bind mount and is written
+    # as changes happen, so a restart costs a reconnect, not the session.
+    mem_limit: 2g
+    restart: unless-stopped
 
     # GPU Support - uncomment these lines to enable GPU
     # NOTE: the FoundryVTT server is headless Node.js and does not use the GPU;
@@ -86,6 +103,7 @@ services:
   # Netdata: per-container CPU/memory/network/disk graphs at http://localhost:19999
   netdata:
     image: netdata/netdata:stable
+    logging: *default-logging
     profiles:
       - monitoring
     ports:
@@ -105,6 +123,7 @@ services:
   # Dozzle: live container logs in the browser at http://localhost:8080
   dozzle:
     image: amir20/dozzle:latest
+    logging: *default-logging
     profiles:
       - monitoring
     ports:
