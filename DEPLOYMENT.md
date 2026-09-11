@@ -136,6 +136,15 @@ docker compose -f compose.yml -f compose.cloudflare.yml logs -f cloudflared
 
 Foundry is then reachable at `https://<FOUNDRY_HOSTNAME>`.
 
+**Tear down with the same `-f` flags you started with.** A plain
+`docker compose down` after an overlay `up` only reads `compose.yml`: it
+removes `foundry` but leaves `cloudflared` running — the public tunnel stays
+up pointing at a dead server, and the network can't be removed ("Resource is
+still in use"). To stop juggling flags entirely, set
+`COMPOSE_FILE=compose.yml:compose.cloudflare.yml` in `.env` (see
+`.env.example`); every plain `docker compose` command then covers the full
+stack.
+
 > **Hardening:** put **Cloudflare Access** in front of the hostname (Zero Trust
 > → Access → Applications) to require SSO/email before Foundry even loads —
 > dashboard-side, no compose change. On the free plan, uploads *through* the
