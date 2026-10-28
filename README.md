@@ -75,6 +75,11 @@ cp .env.example .env          # fill in FoundryVTT credentials + admin key
 docker compose up -d
 ```
 
+Run `./deploy-setup.sh` before the first `up`, even if you edit `.env` by hand.
+It creates the data and vault directories as your user (no root needed). If
+Docker creates them instead, they are owned by root, and Foundry (uid 1000)
+cannot start. See [`DEPLOYMENT.md`](DEPLOYMENT.md#1-initial-setup) for the fix.
+
 Foundry answers on <http://localhost:30000>. Every environment variable the
 image understands is documented in the
 [upstream README](https://github.com/felddy/foundryvtt-docker#readme).

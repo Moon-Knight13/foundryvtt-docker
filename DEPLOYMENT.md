@@ -36,6 +36,17 @@ Optional:
 - `FOUNDRY_DATA_PATH` — host data directory
   (default `~/.local/share/FoundryVTT`)
 
+**Create the data directories before the first `up`.** `deploy-setup.sh` does
+this for `FOUNDRY_DATA_PATH` and `DND_VAULT_PATH`, as your user, without root.
+If a bind-mount source is missing, Docker creates it owned by `root`. The
+Foundry image runs as uid 1000, so it then cannot write `/data`. It logs
+`Aborting due to insufficient permissions on /data` and sleeps instead of
+exiting, so the restart policy never fires and a Cloudflare Tunnel in front
+of it reports `connection refused`. Skipping the script? Run
+`mkdir -p` on both paths yourself. A directory already owned by root needs
+`sudo chown -R 1000:1000 <path>`, then
+`docker compose up -d --force-recreate foundry`.
+
 ### 2. Start
 
 ```bash
