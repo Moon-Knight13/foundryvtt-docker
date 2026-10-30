@@ -20,17 +20,14 @@ reporter unless anonymity is requested.
 ### Scope
 
 In scope — report here: this repo's `compose.yml`, `.devcontainer/`,
-`scripts/`, MCP wiring, content pipeline, and docs.
+`scripts/`, `plugins/`, MCP wiring, content pipeline, and docs.
 
 Out of scope — report to the project that owns the code:
 
-- The `foundry-gm` plugin (skills, guard hook, build tooling) —
-  [report to foundry-gm-claude-plugin][plugin-advisory]
 - The upstream FoundryVTT image —
   [report to felddy/foundryvtt-docker][upstream-security]
 - FoundryVTT itself — [report to foundryvtt.com](https://foundryvtt.com/)
 
-[plugin-advisory]: https://github.com/Moon-Knight13/foundry-gm-claude-plugin/security/advisories/new
 [upstream-security]: https://github.com/felddy/foundryvtt-docker/security
 
 The devcontainer is a local development sandbox behind a deny-by-default
