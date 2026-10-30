@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "foundry-gm-marketplace",
+  "owner": { "name": "Moon-Knight13" },
+  "description": "Claude Code plugins for running FoundryVTT games with Claude as an AI game master.",
+  "plugins": [
+    {
+      "name": "foundry-gm",
+      "source": "./foundry-gm",
+      "description": "AI game master toolkit for FoundryVTT: content-as-code compendium authoring (system-agnostic, dnd5e first-class), foundry-mcp bridge setup guidance, and token-cost routing guards.",
+      "version": "0.1.1",
+      "keywords": ["foundryvtt", "foundry-vtt", "dnd5e", "game-master", "compendium", "content-as-code", "mcp"],
+      "category": "gamedev"
+    }
+  ]
+}

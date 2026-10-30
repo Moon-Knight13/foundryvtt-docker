@@ -300,11 +300,10 @@ Two ways to get content into Foundry — the choice is the routing protocol
 applied to game content. Full pipeline doc: `docs/CONTENT_AUTHORING.md`.
 
 The `foundry-content` skill (and the `foundry-mcp-setup` skill) ship in the
-**foundry-gm** Claude Code plugin, installed from its marketplace:
+**foundry-gm** Claude Code plugin, bundled in `plugins/foundry-gm-claude/`:
 
 ```text
-/plugin marketplace add Moon-Knight13/foundry-gm-claude-plugin
-/plugin install foundry-gm@foundry-gm-marketplace
+/plugin install plugins/foundry-gm-claude/foundry-gm
 ```
 
 The plugin scaffolds its build tooling into `scripts/content/` (already
@@ -395,9 +394,9 @@ upstream-bound change into our own board work.
 | The problem is in… | File it on… |
 | --- | --- |
 | This repo's runtime, compose stack, MCP wiring, content pipeline, scripts, docs | An **Issue on `Moon-Knight13/foundryvtt-docker`** → add to **board #10** (`scripts/board.sh add <n>`). |
-| The **foundry-gm plugin** itself — `foundry-content` / `foundry-mcp-setup` skills, the guard hook, the reviewer agent, or the build tooling the plugin ships | An **Issue on `Moon-Knight13/foundry-gm-claude-plugin`** (its own board/repo), not here. |
+| The **foundry-gm plugin** itself — `foundry-content` / `foundry-mcp-setup` skills, the guard hook, the reviewer agent, or the build tooling under `plugins/foundry-gm-claude/` | An **Issue on this repo** with the `plugin` label. |
 | Upstream felddy image/behavior we want fixed upstream | Branch on **`upstreamfork`**, PR to **`felddy/foundryvtt-docker`**. |
 
-Rule of thumb: this repo *consumes* the plugin. A bug reproducible with the
-plugin uninstalled belongs here; a bug in a skill/hook/agent the plugin ships
-belongs on the plugin repo so the fix reaches every consumer.
+Rule of thumb: plugin source lives under `plugins/foundry-gm-claude/`.
+A bug in the runtime/compose stack belongs at repo root; a bug in a
+skill/hook/agent the plugin ships belongs under the plugin directory.
