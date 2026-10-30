@@ -1,0 +1,17 @@
+# CODEOWNERS — populate before running scripts/bootstrap-github-settings.sh
+# Without real owners, the "require code owner reviews" branch protection has no effect.
+# Replace @Moon-Knight13 with actual GitHub users or teams.
+#
+# Docs: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default: all files require a review
+* @Moon-Knight13
+
+# Security-sensitive paths require explicit ownership
+.devcontainer/ @Moon-Knight13
+.github/ @Moon-Knight13
+scripts/ @Moon-Knight13
+.semgrep.yml @Moon-Knight13
+.gitleaks.toml @Moon-Knight13
+SECURITY.md @Moon-Knight13
+CLAUDE.md @Moon-Knight13

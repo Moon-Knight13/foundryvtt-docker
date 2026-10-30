@@ -1,0 +1,13 @@
+{
+  "name": "foundry-content-tools",
+  "private": true,
+  "type": "module",
+  "description": "Build tooling for the troubled-waters-content compendium module.",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@foundryvtt/foundryvtt-cli": "^1.0.3"
+  }
+}

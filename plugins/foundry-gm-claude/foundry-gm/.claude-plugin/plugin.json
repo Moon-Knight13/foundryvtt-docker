@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "foundry-gm",
+  "version": "0.1.1",
+  "description": "AI game master toolkit for FoundryVTT: content-as-code compendium authoring (system-agnostic, dnd5e first-class), foundry-mcp bridge setup guidance, and token-cost routing guards.",
+  "author": { "name": "Moon-Knight13", "url": "https://github.com/Moon-Knight13" },
+  "repository": "https://github.com/Moon-Knight13/foundry-gm-claude-plugin",
+  "license": "MIT",
+  "keywords": ["foundryvtt", "foundry-vtt", "dnd5e", "game-master", "compendium", "content-as-code", "mcp"]
+}
