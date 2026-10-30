@@ -29,7 +29,7 @@ permissions:
 jobs:
   diagnostics:
     name: Run Diagnostics
-    uses: felddy/reusable-workflows/.github/workflows/diagnostics.yml@76486c28caa391f5f9db4941fc555a20a6e084c8 # tag=v4.2.0
+    uses: felddy/reusable-workflows/.github/workflows/diagnostics.yml@b07549e507f93d3f85b235eef2e56de15ec5ce01 # tag=v5.2.1
   analyze:
     name: Analyze
     # CodeQL result upload requires code scanning, which needs GitHub Advanced
@@ -84,7 +84,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # tag=v2.21.0
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # tag=v2.22.3
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -99,7 +99,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # tag=v4.37.8
+        uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # tag=v4.39.1
         with:
           languages: ${{ matrix.language }}
 
@@ -107,7 +107,7 @@ jobs:
       # Java). If this step fails, then you should remove it and run the build
       # manually (see below).
       - name: Autobuild
-        uses: github/codeql-action/autobuild@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # tag=v4.37.8
+        uses: github/codeql-action/autobuild@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # tag=v4.39.1
 
       # ℹ️ Command-line programs to run using the OS shell. 📚
       # https://git.io/JvXDl
@@ -121,4 +121,4 @@ jobs:
       #     make release
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # tag=v4.37.8
+        uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # tag=v4.39.1
