@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "@foundryvtt/foundryvtt-cli": "^1.0.3",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "pdf-lib": "^1.17.1"
   },
   "description": "Build tooling for compiling a game's vault notes into a FoundryVTT compendium module.",
   "name": "foundry-content-tools",

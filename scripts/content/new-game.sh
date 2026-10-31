@@ -114,7 +114,8 @@ $SYSTEM_LINE
   "version": "1.0.0",
   "packLabelPrefix": "$TITLE",
   "compatibility": { "minimum": "12", "verified": "14" },
-  "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+  "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" },
+  "folders": { "actors": ["PCs"] }
 }
 EOF
 
@@ -186,7 +187,8 @@ $SYSTEM_LINE
   "version": "1.0.0",
   "packLabelPrefix": "$TITLE",
   "compatibility": { "minimum": "12", "verified": "14" },
-  "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+  "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" },
+  "folders": { "actors": ["PCs"] }
 }
 EOF
 
@@ -293,6 +295,36 @@ REPLACE — anything worth checking at session zero.
 ## Rewards
 
 REPLACE
+EOF
+
+cat > "$GAME_DIR/Pregens.md" << EOF
+---
+type: index
+system: $SYSTEM_FM
+artifact: [online, in-person]
+tags: [$SYSTEM_FM, $TYPE, $TAG, pregen]
+edition: '2024'
+level: REPLACE
+party: [dwarf-cleric, elf-wizard, goliath-barbarian, halfling-rogue, human-fighter]
+---
+
+# $TITLE — Pregens
+
+The backup characters this game hands out, drawn by name from the shared pool at
+\`01 Systems/dnd5e/Pregens\`. Every game ships them, even one whose players bring
+their own. Fill \`level:\` with the level this game runs at; \`party:\` starts with
+the whole pool, by slug, and a name can be dropped from it.
+
+The pool is a folder of D&D Beyond exports, one per character **per level**. A
+character the pool does not hold at this game's level is a build error naming the
+file to go and make — nothing here levels a character up, because above about
+level 4 the equipment and choices stop being rules-derivable.
+
+An empty \`party:\` stops \`ship-game.sh\` unless it is given \`--no-pregens\`.
+
+Each drawn character becomes a compendium actor beside this game's NPCs, and the
+sheet a player is handed is the pool PDF itself.
+
 EOF
 
 cat > "$GAME_DIR/Soundtrack.md" << EOF
@@ -444,7 +476,7 @@ done
 
 echo "Scaffolded $TYPE \"$TITLE\" ($ID)"
 echo "  game:    $GAME_DIR"
-echo "  notes:   $TITLE.md, GM Prep.md, Soundtrack.md$([[ "$TYPE" == "oneshot" ]] && echo ", Advert.md")"
+echo "  notes:   $TITLE.md, GM Prep.md, Soundtrack.md, Pregens.md$([[ "$TYPE" == "oneshot" ]] && echo ", Advert.md")"
 echo "  folders: Handouts/ Maps/ NPCs/ Scenes/ Tables/ Assets/{Maps,Tokens,Art}/"
 echo "  foundry: Foundry/$SLUG.config.json + Foundry/src/{actors,items,journals,macros,scenes,tables}/"
 echo "  macro:   Foundry/src/macros/cue-reminder.json (whispers each scene's ambience cue)"
@@ -456,6 +488,7 @@ todo "GM Prep.md" "the truth, arc, pacing, scaling, safety, rewards"
 todo "NPCs/" "one card per creature, each with a statblock block"
 todo "Scenes/" "one note per scene: read-aloud, map embed, beats"
 todo "Soundtrack.md" "soundtrack_playlist + a cue per scene (audio_source/_ref/_cue)"
+todo "Pregens.md" "level this game runs at (party: starts with the whole pool)"
 todo "Tables/" "rumour/loot tables as markdown tables"
 todo "Handouts/" "anything the players physically receive"
 todo "Maps/" "map briefs or generator specs"

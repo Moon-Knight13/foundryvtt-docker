@@ -1,0 +1,80 @@
+{
+  "$comment": [
+    "Numbers a pregen's sheet prints that the class tables cannot derive.",
+    "",
+    "The pool sheet is root truth. Where it disagrees with what Open5e's class",
+    "tables alone would give, the difference is a feat, a species trait, or a",
+    "class feature whose numbers the SRD publishes only as prose. Recording it",
+    "here makes it visible and reviewable; letting the tool absorb any mismatch",
+    "silently would also absorb a defect in our own data, which is exactly how",
+    "the 2024 fighter's saving throws stayed wrong.",
+    "",
+    "Keyed by pool slug, which carries the level: a level 5 rogue's Alert bonus",
+    "is +3, not +2, because it is the proficiency bonus rather than a constant.",
+    "",
+    "`why` is required and is the point of the file. Quote the sheet.",
+    "",
+    "Keys inside `values`: `initiative`, or `skill.<name>` using the same names",
+    "as SKILLS in pregen.mjs."
+  ],
+  "adjustments": {
+    "dwarf-cleric-lv1": {
+      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. This cleric has Wisdom 16 at every level from 1 to 4, so the bonus is +3 throughout.",
+      "values": {
+        "skill.arcana": 3,
+        "skill.religion": 3
+      }
+    },
+    "dwarf-cleric-lv2": {
+      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. This cleric has Wisdom 16 at every level from 1 to 4, so the bonus is +3 throughout.",
+      "values": {
+        "skill.arcana": 3,
+        "skill.religion": 3
+      }
+    },
+    "dwarf-cleric-lv3": {
+      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. This cleric has Wisdom 16 at every level from 1 to 4, so the bonus is +3 throughout.",
+      "values": {
+        "skill.arcana": 3,
+        "skill.religion": 3
+      }
+    },
+    "dwarf-cleric-lv4": {
+      "why": "Divine Order — Thaumaturge (PHB-2024 70): 'a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)'. This cleric has Wisdom 16 at every level from 1 to 4, so the bonus is +3 throughout.",
+      "values": {
+        "skill.arcana": 3,
+        "skill.religion": 3
+      }
+    },
+    "halfling-rogue-lv1": {
+      "why": "Alert (PHB-2024 200), from the Criminal background's origin feat: 'Initiative Proficiency. When you roll Initiative, add your Proficiency Bonus to the roll.' Proficiency is +2 at level 1.",
+      "values": {
+        "initiative": 2
+      }
+    },
+    "halfling-rogue-lv2": {
+      "why": "Alert (PHB-2024 200), from the Criminal background's origin feat: 'Initiative Proficiency. When you roll Initiative, add your Proficiency Bonus to the roll.' Proficiency is +2 through level 4 and becomes +3 at level 5.",
+      "values": {
+        "initiative": 2
+      }
+    },
+    "halfling-rogue-lv3": {
+      "why": "Alert (PHB-2024 200), from the Criminal background's origin feat: 'Initiative Proficiency. When you roll Initiative, add your Proficiency Bonus to the roll.' Proficiency is +2 through level 4 and becomes +3 at level 5.",
+      "values": {
+        "initiative": 2
+      }
+    },
+    "halfling-rogue-lv4": {
+      "why": "Alert (PHB-2024 200), from the Criminal background's origin feat: 'Initiative Proficiency. When you roll Initiative, add your Proficiency Bonus to the roll.' Proficiency is +2 through level 4 and becomes +3 at level 5.",
+      "values": {
+        "initiative": 2
+      }
+    },
+    "human-fighter-lv4": {
+      "why": "Alert (PHB-2024 200), taken as the level 4 feat instead of an ability increase: 'Initiative Proficiency. When you roll Initiative, add your Proficiency Bonus to the roll.' Levels 1 to 3 have no such bonus; proficiency is +2 at level 4 and becomes +3 at level 5.",
+      "values": {
+        "initiative": 2
+      }
+    }
+  }
+}

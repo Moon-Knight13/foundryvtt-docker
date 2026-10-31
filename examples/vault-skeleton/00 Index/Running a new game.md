@@ -125,7 +125,7 @@ write the GroupFlows advert for <game> — <N> players, level <X>, ~<H>h.
 | Post-session | Recap + next-session prep | "session recap: …" |
 | Existing content | Reskin / scale / sequel | "scale <your game> to L5" |
 | A concept | Faction / region / pantheon | "build the … faction" |
-| A oneshot | Ready-to-run pregens | "make 5 L3 pregens" |
+| A oneshot | Party drawn from the pregen pool | "draw a L3 party for …" |
 | Another system | Converted prep | "convert … to Cairn" |
 | A loose pile | Cross-links + MOC | "link and index …" |
 | A ready game | GroupFlows recruitment post | "write the GroupFlows advert for …" |

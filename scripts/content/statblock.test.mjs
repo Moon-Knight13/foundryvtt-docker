@@ -196,9 +196,13 @@ test('toActor gives every dnd5e size its token footprint', () => {
 
 test('toActor derives expertise rather than trusting a flat multiplier', () => {
   const { actor, warnings } = toActor(LAMIA_NPC, { name: 'Vashti' });
-  assert.deepEqual(actor.system.skills.dec, { value: 2 }, 'Deception +7 is expertise');
-  assert.deepEqual(actor.system.skills.ins, { value: 1 });
-  assert.deepEqual(actor.system.skills.ste, { value: 1 });
+  assert.deepEqual(
+    actor.system.skills.dec,
+    { value: 2, ability: 'cha' },
+    'Deception +7 is expertise',
+  );
+  assert.deepEqual(actor.system.skills.ins, { value: 1, ability: 'wis' });
+  assert.deepEqual(actor.system.skills.ste, { value: 1, ability: 'dex' });
   // No SKILL warnings: all three bonuses are cleanly reachable. The art warning
   // is expected here and checked separately.
   assert.deepEqual(
@@ -538,4 +542,29 @@ test('real SRD token art reports the srd tier, not a map tier', async () => {
   const { art } = await compileNote(note, { reference: dir });
   assert.equal(art.tier, 'srd');
   assert.equal(art.src, 'DnD/06 Assets/Tokens/srd/Goblin.webp');
+});
+
+test('every NPC skill names its ability, or dnd5e reads it as Dexterity', () => {
+  // Packed documents skip _preCreate, so a partial skill entry is filled from
+  // the field default rather than the per-skill one. This shipped: a live world
+  // showed an NPC's Deception, Insight, Investigation, Perception and
+  // Persuasion all bound to Dex.
+  const { actor } = toActor(
+    {
+      name: 'Skilled',
+      source: 'SRD 5.1 (CC-BY-4.0) — Bandit',
+      type: 'humanoid',
+      ac: 12,
+      hp: 11,
+      cr: 0.125,
+      stats: [11, 12, 12, 10, 10, 10],
+      skillsaves: [{ deception: 2 }, { insight: 2 }, { investigation: 2 }, { stealth: 3 }],
+    },
+    { name: 'Skilled' },
+  );
+
+  assert.equal(actor.system.skills.dec.ability, 'cha');
+  assert.equal(actor.system.skills.ins.ability, 'wis');
+  assert.equal(actor.system.skills.inv.ability, 'int');
+  assert.equal(actor.system.skills.ste.ability, 'dex');
 });
