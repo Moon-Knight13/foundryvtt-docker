@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  buildFolders,
   docId,
   validateDoc,
   prepareDoc,
@@ -269,4 +270,51 @@ test('validateLinks resolves ids and pack placement', () => {
     ],
   };
   assert.deepEqual(validateLinks(foreign, 'journals/j.json', 'test-content', idType), []);
+});
+
+test('a pack arrives foldered, not as one flat list', () => {
+  const docs = [
+    { name: 'Goblin', folder: 'NPCs' },
+    { name: 'Dwarf Cleric', folder: 'Pregens' },
+    { name: 'Unfiled' },
+  ];
+  const { folders } = buildFolders(docs, 'actors', { extra: ['PCs'] });
+
+  assert.deepEqual(
+    folders.map(f => f.name),
+    ['NPCs', 'PCs', 'Pregens'],
+  );
+  assert.ok(folders.every(f => f.type === 'Actor'));
+  assert.ok(folders.every(f => f._key.startsWith('!folders!')));
+});
+
+test('a doc points at its folder by id, not by name', () => {
+  const docs = [{ name: 'Goblin', folder: 'NPCs' }];
+  const { folders } = buildFolders(docs, 'actors');
+
+  assert.equal(docs[0].folder, folders[0]._id);
+  assert.notEqual(docs[0].folder, 'NPCs');
+});
+
+test('an empty folder is still created, because a PCs folder starts empty', () => {
+  const { folders } = buildFolders([], 'actors', { extra: ['PCs'] });
+  assert.deepEqual(
+    folders.map(f => f.name),
+    ['PCs'],
+  );
+});
+
+test('a folder nobody declared is dropped rather than left dangling', () => {
+  const docs = [
+    { name: 'Goblin', folder: 'NPCs' },
+    { name: 'Ghost', folder: 'Nowhere' },
+  ];
+  buildFolders(docs, 'actors', { extra: [] });
+  assert.ok(docs[1].folder !== 'Nowhere');
+});
+
+test('folder ids are stable, so a rebuild does not orphan what a GM filed', () => {
+  const a = buildFolders([{ name: 'x', folder: 'NPCs' }], 'actors').folders[0]._id;
+  const b = buildFolders([{ name: 'y', folder: 'NPCs' }], 'actors').folders[0]._id;
+  assert.equal(a, b);
 });

@@ -8,9 +8,17 @@
 # fine inside the devcontainer via their own CLIs; this script is the chain.
 #
 # Usage:
-#   scripts/content/ship-game.sh "<vault>/03 Oneshots/<Game>" [--force] [--no-restart]
+#   scripts/content/ship-game.sh "<vault>/03 Oneshots/<Game>" [--force] [--no-restart] [--no-pregens]
 #     --force       recompile every note, not just stale ones
 #     --no-restart  skip the Foundry container restart at the end
+#     --no-pregens  ship a game that deliberately has no pregen party
+#     --pool <dir>  pregen pool to draw the game's party from
+#                   (default: <vault>/01 Systems/dnd5e/Pregens)
+#
+# The pool is passed whenever it exists, so a game that declares a party in its
+# Pregens.md ships with it and one that does not is unaffected. Without this the
+# party silently never compiles, which looks exactly like a game having no
+# pregens.
 #
 # The art gate runs --strict BETWEEN compile and build: a game with a blank
 # named NPC stops here, before anything reaches Foundry.
@@ -22,11 +30,18 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GAME_DIR=""
 FORCE=""
 RESTART=1
+PREGENS=1
+POOL=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --force) FORCE="--force" ;;
     --no-restart) RESTART=0 ;;
+    --no-pregens) PREGENS=0 ;;
+    --pool)
+      POOL="$2"
+      shift
+      ;;
     --*)
       echo "Unknown argument: $1" >&2
       exit 1
@@ -37,7 +52,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z $GAME_DIR ]]; then
-  echo 'Usage: ship-game.sh "<vault>/03 Oneshots/<Game>" [--force] [--no-restart]' >&2
+  echo 'Usage: ship-game.sh "<vault>/03 Oneshots/<Game>" [--force] [--no-restart] [--no-pregens] [--pool <dir>]' >&2
   exit 1
 fi
 if [[ ! -d $GAME_DIR ]]; then
@@ -60,13 +75,33 @@ if [[ ${#configs[@]} -gt 1 ]]; then
   exit 1
 fi
 CONFIG="${configs[0]}"
+
+# Every game ships backup characters. A game with no party looks finished, so
+# the gap stops here rather than surfacing when a player turns up without a sheet.
+if [[ $PREGENS -eq 1 ]] && ! node --input-type=module -e \
+  'const { readParty } = await import(process.argv[1]);
+   process.exit((await readParty(process.argv[2])) ? 0 : 1);' \
+  "$SCRIPT_DIR/pregen-party.mjs" "$GAME_DIR"; then
+  echo "No pregen party in $GAME_DIR/Pregens.md — set level: and party:, or pass --no-pregens." >&2
+  exit 1
+fi
 SRC="$GAME_DIR/Foundry/src"
 
 # The vault root anchors art paths; derive it from the game dir when unset.
 export DND_VAULT_PATH="${DND_VAULT_PATH:-$(cd "$GAME_DIR/../.." && pwd)}"
 
+# The shared pregen pool. Passed when it exists so a game declaring a party in
+# its Pregens.md ships with it; a game that declares none is unaffected.
+POOL="${POOL:-$DND_VAULT_PATH/01 Systems/dnd5e/Pregens}"
+POOL_ARGS=()
+if [[ -d $POOL ]]; then
+  POOL_ARGS=(--pool "$POOL")
+else
+  echo "No pregen pool at $POOL — shipping without one." >&2
+fi
+
 echo "=== compile   $GAME_DIR"
-node "$SCRIPT_DIR/compile-game.mjs" "$GAME_DIR" $FORCE
+node "$SCRIPT_DIR/compile-game.mjs" "$GAME_DIR" $FORCE --vault "$DND_VAULT_PATH" "${POOL_ARGS[@]}"
 
 echo "=== art gate  $CONFIG"
 node "$SCRIPT_DIR/art-coverage.mjs" --config "$CONFIG" --src "$SRC" --strict

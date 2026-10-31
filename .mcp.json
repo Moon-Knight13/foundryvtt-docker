@@ -1,7 +1,9 @@
 {
   "mcpServers": {
     "foundry-mcp": {
-      "args": ["mcp-server/index.js"],
+      "args": [
+        "mcp-server/index.js"
+      ],
       "command": "node",
       "env": {
         "FOUNDRY_HOST": "localhost",

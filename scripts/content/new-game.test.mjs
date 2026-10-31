@@ -133,6 +133,13 @@ test('new-game.sh scaffolds the full vault game folder by default', async () => 
     assert.ok(!('srcDir' in raw), 'vault config must omit srcDir');
     await loadConfig(configPath);
 
+    // Every game ships the backup characters, so the party starts full.
+    const pregens = await readFile(path.join(game, 'Pregens.md'), 'utf8');
+    assert.match(
+      pregens,
+      /^party: \[dwarf-cleric, elf-wizard, goliath-barbarian, halfling-rogue, human-fighter\]$/m,
+    );
+
     assert.match(out, /Definition of done/);
   } finally {
     await rm(vault, { recursive: true, force: true });

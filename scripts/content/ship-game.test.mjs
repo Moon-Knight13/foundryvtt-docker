@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -41,4 +41,45 @@ test('ship-game.sh demands exactly one module config', async () => {
 
 test('ship-game.sh rejects an unknown flag', async () => {
   assert.throws(() => run(['--frobnicate']), stderrMatches(/Unknown argument/));
+});
+
+test('ship-game passes the pool to compile-game when one exists', async () => {
+  // Without this a game's party silently never compiles, which looks exactly
+  // like the game having no pregens.
+  const script = await readFile(new URL('./ship-game.sh', import.meta.url), 'utf8');
+
+  assert.match(script, /--pool/, 'the flag exists');
+  assert.match(script, /POOL_ARGS=\(--pool "\$POOL"\)/);
+  assert.match(script, /01 Systems\/dnd5e\/Pregens/, 'defaults to the shared pool');
+});
+
+test('a missing pool is a note, not a failure', async () => {
+  const script = await readFile(new URL('./ship-game.sh', import.meta.url), 'utf8');
+  assert.match(script, /shipping without one/);
+});
+
+async function gameWithConfig() {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'ship-game-'));
+  const game = path.join(dir, '03 Oneshots', 'Test Game');
+  await mkdir(path.join(game, 'Foundry'), { recursive: true });
+  await writeFile(path.join(game, 'Foundry', 'a.config.json'), '{}');
+  return game;
+}
+
+test('ship-game refuses a game with no pregen party', async () => {
+  // Every game ships backup characters. A game without a party is a gap, and
+  // it looks finished, so it stops here rather than at the table.
+  const game = await gameWithConfig();
+  assert.throws(() => run([game, '--no-restart']), stderrMatches(/No pregen party/));
+
+  await writeFile(path.join(game, 'Pregens.md'), '---\nlevel: 3\nparty: []\n---\n');
+  assert.throws(() => run([game, '--no-restart']), stderrMatches(/No pregen party/));
+});
+
+test('--no-pregens ships a game without a party, on purpose', async () => {
+  const game = await gameWithConfig();
+  assert.throws(
+    () => run([game, '--no-restart', '--no-pregens']),
+    err => !/No pregen party/.test(err.stderr ?? ''),
+  );
 });

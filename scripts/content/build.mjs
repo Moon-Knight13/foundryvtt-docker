@@ -105,6 +105,52 @@ export function sizeToken(doc) {
   return doc;
 }
 
+/**
+ * Folder documents for a compendium, from the folder names its docs declare.
+ *
+ * A pack arrives in Foundry as one flat list, which is fine for six NPCs and
+ * unusable once a game also ships a party. A doc says which folder it wants by
+ * NAME — `"folder": "Pregens"` — and this turns those names into the folder
+ * documents Foundry needs, rewriting each doc to point at the id.
+ *
+ * `extra` names folders to create with nothing in them. That is not a quirk: a
+ * game ships a PCs folder so the table has somewhere to put the characters
+ * players bring, and it is empty by definition.
+ *
+ * Ids are derived from the pack and the folder name, so a rebuild puts
+ * everything back where it was rather than orphaning what a GM had filed.
+ */
+export function buildFolders(docs, collection, { extra = [] } = {}) {
+  const declared = docs.map(doc => doc.folder).filter(name => typeof name === 'string' && name);
+  const names = [...new Set([...declared, ...extra])].sort();
+  if (!names.length) return { folders: [], byName: new Map() };
+
+  const type = COLLECTIONS[collection].type;
+  const byName = new Map();
+  const folders = names.map((name, index) => {
+    const id = docId(`${collection}/folder/${name}`);
+    byName.set(name, id);
+    return {
+      _id: id,
+      _key: `!folders!${id}`,
+      name,
+      type,
+      sorting: 'a',
+      sort: (index + 1) * 100000,
+      folder: null,
+      description: '',
+      flags: {},
+    };
+  });
+
+  for (const doc of docs) {
+    if (typeof doc.folder === 'string' && byName.has(doc.folder))
+      doc.folder = byName.get(doc.folder);
+    else if (doc.folder !== undefined) delete doc.folder;
+  }
+  return { folders, byName };
+}
+
 export function prepareDoc(doc, type, relPath) {
   const out = structuredClone(doc);
   if (type === 'actors') sizeToken(out);
@@ -224,6 +270,18 @@ export async function main({
     errors.push(...validateLinks(doc, `${type}/${file}`, config.id, idType));
   }
 
+  // Folders, before staging: buildFolders rewrites each doc's folder NAME to
+  // the folder's id, so it has to run while the docs are still in hand.
+  const folderDocs = {};
+  if (!errors.length) {
+    for (const type of Object.keys(COLLECTIONS)) {
+      const ofType = prepared.filter(([t]) => t === type).map(([, , doc]) => doc);
+      const extra = config.folders?.[type] ?? [];
+      if (!ofType.length && !extra.length) continue;
+      folderDocs[type] = buildFolders(ofType, type, { extra }).folders;
+    }
+  }
+
   if (!errors.length) {
     for (const [type, file, doc] of prepared) {
       if (!staged[type]) {
@@ -233,6 +291,24 @@ export async function main({
       }
       await writeFile(path.join(staged[type], file), JSON.stringify(doc, null, 2));
       counts[type] += 1;
+    }
+  }
+
+  // Folder documents are staged alongside the docs they hold. A folder with
+  // nothing in it still needs staging — a game ships an empty PCs folder so the
+  // table has somewhere to put the characters players bring.
+  for (const [type, folders] of Object.entries(folderDocs)) {
+    if (!folders.length) continue;
+    if (!staged[type]) {
+      const stageDir = path.join(distRoot, '.stage', type);
+      await mkdir(stageDir, { recursive: true });
+      staged[type] = stageDir;
+    }
+    for (const folder of folders) {
+      await writeFile(
+        path.join(staged[type], `_folder-${folder._id}.json`),
+        JSON.stringify(folder, null, 2),
+      );
     }
   }
 
