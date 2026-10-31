@@ -164,6 +164,43 @@ else
   echo ""
 fi
 
+# The felddy image runs as a fixed uid:gid of 1000:1000 (`node`).
+CONTAINER_UID=1000
+
+# Create a bind-mount source before compose does. A missing source is created
+# by the Docker daemon as root:root, and the Foundry entrypoint then aborts
+# with "insufficient permissions on /data" and sleeps forever (so the restart
+# policy never fires and a tunnel in front of it gets connection refused).
+# Creating it here as the invoking user needs no root. Only a directory that
+# is already owned by someone else needs a chown, and that one we report
+# rather than fix, so this script never needs sudo.
+ensure_bind_dir() {
+  local var_name=$1
+  local default_path=$2
+  local dir
+
+  dir=$(get_env_value "$var_name")
+  dir=${dir:-$default_path}
+  # compose expands a leading ~ in bind sources; mirror that here.
+  case "$dir" in
+    "~") dir=$HOME ;;
+    "~/"*) dir="$HOME/${dir#\~/}" ;;
+  esac
+
+  if [ ! -d "$dir" ]; then
+    mkdir -p "$dir"
+    echo "✅ Created $var_name: $dir"
+  fi
+
+  if [ "$(stat -c %u "$dir")" != "$CONTAINER_UID" ]; then
+    echo "❌ $var_name ($dir) is owned by uid $(stat -c %u "$dir"), but Foundry"
+    echo "   runs as uid $CONTAINER_UID and cannot write to it. Fix with:"
+    echo "   sudo chown -R $CONTAINER_UID:$CONTAINER_UID \"$dir\""
+    return 1
+  fi
+  echo "✅ $var_name is writable by the container: $dir"
+}
+
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "⚡ Validating required Foundry settings"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -187,6 +224,14 @@ if ! docker compose version &> /dev/null; then
 fi
 
 echo "✅ Docker Compose is installed"
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "⚡ Preparing data directories"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+# Defaults match compose.yml's fallbacks for unset variables.
+ensure_bind_dir "FOUNDRY_DATA_PATH" "$HOME/.local/share/FoundryVTT"
+ensure_bind_dir "DND_VAULT_PATH" "$HOME/Documents/DnD"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
