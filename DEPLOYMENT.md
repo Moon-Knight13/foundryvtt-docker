@@ -228,6 +228,84 @@ Static-file and websocket compression are enabled by default via
 environment variables on every start — change settings in `.env` /
 `compose.yml`, not by editing `options.json` directly.
 
+## Host maintenance
+
+Docker does not clean up after itself. Without periodic maintenance, stopped
+containers, dangling images, and build cache accumulate — the host that prompted
+issue #151 had 110 GB of reclaimable Docker data. The log caps in `compose.yml`
+prevent unbounded log growth, but images and volumes still need attention.
+
+### Scheduled prune
+
+Run a safe prune monthly (or after image upgrades):
+
+```bash
+docker system prune -f          # dangling images, stopped containers, unused networks
+docker builder prune -f         # build cache (safe — rebuilds just re-download layers)
+```
+
+To also reclaim unused **volumes** (only volumes not mounted by a running
+container):
+
+```bash
+docker volume prune -f
+```
+
+> **Caution:** `docker system prune --volumes` removes *all* unused volumes,
+> including named ones that may hold data you want. Prefer the targeted
+> `docker volume prune` above, and review with `docker volume ls` first.
+
+A cron job keeps this automatic — add to the host's crontab
+(`sudo crontab -e`):
+
+```cron
+# Monthly Docker cleanup — first Sunday at 03:00
+0 3 1-7 * 0  docker system prune -f && docker builder prune -f
+```
+
+### daemon.json log defaults
+
+The compose file caps logs per-container, but any container started outside
+this stack (one-off `docker run`, other projects) inherits the Docker daemon
+default: **no cap**. Set a global fallback in `/etc/docker/daemon.json`:
+
+```json
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+```
+
+Restart the daemon after editing: `sudo systemctl restart docker`. Existing
+containers keep their current log files; new containers pick up the default.
+
+### Container safeguards (mem limit + auto-restart)
+
+The `foundry` service has `mem_limit: 2g` and `restart: unless-stopped`.
+Normal Foundry usage sits well under 1 GiB; if a leaky module balloons past
+2 GiB, the kernel OOM-kills the container and the restart policy brings it
+back automatically.
+
+**What a GM sees during recovery:** a brief disconnection (typically 10–20
+seconds), then the browser reconnects and resumes. World data is safe — Foundry
+writes to the `/data` bind mount as changes happen, so a restart costs a
+reconnect, not the session. Players may need to refresh their browser tab if the
+websocket does not auto-reconnect.
+
+### Session monitoring
+
+`scripts/session-monitor.sh` logs host memory, swap, PSI pressure, and Foundry
+container stats to a CSV every 5 seconds — start it before a game session to
+capture data for diagnosing any future slowdown:
+
+```bash
+scripts/session-monitor.sh                    # ~/session-monitor-<date>.csv
+scripts/session-monitor.sh /path/to/out.csv   # custom path
+```
+
 ## Common commands
 
 ```bash
@@ -270,7 +348,6 @@ docker compose restart foundry        # restart the server
 1. SSL/TLS with valid certificates (or terminate at a Cloudflare Tunnel)
 2. Watchtower for automatic image updates
 3. Scheduled backups of the live data path (worlds **and** assets)
-4. Resource limits in a compose override
 
 ### Compose overrides
 
