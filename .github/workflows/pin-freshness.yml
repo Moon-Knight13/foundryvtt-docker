@@ -48,17 +48,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      # Report first, write nothing. A non-zero exit here means a manifest URL
-      # no longer resolves -- rot, not staleness -- and the job should fail
-      # loudly rather than open a cheerful "nothing moved" PR over the top of a
-      # rebuild that is already broken.
+      # Report first, write nothing.  `update --dry-run` exits non-zero when
+      # a manifest URL no longer resolves (rot), but it prints the full report
+      # before throwing.  Absorb the exit when rot is the only failure so valid
+      # bumps still reach the PR step; a dedicated step re-raises it at the end.
       - name: Check pins for staleness
+        id: check
         run: |
-          # pipefail matters here: without it `tee` swallows the non-zero exit
-          # that means a manifest URL no longer resolves, and the job goes green
-          # over a rebuild that is already broken.
           set -o pipefail
-          node scripts/content/foundry-base.mjs update --dry-run | tee pin-report.txt
+          rc=0
+          node scripts/content/foundry-base.mjs update --dry-run | tee pin-report.txt || rc=$?
+          if grep -q 'could not be resolved AT ALL' pin-report.txt; then
+            echo "rotted=true" >> "$GITHUB_OUTPUT"
+          elif [ "$rc" -ne 0 ]; then
+            exit "$rc"
+          fi
 
       - name: Decide whether anything moved
         id: moved
@@ -71,7 +75,16 @@ jobs:
 
       - name: Apply the bumps
         if: steps.moved.outputs.any == 'true'
-        run: node scripts/content/foundry-base.mjs update
+        run: |
+          # `update` writes the manifest before throwing on rot, so valid
+          # bumps land on disk even when unreachable pins exit non-zero.
+          node scripts/content/foundry-base.mjs update || {
+            if [ "${{ steps.check.outputs.rotted }}" = "true" ]; then
+              echo "::warning::Rotted pins present — valid bumps were still applied."
+            else
+              exit 1
+            fi
+          }
 
       - name: Open or refresh the pins PR
         if: steps.moved.outputs.any == 'true'
@@ -97,6 +110,13 @@ jobs:
           # strings in it come from third-party manifests fetched over the wire.
           {
             echo "Pins moved since the last run. **Do not merge on game day.**"
+            if [ "${{ steps.check.outputs.rotted }}" = "true" ]; then
+              echo
+              echo "> [!WARNING]"
+              echo "> **Rotted pins detected.** One or more manifest URLs no longer resolve."
+              echo "> These are listed in the report below and need manual attention — a"
+              echo "> rebuild will fail on them today. The valid bumps in this PR are unaffected."
+            fi
             echo
             echo '```text'
             cat pin-report.txt
@@ -126,3 +146,11 @@ jobs:
               --title "chore(foundry-base): pins moved: ${moved} module(s)" \
               --label "dependencies :game_die:"
           fi
+
+      # Rot is still a problem — fail the job AFTER the PR lands so the
+      # dashboard goes red and the report is not buried.
+      - name: Fail on rotted pins
+        if: steps.check.outputs.rotted == 'true'
+        run: |
+          echo "::error::One or more manifest URLs no longer resolve — see the pins PR for details."
+          exit 1
