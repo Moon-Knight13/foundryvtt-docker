@@ -32,10 +32,11 @@ flowchart TD
   L --> N[Write the GroupFlows advert, recruit on Discord]
 ```
 
-## Quick start — buttons
+## Quick start — spark a game
 
-Spawn the starting card, then tell Claude to build it. *(Needs Buttons +
-Templater configured — see [[_Plugins Setup]].)*
+Start here when you have an idea but no game folder yet. These buttons drop a
+card into the inbox; fill it, then scaffold the game with `new-game.sh`.
+*(Needs Buttons + Templater configured — see [[_Plugins Setup]].)*
 
 ```button
 name 🎲 New Game Brief
@@ -43,6 +44,17 @@ type note(99 Inbox/New Game Brief, split) template
 action New Game Brief Template
 templater true
 ```
+```button
+name 📣 New Advert
+type note(99 Inbox/New Advert, split) template
+action Advert Template
+templater true
+```
+
+## Quick start — one-off cards
+
+Need a single piece without a full game? Drop it in the inbox.
+
 ```button
 name ⚔️ New Encounter
 type note(99 Inbox/New Encounter, split) template
@@ -67,12 +79,23 @@ type note(99 Inbox/New Map Brief, split) template
 action Map Brief Template
 templater true
 ```
-```button
-name 📣 New Advert
-type note(99 Inbox/New Advert, split) template
-action Advert Template
-templater true
-```
+
+## The per-game pipeline
+
+Once a game exists (`new-game.sh <slug>`), its **index note** is the pipeline.
+Open the game's `<Title>.md` — the **DM Pipeline** section shows five stages,
+each with buttons that create cards in that game's folders and Dataview queries
+that show what exists and what is missing:
+
+1. **Brief & prep** — fill the index and GM Prep
+2. **Cast & scenes** — create NPCs, scenes, encounters, tables, handouts
+3. **Maps & art** — map specs, token art, handout illustrations
+4. **Soundtrack** — fill `audio_cue` on each scene; the cue-coverage query shows gaps
+5. **Ship** — pregens, build, art gate, sync, advert
+
+The buttons are stage-grouped so the next thing to do is always at the top of
+the section you are in. The Dataview queries answer "what is done, what is
+next" without leaving the vault for terminal scrollback.
 
 ## Quick start — say it to Claude
 
@@ -156,7 +179,7 @@ than remembered — if a stub still says `REPLACE`, that part isn't done.
 | `<Name>.md` | Index: premise, run order, GM shelf, Dataview blocks |
 | `GM Prep.md` | The truth, arc, pacing, scaling, safety, rewards |
 | `NPCs/` | One card per creature, each with a `statblock` block |
-| `Scenes/` | One note per scene: read-aloud, map embed, the beats |
+| `Scenes/` | One note per scene: read-aloud, map, beats, `audio_cue` in frontmatter |
 | `Tables/` | Rumour / loot tables as markdown tables |
 | `Handouts/` | Anything the players physically receive |
 | `Maps/` | Map briefs, or notes on the generator specs |

@@ -19,6 +19,7 @@ templates/indexes just work.
   | `…/Factions` | `Faction Template` |
   | `…/Items` | `Item Template` |
   | `…/Quests` | `Quest Template` |
+  | `…/Scenes` | `Scene Template` |
   | `…/Sessions` | `Session Template` |
 - Or bind a hotkey to **"Templater: Create new note from template."**
 

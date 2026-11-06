@@ -40,6 +40,28 @@ FROM "03 Oneshots/REPLACE/Scenes"
 SORT scene, act, file.name
 ```
 
+## Starter moods
+
+Seed your scene notes from these — pick the row that fits the scene, paste its
+`audio_source` and `audio_ref` into the frontmatter, and write a one-line
+`audio_cue` for the moment it should start.
+
+| Mood | Use for | tabletopaudio search |
+|---|---|---|
+| Tavern / social | roleplay, downtime, arrival in town | Medieval Tavern, Busy Tavern |
+| Wilderness / travel | overland, forest, the road | Medieval Forest, The Long Road |
+| Tension / creep | investigation, approach, something wrong | Strangers, Mountain Pass |
+| Combat / action | fights, chases, escapes | Battle, Showdown |
+| Mystery / horror | dungeon crawl, revelation, dread | Dungeon, Dark Cathedral |
+| Victory / resolution | after the boss, safe at last | The Forge, Celebrations |
+| Sea / water | ports, ships, coast | High Seas, Docks District |
+| Urban / intrigue | city streets, courts, politics | Marketplace, Throne Room |
+
+Browse the full library at [tabletopaudio.com](https://tabletopaudio.com) —
+tracks are free and already an accepted `audio_source`. Spotify playlists
+work the same way: paste the URL as `audio_ref` with
+`audio_source: spotify`.
+
 ## Adding a cue
 
 The cue lives on the scene note, not in a list here, so it cannot drift from the

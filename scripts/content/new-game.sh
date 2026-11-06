@@ -214,25 +214,114 @@ REPLACE — one paragraph: the pitch, the cast, the choice at the end.
 > [!abstract] Premise
 > REPLACE — two sentences, player-facing.
 
-## Run order
+## Tone
 
-1. **[[1 - REPLACE]]** — REPLACE
-2. **[[2 - REPLACE]]** — REPLACE
+REPLACE
+
+---
+
+## DM Pipeline
+
+Each stage builds on the last. Work top to bottom; the queries show what exists
+and what is missing.
+
+### 1 — Brief & prep
+
+Fill in this game's identity and your GM notes before building content.
+
+- [ ] **This note** — premise, tone, and frontmatter above (level, players, runtime, themes)
+- [ ] **[[GM Prep]]** — the truth, arc, pacing, scaling, safety, rewards
+
+### 2 — Cast & scenes
+
+Build the cast and the locations. Create cards with the buttons, then fill them
+(or tell Claude to).
+
+\`\`\`button
+name 🧑 New NPC
+type note($SECTION/$TITLE/NPCs/Untitled, split) template
+action NPC Template
+templater true
+\`\`\`
+\`\`\`button
+name 🎭 New Scene
+type note($SECTION/$TITLE/Scenes/Untitled, split) template
+action Scene Template
+templater true
+\`\`\`
+\`\`\`button
+name ⚔️ New Encounter
+type note($SECTION/$TITLE/Scenes/Untitled Encounter, split) template
+action Encounter Template
+templater true
+\`\`\`
+\`\`\`button
+name 🎲 New Roll Table
+type note($SECTION/$TITLE/Tables/Untitled, split) template
+action Roll Table Template
+templater true
+\`\`\`
+\`\`\`button
+name 📜 New Handout
+type note($SECTION/$TITLE/Handouts/Untitled, split) template
+action Handout Template
+templater true
+\`\`\`
+
+**NPCs:**
+\`\`\`dataview
+TABLE WITHOUT ID file.link AS NPC, role, cr FROM "$SECTION/$TITLE/NPCs" WHERE type = "npc" SORT file.name
+\`\`\`
+**Scenes:**
+\`\`\`dataview
+TABLE WITHOUT ID file.link AS Scene, scene, act FROM "$SECTION/$TITLE/Scenes" SORT scene, act, file.name
+\`\`\`
+
+### 3 — Maps & art
+
+Every scene needs a map; every named NPC needs a face.
+
+\`\`\`button
+name 🗺️ New Map Brief
+type note($SECTION/$TITLE/Maps/Untitled, split) template
+action Map Brief Template
+templater true
+\`\`\`
+
+See \`docs/CONTENT_AUTHORING.md\` for the map pipeline
+(\`render_map.py\` / \`dd2vtt-to-scene.mjs\` / \`map-to-scene.sh\`) and for
+the named-NPC art flow (Claude-drawn SVG or generated PNG).
+
+### 4 — Soundtrack
+
+Fill \`audio_cue\` on each scene note's **frontmatter**, then confirm every scene
+has a cue. See [[Soundtrack]] for the full cue sheet and starter moods.
+
+**Cue coverage:**
+\`\`\`dataview
+TABLE WITHOUT ID
+  file.link AS Scene,
+  choice(audio_cue, "✅ " + audio_cue, "⬜ needs cue") AS "Cue"
+FROM "$SECTION/$TITLE/Scenes"
+SORT scene, act, file.name
+\`\`\`
+
+### 5 — Ship
+
+- [ ] **[[Pregens]]** — level set, party drawn from the pool
+- [ ] Foundry module built, art gate passed (\`--strict\`), synced$([[ "$TYPE" == "oneshot" ]] && echo "
+- [ ] **[[Advert]]** — GroupFlows recruitment post")
+
+\`\`\`bash
+# One command: compile, art gate, build, sync, restart Foundry
+scripts/content/ship-game.sh "$GAME_DIR"
+\`\`\`
+
+---
 
 ## GM shelf
 
-- [[GM Prep]] · [[Soundtrack]] · Handouts: REPLACE · Tables: REPLACE · Maps: REPLACE
-- Cast: REPLACE
-- Recruiting: [[Advert]]
-
-## Cast & scenes (auto)
-
-\`\`\`dataview
-TABLE role, cr FROM "$SECTION/$TITLE/NPCs" WHERE type = "npc" SORT file.name
-\`\`\`
-\`\`\`dataview
-TABLE scene FROM "$SECTION/$TITLE/Scenes" SORT scene, act, file.name
-\`\`\`
+[[GM Prep]] · [[Soundtrack]] · [[Pregens]]$([[ "$TYPE" == "oneshot" ]] && echo " · [[Advert]]")
 
 ## Foundry
 
@@ -245,10 +334,6 @@ node scripts/content/build.mjs \\
 ./scripts/content/sync-content.sh --config "<same>"   # on the host
 docker compose restart
 \`\`\`
-
-## Tone
-
-REPLACE
 EOF
 
 cat > "$GAME_DIR/GM Prep.md" << EOF
@@ -364,6 +449,28 @@ TABLE WITHOUT ID
 FROM "$SECTION/$TITLE/Scenes"
 SORT scene, act, file.name
 \`\`\`
+
+## Starter moods
+
+Seed your scene notes from these — pick the row that fits the scene, paste its
+\`audio_source\` and \`audio_ref\` into the frontmatter, and write a one-line
+\`audio_cue\` for the moment it should start.
+
+| Mood | Use for | tabletopaudio search |
+|---|---|---|
+| Tavern / social | roleplay, downtime, arrival in town | Medieval Tavern, Busy Tavern |
+| Wilderness / travel | overland, forest, the road | Medieval Forest, The Long Road |
+| Tension / creep | investigation, approach, something wrong | Strangers, Mountain Pass |
+| Combat / action | fights, chases, escapes | Battle, Showdown |
+| Mystery / horror | dungeon crawl, revelation, dread | Dungeon, Dark Cathedral |
+| Victory / resolution | after the boss, safe at last | The Forge, Celebrations |
+| Sea / water | ports, ships, coast | High Seas, Docks District |
+| Urban / intrigue | city streets, courts, politics | Marketplace, Throne Room |
+
+Browse the full library at [tabletopaudio.com](https://tabletopaudio.com) —
+tracks are free and already an accepted \`audio_source\`. Spotify playlists
+work the same way: paste the URL as \`audio_ref\` with
+\`audio_source: spotify\`.
 
 ## Adding a cue
 
@@ -486,7 +593,7 @@ todo() { printf '  [ ] %-18s %s\n' "$1" "$2"; }
 todo "$TITLE.md" "index: premise, run order, GM shelf, dataview blocks"
 todo "GM Prep.md" "the truth, arc, pacing, scaling, safety, rewards"
 todo "NPCs/" "one card per creature, each with a statblock block"
-todo "Scenes/" "one note per scene: read-aloud, map embed, beats"
+todo "Scenes/" "one note per scene: read-aloud, map, beats, audio_cue in frontmatter"
 todo "Soundtrack.md" "soundtrack_playlist + a cue per scene (audio_source/_ref/_cue)"
 todo "Pregens.md" "level this game runs at (party: starts with the whole pool)"
 todo "Tables/" "rumour/loot tables as markdown tables"
@@ -497,7 +604,8 @@ if [[ "$TYPE" == "oneshot" ]]; then
 fi
 todo "Foundry/src/" "the above projected to JSON, ONCE, at packaging"
 echo
-echo "Author the vault notes FIRST — they are the source of truth. The Foundry"
+echo "Open $TITLE.md — the DM Pipeline section is the staged walkthrough."
+echo "Author vault notes FIRST — they are the source of truth. The Foundry"
 echo "JSON is a projection of them; never hand-maintain both."
 echo
 echo "Then build:"
