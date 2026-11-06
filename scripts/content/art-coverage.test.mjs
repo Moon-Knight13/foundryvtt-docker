@@ -127,6 +127,75 @@ test('a resolvable SVG with no intrinsic size is still a failure', async () => {
   assert.match(report.failures[0], /no width\/height/);
 });
 
+function minimalPng(width, height) {
+  const buf = Buffer.alloc(33);
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(buf, 0);
+  buf.writeUInt32BE(13, 8);
+  buf.write('IHDR', 12, 'ascii');
+  buf.writeUInt32BE(width, 16);
+  buf.writeUInt32BE(height, 20);
+  buf[24] = 8;
+  buf[25] = 6;
+  return buf;
+}
+
+test('a scene whose background dimensions disagree with its declared size is a failure', async () => {
+  const vault = await mkdtemp(path.join(tmpdir(), 'art-vault-'));
+  await mkdir(path.join(vault, 'G', 'Assets', 'Maps'), { recursive: true });
+  await writeFile(path.join(vault, 'G', 'Assets', 'Maps', 'bg.png'), minimalPng(1499, 1049));
+
+  const src = await srcTree({
+    'scenes/library.json': {
+      name: 'Library',
+      width: 2621,
+      height: 1904,
+      background: { src: 'DnD/G/Assets/Maps/bg.png' },
+    },
+  });
+
+  const report = await audit(src, { vault });
+  assert.equal(report.failures.length, 1);
+  assert.match(report.failures[0], /1499.*1049/);
+  assert.match(report.failures[0], /2621.*1904/);
+  assert.match(report.failures[0], /stretch/);
+});
+
+test('a scene whose background matches its declared size passes', async () => {
+  const vault = await mkdtemp(path.join(tmpdir(), 'art-vault-'));
+  await mkdir(path.join(vault, 'G', 'Assets', 'Maps'), { recursive: true });
+  await writeFile(path.join(vault, 'G', 'Assets', 'Maps', 'bg.png'), minimalPng(2621, 1904));
+
+  const src = await srcTree({
+    'scenes/library.json': {
+      name: 'Library',
+      width: 2621,
+      height: 1904,
+      background: { src: 'DnD/G/Assets/Maps/bg.png' },
+    },
+  });
+
+  const report = await audit(src, { vault });
+  assert.equal(report.failures.length, 0);
+});
+
+test('scene dimension check tolerates off-by-one rounding', async () => {
+  const vault = await mkdtemp(path.join(tmpdir(), 'art-vault-'));
+  await mkdir(path.join(vault, 'G', 'Assets', 'Maps'), { recursive: true });
+  await writeFile(path.join(vault, 'G', 'Assets', 'Maps', 'bg.png'), minimalPng(2620, 1903));
+
+  const src = await srcTree({
+    'scenes/map.json': {
+      name: 'Map',
+      width: 2621,
+      height: 1904,
+      background: { src: 'DnD/G/Assets/Maps/bg.png' },
+    },
+  });
+
+  const report = await audit(src, { vault });
+  assert.equal(report.failures.length, 0);
+});
+
 test('without a vault, Data-relative paths are trusted, not failed', async () => {
   // CI has no vault mount; a green report there must not promise resolution.
   const src = await srcTree({

@@ -27,6 +27,22 @@ import { COLLECTIONS, loadConfig, resolveSrcRoot } from './build.mjs';
 import { GENERIC_ART_DIR } from './art-resolve.mjs';
 import { PLACEHOLDER_IMG } from './statblock.mjs';
 import { hasIntrinsicSize } from './svg-size.mjs';
+import { imageSize } from './image-size.mjs';
+
+// Scene backgrounds may differ from the declared canvas by a pixel or two due
+// to rounding in the map generator. Anything beyond this is a real mismatch.
+const SCENE_DIM_TOLERANCE = 2;
+
+/** Read the pixel dimensions of a scene background image. Returns null for
+ * SVGs (handled separately) and for files whose format is unrecognised. */
+async function sceneBgSize(abs) {
+  if (abs.toLowerCase().endsWith('.svg')) return null;
+  try {
+    return await imageSize(abs);
+  } catch {
+    return null;
+  }
+}
 
 /** Is this SVG sized? An unreadable file counts as sized so the caller reports
  * the read failure once, rather than as a bogus sizing complaint. */
@@ -123,6 +139,24 @@ export async function audit(srcRoot, { vault } = {}) {
                     `${what} "${src}" has no width/height on its <svg> tag — it will ` +
                       'render at about half its token (fix: svg-size.mjs --apply)',
                   );
+                }
+                // A scene background that does not match the declared canvas
+                // renders stretched/soft and puts every grid square off by the
+                // scale factor. Check raster dimensions against the scene's
+                // width/height with a small tolerance for rounding.
+                if (collection === 'scenes' && what === 'background') {
+                  const dim = await sceneBgSize(abs);
+                  if (dim && typeof doc.width === 'number' && typeof doc.height === 'number') {
+                    const dw = Math.abs(dim.width - doc.width);
+                    const dh = Math.abs(dim.height - doc.height);
+                    if (dw > SCENE_DIM_TOLERANCE || dh > SCENE_DIM_TOLERANCE) {
+                      problems.push(
+                        `background is ${dim.width}×${dim.height} but scene declares ` +
+                          `${doc.width}×${doc.height} — Foundry will stretch the art ` +
+                          'and every grid distance will be wrong',
+                      );
+                    }
+                  }
                 }
               }
             } else {
