@@ -219,6 +219,22 @@
       "note": "Was excluded as overlapping the compendium pipeline; kept because it is in active use. Its manifest URL is version-locked (.../2.8.12/...) rather than /latest/, so `update` can never move this pin \u2014 it will report \"current\" forever. Bump it by editing the URL and the version together.",
       "title": "Library: Scene Packer",
       "version": "2.8.12"
+    },
+    {
+      "check": "https://github.com/CarlosFdez/global-progress-clocks/releases/latest/download/module.json",
+      "id": "global-progress-clocks",
+      "manifest": "https://github.com/CarlosFdez/global-progress-clocks/releases/download/v1.3.3/module.json",
+      "note": "Blades-style segmented clocks and numeric point trackers. Used for the HEAT gauge (8-segment, player-visible) in Noir Gala Heist and similar oneshots.",
+      "title": "Global Progress Clocks",
+      "version": "1.3.3"
+    },
+    {
+      "check": "https://modules.wgtngm.net/mini-progress-tracker/module.json",
+      "id": "mini-progress-tracker",
+      "manifest": "https://modules.wgtngm.net/mini-progress-tracker/0.1.7/module.json",
+      "note": "Simple numeric counter with visibility controls. Used for GM-only vote/resource trackers. No GitHub repo \u2014 hosted on author's domain (modules.wgtngm.net).",
+      "title": "Mini Progress Tracker",
+      "version": "0.1.7"
     }
   ],
   "deliberatelyExcluded": {
