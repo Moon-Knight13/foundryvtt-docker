@@ -29,7 +29,7 @@ permissions:
 jobs:
   diagnostics:
     name: Run Diagnostics
-    uses: felddy/reusable-workflows/.github/workflows/diagnostics.yml@f57192a71df95745f086715b06f25e164874f06f # tag=v6.0.2
+    uses: felddy/reusable-workflows/.github/workflows/diagnostics.yml@a05932b25d8554128d0720b447548211eaaec6a2 # tag=v6.0.3
   analyze:
     name: Analyze
     # CodeQL result upload requires code scanning, which needs GitHub Advanced
